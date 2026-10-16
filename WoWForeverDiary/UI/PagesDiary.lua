@@ -314,7 +314,7 @@ function UI.LayoutDiary(book, chapters)
             local keep = f and keepsakes(f)
             if keep then
                 if y + keep.h > AREA then newPage(head) end
-                put({ t = "keep", keep = keep }, keep.h + GAP)
+                put({ t = "keep", keep = keep, day = day }, keep.h + GAP)
             end
             if y + H_FLOURISH <= AREA then
                 put({ t = "flourish" }, H_FLOURISH)
@@ -582,7 +582,8 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
             bar:SetSize(2, fs:GetStringHeight())
             bar:SetPoint("TOPRIGHT", fs, "TOPLEFT", -5, 0)
         elseif it.t == "keep" then
-            UI.SectionHead(pool, canvas, textX, TCW, y - 2, 18, L["Kept as a memory"])
+            -- the day the keepsakes belong to: they may stand beside the next day's entry
+            UI.SectionHead(pool, canvas, textX, TCW, y - 2, 18, L["Kept as a memory"], it.day and format(L["Day %d"], it.day) or nil)
             drawKeep(pool, canvas, textX, y - 24, it.keep, TCW)
         elseif it.t == "flourish" then
             local cx = textX + TCW / 2

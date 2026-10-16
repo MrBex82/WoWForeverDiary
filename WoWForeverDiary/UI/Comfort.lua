@@ -462,18 +462,21 @@ end
 -- A short introduction on the first opening: notes pinned beside the parts they explain
 ------------------------------------------------------------------------
 local TOUR = {
-    { "thumbs", "The bookmarks", "The bookmarks on the right lead to the parts of the book. A red dot shows how much is new since you last read." },
-    { "search", "Search", "The spyglass on the spine searches the whole book: days, people, creatures, quests and places." },
+    { "thumbs", "The tabs", "The tabs on the right lead to the parts of the book, one colour for each group. Point at them to read their names. A red dot shows how much is new since you last read." },
+    { "search", "Search", "The spyglass on the spine searches the whole book: days, people, creatures, quests, places and treasures. Ctrl + F opens it too." },
     { "ribbon", "Turning pages", "Turn the pages with the arrows, the mouse wheel or the arrow keys. The red ribbon below always leads to today; Backspace takes you back. Ctrl + mouse wheel changes the size of the book." },
+    { "marks", "Your own bookmarks", "Ctrl-click a page number to keep that page. A ribbon then sticks out of the top of the book: a click opens the page, a right-click takes the ribbon away." },
     { "page", "Almost everything can be clicked", "Cards, names, days and maps open more. Right-click the page number to go to any page. The settings are in the scribe's notes at the very end." },
 }
 local note
-local function tourStep(i)
+-- only: a single step on its own (a step added after the reader already knew the introduction)
+local function tourStep(i, only)
     local bf = UI.bookFrame
     local step = TOUR[i]
     if not step or not bf:IsShown() then
         if note then note:Hide() end
         WFD.S.tourDone = true
+        WFD.S.tourMarks = true
         return
     end
     if not note then
@@ -501,16 +504,16 @@ local function tourStep(i)
             b:SetScript("OnLeave", function(s) s.t:SetTextColor(col4(c.gold)) end)
             return b
         end
-        note.next = btn(L["Next"] .. "  >", -14, function() tourStep(note.i + 1) end)
+        note.next = btn(L["Next"] .. "  >", -14, function() tourStep(note.only and (#TOUR + 1) or (note.i + 1)) end)
         note.skip = btn(L["Skip"], -110, function() tourStep(#TOUR + 1) end)
         note.pin = UI.Diamond(note, 14, c.gold, "OVERLAY", 0)
     end
-    note.i = i
+    note.i, note.only = i, only
     note.title:SetText(L[step[2]])
     note.text:SetText(L[step[3]])
-    note.count:SetText(i .. " / " .. #TOUR)
-    note.next.t:SetText(i == #TOUR and L["Got it"] or (L["Next"] .. "  >"))
-    note.skip:SetShown(i < #TOUR)
+    note.count:SetText(only and "" or (i .. " / " .. #TOUR))
+    note.next.t:SetText((only or i == #TOUR) and L["Got it"] or (L["Next"] .. "  >"))
+    note.skip:SetShown(not only and i < #TOUR)
     note:SetHeight(max(110, note.text:GetStringHeight() + 74))
     note:ClearAllPoints()
     note.pin:ClearAllPoints()
@@ -523,13 +526,23 @@ local function tourStep(i)
     elseif step[1] == "ribbon" then
         note:SetPoint("BOTTOM", bf, "BOTTOM", 0, 60)
         note.pin:SetPoint("CENTER", note, "BOTTOM", 0, 0)
+    elseif step[1] == "marks" then
+        -- below the top edge, where the ribbons stick out
+        note:SetPoint("TOPLEFT", bf, "TOPLEFT", 50, -30)
+        note.pin:SetPoint("CENTER", note, "TOPLEFT", 24, 0)
     else
         note:SetPoint("CENTER", bf, "CENTER", 0, 0)
         note.pin:SetPoint("CENTER", note, "TOP", 0, 0)
     end
     note:Show()
 end
-function UI:StartTour() tourStep(1) end
+-- key: show only that step (for readers who already know the rest)
+function UI:StartTour(key)
+    if key then
+        for i, s in ipairs(TOUR) do if s[1] == key then return tourStep(i, true) end end
+    end
+    tourStep(1)
+end
 
 ------------------------------------------------------------------------
 -- Opening the book at the scribe's notes (minimap right click, game options)
@@ -573,7 +586,12 @@ function UI:OpenBook(page)
     self.readSince = C and C.seenAt
     self.visited = {}
     open0(self, page)
-    if not WFD.S.tourDone then C_Timer.After(0.3, function() UI:StartTour() end) end
+    if not WFD.S.tourDone then
+        C_Timer.After(0.3, function() UI:StartTour() end)
+    elseif not WFD.S.tourMarks then
+        -- the introduction is known, the own bookmarks came later: that one step on its own
+        C_Timer.After(0.3, function() UI:StartTour("marks") end)
+    end
 end
 
 ------------------------------------------------------------------------
@@ -633,9 +651,10 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
         { L["Ctrl + F"], L["search the book"] },
         { L["Ctrl + mouse wheel"], L["size of the book"] },
         { L["Right-click the page number"], L["go to a page"] },
+        { L["Ctrl + click on the page number"], L["set or remove a bookmark"] },
         { "/wfd", L["open or close the book"] },
     }
-    for _, r in ipairs(rows) do UI.LeaderLine(pool, canvas, tx, y, tw, r[1], r[2], 12, c.inkSoft); y = y - 18 end
+    for _, r in ipairs(rows) do UI.LeaderLine(pool, canvas, tx, y, tw, r[1], r[2], 12, c.inkSoft); y = y - 17 end
     small(L["A key to open the book can be set in the game's key bindings, under AddOns."])
     y = y - 4
 
