@@ -143,9 +143,16 @@ function UI:Paginate()
     -- Heights as the contents page draws them: a chapter with its sub line 36, the appendix heading 36,
     -- a part of the appendix 26; the first page loses the room of its title.
     local TOC_FIRST, TOC_NEXT = UI.AREA_H - 76, UI.AREA_H
-    -- a group heading of the appendix takes 24
-    local function entryH(e) return e.group and 24 or ((e.header or e.sub) and 36 or 26) end
-    local need = #chapters * 36 + 36 + #self.sections * 26 + #UI.GROUPS * 24
+    -- a part of the appendix 22, a group heading 20; only the parts that are in the book count,
+    -- and only the groups with a heading
+    local function entryH(e) return e.group and 20 or ((e.header or e.sub) and 36 or 22) end
+    local present = 0
+    for _, sec in ipairs(self.sections) do
+        if not sec.enabled or sec.enabled() then present = present + 1 end
+    end
+    local headings = 0
+    for _, g in ipairs(UI.GROUPS) do if g.label then headings = headings + 1 end end
+    local need = #chapters * 36 + 36 + present * 22 + headings * 20
     local tocPages = 1 + max(0, ceil((need - TOC_FIRST) / TOC_NEXT))
     book:Start("toc")
     local tocList = {}
@@ -190,7 +197,7 @@ function UI:Paginate()
     for _, e in ipairs(all) do
         local h = entryH(e)
         -- a group heading never stays alone at the foot of a page
-        if (h > room or (e.group and h + 26 > room)) and tocList[ti + 1] then
+        if (h > room or (e.group and h + 22 > room)) and tocList[ti + 1] then
             ti = ti + 1
             room = TOC_NEXT
         end
