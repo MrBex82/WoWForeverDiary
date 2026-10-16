@@ -166,11 +166,24 @@ local function build()
     f.sheen2:SetSize(60, TH - 8)
     f.sheen2:SetPoint("LEFT", f.sheen, "RIGHT")
 
-    f:SetScript("OnClick", function(self)
+    -- a click opens the book where the moment is told; a right-click only puts the note away
+    f:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    f:SetScript("OnClick", function(self, button)
         local ev = self.ev
+        GameTooltip:Hide()
+        if button == "RightButton" then
+            self.phase, self.t = "out", 0
+            return
+        end
         self.phase, self.t = "out", 0
         if ev then UI:OpenAt(TARGET[ev.k] or ev.day) end
     end)
+    f:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:SetText(L["Right-click to close."], 0.5, 0.8, 1)
+        GameTooltip:Show()
+    end)
+    f:SetScript("OnLeave", function() GameTooltip:Hide() end)
     f:SetScript("OnUpdate", function(self, dt)
         self.t = self.t + dt
         self.life = (self.life or 0) + dt

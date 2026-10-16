@@ -46,7 +46,7 @@ local function newRow(parent)
     r.mark:SetPoint("LEFT", 2, 1)
     r.label = text(r, 11, c.ink, "LEFT")
     r.label:SetPoint("LEFT", 12, 1)
-    r.value = text(r, 10, c.inkSoft, "RIGHT")
+    r.value = text(r, 11, c.inkSoft, "RIGHT")
     r.value:SetPoint("RIGHT", -2, 1)
     r.track = UI.Fill(r, { 1, 1, 1 }, "ARTWORK", 0, 0.08)
     r.track:SetHeight(2)
@@ -92,7 +92,7 @@ local function setRow(r, label, value, frac, done, tip, go)
 end
 
 local function caption(parent)
-    local t = text(parent, 9, c.redInk, "LEFT")
+    local t = text(parent, 10, c.redInk, "LEFT")
     local ln = UI.Fill(parent, LINE, "ARTWORK", 0)
     ln:SetHeight(1)
     ln:SetPoint("LEFT", t, "RIGHT", 6, 0)
@@ -175,13 +175,14 @@ local function build()
         s:SetPoint("TOPLEFT", col * (W - 20) / 3, -row * 34)
         s.v = text(s, 14, c.ink, "LEFT")
         s.v:SetPoint("TOPLEFT", 0, 0)
-        s.l = text(s, 9, c.inkFaint, "LEFT")
+        s.l = text(s, 10, c.inkSoft, "LEFT")
         s.l:SetPoint("TOPLEFT", 0, -17)
         f.stats[i] = s
     end
     f.capTasks = { caption(body) }
     f.capWeek = { caption(body) }
     f.capHon = { caption(body) }
+    f.capNext = { caption(body) }
     f.rows = {}
     for i = 1, 9 do f.rows[i] = newRow(body) end
     f:Hide()
@@ -239,7 +240,7 @@ function UI:UpdateCompanion(relayout)
 
     local y = -72
     local used = 0
-    for _, cap in ipairs({ comp.capTasks, comp.capWeek, comp.capHon }) do cap[1]:Hide() cap[2]:Hide() end
+    for _, cap in ipairs({ comp.capTasks, comp.capWeek, comp.capHon, comp.capNext }) do cap[1]:Hide() cap[2]:Hide() end
     local function place(cap, label)
         local fs, ln = cap[1], cap[2]
         fs:ClearAllPoints()
@@ -294,6 +295,23 @@ function UI:UpdateCompanion(relayout)
             row(L[e.def.name], e.value .. "/" .. e.next, e.frac, false,
                 { L[e.def.name], WFD:HonourText(e.def, e.next) }, function(b) return b.sectionStart.honour or 1 end)
         end
+    end
+    -- the creature closest to its next stage in the bestiary
+    local near
+    for _, m in pairs(C.mobs or {}) do
+        local stage = WFD:MobStage(m)
+        if stage < 3 then
+            local goal = stage == 1 and WFD.STAGE_COLOUR or WFD.STAGE_MASTER
+            local left = goal - (m.kills or 0)
+            if not near or left < near.left then near = { m = m, goal = goal, left = left, stage = stage } end
+        end
+    end
+    if near then
+        y = y - 4
+        place(comp.capNext, L["Almost there"])
+        local what = format(near.stage == 1 and L["%d more, then in colour"] or L["%d more, then a connoisseur"], near.left)
+        row(near.m.name or "?", (near.m.kills or 0) .. "/" .. near.goal, (near.m.kills or 0) / near.goal, false,
+            { near.m.name or "?", what }, function(b) return b.nextPage or b.sectionStart.bestiary or 1 end)
     end
     for i = used + 1, #comp.rows do comp.rows[i]:Hide() end
     comp.body:SetHeight(-y)

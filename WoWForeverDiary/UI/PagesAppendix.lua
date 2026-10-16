@@ -601,6 +601,17 @@ UI:RegisterSection({
             for _, e in ipairs(list) do
                 if e.hint then hints[#hints + 1] = e else mine[#mine + 1] = e end
             end
+            -- what is worth hunting first; critters and what is grey to you at the end, each part by level
+            local lvl = UnitLevel("player") or 1
+            local function minor(h)
+                return h.cls == "trivial" or h.cls == "minus" or (h.lv and h.lv > 0 and h.lv < lvl - 7) or false
+            end
+            table.sort(hints, function(a, b)
+                local ma, mb = minor(a.h), minor(b.h)
+                if ma ~= mb then return mb end
+                if (a.h.lv or 0) ~= (b.h.lv or 0) then return (a.h.lv or 0) < (b.h.lv or 0) end
+                return (a.h.n or "") < (b.h.n or "")
+            end)
             local hidden = #hints
             local first
             local pages = math.ceil(#mine / PER_PAGE)
