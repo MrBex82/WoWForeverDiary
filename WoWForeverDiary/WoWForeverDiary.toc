@@ -1,0 +1,78 @@
+## Interface: 16001, 11509, 11508, 11507
+## Title: |cffffd100WoW Forever|r Diary
+## Title-deDE: |cffffd100WoW Forever|r Reisetagebuch
+## Notes: A living travel diary: every NPC, quest, kill, coin and footstep of your character, told as a story.
+## Notes-deDE: Ein lebendiges Reisetagebuch: jeder NPC, jede Quest, jeder Kill, jede Münze und jeder Schritt deines Charakters als Geschichte.
+## Title-frFR: |cffffd100WoW Forever|r Carnet de voyage
+## Notes-frFR: Un carnet de voyage vivant : chaque PNJ, quête, victime, pièce et pas de votre personnage, raconté comme une histoire.
+## Title-esES: |cffffd100WoW Forever|r Diario de viaje
+## Notes-esES: Un diario de viaje vivo: cada PNJ, misión, baja, moneda y paso de tu personaje, contado como una historia.
+## Title-esMX: |cffffd100WoW Forever|r Diario de viaje
+## Notes-esMX: Un diario de viaje vivo: cada PNJ, misión, baja, moneda y paso de tu personaje, contado como una historia.
+## Title-ptBR: |cffffd100WoW Forever|r Diário de Viagem
+## Notes-ptBR: Um diário de viagem vivo: cada NPC, missão, abate, moeda e passo do seu personagem, contado como uma história.
+## Title-ruRU: |cffffd100WoW Forever|r Дневник путешествий
+## Notes-ruRU: Живой дневник путешествий: каждый NPC, задание, убийство, монета и шаг вашего персонажа — в виде истории.
+## Title-koKR: |cffffd100WoW Forever|r 여행 일기
+## Notes-koKR: 살아 있는 여행 일기: 캐릭터가 만난 모든 NPC, 퀘스트, 처치, 동전, 발걸음을 이야기로 들려줍니다.
+## Title-zhTW: |cffffd100WoW Forever|r 旅行日記
+## Notes-zhTW: 一本活生生的旅行日記：你的角色遇見的每個NPC、每個任務、每次擊殺、每枚錢幣與每一步，都化為一段故事。
+## Author: MrBex
+## Version: 0.1.7
+## X-License: MIT
+## IconTexture: Interface\Icons\INV_Misc_Book_09
+## SavedVariables: WFDiaryDB
+## SavedVariablesPerCharacter: WFDiaryChar
+
+Core.lua
+Locales\enUS.lua
+Locales\enGB.lua
+Locales\deDE.lua
+Locales\esES.lua
+Locales\frFR.lua
+Locales\koKR.lua
+Locales\ptBR.lua
+Locales\ruRU.lua
+Locales\zhTW.lua
+
+Modules\Retell.lua
+Modules\Rename.lua
+Modules\Tracker_Path.lua
+Modules\Tracker_Kills.lua
+Modules\Creatures.lua
+Modules\Tracker_NPC.lua
+Modules\Tracker_Quests.lua
+Modules\Tracker_Money.lua
+Modules\Tracker_Loot.lua
+Modules\Tracker_Progress.lua
+Modules\Tracker_Social.lua
+Modules\Tracker_Runs.lua
+Modules\Honours.lua
+Modules\Transfer.lua
+Modules\Challenges.lua
+Modules\Firsts.lua
+Modules\Family.lua
+Modules\Capsules.lua
+Modules\Gathering.lua
+Modules\Narrator.lua
+Modules\Demo.lua
+
+UI\Widgets.lua
+UI\Themes.lua
+UI\Components.lua
+UI\Book.lua
+UI\PagesFront.lua
+UI\PagesDiary.lua
+UI\PagesAppendix.lua
+UI\PagesBestiary.lua
+UI\PagesExtra.lua
+UI\PagesExplore.lua
+UI\PagesChronicle.lua
+UI\PagesKeepsakes.lua
+UI\Cards.lua
+UI\Toast.lua
+UI\Export.lua
+UI\Search.lua
+UI\Comfort.lua
+UI\Moving.lua
+UI\Companion.lua

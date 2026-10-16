@@ -1,0 +1,1391 @@
+-- The book: closed cover as start screen, the open book with two pages, page turning,
+-- thumb index, ribbon bookmark and the pagination of all sections.
+local ADDON, WFD = ...
+local UI = WFD.UI
+local L = WFD.L
+local c = UI.c
+local col4 = UI.col4
+local floor, max, min, ceil, format = math.floor, math.max, math.min, math.ceil, string.format
+
+-- geometry ------------------------------------------------------------
+local PW, PH, GUT, BRD = 420, 560, 22, 18
+UI.PW, UI.PH = PW, PH
+UI.TOP, UI.BOTTOM = 50, 54                  -- text area inside a page
+UI.AREA_H = PH - UI.TOP - UI.BOTTOM
+UI.INNER, UI.OUTER = 38, 34                 -- margins at the spine / at the outer edge
+local BW, BH = PW * 2 + GUT + BRD * 2, PH + BRD * 2
+
+UI.renderers = {}
+UI.sections = {}
+UI.spread = 1
+
+function UI:RegisterRenderer(kind, fn) self.renderers[kind] = fn end
+
+-- def = { key, label, icon, order, build = function(book) ... end }
+function UI:RegisterSection(def)
+    self.sections[#self.sections + 1] = def
+    table.sort(self.sections, function(a, b) return a.order < b.order end)
+end
+
+-- x of the text column on a page side
+function UI.TextX(side) return side == "left" and UI.OUTER or UI.INNER end
+function UI.TextW() return PW - UI.INNER - UI.OUTER end
+
+------------------------------------------------------------------------
+-- Text measuring for pagination
+------------------------------------------------------------------------
+local measureFrame = CreateFrame("Frame", nil, UIParent)
+measureFrame:SetSize(10, 10)
+measureFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", -2000, 2000)
+measureFrame:SetAlpha(0)
+local mfs = measureFrame:CreateFontString(nil, "OVERLAY")
+local measureCache = {}
+
+function UI.Measure(text, size, width, spacing, font)
+    local key = (font or UI.HEAD) .. size .. ":" .. width .. ":" .. (spacing or 0) .. ":" .. text
+    local v = measureCache[key]
+    if v then return v end
+    mfs:SetFont(font or UI.HEAD, size, "")
+    mfs:SetSpacing(spacing or 0)
+    mfs:SetWidth(width)
+    mfs:SetText(text)
+    v = mfs:GetStringHeight() or 0
+    if v <= 0 then
+        -- fallback estimate if the client cannot measure hidden text
+        local lines = ceil((#text * size * 0.48) / width)
+        v = lines * (size + (spacing or 0))
+    end
+    measureCache[key] = v
+    return v
+end
+
+function UI.MeasureWidth(text, size, font)
+    mfs:SetFont(font or UI.HEAD, size, "")
+    mfs:SetSpacing(0)
+    mfs:SetWidth(0)
+    mfs:SetText(text)
+    local w = mfs:GetStringWidth() or 0
+    if w <= 0 then w = size * 0.75 * #text end
+    return w
+end
+
+function UI.ClearCaches()
+    measureCache = {}
+    UI.storyCache = {}
+end
+UI.storyCache = {}
+
+------------------------------------------------------------------------
+-- Pagination
+------------------------------------------------------------------------
+local Book = {}
+Book.__index = Book
+
+function Book:Add(page)
+    self.pages[#self.pages + 1] = page
+    page.index = #self.pages
+    page.section = page.section or self.curSection
+    return page
+end
+
+-- make sure the next page is a left page
+function Book:PadToLeft(key)
+    if #self.pages % 2 == 1 then self:Add({ kind = "blank", noteKey = "before:" .. (key or "?") }) end
+end
+
+function Book:Start(key)
+    self.sectionStart[key] = #self.pages + 1
+    self.curSection = key
+end
+
+function UI.PageNumber(index) return index - 1 end
+
+function UI:Paginate()
+    local book = setmetatable({ pages = {}, dayPage = {}, sectionStart = {}, toc = {} }, Book)
+    book:Add({ kind = "endpaper" })
+    book:Add({ kind = "owner" })
+
+    local chapters = UI.Chapters()
+
+    -- table of contents: reserve the pages first, fill them at the end.
+    -- Heights as the contents page draws them: a chapter with its sub line 36, the appendix heading 36,
+    -- a part of the appendix 26; the first page loses the room of its title.
+    local TOC_FIRST, TOC_NEXT = UI.AREA_H - 76, UI.AREA_H
+    local function entryH(e) return (e.header or e.sub) and 36 or 26 end
+    local need = #chapters * 36 + 36 + #self.sections * 26
+    local tocPages = 1 + max(0, ceil((need - TOC_FIRST) / TOC_NEXT))
+    book:Start("toc")
+    local tocList = {}
+    for i = 1, tocPages do
+        tocList[i] = book:Add({ kind = "toc", first = (i == 1), entries = {}, numbered = true })
+    end
+
+    book:PadToLeft("diary")
+    book:Start("diary")
+    UI.LayoutDiary(book, chapters)
+
+    for _, sec in ipairs(self.sections) do
+      if not sec.enabled or sec.enabled() then
+        -- spreads start on a left page, the rest flows on (a note page someone already wrote on stays)
+        local wrote = WFD.C.notes and WFD.C.notes["before:" .. sec.key]
+        if sec.leftStart or wrote then book:PadToLeft(sec.key) end
+        book:Start(sec.key)
+        local ok, err = pcall(sec.build, book)
+        if not ok then WFD:Error("section " .. sec.key, err) end
+      end
+    end
+    if #book.pages % 2 == 1 then book:Add({ kind = "endpaper" }) end
+
+    -- fill the table of contents
+    local all = {}
+    for i, ch in ipairs(chapters) do
+        all[#all + 1] = { text = ch.roman .. ".  " .. ch.title, sub = ch.sub, page = ch.page }
+    end
+    all[#all + 1] = { header = true, text = L["Appendix"] }
+    for _, sec in ipairs(self.sections) do
+        if book.sectionStart[sec.key] then
+            all[#all + 1] = { text = L[sec.label], page = book.sectionStart[sec.key], icon = sec.icon }
+        end
+    end
+    local ti, room = 1, TOC_FIRST
+    for _, e in ipairs(all) do
+        local h = entryH(e)
+        if h > room and tocList[ti + 1] then
+            ti = ti + 1
+            room = TOC_NEXT
+        end
+        local tp = tocList[ti]
+        tp.entries[#tp.entries + 1] = e
+        room = room - h
+    end
+
+    self.book = book
+    return book
+end
+
+------------------------------------------------------------------------
+-- Navigation
+------------------------------------------------------------------------
+function UI:NumSpreads()
+    return self.book and ceil(#self.book.pages / 2) or 1
+end
+
+function UI:GoToPage(index)
+    if not index then return end
+    local s = ceil(index / 2)
+    local same = (s == self.spread)
+    if not same and (self.spread or 0) > 0 then
+        self.history = self.history or {}
+        table.insert(self.history, self.spread)
+        if #self.history > 30 then table.remove(self.history, 1) end
+    end
+    self:ShowSpread(s)
+    -- show which of the two pages was meant; when the spread is already open, this is all that happens,
+    -- so the page also turns in again and rustles
+    self:PointAt(index % 2 == 1 and "left" or "right", same)
+end
+
+function UI:TodayPage()
+    local b = self.book
+    if not b then return 1 end
+    local best
+    for day, p in pairs(b.dayPage) do
+        if not best or day > best then best = day end
+    end
+    return best and b.dayPage[best] or b.sectionStart.diary or 1
+end
+
+function UI:GoToDay(day)
+    if self.book and self.book.dayPage[day] then self:GoToPage(self.book.dayPage[day]) end
+end
+
+-- quiet book sounds, if the client knows them
+local function sound(name, fallback)
+    local id = SOUNDKIT and SOUNDKIT[name] or fallback
+    if id and PlaySound then pcall(PlaySound, id) end
+end
+UI.Sound = sound
+
+local function fadeIn(frame)
+    frame:SetAlpha(0)
+    frame.fadeT = 0
+    frame:SetScript("OnUpdate", function(self, dt)
+        self.fadeT = self.fadeT + dt
+        local a = min(1, self.fadeT / 0.22)
+        self:SetAlpha(a)
+        if a >= 1 then self:SetScript("OnUpdate", nil) end
+    end)
+end
+
+-- traces of use on a page, more of them the older the book: a mug ring, foxing, a folded corner.
+-- Always the same traces on the same page.
+local function hash(n, salt) return ((n * 2654435761 + salt * 40503) % 997) / 997 end
+local ears = {}      -- page canvas -> its folded-corner frame
+function UI.DrawWear(pool, canvas, side, index)
+    local w = UI.Wear and UI.Wear() or 0
+    if ears[canvas] then ears[canvas]:Hide() end
+    if w <= 0 or index <= 2 then return end
+    -- a ring left by a mug: small dots around a circle
+    if hash(index, 1) < w * 0.30 then
+        local cx = PW * (0.25 + 0.5 * hash(index, 2))
+        local cy = PH * (0.22 + 0.56 * hash(index, 3))
+        local r = 22 + 14 * hash(index, 4)
+        local a = 0.06 + 0.07 * w
+        for k = 0, 23 do
+            local ang = k / 24 * math.pi * 2
+            local wob = 1 + 0.06 * math.sin(ang * 3 + index)
+            local d = pool:Circle(5 + 2 * hash(index * 31 + k, 5), { 0.32, 0.19, 0.07, a * (0.6 + 0.6 * hash(k, index)) }, "BACKGROUND", 1)
+            d:SetPoint("CENTER", canvas, "TOPLEFT", cx + math.cos(ang) * r * wob, -(cy + math.sin(ang) * r * wob))
+        end
+    end
+    -- foxing: little brown spots near the edges
+    if w > 0.2 then
+        for k = 1, floor(hash(index, 6) * 6 * w) do
+            local x = (side == "left") and (14 + 60 * hash(index + k, 7)) or (PW - 14 - 60 * hash(index + k, 7))
+            local y = 30 + (PH - 60) * hash(index * 7 + k, 8)
+            local s = 2 + 4 * hash(index + k, 9)
+            local d = pool:Circle(s, { 0.36, 0.22, 0.09, 0.14 + 0.10 * w }, "BACKGROUND", 1)
+            d:SetPoint("CENTER", canvas, "TOPLEFT", x, -y)
+        end
+    end
+    -- a folded upper outer corner, drawn in a small frame of its own that cuts it at the page edge
+    -- (the whole page is not clipped: models in paintings and cards do not like that)
+    local ear = ears[canvas]
+    if not ear then
+        ear = CreateFrame("Frame", nil, canvas)
+        ear:SetSize(40, 40)
+        ear:SetFrameLevel(canvas:GetFrameLevel() + 8)
+        if ear.SetClipsChildren then ear:SetClipsChildren(true) end
+        local inner = CreateFrame("Frame", nil, ear)
+        inner:SetAllPoints()
+        ear.shadow = UI.Diamond(inner, 33, { 0, 0, 0, 0.38 }, "ARTWORK", 0)
+        ear.flap = UI.Diamond(inner, 26, { 0.29, 0.21, 0.13, 1 }, "ARTWORK", 1)
+        ear.ok = ear.SetClipsChildren ~= nil
+        ears[canvas] = ear
+    end
+    ear:ClearAllPoints()
+    ear:SetPoint(side == "left" and "TOPLEFT" or "TOPRIGHT", canvas, side == "left" and "TOPLEFT" or "TOPRIGHT", 0, 0)
+    if ear.ok and hash(index, 10) < w * 0.35 then
+        local s = 26 + 10 * hash(index, 11)
+        local corner = side == "left" and "TOPLEFT" or "TOPRIGHT"
+        ear.shadow:SetSize(s + 7, s + 7)
+        ear.shadow:ClearAllPoints()
+        ear.shadow:SetPoint("CENTER", ear, corner, 0, 0)
+        ear.flap:SetSize(s, s)
+        ear.flap:ClearAllPoints()
+        ear.flap:SetPoint("CENTER", ear, corner, 0, 0)
+        ear:Show()
+    else
+        ear:Hide()
+    end
+end
+
+function UI:RenderPage(side, index)
+    local pg = self.pageFrames[side]
+    local pool = pg.pool
+    pool:Begin()
+    local page = self.book and self.book.pages[index]
+    if not page then pool:End() return end
+    if UI.HideMarble then UI.HideMarble(pg.canvas) end
+    UI.DrawWear(pool, pg.canvas, side, index)
+    local tx, tw = UI.TextX(side), UI.TextW()
+    if page.head then
+        local h = pool:Text(9, c.inkFaint, UI.FONT, "CENTER")
+        h:SetText(page.head:upper())
+        h:SetPoint("TOP", pg.canvas, "TOPLEFT", tx + tw / 2, -24)
+        local r = pool:Grad("HORIZONTAL", { 0.78, 0.60, 0.26, 0 }, { 0.78, 0.60, 0.26, 0.45 })
+        r:SetSize(tw / 2, 1)
+        r:SetPoint("TOPLEFT", pg.canvas, "TOPLEFT", tx, -38)
+        local r2 = pool:Grad("HORIZONTAL", { 0.78, 0.60, 0.26, 0.45 }, { 0.78, 0.60, 0.26, 0 })
+        r2:SetSize(tw / 2, 1)
+        r2:SetPoint("TOPLEFT", pg.canvas, "TOPLEFT", tx + tw / 2, -38)
+    end
+    if page.numbered ~= false and page.kind ~= "endpaper" and page.kind ~= "owner" then
+        local n = pool:Text(13, c.inkFaint, UI.HEAD, "CENTER")
+        n:SetText("~ " .. UI.PageNumber(index) .. " ~")
+        n:SetPoint("BOTTOM", pg.canvas, "BOTTOMLEFT", tx + tw / 2, 22)
+        local toc = self.book.sectionStart.toc
+        if toc and page.kind ~= "toc" then
+            local hot = pool:Hot({ L["To the contents"], L["Right-click to go to a page."] }, function() UI:GoToPage(toc) end)
+            hot.onRight = function() if UI.AskPage then UI:AskPage() end end
+            hot:SetPoint("TOPLEFT", n, "TOPLEFT", -6, 4)
+            hot:SetPoint("BOTTOMRIGHT", n, "BOTTOMRIGHT", 6, -4)
+        end
+    end
+    local fn = self.renderers[page.kind]
+    if fn then
+        local ok, err = pcall(fn, pool, page, side, pg.canvas, index)
+        if not ok then WFD:Error("page " .. page.kind, err) end
+    end
+    pool:End()
+end
+
+function UI:ShowSpread(s)
+    if not self.bookFrame then return end
+    s = max(1, min(s or 1, self:NumSpreads()))
+    local changed = (s ~= self.spread)
+    local old = self.spread
+    self.spread = s
+    self:RenderPage("left", s * 2 - 1)
+    self:RenderPage("right", s * 2)
+    if changed then
+        local turning = self.spreadShownOnce and (old or 0) > 0 and self.TurnSweep and WFD.S.turnAnim ~= false
+        if self.spreadShownOnce then sound("IG_ABILITY_PAGE_TURN", 836) end
+        self.spreadShownOnce = true
+        if turning then
+            -- a leaf is turned over the spine: forwards from right to left, backwards the other way
+            self:TurnSweep(s > old and 1 or -1)
+        else
+            fadeIn(self.pageFrames.left.canvas)
+            fadeIn(self.pageFrames.right.canvas)
+        end
+    end
+    self.prevBtn:SetEnabled(s > 1)
+    self.nextBtn:SetEnabled(s < self:NumSpreads())
+    self:RememberPlace(s)
+    self:UpdateThumbs()
+    if self.UpdateBack then self:UpdateBack() end
+    local today = self:TodayPage()
+    self.followToday = (ceil(today / 2) == s)
+end
+
+-- Where reading stopped, kept so that it survives a growing book: a diary day, or a page within its section.
+-- (Page numbers alone would wander as new days are written in front of the appendix.)
+function UI:RememberPlace(s)
+    local b, C = self.book, WFD.C
+    if not b or not C then return end
+    local left = s * 2 - 1
+    local page = b.pages[left]
+    if not page then return end
+    local day
+    for d, idx in pairs(b.dayPage) do
+        if (idx == left or idx == left + 1) and (not day or d < day) then day = d end
+    end
+    if s == 1 then
+        C.lastPlace = nil
+    else
+        local start = page.section and b.sectionStart[page.section]
+        C.lastPlace = { section = page.section, offset = start and (left - start) or nil, day = day }
+    end
+end
+
+-- the page to open at: where reading stopped, else the start
+function UI.PlacePage(book)
+    local p = WFD.C and WFD.C.lastPlace
+    if not p then return 1 end
+    if p.day and book.dayPage[p.day] then return book.dayPage[p.day] end
+    local start = p.section and book.sectionStart[p.section]
+    if start then
+        local idx = start + (p.offset or 0)
+        local page = book.pages[idx]
+        -- still inside the same part of the book (it may have become shorter)
+        if page and page.section == p.section then return idx end
+        return start
+    end
+    return 1
+end
+
+-- a soft gold glow around one page that fades away
+function UI:PointAt(side, again)
+    local pg = self.pageFrames and self.pageFrames[side]
+    if not pg or not pg.glow then return end
+    if again then
+        sound("IG_ABILITY_PAGE_TURN", 836)
+        fadeIn(pg.canvas)
+    end
+    local g = pg.glow
+    g.t = 0
+    g:SetAlpha(1)
+    g:Show()
+    g:SetScript("OnUpdate", function(self, dt)
+        self.t = self.t + dt
+        local a = 1 - self.t / 0.9
+        if a <= 0 then
+            self:SetScript("OnUpdate", nil)
+            self:Hide()
+        else
+            self:SetAlpha(a * a)
+        end
+    end)
+end
+
+function UI:Flip(dir)
+    self:ShowSpread(self.spread + dir)
+end
+
+------------------------------------------------------------------------
+-- Thumb index
+------------------------------------------------------------------------
+local TAB_COLORS = {
+    { 0.42, 0.26, 0.12 }, { 0.52, 0.10, 0.08 }, { 0.62, 0.46, 0.10 }, { 0.20, 0.38, 0.18 }, { 0.30, 0.14, 0.12 },
+    { 0.16, 0.28, 0.48 }, { 0.58, 0.36, 0.06 }, { 0.36, 0.16, 0.44 }, { 0.10, 0.36, 0.36 },
+}
+
+function UI:ThumbList()
+    local list = {
+        { key = "toc", label = L["Contents"], icon = "journal" },
+        { key = "diary", label = L["Diary"], icon = "quill" },
+    }
+    for _, sec in ipairs(self.sections) do
+        if sec.thumb ~= false then
+            list[#list + 1] = { key = sec.key, label = sec.thumbText and sec.thumbText() or L[sec.label], icon = sec.icon }
+        end
+    end
+    for i, t in ipairs(list) do t.col = TAB_COLORS[((i - 1) % #TAB_COLORS) + 1] end
+    return list
+end
+
+local TAB_W, TAB_H, TAB_GAP = 66, 38, 4
+
+local function paintTab(t, on, hover)
+    local k = on and 1.45 or (hover and 1.2 or 1)
+    local r, g, b = min(1, t.col[1] * k), min(1, t.col[2] * k), min(1, t.col[3] * k)
+    UI.Gradient(t.body, "HORIZONTAL", { r * 0.45, g * 0.45, b * 0.45, 1 }, { r, g, b, 1 })
+    t.cap:SetVertexColor(r, g, b, 1)
+    t.ring:SetVertexColor(col4(on and c.gold or { 0.12, 0.07, 0.03, 1 }))
+    t.icon:SetDesaturated(false)
+    local v = (on or hover) and 1 or 0.78
+    t.icon:SetVertexColor(v, v, v)
+    t.icon:SetAlpha(1)
+    t.trimTop:SetAlpha(on and 0.9 or 0.45)
+    t.trimBot:SetAlpha(on and 0.9 or 0.45)
+end
+
+-- a tab sticks out further when it is the open one, a little when the mouse is on it, less while pressed
+local function placeTab(t)
+    local out = t.on and 10 or (t.hover and 5 or 0)
+    if t.down then out = out - 3 end
+    t:ClearAllPoints()
+    t:SetPoint("TOPLEFT", UI.bookFrame, "TOPLEFT", BW - BRD - 14 + out, t.y)
+end
+
+function UI:UpdateThumbs()
+    if not self.thumbs or not self.book then return end
+    -- two sections can share a spread now: the tab that was clicked wins while its section is in view,
+    -- otherwise the section of the left page
+    local left, right = self.spread * 2 - 1, self.spread * 2
+    local activeKey, bestStart = nil, 0
+    local want = self.wantTab and self.book.sectionStart[self.wantTab]
+    if want and (want == left or want == right) then
+        activeKey = self.wantTab
+    else
+        self.wantTab = nil
+        for _, t in ipairs(self.thumbs) do
+            local st = self.book.sectionStart[t.key]
+            if st and st <= left and st > bestStart then activeKey, bestStart = t.key, st end
+        end
+    end
+    for _, t in ipairs(self.thumbs) do
+        t.on = (t.key == activeKey)
+        placeTab(t)
+        paintTab(t, t.on, t.hover)
+    end
+    if self.PaintNewDots then self:PaintNewDots(activeKey) end
+end
+
+local function buildThumbs(bf)
+    UI.thumbs = {}
+    local list = UI:ThumbList()
+    -- tabs shrink a little when the book has many sections, so they always fit beside the pages
+    local H = min(TAB_H, floor((PH - 12) / #list) - TAB_GAP)
+    local total = #list * (H + TAB_GAP) - TAB_GAP
+    local y = -BRD - max(10, (PH - total) / 2)
+    for _, def in ipairs(list) do
+        local t = CreateFrame("Button", nil, bf)
+        t:SetSize(TAB_W + H / 2, H)
+        t:SetFrameLevel(bf:GetFrameLevel() + 1)
+        t.col = def.col
+        -- drop shadow
+        local sh = UI.Fill(t, { 0, 0, 0 }, "BACKGROUND", 0, 0.4)
+        sh:SetPoint("TOPLEFT", 0, -3)
+        sh:SetSize(TAB_W, H)
+        local shc = UI.Circle(t, H, { 0, 0, 0, 0.4 }, "BACKGROUND", 0)
+        shc:SetPoint("CENTER", t, "LEFT", TAB_W, -3)
+        -- body with a rounded end
+        t.body = t:CreateTexture(nil, "ARTWORK", nil, 0)
+        t.body:SetPoint("TOPLEFT", 0, 0)
+        t.body:SetSize(TAB_W, H)
+        t.cap = UI.Circle(t, H, { 1, 1, 1, 1 }, "ARTWORK", 0)
+        t.cap:SetPoint("CENTER", t, "LEFT", TAB_W, 0)
+        -- gold trim
+        t.trimTop = UI.Fill(t, c.gold, "ARTWORK", 2)
+        t.trimTop:SetSize(TAB_W - 6, 1)
+        t.trimTop:SetPoint("TOPLEFT", 0, -3)
+        t.trimBot = UI.Fill(t, c.gold, "ARTWORK", 2)
+        t.trimBot:SetSize(TAB_W - 6, 1)
+        t.trimBot:SetPoint("BOTTOMLEFT", 0, 3)
+        local sheen = UI.GradRect(t, "VERTICAL", { 0, 0, 0, 0.25 }, { 1, 1, 1, 0.12 }, "ARTWORK", 1)
+        sheen:SetPoint("TOPLEFT", 0, 0)
+        sheen:SetSize(TAB_W, H)
+        -- round icon in a ring at the visible end
+        t.ring = UI.Circle(t, H - 6, c.gold, "ARTWORK", 3)
+        t.ring:SetPoint("CENTER", t, "LEFT", TAB_W - 4, 0)
+        t.icon = t:CreateTexture(nil, "ARTWORK", nil, 4)
+        t.icon:SetSize(H - 11, H - 11)
+        t.icon:SetPoint("CENTER", t.ring, "CENTER")
+        t.icon:SetTexture(UI.Icon(def.icon))
+        t.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        UI.Round(t.icon, t)
+        t.key, t.label, t.y = def.key, def.label, y
+        t:SetScript("OnClick", function(self)
+            local st = UI.book and UI.book.sectionStart[self.key]
+            if st then
+                UI.wantTab = self.key
+                UI:GoToPage(st)
+            end
+        end)
+        t:SetScript("OnMouseDown", function(self) self.down = true; placeTab(self) end)
+        t:SetScript("OnMouseUp", function(self) self.down = nil; placeTab(self) end)
+        t:SetScript("OnEnter", function(self)
+            self.hover = true
+            placeTab(self)
+            paintTab(self, self.on, true)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(self.label, 1, 0.86, 0.5)
+            local st = UI.book and UI.book.sectionStart[self.key]
+            if st then GameTooltip:AddLine(format(L["Page %d"], UI.PageNumber(st)), 0.8, 0.8, 0.8) end
+            if self.newCount and self.newCount > 0 then
+                GameTooltip:AddLine(format(L["%d new since you last read"], self.newCount), 1, 0.45, 0.35)
+            end
+            GameTooltip:AddLine(L["Click to open this part of the book."], 0.5, 0.8, 1)
+            GameTooltip:Show()
+        end)
+        t:SetScript("OnLeave", function(self)
+            self.hover, self.down = nil, nil
+            placeTab(self)
+            paintTab(self, self.on, false)
+            GameTooltip:Hide()
+        end)
+        paintTab(t, false, false)
+        UI.thumbs[#UI.thumbs + 1] = t
+        y = y - H - TAB_GAP
+    end
+end
+
+------------------------------------------------------------------------
+-- Building the frames
+------------------------------------------------------------------------
+local function leather(f, inset)
+    UI.Leather(f, inset, 1, 0.30)
+    UI.EdgeFade(f, "LEFT", 60, { 0, 0, 0 }, 0.45, "BACKGROUND", 3, inset)
+    UI.EdgeFade(f, "RIGHT", 60, { 0, 0, 0 }, 0.45, "BACKGROUND", 3, inset)
+    UI.EdgeFade(f, "BOTTOM", 60, { 0, 0, 0 }, 0.45, "BACKGROUND", 3, inset)
+    UI.EdgeFade(f, "TOP", 50, { 1, 0.80, 0.55 }, 0.07, "BACKGROUND", 4, inset)
+end
+
+local function stitches(frame, inset, w, h, col)
+    for x = inset + 8, w - inset - 14, 12 do
+        local a = UI.Fill(frame, col, "BORDER", 5); a:SetSize(7, 1); a:SetPoint("TOPLEFT", x, -inset)
+        local b = UI.Fill(frame, col, "BORDER", 5); b:SetSize(7, 1); b:SetPoint("TOPLEFT", x, -(h - inset - 1))
+    end
+    for y = inset + 8, h - inset - 14, 12 do
+        local a = UI.Fill(frame, col, "BORDER", 5); a:SetSize(1, 7); a:SetPoint("TOPLEFT", inset, -y)
+        local b = UI.Fill(frame, col, "BORDER", 5); b:SetSize(1, 7); b:SetPoint("TOPLEFT", w - inset - 1, -y)
+    end
+end
+
+local function buildBook(holder)
+    local bf = UI.Frame(holder, BW, BH)
+    bf:SetPoint("CENTER")
+    UI.Backdrop(bf, "tooltip", 16, 4, c.leather, { 0.78, 0.60, 0.28, 1 })
+    leather(bf, 4)
+    stitches(bf, 9, BW, BH, { 0.85, 0.66, 0.32, 0.4 })
+    bf:EnableMouse(true)
+    bf:RegisterForDrag("LeftButton")
+    bf:SetScript("OnDragStart", function() holder:StartMoving() end)
+    bf:SetScript("OnDragStop", function()
+        holder:StopMovingOrSizing()
+        if UI.SavePosition then UI:SavePosition() end
+    end)
+    bf:EnableMouseWheel(true)
+    bf:SetScript("OnMouseWheel", function(_, delta)
+        if IsControlKeyDown() and UI.StepScale then UI:StepScale(delta) return end
+        UI:Flip(delta > 0 and -1 or 1)
+    end)
+    UI.bookFrame = bf
+    local base = bf:GetFrameLevel()
+
+    -- page stacks peeking out at the bottom
+    local stack = CreateFrame("Frame", nil, bf)
+    stack:SetPoint("TOPLEFT", BRD, -BRD)
+    stack:SetSize(PW * 2 + GUT, PH)
+    stack:SetFrameLevel(base + 2)
+    local cols = { { 0.22, 0.16, 0.10 }, { 0.08, 0.05, 0.03 }, { 0.20, 0.14, 0.09 }, { 0.06, 0.04, 0.02 } }  -- dark leaves under the pages
+    for i = #cols, 1, -1 do
+        local l = UI.Fill(stack, cols[i], "BACKGROUND", -6 + i)
+        l:SetPoint("TOPLEFT", stack, "TOPLEFT", -i, -i * 1.5)
+        l:SetPoint("BOTTOMRIGHT", stack, "BOTTOMLEFT", PW, -i * 1.5)
+        local r = UI.Fill(stack, cols[i], "BACKGROUND", -6 + i)
+        r:SetPoint("TOPLEFT", stack, "TOPLEFT", PW + GUT, -i * 1.5)
+        r:SetPoint("BOTTOMRIGHT", stack, "BOTTOMRIGHT", i, -i * 1.5)
+    end
+    local gutL = UI.GradRect(stack, "HORIZONTAL", { 0.22, 0.11, 0.05, 1 }, { 0.04, 0.02, 0.01, 1 }, "BACKGROUND", 4)
+    gutL:SetPoint("TOPLEFT", PW, 0)
+    gutL:SetSize(GUT / 2, PH)
+    local gutR = UI.GradRect(stack, "HORIZONTAL", { 0.04, 0.02, 0.01, 1 }, { 0.22, 0.11, 0.05, 1 }, "BACKGROUND", 4)
+    gutR:SetPoint("TOPLEFT", PW + GUT / 2, 0)
+    gutR:SetSize(GUT / 2, PH)
+
+    -- the two pages
+    UI.pageFrames = {}
+    for _, side in ipairs({ "left", "right" }) do
+        local p = UI.Page(bf, PW, PH, side == "left" and "right" or "left")
+        p:SetFrameLevel(base + 3)
+        if side == "left" then p:SetPoint("TOPLEFT", BRD, -BRD) else p:SetPoint("TOPLEFT", BRD + PW + GUT, -BRD) end
+        local canvas = CreateFrame("Frame", nil, p)
+        canvas:SetAllPoints()
+        canvas:SetFrameLevel(base + 6)
+
+        p.canvas = canvas
+        p.pool = UI.NewPool(canvas)
+        -- the glow that shows which page a link or tab led to
+        local glow = CreateFrame("Frame", nil, p)
+        glow:SetAllPoints()
+        glow:SetFrameLevel(base + 12)
+        glow:EnableMouse(false)
+        for _, edge in ipairs({ "TOP", "BOTTOM", "LEFT", "RIGHT" }) do
+            UI.EdgeFade(glow, edge, 34, { 0.95, 0.72, 0.28 }, 0.42, "OVERLAY", 0)
+        end
+        UI.Fill(glow, { 1, 0.85, 0.5 }, "OVERLAY", -1, 0.06):SetAllPoints()
+        glow:Hide()
+        p.glow = glow
+        UI.pageFrames[side] = p
+    end
+
+    -- page turning
+    UI.prevBtn = UI.PageArrow(UI.pageFrames.left, "Prev", function() UI:Flip(-1) end)
+    UI.prevBtn:SetPoint("BOTTOMLEFT", 12, 10)
+    UI.prevBtn:SetFrameLevel(base + 12)
+    UI.nextBtn = UI.PageArrow(UI.pageFrames.right, "Next", function() UI:Flip(1) end)
+    UI.nextBtn:SetPoint("BOTTOMRIGHT", -12, 10)
+    UI.nextBtn:SetFrameLevel(base + 12)
+
+    -- ribbon bookmark: always leads to today's entry
+    -- the ribbon bookmark: it lies inside the book and only its end shows, hanging out below the
+    -- binding - muted wine red with gold edges, cut to a swallowtail
+    local RW, HANG, UNDER = 12, 34, 8
+    local rb = CreateFrame("Button", nil, holder)
+    rb:SetFrameLevel(max(0, bf:GetFrameLevel() - 1))          -- behind the book: the binding covers its top
+    rb:SetSize(RW, HANG + UNDER)
+    rb:SetPoint("TOP", bf, "BOTTOMLEFT", BRD + PW + GUT / 2, UNDER)
+    local DARK, MID, LIGHT = { 0.17, 0.045, 0.035 }, { 0.30, 0.08, 0.06 }, { 0.42, 0.14, 0.09 }
+    local half = RW / 2
+    local NOTCH = 8
+    -- woven silk: darker at the edges, a soft light crease in the middle
+    local l = UI.GradRect(rb, "HORIZONTAL", { DARK[1], DARK[2], DARK[3], 1 }, { LIGHT[1], LIGHT[2], LIGHT[3], 1 }, "ARTWORK", 0)
+    l:SetPoint("TOPLEFT"); l:SetPoint("BOTTOMLEFT", 0, NOTCH); l:SetWidth(half)
+    local r = UI.GradRect(rb, "HORIZONTAL", { MID[1], MID[2], MID[3], 1 }, { DARK[1], DARK[2], DARK[3], 1 }, "ARTWORK", 0)
+    r:SetPoint("TOPRIGHT"); r:SetPoint("BOTTOMRIGHT", 0, NOTCH); r:SetWidth(half)
+    -- gold threads along both edges, as on the binding
+    for _, side in ipairs({ "LEFT", "RIGHT" }) do
+        local g = UI.Fill(rb, c.gold, "ARTWORK", 2, 0.55)
+        g:SetWidth(1)
+        g:SetPoint("TOP" .. side, rb, "TOP" .. side, side == "LEFT" and 1 or -1, 0)
+        g:SetPoint("BOTTOM" .. side, rb, "BOTTOM" .. side, side == "LEFT" and 1 or -1, NOTCH)
+    end
+    -- the swallowtail: a V cut into the end, row by row; the points sit at the outer edges
+    for k = 0, NOTCH - 1 do
+        local w = half * (k + 0.5) / NOTCH
+        local ta = UI.Fill(rb, { (DARK[1] + LIGHT[1]) / 2, (DARK[2] + LIGHT[2]) / 2, (DARK[3] + LIGHT[3]) / 2 }, "ARTWORK", 0)
+        ta:SetSize(w, 1)
+        ta:SetPoint("BOTTOMLEFT", rb, "BOTTOMLEFT", 0, k)
+        local tb = UI.Fill(rb, { (DARK[1] + MID[1]) / 2, (DARK[2] + MID[2]) / 2, (DARK[3] + MID[3]) / 2 }, "ARTWORK", 0)
+        tb:SetSize(w, 1)
+        tb:SetPoint("BOTTOMRIGHT", rb, "BOTTOMRIGHT", 0, k)
+    end
+    -- in the shadow of the book where it comes out
+    local shade = UI.GradRect(rb, "VERTICAL", { 0, 0, 0, 0 }, { 0, 0, 0, 0.7 }, "OVERLAY", 0)
+    shade:SetPoint("TOPLEFT"); shade:SetPoint("TOPRIGHT"); shade:SetHeight(UNDER + 8)
+    -- it belongs to the open book: hidden with it (the closed cover has none)
+    bf:HookScript("OnShow", function() rb:Show() end)
+    bf:HookScript("OnHide", function() rb:Hide() end)
+    rb:SetScript("OnClick", function() UI:GoToPage(UI:TodayPage()) end)
+    rb:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:SetText(L["Bookmark"], 1, 0.86, 0.5)
+        GameTooltip:AddLine(L["Click to open today's entry."], 0.9, 0.9, 0.9)
+        GameTooltip:Show()
+    end)
+    rb:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    -- close
+    local ok, close = pcall(CreateFrame, "Button", nil, bf, "UIPanelCloseButton")
+    if not (ok and close) then
+        close = UI.Button(bf, "X", 24, 24)
+    end
+    close:SetPoint("TOPRIGHT", bf, "TOPRIGHT", 6, 6)
+    close:SetFrameLevel(base + 20)
+    close:SetScript("OnClick", function() holder:Hide() end)
+
+    buildThumbs(bf)
+    bf:Hide()
+end
+
+------------------------------------------------------------------------
+-- The closed cover (start screen)
+------------------------------------------------------------------------
+local CVW, CVH = 450, BH
+local BRASS = { 0.76, 0.58, 0.26, 1 }
+
+-- the faction emblem, gold-stamped: path, texture coordinates, whether it is a square icon
+local CRESTS = {
+    Alliance = {
+        { "Interface\\Timer\\Alliance-Logo", { 0, 1, 0, 1 } },
+        { "Interface\\FriendsFrame\\PlusManz-Alliance", { 0, 1, 0, 1 } },
+        { "Interface\\Icons\\INV_BannerPVP_02", { 0.08, 0.92, 0.08, 0.92 }, true },
+    },
+    Horde = {
+        { "Interface\\Timer\\Horde-Logo", { 0, 1, 0, 1 } },
+        { "Interface\\FriendsFrame\\PlusManz-Horde", { 0, 1, 0, 1 } },
+        { "Interface\\Icons\\INV_BannerPVP_01", { 0.08, 0.92, 0.08, 0.92 }, true },
+    },
+}
+local function factionCrest()
+    local faction = UnitFactionGroup and UnitFactionGroup("player")
+    for _, e in ipairs(CRESTS[faction] or {}) do
+        if UI.Has(e[1]) then return e[1], e[2], e[3] end
+    end
+    return UI.Icon("journal"), { 0.08, 0.92, 0.08, 0.92 }, true
+end
+
+-- how worn the book is: nothing on the first day, fully worn after about four months
+function UI.Wear()
+    return math.max(0, math.min(1, (WFD:NumDays() - 1) / 120))
+end
+
+-- the binding grows with the honours: corner studs change metal with the honour points,
+-- a gem is set into the lozenge for every ten tiers, the spine gets a gold mark for every ten levels
+UI.COVER_METALS = { { 150, 1 }, { 500, 2 }, { 1000, 3 }, { 1800, 4 }, { 2800, 5 } }
+local GEM_COLOURS = {
+    { 0.80, 0.12, 0.10 }, { 0.16, 0.38, 0.90 }, { 0.16, 0.70, 0.28 }, { 0.62, 0.22, 0.80 },
+    { 0.95, 0.70, 0.12 }, { 0.20, 0.75, 0.80 }, { 0.92, 0.92, 0.95 }, { 0.95, 0.38, 0.10 },
+}
+
+function UI:CoverGrowth()
+    local _, sum = WFD:HonourState()
+    local metal = 0
+    for _, m in ipairs(UI.COVER_METALS) do if sum.points >= m[1] then metal = m[2] end end
+    local nextMetal
+    for _, m in ipairs(UI.COVER_METALS) do if sum.points < m[1] then nextMetal = m break end end
+    local level = UnitLevel("player") or 1
+    if WFD.demo and WFD.C.level then level = WFD.C.level end
+    return {
+        points = sum.points, metal = metal, nextMetal = nextMetal,
+        tiers = sum.tiers, gems = math.min(8, floor(sum.tiers / 10)),
+        marks = math.min(6, floor(level / 10)), level = level,
+    }
+end
+
+function UI:RefreshCoverGrowth()
+    local cv = self.cover
+    if not cv or not cv.deco then return end
+    local ok, g = pcall(self.CoverGrowth, self)
+    if not ok then return end
+    cv.growth = g
+    for _, s in ipairs(cv.studs) do
+        local shown = g.metal > 0
+        s.shadow:SetShown(shown)
+        s.body:SetShown(shown)
+        s.shine:SetShown(shown)
+        if shown then s.body:SetVertexColor(col4(WFD.METALS[g.metal].col)) end
+    end
+    for i, gem in ipairs(cv.gems) do
+        local shown = i <= g.gems
+        gem.setting:SetShown(shown)
+        gem.stone:SetShown(shown)
+        gem.spark:SetShown(shown)
+        if shown then
+            local col = GEM_COLOURS[i]
+            gem.stone:SetVertexColor(col[1], col[2], col[3], 1)
+        end
+    end
+    for i, d in ipairs(cv.spine) do d:SetShown(i <= g.marks) end
+    -- the wear of the days
+    local w = UI.Wear()
+    for _, e in ipairs(cv.wear) do
+        local a = e.from and (w > e.from and e.a * w or 0) or e.a * w
+        if e.edge then
+            local from, to = { 1, 0.82, 0.58, a }, { 1, 0.82, 0.58, 0 }
+            if e.edge == "TOP" then UI.Gradient(e.tex, "VERTICAL", to, from)
+            elseif e.edge == "BOTTOM" then UI.Gradient(e.tex, "VERTICAL", from, to)
+            elseif e.edge == "LEFT" then UI.Gradient(e.tex, "HORIZONTAL", from, to)
+            else UI.Gradient(e.tex, "HORIZONTAL", to, from) end
+        else
+            e.tex:SetAlpha(a)
+        end
+    end
+end
+
+-- tooltip of the closed book: what the binding shows, and what comes next
+function UI:CoverTooltip(owner)
+    local g = self.cover and self.cover.growth
+    if not g then return end
+    GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+    GameTooltip:SetText(L["The binding"], 1, 0.86, 0.5)
+    local metalName = g.metal > 0 and L[WFD.METALS[g.metal].name] or L["none yet"]
+    GameTooltip:AddDoubleLine(L["Corner studs"], metalName, 0.9, 0.9, 0.9, 1, 0.82, 0.4)
+    if g.nextMetal then
+        GameTooltip:AddLine(format(L["Next metal at %d honour points (now %d)."], g.nextMetal[1], g.points), 0.7, 0.7, 0.7, true)
+    end
+    GameTooltip:AddDoubleLine(L["Gems"], g.gems .. " / 8", 0.9, 0.9, 0.9, 1, 0.82, 0.4)
+    if g.gems < 8 then
+        GameTooltip:AddLine(format(L["One gem for every ten honour tiers (now %d)."], g.tiers), 0.7, 0.7, 0.7, true)
+    end
+    GameTooltip:AddDoubleLine(L["Gold marks on the spine"], g.marks .. " / 6", 0.9, 0.9, 0.9, 1, 0.82, 0.4)
+    if g.marks < 6 then GameTooltip:AddLine(L["One for every ten levels."], 0.7, 0.7, 0.7, true) end
+    GameTooltip:Show()
+end
+
+function UI:RefreshCover()
+    local cv = self.cover
+    if not cv or not WFD.C then return end
+    local C = WFD.C
+    self:RefreshCoverGrowth()
+    cv.name:SetText(C.name or UnitName("player"))
+    cv.who:SetText(((C.race or "") .. "  -  " .. (C.class or "")):upper())
+    if C.obituary then
+        cv.since:SetText(date(WFD.loc.date, C.born) .. "  -  " .. date(WFD.loc.date, C.obituary.t))
+        cv.of:SetText(L["In memoriam"])
+    else
+        cv.since:SetText(format(L["Begun on %s"], date(WFD.loc.date, C.born)))
+        cv.of:SetText(L["of"])
+    end
+    -- names and lines of any length and language fit their plate
+    UI.FitText(cv.name, 230, 30, 16)
+    UI.FitText(cv.who, 236, 10, 8, UI.FONT)
+    UI.FitText(cv.of, 230, 14, 10)
+    UI.FitText(cv.since, 300, 14, 10)
+    local path, tc, isIcon = factionCrest()
+    cv.crest:SetTexture(path)
+    cv.crest:SetTexCoord(tc[1], tc[2], tc[3], tc[4])
+    -- emblems are stamped in gold; a square icon keeps a little of its colour
+    cv.crest:SetDesaturated(true)
+    if isIcon then
+        cv.crest:SetSize(112, 112)
+        cv.crest:SetVertexColor(1.0, 0.82, 0.45, 1)
+    else
+        cv.crest:SetSize(108, 108)
+        cv.crest:SetVertexColor(1.0, 0.80, 0.38, 1)
+    end
+    cv.demo:SetShown(WFD.demo and true or false)
+end
+
+-- brass corner piece: a diamond cut by the corner of the cover, with two rivets
+local function brassCorner(cv, point, dx, dy)
+    local f = CreateFrame("Frame", nil, cv)
+    f:SetSize(48, 48)
+    f:SetPoint(point, cv, point, dx * 2, dy * 2)
+    f:SetFrameLevel(cv:GetFrameLevel() + 6)
+    if not f.SetClipsChildren then return end
+    f:SetClipsChildren(true)
+    local layers = {
+        { 72, { 0.30, 0.21, 0.08 } }, { 68, BRASS }, { 58, { 0.52, 0.38, 0.14 } }, { 54, { 0.84, 0.66, 0.32 } },
+    }
+    for i, l in ipairs(layers) do
+        local d = UI.Diamond(f, l[1], l[2], "ARTWORK", i)
+        d:SetPoint("CENTER", f, point, 0, 0)
+    end
+    for _, r in ipairs({ { 13, 5 }, { 5, 13 } }) do
+        local rx, ry = r[1] * -dx, r[2] * -dy
+        local s = UI.Circle(f, 6, { 0.25, 0.17, 0.06, 1 }, "OVERLAY", 0)
+        s:SetPoint("CENTER", f, point, rx + 4 * -dx, ry + 4 * -dy)
+        local h = UI.Circle(f, 3, { 1, 0.90, 0.60, 1 }, "OVERLAY", 1)
+        h:SetPoint("CENTER", s, "CENTER", -0.5, 0.5)
+    end
+end
+
+-- a leather strap with a brass buckle over the right edge
+local function strap(cv, y)
+    local s = CreateFrame("Frame", nil, cv)
+    s:SetSize(88, 46)
+    s:SetPoint("RIGHT", cv, "RIGHT", 20, y)
+    s:SetFrameLevel(cv:GetFrameLevel() + 7)
+    local sh = UI.Fill(s, { 0, 0, 0 }, "BACKGROUND", 0, 0.45)
+    sh:SetPoint("TOPLEFT", -3, -4)
+    sh:SetPoint("BOTTOMRIGHT", 0, -4)
+    local body = UI.GradRect(s, "VERTICAL", { 0.07, 0.035, 0.02, 1 }, { 0.28, 0.14, 0.07, 1 }, "ARTWORK", 0)
+    body:SetAllPoints()
+    local edge = UI.Frame(s)
+    edge:SetAllPoints()
+    UI.Backdrop(edge, nil, 1, 0, { 0, 0, 0, 0 }, { 0, 0, 0, 0.85 })
+    for x = 6, 82, 9 do
+        local a = UI.Fill(s, { 0.85, 0.66, 0.32 }, "OVERLAY", 0, 0.45); a:SetSize(5, 1); a:SetPoint("TOPLEFT", x, -5)
+        local b = UI.Fill(s, { 0.85, 0.66, 0.32 }, "OVERLAY", 0, 0.45); b:SetSize(5, 1); b:SetPoint("BOTTOMLEFT", x, 5)
+    end
+    -- buckle: brass frame, dark opening, tongue
+    local bk = UI.Frame(s, 32, 40)
+    bk:SetPoint("LEFT", s, "LEFT", 6, 0)
+    bk:SetFrameLevel(s:GetFrameLevel() + 2)
+    UI.Backdrop(bk, "tooltip", 12, 3, { 0.10, 0.05, 0.02, 1 }, { 1, 0.84, 0.42, 1 })
+    local tongue = UI.Fill(bk, { 1, 0.84, 0.42 }, "OVERLAY")
+    tongue:SetSize(16, 3)
+    tongue:SetPoint("CENTER", 2, 0)
+    local hole = UI.Circle(s, 5, { 0, 0, 0, 0.8 }, "OVERLAY", 1)
+    hole:SetPoint("LEFT", s, "LEFT", 52, 0)
+end
+
+local COVER_ART = "Interface\\AddOns\\" .. ADDON .. "\\Media\\cover"
+
+local function buildCover(holder)
+    local cv = UI.Frame(holder, CVW, CVH, "Button")
+    cv:SetPoint("CENTER")
+    -- the painted leather binding (Media folder, cover.tga); the drawn decoration below only stands in without it
+    local art = cv:CreateTexture(nil, "BACKGROUND", nil, -8)
+    art:SetAllPoints()
+    local hasArt = art:SetTexture(COVER_ART) ~= false
+    art:SetTexCoord(0, CVW / 512, 0, CVH / 1024)
+    if not hasArt then
+        art:Hide()
+        UI.Backdrop(cv, "tooltip", 16, 4, c.leather, { 0.55, 0.40, 0.18, 1 })
+        leather(cv, 4)
+    end
+    cv:RegisterForDrag("LeftButton")
+    cv:SetScript("OnDragStart", function() holder:StartMoving() end)
+    cv:SetScript("OnDragStop", function()
+        holder:StopMovingOrSizing()
+        if UI.SavePosition then UI:SavePosition() end
+        cv.dragEnd = GetTime()
+    end)
+    UI.cover = cv
+    local cx = 20   -- visual centre shifted right of the spine
+
+    if not hasArt then
+        -- worn leather: lighter scuffs near the edges, darker in the middle
+        for _, s in ipairs({ { 70, -30, 90 }, { CVW - 40, -80, 70 }, { 90, -CVH + 40, 80 }, { CVW - 60, -CVH + 60, 100 },
+                             { CVW - 20, -CVH / 2, 60 }, { 60, -CVH / 2 - 60, 50 } }) do
+            local sc = UI.Circle(cv, s[3], { 1, 0.80, 0.55, 0.045 }, "BACKGROUND", 5)
+            sc:SetPoint("CENTER", cv, "TOPLEFT", s[1], s[2])
+        end
+
+        -- spine with raised bands and gold fillets
+        local spine = UI.GradRect(cv, "HORIZONTAL", { 0.04, 0.02, 0.01, 1 }, { 0.22, 0.11, 0.06, 1 }, "BORDER", 0)
+        spine:SetPoint("TOPLEFT", 4, -4)
+        spine:SetPoint("BOTTOMLEFT", 4, 4)
+        spine:SetWidth(38)
+        local hinge = UI.Fill(cv, { 0, 0, 0 }, "BORDER", 1, 0.65)
+        hinge:SetPoint("TOPLEFT", 42, -4)
+        hinge:SetPoint("BOTTOMLEFT", 42, 4)
+        hinge:SetWidth(3)
+        for i = 1, 5 do
+            local by = -44 - (i - 1) * ((CVH - 100) / 4)
+            local band = UI.GradRect(cv, "VERTICAL", { 0.06, 0.03, 0.01, 1 }, { 0.40, 0.22, 0.11, 1 }, "BORDER", 2)
+            band:SetSize(38, 12)
+            band:SetPoint("TOPLEFT", 4, by)
+            for _, o in ipairs({ -3, 14 }) do
+                local fil = UI.Fill(cv, c.gold, "BORDER", 3, 0.55)
+                fil:SetSize(34, 1)
+                fil:SetPoint("TOPLEFT", 6, by - o)
+            end
+        end
+
+        -- tooled border: a dark blind-stamped groove, two gold fillets, a row of stamped diamonds between them
+        local groove = UI.Frame(cv)
+        groove:SetPoint("TOPLEFT", 40 + 18, -18)
+        groove:SetPoint("BOTTOMRIGHT", -18, 18)
+        UI.Backdrop(groove, nil, 2, 0, { 0, 0, 0, 0 }, { 0, 0, 0, 0.35 })
+        for i, inset in ipairs({ 28, 44 }) do
+            local fr = UI.Frame(cv)
+            fr:SetPoint("TOPLEFT", 40 + inset - 6, -inset)
+            fr:SetPoint("BOTTOMRIGHT", -inset, inset)
+            UI.Backdrop(fr, "tooltip", 12, 3, { 0, 0, 0, 0 }, { 0.85, 0.66, 0.30, i == 1 and 0.80 or 0.50 })
+        end
+        local L0, T0, R0, B0 = 40 + 36 - 6 + 4, -36 - 4, CVW - 36 - 4, -CVH + 36 + 4
+        for x = L0 + 8, R0 - 8, 15 do
+            for _, yy in ipairs({ T0, B0 }) do
+                local d = UI.Diamond(cv, 4, { 0, 0, 0, 0.45 }, "BORDER", 4)
+                d:SetPoint("CENTER", cv, "TOPLEFT", x, yy)
+            end
+        end
+        for y = T0 - 8, B0 + 8, -15 do
+            for _, xx in ipairs({ L0, R0 }) do
+                local d = UI.Diamond(cv, 4, { 0, 0, 0, 0.45 }, "BORDER", 4)
+                d:SetPoint("CENTER", cv, "TOPLEFT", xx, y)
+            end
+        end
+        -- gold fleurons in the inner corners
+        for _, p in ipairs({ { L0 + 18, T0 - 18, 1, -1 }, { R0 - 18, T0 - 18, -1, -1 }, { L0 + 18, B0 + 18, 1, 1 }, { R0 - 18, B0 + 18, -1, 1 } }) do
+            local big = UI.Diamond(cv, 10, c.gold, "ARTWORK", 2)
+            big:SetPoint("CENTER", cv, "TOPLEFT", p[1], p[2])
+            for _, o in ipairs({ { 12, 0 }, { 0, 12 } }) do
+                local sm = UI.Diamond(cv, 5, c.goldDk, "ARTWORK", 2)
+                sm:SetPoint("CENTER", cv, "TOPLEFT", p[1] + o[1] * p[3], p[2] + o[2] * p[4])
+            end
+        end
+    end
+
+    -- the title in a recessed cartouche
+    local cart = UI.Frame(cv, 300, 58)
+    cart:SetPoint("TOP", cv, "TOP", cx, -62)
+    if not hasArt then UI.Backdrop(cart, "tooltip", 12, 3, { 0.06, 0.03, 0.015, 0.75 }, { 0.85, 0.66, 0.30, 0.9 }) end
+    cv.title = UI.Text(cart, 30, c.gold, "CENTER", UI.HEAD, true)
+    cv.title:SetPoint("CENTER", 0, -1)
+    cv.title:SetText(L["Travel Diary"])
+    UI.FitText(cv.title, 232, 30, 16)          -- the title field is 248 px wide; long titles shrink
+    if not hasArt then
+        for s = -1, 1, 2 do
+            local d = UI.Diamond(cv, 9, c.gold, "ARTWORK", 3)
+            d:SetPoint("CENTER", cart, s < 0 and "LEFT" or "RIGHT", 0, 0)
+        end
+    end
+
+    -- a gold lozenge around the crest, as on old bindings
+    local CY = -250
+    if not hasArt and cv.CreateLine then
+        for k, half in ipairs({ 122, 112 }) do
+            local pts = { { 0, half }, { half * 0.86, 0 }, { 0, -half }, { -half * 0.86, 0 } }
+            for i = 1, 4 do
+                local a, b = pts[i], pts[i % 4 + 1]
+                local ln = cv:CreateLine(nil, "ARTWORK", nil, 1)
+                ln:SetColorTexture(0.85, 0.66, 0.30, k == 1 and 0.75 or 0.40)
+                ln:SetThickness(k == 1 and 2 or 1)
+                ln:SetStartPoint("TOP", cv, cx + a[1], CY + a[2])
+                ln:SetEndPoint("TOP", cv, cx + b[1], CY + b[2])
+            end
+        end
+        for _, t in ipairs({ { 0, 122 }, { 105, 0 }, { 0, -122 }, { -105, 0 } }) do
+            local tip = UI.Diamond(cv, 10, c.gold, "ARTWORK", 3)
+            tip:SetPoint("CENTER", cv, "TOP", cx + t[1], CY + t[2])
+        end
+    end
+
+    -- crest in a gold medallion
+    local medal = CreateFrame("Frame", nil, cv)
+    medal:SetSize(160, 160)
+    medal:SetPoint("CENTER", cv, "TOP", cx, CY)
+    if not hasArt then
+        local glow = UI.Circle(medal, 168, { 0, 0, 0, 0.55 }, "BACKGROUND")
+        glow:SetPoint("CENTER", 3, -4)
+        local ring = UI.Circle(medal, 150, c.goldDk, "ARTWORK", 0)
+        ring:SetPoint("CENTER")
+        local ring2 = UI.Circle(medal, 144, c.gold, "ARTWORK", 1)
+        ring2:SetPoint("CENTER")
+        local ring3 = UI.Circle(medal, 136, { 0.45, 0.30, 0.10, 1 }, "ARTWORK", 2)
+        ring3:SetPoint("CENTER")
+        local inner = UI.Circle(medal, 132, { 0.12, 0.06, 0.03, 1 }, "ARTWORK", 3)
+        inner:SetPoint("CENTER")
+    end
+    cv.crest = medal:CreateTexture(nil, "ARTWORK", nil, 4)
+    cv.crest:SetSize(108, 108)
+    cv.crest:SetPoint("CENTER")
+    UI.Round(cv.crest, medal)
+
+    -- name plate
+    local plate = UI.Frame(cv, 250, 92)
+    plate:SetPoint("TOP", cv, "TOP", cx, -386)
+    if not hasArt then UI.Backdrop(plate, "tooltip", 12, 3, { 0.06, 0.03, 0.015, 0.55 }, { 0.85, 0.66, 0.30, 0.7 }) end
+    cv.of = UI.Text(plate, 14, c.goldDk, "CENTER", UI.HEAD, true)
+    cv.of:SetPoint("TOP", 0, -10)
+    cv.of:SetText(L["of"])
+    cv.name = UI.Text(plate, 30, c.gold, "CENTER", UI.HEAD, true)
+    cv.name:SetPoint("TOP", 0, -28)
+    cv.who = UI.Caps(plate, "", 10, { 0.85, 0.68, 0.36, 1 })
+    cv.who:SetJustifyH("CENTER")
+    cv.who:SetPoint("TOP", 0, -66)
+
+    cv.since = UI.Text(cv, 14, { 0.85, 0.70, 0.42, 1 }, "CENTER", UI.HEAD, true)
+    cv.since:SetPoint("TOP", cv, "TOP", cx, -490)
+    cv.hint = UI.Text(cv, 13, { 0.80, 0.64, 0.36, 1 }, "CENTER", UI.HEAD, true)
+    cv.hint:SetPoint("BOTTOM", cv, "BOTTOM", cx, 60)
+    cv.hint:SetText(L["Click to open"])
+    cv.demo = UI.Text(cv, 12, { 1, 0.45, 0.35, 1 }, "CENTER", UI.HEAD, true)
+    cv.demo:SetPoint("BOTTOM", cv.hint, "TOP", 0, 6)
+    cv.demo:SetText(L["DEMO MODE - invented data"])
+
+    -- what the binding gains over a life (see UI:RefreshCoverGrowth): metal studs in the corners,
+    -- gems set into the lozenge, gold marks on the spine - and the wear of many days
+    local deco = CreateFrame("Frame", nil, cv)
+    deco:SetAllPoints()
+    deco:SetFrameLevel(cv:GetFrameLevel() + 5)
+    cv.deco = deco
+    cv.studs = {}
+    for i, p in ipairs({ { 100, 60 }, { 390, 60 }, { 100, CVH - 60 }, { 390, CVH - 60 } }) do
+        local s = {}
+        s.shadow = UI.Circle(deco, 20, { 0, 0, 0, 0.55 }, "ARTWORK", 0)
+        s.shadow:SetPoint("CENTER", cv, "TOPLEFT", p[1] + 1, -p[2] - 2)
+        s.body = UI.Circle(deco, 17, BRASS, "ARTWORK", 1)
+        s.body:SetPoint("CENTER", cv, "TOPLEFT", p[1], -p[2])
+        s.shine = UI.Circle(deco, 7, { 1, 1, 1, 0.55 }, "ARTWORK", 2)
+        s.shine:SetPoint("CENTER", s.body, "CENTER", -3, 3)
+        cv.studs[i] = s
+    end
+    cv.gems = {}
+    for i, p in ipairs({ { 0, 124 }, { 106, 0 }, { 0, -124 }, { -106, 0 }, { 53, 62 }, { 53, -62 }, { -53, -62 }, { -53, 62 } }) do
+        local g = {}
+        g.setting = UI.Circle(deco, 15, { 0.55, 0.40, 0.14, 1 }, "ARTWORK", 3)
+        g.setting:SetPoint("CENTER", cv, "TOP", cx + p[1], CY + p[2])
+        g.stone = UI.Circle(deco, 11, c.red, "ARTWORK", 4)
+        g.stone:SetPoint("CENTER", g.setting, "CENTER")
+        g.spark = UI.Circle(deco, 4, { 1, 1, 1, 0.75 }, "ARTWORK", 5)
+        g.spark:SetPoint("CENTER", g.stone, "CENTER", -2, 2)
+        cv.gems[i] = g
+    end
+    cv.spine = {}
+    for i = 1, 6 do
+        local d = UI.Diamond(deco, 10, c.gold, "ARTWORK", 3)
+        d:SetPoint("CENTER", cv, "TOPLEFT", 21, -110 - (i - 1) * 76)
+        cv.spine[i] = d
+    end
+    -- wear: rubbed, lighter edges and corners, a few scratches
+    cv.wear = {}
+    for _, e in ipairs({ "TOP", "BOTTOM", "RIGHT", "LEFT" }) do
+        cv.wear[#cv.wear + 1] = { tex = UI.EdgeFade(deco, e, 26, { 1, 0.82, 0.58 }, 0, "BACKGROUND", 0, 3), a = 0.10, edge = e }
+    end
+    for _, p in ipairs({ { 14, 14 }, { CVW - 14, 14 }, { 14, CVH - 14 }, { CVW - 14, CVH - 14 } }) do
+        local rub = UI.Circle(deco, 64, { 1, 0.82, 0.58, 1 }, "BACKGROUND", 1)
+        rub:SetPoint("CENTER", cv, "TOPLEFT", p[1], -p[2])
+        cv.wear[#cv.wear + 1] = { tex = rub, a = 0.12 }
+    end
+    if deco.CreateLine then
+        for i, s in ipairs({ { 150, 120, 205, 150 }, { 320, 420, 380, 404 }, { 280, 520, 300, 560 }, { 90, 300, 120, 340 },
+                             { 360, 190, 410, 230 }, { 200, 470, 230, 455 } }) do
+            local ln = deco:CreateLine(nil, "BACKGROUND", nil, 2)
+            ln:SetColorTexture(1, 0.85, 0.62, 1)
+            ln:SetThickness(1)
+            ln:SetStartPoint("TOPLEFT", cv, s[1], -s[2])
+            ln:SetEndPoint("TOPLEFT", cv, s[3], -s[4])
+            cv.wear[#cv.wear + 1] = { tex = ln, a = 0.16, from = i / 7 }
+        end
+    end
+
+    -- metal and straps on top of everything
+    if not hasArt then
+        brassCorner(cv, "TOPLEFT", -1, 1)
+        brassCorner(cv, "TOPRIGHT", 1, 1)
+        brassCorner(cv, "BOTTOMLEFT", -1, -1)
+        brassCorner(cv, "BOTTOMRIGHT", 1, -1)
+    end
+    strap(cv, 150)
+    strap(cv, -150)
+
+    -- hover: the leather catches a little light
+    local sheen = UI.Fill(cv, { 1, 0.85, 0.6 }, "OVERLAY", 7, 0.05)
+    sheen:SetPoint("TOPLEFT", 4, -4)
+    sheen:SetPoint("BOTTOMRIGHT", -4, 4)
+    sheen:Hide()
+    cv:SetScript("OnEnter", function(self)
+        sheen:Show()
+        cv.hint:SetTextColor(1, 0.9, 0.6, 1)
+        UI:CoverTooltip(self)
+    end)
+    cv:SetScript("OnLeave", function()
+        sheen:Hide()
+        cv.hint:SetTextColor(0.80, 0.64, 0.36, 1)
+        GameTooltip:Hide()
+    end)
+    cv:SetScript("OnClick", function()
+        if cv.dragEnd and GetTime() - cv.dragEnd < 0.3 then return end
+        UI:OpenBook(UI.PlacePage)
+    end)
+end
+
+------------------------------------------------------------------------
+-- Holder, opening and closing
+------------------------------------------------------------------------
+function UI:Build()
+    if self.holder then return end
+    local h = CreateFrame("Frame", "WoWForeverDiaryFrame", UIParent)
+    h:SetSize(BW, BH)
+    h:SetPoint("CENTER")
+    h:SetFrameStrata("HIGH")
+    h:SetMovable(true)
+    h:SetClampedToScreen(true)
+    h:SetScale(WFD.S.scale or 0.9)
+    tinsert(UISpecialFrames, "WoWForeverDiaryFrame")
+    self.holder = h
+    self.frame = h
+    -- measure text at exactly the scale it is drawn at
+    measureFrame:SetParent(h)
+    measureFrame:ClearAllPoints()
+    measureFrame:SetPoint("TOPLEFT", h, "TOPLEFT", 0, 0)
+    measureFrame:SetFrameLevel(1)
+    buildBook(h)
+    buildCover(h)
+
+    -- refresh the open book every ten seconds while playing when something happened; the clock and the
+    -- footsteps alone (WFD.ticked, every few seconds) only once a minute, laying out the book costs a moment
+    local acc, sinceTick = 0, 0
+    h:SetScript("OnUpdate", function(_, dt)
+        acc = acc + dt
+        if acc < 10 then return end
+        sinceTick = sinceTick + acc
+        acc = 0
+        if UI.bookFrame:IsShown() and (WFD.dirty or (WFD.ticked and sinceTick >= 60)) then
+            WFD.dirty, WFD.ticked, sinceTick = false, false, 0
+            UI:Reflow()
+        end
+    end)
+    h:Hide()
+end
+
+function UI:Reflow()
+    if not self.bookFrame then return end
+    if UI.noteFocus then
+        WFD.dirty = true      -- do not disturb while the player is writing; try again later
+        return
+    end
+    local follow = self.followToday
+    UI.storyCache[WFD:NumDays()] = nil
+    self:Paginate()
+    if follow then
+        self:ShowSpread(ceil(self:TodayPage() / 2))
+    else
+        self:ShowSpread(self.spread)
+    end
+end
+
+-- page: a page number, or a function picking one once the book is laid out; without it the book opens at the start
+-- (the endpaper with the ex libris and "this book belongs to")
+function UI:OpenBook(page)
+    self:Build()
+    self.holder:Show()
+    self.cover:Hide()
+    self.bookFrame:Show()
+    self.spreadShownOnce = false
+    sound("IG_SPELLBOOK_OPEN", 829)
+    fadeIn(self.bookFrame)
+    self:Paginate()
+    self.spread = 0
+    self.history = {}
+    if type(page) == "function" then page = page(self.book) end
+    page = page or 1
+    self:ShowSpread(ceil(page / 2))
+end
+
+function UI:Show()
+    self:Build()
+    if self.card then self.card:Hide() end
+    self.bookFrame:Hide()
+    self:RefreshCover()
+    self.cover:Show()
+    fadeIn(self.cover)
+    self.holder:Show()
+end
+
+function UI:Hide()
+    if self.holder then self.holder:Hide() end
+end
+
+function UI:Toggle()
+    self:Build()
+    if self.holder:IsShown() then self:Hide() else self:Show() end
+end
+
+function UI:DataSwitched()
+    UI.ClearCaches()
+    if self.bookFrame and self.bookFrame:IsShown() then
+        self:Paginate()
+        self:ShowSpread(ceil(self:TodayPage() / 2))
+    end
+    self:RefreshCover()
+end
+
+function UI:SetScale(s)
+    WFD.S.scale = s
+    if self.holder then self.holder:SetScale(s) end
+    UI.ClearCaches()
+    if self.bookFrame and self.bookFrame:IsShown() then self:Paginate() end
+end
+
+------------------------------------------------------------------------
+-- Minimap button
+------------------------------------------------------------------------
+local mm
+
+local function placeMinimap()
+    if not mm then return end
+    local a = math.rad(WFD.S.angle or 215)
+    local x, y = math.cos(a), math.sin(a)
+    local rw = (Minimap:GetWidth() / 2) + 5
+    local rh = (Minimap:GetHeight() / 2) + 5
+    local shape = GetMinimapShape and GetMinimapShape() or "ROUND"
+    if shape == "SQUARE" then
+        -- push the button onto the edge of a square map
+        local m = math.max(math.abs(x), math.abs(y))
+        x, y = x / m, y / m
+    end
+    mm:ClearAllPoints()
+    mm:SetPoint("CENTER", Minimap, "CENTER", x * rw, y * rh)
+end
+
+function UI:UpdateMinimapButton()
+    if not mm then return end
+    mm:SetShown(WFD.S.minimap)
+end
+
+WFD:OnInit(function()
+    mm = CreateFrame("Button", "WoWForeverDiaryMinimapButton", Minimap)
+    mm:SetSize(31, 31)
+    mm:SetFrameStrata("MEDIUM")
+    mm:SetFrameLevel(8)
+    mm:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    mm:RegisterForDrag("LeftButton")
+    local bg = mm:CreateTexture(nil, "BACKGROUND")
+    bg:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
+    bg:SetSize(20, 20)
+    bg:SetPoint("TOPLEFT", 7, -5)
+    local icon = mm:CreateTexture(nil, "ARTWORK")
+    icon:SetTexture("Interface\\Icons\\INV_Misc_Book_09")
+    icon:SetSize(17, 17)
+    icon:SetPoint("TOPLEFT", 7, -6)
+    icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    local border = mm:CreateTexture(nil, "OVERLAY")
+    border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+    border:SetSize(53, 53)
+    border:SetPoint("TOPLEFT", 0, 0)
+    mm:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+    mm:SetScript("OnClick", function(_, button)
+        if button == "RightButton" and UI.OpenSettings then UI:OpenSettings() else UI:Toggle() end
+    end)
+    mm:SetScript("OnDragStart", function(self)
+        self:SetScript("OnUpdate", function()
+            local mx, my = Minimap:GetCenter()
+            local px, py = GetCursorPosition()
+            local s = Minimap:GetEffectiveScale()
+            WFD.S.angle = math.deg(math.atan2(py / s - my, px / s - mx))
+            placeMinimap()
+        end)
+    end)
+    mm:SetScript("OnDragStop", function(self) self:SetScript("OnUpdate", nil) end)
+    mm:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+        GameTooltip:SetText("WoW Forever Diary", 1, 0.82, 0)
+        local C = WFD.C
+        if C then
+            local d = C.days[WFD:DayIndex()]
+            GameTooltip:AddLine(format(L["Day %d"], WFD:NumDays()), 1, 1, 1)
+            if d then
+                GameTooltip:AddLine(format(L["%d kills today"], d.killTotal) .. ", " .. format(L["%d quests today"], #d.qd), 0.8, 0.8, 0.8)
+            end
+        end
+        GameTooltip:AddLine(L["Click to open the diary."], 0.5, 0.8, 1)
+        GameTooltip:AddLine(L["Right-click for the settings."], 0.5, 0.8, 1)
+        GameTooltip:AddLine(L["Drag to move this button."], 0.5, 0.8, 1)
+        GameTooltip:Show()
+    end)
+    mm:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    placeMinimap()
+    Minimap:HookScript("OnSizeChanged", placeMinimap)
+    C_Timer.After(1, placeMinimap)      -- other addons may resize the map after login
+    UI:UpdateMinimapButton()
+end)
+
+------------------------------------------------------------------------
+-- Totals over the whole life of the character (used by several pages)
+------------------------------------------------------------------------
+function WFD:Totals()
+    local C = self.C
+    local t = { online = 0, kills = 0, quests = 0, deaths = 0, income = 0, spend = 0, steps = 0, xp = 0, jumps = 0, days = 0 }
+    for _, d in pairs(C.days) do
+        t.online = t.online + (d.online or 0)
+        t.kills = t.kills + d.killTotal
+        t.quests = t.quests + #d.qd
+        t.deaths = t.deaths + d.deaths
+        t.income = t.income + self:Sum(d.income)
+        t.spend = t.spend + self:Sum(d.spend)
+        t.steps = t.steps + (d.steps or 0)
+        t.xp = t.xp + d.xp
+        t.jumps = t.jumps + (d.jumps or 0)
+        t.days = t.days + 1
+    end
+    return t
+end

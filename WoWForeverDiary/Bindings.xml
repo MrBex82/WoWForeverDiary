@@ -1,0 +1,5 @@
+<Bindings>
+    <Binding name="WOWFOREVERDIARY_TOGGLE" header="WOWFOREVERDIARY" category="ADDONS">
+        if WoWForeverDiary and WoWForeverDiary.ready and WoWForeverDiary.UI then WoWForeverDiary.UI:Toggle() end
+    </Binding>
+</Bindings>
