@@ -579,27 +579,92 @@ UI:RegisterSection({
         for _, e in ipairs(extra) do zones[#zones + 1] = e.z end
         local intro = book:Add({ kind = "albumintro", numbered = true, head = L["Bestiary"], zoneIndex = {} })
         if next(WFD.C.mobs) then book:Add({ kind = "albumkinds", numbered = true, head = L["Bestiary"] }) end
+        book.nextPage = nil
+        if next(WFD.C.mobs) or next(WFD.C.sighted or {}) then
+            book.nextPage = book:Add({ kind = "albumnext", numbered = true, head = L["Bestiary"] }).index
+        end
         local grounds = {}
         for _, z in ipairs(zones) do
             local map = mapOfZone(z, byZone[z])
             if map then grounds[#grounds + 1] = { zone = z, map = map } end
         end
-        if #grounds > 0 then book:Add({ kind = "huntmap", numbered = true, head = L["Bestiary"], grounds = grounds }) end
+        book.huntZones = {}
+        if #grounds > 0 then
+            book.huntPage = book:Add({ kind = "huntmap", numbered = true, head = L["Bestiary"], grounds = grounds }).index
+            for _, g in ipairs(grounds) do book.huntZones[g.zone] = true end
+        end
+        book.albumPage = {}
         for _, z in ipairs(zones) do
             local list = byZone[z]
-            local hidden = #list - own[z]
-            local pages = math.ceil(#list / PER_PAGE)
+            -- your own cards; what you only saw and what your other characters know goes in a list after them
+            local mine, hints = {}, {}
+            for _, e in ipairs(list) do
+                if e.hint then hints[#hints + 1] = e else mine[#mine + 1] = e end
+            end
+            local hidden = #hints
+            local first
+            local pages = math.ceil(#mine / PER_PAGE)
             for p = 1, pages do
                 local cards = {}
-                for i = (p - 1) * PER_PAGE + 1, math.min(#list, p * PER_PAGE) do cards[#cards + 1] = list[i] end
+                for i = (p - 1) * PER_PAGE + 1, math.min(#mine, p * PER_PAGE) do cards[#cards + 1] = mine[i] end
                 local pg = book:Add({ kind = "album", numbered = true, head = L["Bestiary"], zone = z, cards = cards,
                     part = (pages > 1) and p or nil, count = own[z], hidden = hidden })
-                if #cards < PER_PAGE then pg.fill = quietCorners(mapOfZone(z, list)) end
-                if p == 1 then intro.zoneIndex[#intro.zoneIndex + 1] = { zone = z, page = pg.index, count = own[z], hidden = hidden } end
+                if #cards < PER_PAGE and hidden == 0 then pg.fill = quietCorners(mapOfZone(z, list)) end
+                first = first or pg.index
+            end
+            local hpages = math.ceil(#hints / UI.HINT_ROWS)
+            for p = 1, hpages do
+                local rows = {}
+                for i = (p - 1) * UI.HINT_ROWS + 1, math.min(#hints, p * UI.HINT_ROWS) do rows[#rows + 1] = hints[i] end
+                local pg = book:Add({ kind = "albumhints", numbered = true, head = L["Bestiary"], zone = z, hints = rows,
+                    part = (hpages > 1) and p or nil, count = own[z], hidden = hidden })
+                first = first or pg.index
+            end
+            if first then
+                intro.zoneIndex[#intro.zoneIndex + 1] = { zone = z, page = first, count = own[z], hidden = hidden }
+                book.albumPage[z] = first
             end
         end
+        for _, g in ipairs(grounds) do g.page = book.albumPage[g.zone] end
     end,
 })
+
+-- the name on the plate of a card: two lines at most, a smaller size before anything is cut, and a word
+-- too long for one line broken at its hyphen (else in the middle, never inside a letter)
+local NAME_W = CARD_W - 20
+local function fitName(fs, text)
+    local function px(s) return UI.FS and UI.FS(s) or s end
+    local function fits(s, t)
+        for w in t:gmatch("[^%s]+") do
+            if UI.MeasureWidth(w, px(s), UI.FONT) > NAME_W then return false end
+        end
+        return UI.Measure(t, px(s), NAME_W, 0, UI.FONT) <= px(s) * 2.7
+    end
+    local function set(s, t)
+        fs:SetFont(UI.FONT, px(s), "")
+        fs:SetText(t)
+    end
+    for s = 10, 8, -1 do
+        if fits(s, text) then return set(s, text) end
+    end
+    local long, lw = nil, 0
+    for w in text:gmatch("[^%s]+") do
+        local ww = UI.MeasureWidth(w, px(8), UI.FONT)
+        if ww > lw then long, lw = w, ww end
+    end
+    if not long then return set(8, text) end
+    local a, b = long:match("^(.+%-)(.+)$")
+    if not a then
+        local mid = math.floor(#long / 2)
+        while mid > 1 and long:byte(mid + 1) and long:byte(mid + 1) >= 128 and long:byte(mid + 1) < 192 do mid = mid - 1 end
+        a, b = long:sub(1, mid) .. "-", long:sub(mid + 1)
+    end
+    local i = text:find(long, 1, true)
+    text = text:sub(1, i - 1) .. a .. "\n" .. b .. text:sub(i + #long)
+    for s = 10, 8, -1 do
+        if fits(s, text) or s == 8 then return set(s, text) end
+    end
+end
 
 -- one trading card, built once per pool slot
 local function newCard(parent)
@@ -620,9 +685,9 @@ local function newCard(parent)
     f.model = CreateFrame("PlayerModel", nil, f.window)
     f.model:SetPoint("TOPLEFT", 1, -1)
     f.model:SetPoint("BOTTOMRIGHT", -1, 1)
-    f.num = UI.Text(f, 9, { 1, 0.92, 0.75, 1 }, "LEFT", UI.FONT, true)
+    f.num = UI.Text(f, 10, { 1, 0.92, 0.75, 1 }, "LEFT", UI.FONT, true)
     f.num:SetPoint("TOPLEFT", 7, -5)
-    f.lvl = UI.Text(f, 9, { 1, 0.92, 0.75, 1 }, "RIGHT", UI.FONT, true)
+    f.lvl = UI.Text(f, 10, { 1, 0.92, 0.75, 1 }, "RIGHT", UI.FONT, true)
     f.lvl:SetPoint("TOPRIGHT", -7, -5)
     f.plate = f:CreateTexture(nil, "ARTWORK", nil, 1)
     f.plate:SetTexture(UI.WHITE)
@@ -635,7 +700,7 @@ local function newCard(parent)
     f.name:SetJustifyV("MIDDLE")
     if f.name.SetMaxLines then f.name:SetMaxLines(2) end
     -- how many were slain: a small badge stuck on the lower corner of the picture
-    f.badge = UI.CountBadge(f, 17)
+    f.badge = UI.CountBadge(f, 20)
     f.badge:SetPoint("RIGHT", f.window, "BOTTOMRIGHT", 4, 0)
     f.badge:SetFrameLevel(f:GetFrameLevel() + 4)
     f.new = UI.Text(f, 10, { 1, 0.95, 0.6, 1 }, "CENTER", UI.HEAD, true)
@@ -866,7 +931,7 @@ local function newCard(parent)
         self.skull:SetShown(nem ~= nil and (nem.n or 0) > 0)
         self.num:SetText(format("#%03d", e.num))
         self.lvl:SetText(format(L["Lv %s"], levelText(m)))
-        self.name:SetText(m.name or "?")
+        fitName(self.name, m.name or "?")
         self.badge:SetCount(UI.ShortCount(m.kills), UI.BADGE_COLOURS[rarityOf(m)] or UI.BADGE_COLOURS.normal)
         local isNew = m.first and WFD:DayIndex(m.first) == WFD:NumDays()
         self.new:SetText(isNew and L["NEW"] or "")
@@ -880,12 +945,21 @@ end
 
 local function kindsText(n) return n == 1 and L["1 kind"] or format(L["%d kinds"], n) end
 
-UI:RegisterRenderer("album", function(pool, page, side, canvas)
-    local tx, tw = UI.TextX(side), UI.TextW()
+-- the head of an album page: the area (a click leads to its hunting grounds), how many kinds, a thin bar
+function UI.AlbumHead(pool, canvas, tx, tw, page)
     local top = -UI.TOP
     local h = pool:Text(17, c.redInk, UI.HEAD)
     h:SetText(page.zone .. (page.part and ("  (" .. page.part .. ")") or ""))
     h:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, top + 4)
+    local b = UI.book
+    if b and b.huntPage and b.huntZones and b.huntZones[page.zone] then
+        local hot = pool:Hot({ page.zone, L["Click for the hunting grounds of this area."] }, function()
+            UI.huntArea = page.zone
+            UI:GoToPage(b.huntPage)
+        end)
+        hot:SetPoint("TOPLEFT", h, "TOPLEFT", -3, 3)
+        hot:SetPoint("BOTTOMRIGHT", h, "BOTTOMRIGHT", 3, -3)
+    end
     local cnt = pool:Text(10, c.inkFaint, UI.FONT, "RIGHT")
     cnt:SetText(kindsText(page.count)
         .. ((page.hidden or 0) > 0 and ("  -  " .. format(L["%d to discover"], page.hidden)) or ""))
@@ -900,9 +974,17 @@ UI:RegisterRenderer("album", function(pool, page, side, canvas)
         bar:SetSize(max(1, tw * page.count / known), 2)
         bar:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, top - 15)
     end
+end
+
+UI:RegisterRenderer("album", function(pool, page, side, canvas)
+    local tx, tw = UI.TextX(side), UI.TextW()
+    local top = -UI.TOP
+    UI.AlbumHead(pool, canvas, tx, tw, page)
 
     local gridX = tx + (tw - (CARD_W * 3 + CARD_GAP * 2)) / 2
-    for i = 1, PER_PAGE do
+    -- with a list of what is still to discover after these cards, empty slots stay empty
+    local slots = ((page.hidden or 0) > 0) and #page.cards or PER_PAGE
+    for i = 1, slots do
         local col = (i - 1) % 3
         local row = math.floor((i - 1) / 3)
         local card = pool:Get("albumcard", newCard)
@@ -990,12 +1072,33 @@ UI:RegisterRenderer("albumintro", function(pool, page, side, canvas)
     end
     y = y - 86
 
-    UI.Tiles(pool, canvas, tx, y, tw, {
-        { bosses, L["Bosses"], bosses > 0 and RARITY.boss.border or c.ink },
-        { rares, L["Rare creatures"], rares > 0 and { 0.22, 0.38, 0.66, 1 } or c.ink },
-        { elites, L["Elite"], elites > 0 and { 0.74, 0.54, 0.14, 1 } or c.ink },
-        { masters, L["Connoisseur"], masters > 0 and c.goldDk or c.ink },
-    })
+    -- four tiles once there is something to count; before that, the creature closest to its next stage
+    local nearest
+    if bosses + rares + elites + masters == 0 then
+        for id, m in pairs(C.mobs) do
+            local stage = WFD:MobStage(m)
+            local left = (stage == 1 and WFD.STAGE_COLOUR or WFD.STAGE_MASTER) - (m.kills or 0)
+            if not nearest or left < nearest.left then nearest = { m = m, left = left, stage = stage } end
+        end
+    end
+    local nextPage = UI.book and UI.book.nextPage
+    if nearest and nextPage then
+        local lead = pool:Text(10, c.redInk, UI.FONT)
+        lead:SetText(L["Almost there"]:upper())
+        lead:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 4)
+        local what = format(nearest.stage == 1 and L["%d more, then in colour"] or L["%d more, then a connoisseur"], nearest.left)
+        local line = pool:Link((nearest.m.name or "?") .. "  -  " .. what .. "  >", function() UI:GoToPage(nextPage) end, 13)
+        line:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 20)
+        line:SetWidth(tw)
+        line:SetWordWrap(false)
+    else
+        UI.Tiles(pool, canvas, tx, y, tw, {
+            { bosses, L["Bosses"], bosses > 0 and RARITY.boss.border or c.ink },
+            { rares, L["Rare creatures"], rares > 0 and { 0.22, 0.38, 0.66, 1 } or c.ink },
+            { elites, L["Elite"], elites > 0 and { 0.74, 0.54, 0.14, 1 } or c.ink },
+            { masters, L["Connoisseur"], masters > 0 and c.goldDk or c.ink },
+        })
+    end
     y = y - 54
 
     -- the album pages, one row per area with how many kinds live there
@@ -1004,13 +1107,24 @@ UI:RegisterRenderer("albumintro", function(pool, page, side, canvas)
     local mapIcon = UI.Icon("map")
     for _, z in ipairs(page.zoneIndex) do
         if y < -(UI.PH - UI.BOTTOM - 22) then break end
+        -- the area you are in: a soft band, its name in the accent colour and a marker behind it
+        local here = (z.zone == WFD.zoneName)
+        if here then
+            local band = pool:Rect(c.redInk, 0.10)
+            band:SetSize(tw + 6, 20)
+            band:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx - 3, y + 2)
+        end
         local ic = pool:Icon(mapIcon, 16)
         ic:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 1, y - 1)
-        local n = pool:Text(12, c.ink, UI.FONT)
+        local n = pool:Text(12, here and c.redInk or c.ink, UI.FONT)
         n:SetText(z.zone)
         n:SetWordWrap(false)
-        n:SetWidth(tw * 0.45)
+        n:SetWidth(tw * 0.45 - (here and 12 or 0))
         n:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 22, y - 2)
+        if here then
+            local dm = pool:Diamond(7, c.redInk)
+            dm:SetPoint("CENTER", canvas, "TOPLEFT", tx + 22 + min(n:GetStringWidth(), tw * 0.45 - 12) + 8, y - 8)
+        end
         -- from the right: page reference, number of kinds, then the bar fills the room that is left
         local pr = pool:Text(10, c.inkFaint, UI.FONT, "RIGHT")
         pr:SetText(format(L["p. %d"], UI.PageNumber(z.page)))
@@ -1029,6 +1143,7 @@ UI:RegisterRenderer("albumintro", function(pool, page, side, canvas)
         if bw > 12 then UI.ProgressBar(pool, canvas, bx, y - 6, bw, 5, z.count / max(1, known), full and c.goldDk or c.redInk) end
         local tip = { z.zone, kindsText(z.count) }
         if (z.hidden or 0) > 0 then tip[3] = format(L["%d to discover"], z.hidden) else tip[3] = L["Every kind known here is collected."] end
+        if here then tip[#tip + 1] = L["You are here."] end
         local hot = pool:Hot(tip, function() UI:GoToPage(z.page) end)
         hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 1)
         hot:SetSize(tw, 20)
@@ -1767,7 +1882,7 @@ UI:RegisterRenderer("settings", function(pool, page, side, canvas)
         }
     end
     linkRow(items, 13)
-    local note = pool:Text(10, c.inkFaint, UI.FONT)
+    local note = pool:Text(11, c.inkSoft, UI.FONT)
     note:SetWidth(tw)
     note:SetText(L["The diary will reload the interface to switch the language."] .. " "
         .. L["Korean and Chinese text needs a game client with those fonts."])
@@ -1777,10 +1892,18 @@ UI:RegisterRenderer("settings", function(pool, page, side, canvas)
     -- size
     caption(L["Size of the book"])
     local sizes = {}
-    for _, s in ipairs({ 0.75, 0.8, 0.9, 1, 1.1 }) do
+    -- a size set with Ctrl + mouse wheel joins the row, so the current one is always marked
+    local cur, steps = S.scale or 0.9, { 0.75, 0.8, 0.9, 1, 1.1 }
+    local known = false
+    for _, s in ipairs(steps) do if math.abs(cur - s) < 0.001 then known = true end end
+    if not known then
+        steps[#steps + 1] = cur
+        table.sort(steps)
+    end
+    for _, s in ipairs(steps) do
         sizes[#sizes + 1] = {
             text = floor(s * 100 + 0.5) .. "%",
-            active = math.abs((S.scale or 0.9) - s) < 0.001,
+            active = math.abs(cur - s) < 0.001,
             fn = function()
                 UI:SetScale(s)
                 UI:ShowSpread(UI.spread)

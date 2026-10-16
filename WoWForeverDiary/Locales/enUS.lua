@@ -4,6 +4,7 @@ local L, loc = WFD:NewLocale("enUS")
 
 L["Favourite prey"] = "Favorite prey"
 L["Distance travelled"] = "Distance traveled"
+L["%d more, then in colour"] = "%d more, then in color"
 
 -- the remaining diary templates fall back to the English defaults in Narrator.lua
 loc.listAnd = " and "

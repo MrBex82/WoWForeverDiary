@@ -357,6 +357,11 @@ function WFD:CaptureGear()
     return gear
 end
 
+-- a death, or the first death among the first times: kept in the diary, never announced
+function WFD:IsDeathEvent(ev)
+    return ev and (ev.k == "death" or (ev.k == "first" and ev.first == "death")) or false
+end
+
 function WFD:Milestone(kind, text, shot, extra)
     if self.paused or not self.C then return end
     local ev = { t = time(), day = self:DayIndex(), k = kind, s = text }
@@ -370,7 +375,7 @@ function WFD:Milestone(kind, text, shot, extra)
     list[#list + 1] = ev
     self:Log("milestone", text)
     self:Signal("milestone", ev)
-    if self.S and self.S.chat and (not self.ShouldNotify or self:ShouldNotify(kind)) then
+    if self.S and self.S.chat and not self:IsDeathEvent(ev) and (not self.ShouldNotify or self:ShouldNotify(kind)) then
         print("|cffffd100[" .. L["Diary"] .. "]|r " .. text)
     end
     if shot and self.S and self.S.screenshots and not self.S.shotBlocked then

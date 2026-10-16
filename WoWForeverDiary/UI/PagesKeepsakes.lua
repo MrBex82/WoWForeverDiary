@@ -315,7 +315,7 @@ UI:RegisterRenderer("capsule", function(pool, page, side, canvas)
                 d:SetPoint("RIGHT", fs, "LEFT", -5, 0)
                 x = x + fs:GetStringWidth() + 34
             end
-            line(pool, canvas, tx, sy - 44, tw, L["Until then the letter stays sealed - not even you can read it."], 9, c.inkFaint)
+            line(pool, canvas, tx, sy - 44, tw, L["Until then the letter stays sealed - not even you can read it."], 10, c.inkSoft)
         elseif r.empty then
             emptyNote(pool, canvas, tx, tw, y - 6, L["No letters yet."])
         elseif r.letter then

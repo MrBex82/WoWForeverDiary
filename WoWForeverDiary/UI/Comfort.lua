@@ -113,6 +113,133 @@ function UI:AskPage()
 end
 
 ------------------------------------------------------------------------
+-- Own bookmarks: Ctrl-click a page number to keep that page; a silk ribbon then sticks out of the top
+-- of the book. Kept like the place where reading stopped (a day, or a page within its part), so they
+-- follow their page while the book grows.
+------------------------------------------------------------------------
+local MARK_COLS = {
+    { 0.18, 0.40, 0.62 }, { 0.22, 0.48, 0.24 }, { 0.66, 0.48, 0.12 }, { 0.44, 0.20, 0.56 }, { 0.10, 0.46, 0.46 }, { 0.62, 0.26, 0.10 },
+}
+local MAX_MARKS, MARK_W, MARK_H = 6, 20, 46
+local markFrames = {}
+
+local function placeOf(index)
+    local b = UI.book
+    local page = b and b.pages[index]
+    if not page then return nil end
+    local day
+    for d, i in pairs(b.dayPage) do if i == index then day = d end end
+    local start = page.section and b.sectionStart[page.section]
+    return { section = page.section, offset = start and (index - start) or nil, day = day }
+end
+
+local function resolveMark(m)
+    local b = UI.book
+    if not b or not m then return nil end
+    if m.day and b.dayPage[m.day] then return b.dayPage[m.day] end
+    local start = m.section and b.sectionStart[m.section]
+    if not start then return nil end
+    local idx = start + (m.offset or 0)
+    local page = b.pages[idx]
+    if page and page.section == m.section then return idx end
+    return start
+end
+
+local function sectionLabel(key)
+    if key == "toc" then return L["Contents"] end
+    if key == "diary" then return L["Diary"] end
+    for _, s in ipairs(UI.sections) do if s.key == key then return L[s.label] end end
+    return ""
+end
+
+function UI:UpdateMarks()
+    local bf, C = self.bookFrame, WFD.C
+    if not bf then return end
+    local marks = C and C.marks or {}
+    local left, right = (self.spread or 1) * 2 - 1, (self.spread or 1) * 2
+    for i = 1, MAX_MARKS do
+        local f = markFrames[i]
+        local m = marks[i]
+        local idx = m and resolveMark(m)
+        if f then f:Hide() end
+        if idx then
+            if not f then
+                f = CreateFrame("Button", nil, UI.holder)
+                f:SetSize(MARK_W, MARK_H)
+                f:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+                f.body = UI.GradRect(f, "VERTICAL", { 0, 0, 0, 1 }, { 1, 1, 1, 1 }, "ARTWORK", 0)
+                f.body:SetAllPoints()
+                for _, side in ipairs({ "LEFT", "RIGHT" }) do
+                    local g = UI.Fill(f, c.gold, "ARTWORK", 2, 0.6)
+                    g:SetWidth(1)
+                    g:SetPoint("TOP" .. side, f, "TOP" .. side, side == "LEFT" and 1 or -1, 0)
+                    g:SetPoint("BOTTOM" .. side, f, "BOTTOM" .. side, side == "LEFT" and 1 or -1, 0)
+                end
+                f.num = UI.Text(f, 9, { 1, 0.95, 0.82, 1 }, "CENTER", UI.FONT, true)
+                f.num:SetPoint("TOP", 0, -5)
+                f:SetScript("OnClick", function(s, button)
+                    if button == "RightButton" then
+                        table.remove(WFD.C.marks, s.i)
+                        GameTooltip:Hide()
+                        UI:UpdateMarks()
+                    else
+                        local to = resolveMark(WFD.C.marks[s.i])
+                        if to then UI:GoToPage(to) end
+                    end
+                end)
+                f:SetScript("OnEnter", function(s)
+                    s:SetPoint("BOTTOMLEFT", bf, "TOPLEFT", s.x, s.y + 4)
+                    local mk = WFD.C.marks[s.i]
+                    local to = resolveMark(mk)
+                    GameTooltip:SetOwner(s, "ANCHOR_TOP")
+                    GameTooltip:SetText(L["Bookmark"], 1, 0.86, 0.5)
+                    if mk then GameTooltip:AddLine(sectionLabel(mk.section), 1, 1, 1) end
+                    if mk and mk.day then GameTooltip:AddLine(format(L["Day %d"], mk.day), 0.8, 0.8, 0.8) end
+                    if to then GameTooltip:AddLine(format(L["Page %d"], UI.PageNumber(to)), 0.8, 0.8, 0.8) end
+                    GameTooltip:AddLine(L["Click to open, right-click to remove."], 0.5, 0.8, 1)
+                    GameTooltip:Show()
+                end)
+                f:SetScript("OnLeave", function(s)
+                    s:SetPoint("BOTTOMLEFT", bf, "TOPLEFT", s.x, s.y)
+                    GameTooltip:Hide()
+                end)
+                markFrames[i] = f
+            end
+            local col = MARK_COLS[((i - 1) % #MARK_COLS) + 1]
+            UI.Gradient(f.body, "HORIZONTAL", { col[1] * 0.55, col[2] * 0.55, col[3] * 0.55, 1 }, { col[1], col[2], col[3], 1 })
+            f.num:SetText(UI.PageNumber(idx))
+            f.i = i
+            -- the ribbon of a page that is open stands a little taller
+            local open = (idx == left or idx == right)
+            f.x, f.y = 60 + (i - 1) * (MARK_W + 8), open and -12 or -20
+            f:SetFrameLevel(max(0, bf:GetFrameLevel() - 1))
+            f:ClearAllPoints()
+            f:SetPoint("BOTTOMLEFT", bf, "TOPLEFT", f.x, f.y)
+            f:SetShown(bf:IsShown())
+        end
+    end
+end
+
+function UI:ToggleMark(index)
+    local C = WFD.C
+    if not C or not self.book then return end
+    C.marks = C.marks or {}
+    for i, m in ipairs(C.marks) do
+        if resolveMark(m) == index then
+            table.remove(C.marks, i)
+            self:UpdateMarks()
+            return
+        end
+    end
+    local p = placeOf(index)
+    if not p then return end
+    if #C.marks >= MAX_MARKS then table.remove(C.marks, 1) end
+    C.marks[#C.marks + 1] = p
+    self:UpdateMarks()
+    UI.Sound("IG_ABILITY_PAGE_TURN", 836)
+end
+
+------------------------------------------------------------------------
 -- Keys, while the mouse is over the open book (so walking and fighting stay untouched)
 ------------------------------------------------------------------------
 local KEYS = {
@@ -121,19 +248,37 @@ local KEYS = {
     HOME = function() if UI.book and UI.book.sectionStart.toc then UI:GoToPage(UI.book.sectionStart.toc) end end,
     END = function() UI:GoToPage(UI:TodayPage()) end,
     BACKSPACE = function() UI:Back() end,
+    ["CTRL-F"] = function() if UI.ToggleSearch then UI:ToggleSearch() end end,
 }
 local function propagate(frame, v)
     if frame.SetPropagateKeyboardInput and not (InCombatLockdown and InCombatLockdown()) then
         pcall(frame.SetPropagateKeyboardInput, frame, v)
     end
 end
+-- Escape closes what lies on top of the book first (a card, the search); the book itself only after that
+local function closeLayer()
+    if UI.card and UI.card:IsShown() then UI.card:Hide() return true end
+    if UI.kindPanel and UI.kindPanel:IsShown() then UI.kindPanel:Hide() return true end
+    if UI.searchPanel and UI.searchPanel:IsShown() then UI.searchPanel:Hide() return true end
+    return false
+end
+
 local function setupKeys(holder)
     if not holder.EnableKeyboard then return end
     holder:EnableKeyboard(true)
     propagate(holder, true)
     holder:SetScript("OnKeyDown", function(self, key)
-        local fn = KEYS[key]
+        local fn = (IsControlKeyDown() and KEYS["CTRL-" .. key]) or KEYS[key]
         local typing = GetCurrentKeyBoardFocus and GetCurrentKeyBoardFocus()
+        if key == "ESCAPE" then
+            if not typing and not (InCombatLockdown and InCombatLockdown()) and closeLayer() then
+                propagate(self, false)
+                C_Timer.After(0, function() propagate(self, true) end)
+            else
+                propagate(self, true)
+            end
+            return
+        end
         if fn and not typing and UI.bookFrame:IsShown() and self:IsMouseOver() and not (InCombatLockdown and InCombatLockdown()) then
             propagate(self, false)
             fn()
@@ -404,12 +549,21 @@ function UI:Build()
     buildBack(self.bookFrame)
     setupKeys(self.holder)
     restorePosition(self.holder)
+    -- the own bookmarks belong to the open book, like the red ribbon
+    self.bookFrame:HookScript("OnHide", function() for _, f in pairs(markFrames) do f:Hide() end end)
     -- the moment the book is put away counts as "read until now"
     self.holder:HookScript("OnHide", function()
         if WFD.C and not WFD.demo then WFD.C.seenAt = time() end
         if note then note:Hide() end
         if ask then ask:Hide() end
     end)
+end
+
+-- the ribbons follow every turn of a page (their pages may have moved, the open one stands taller)
+local spread0 = UI.ShowSpread
+function UI:ShowSpread(s)
+    spread0(self, s)
+    self:UpdateMarks()
 end
 
 local open0 = UI.OpenBook
@@ -452,7 +606,7 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
         y = y - 22
     end
     local function small(text)
-        local t = pool:Text(10, c.inkFaint, UI.FONT)
+        local t = pool:Text(11, c.inkSoft, UI.FONT)
         t:SetWidth(tw)
         t:SetText(text)
         t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 4)
@@ -467,7 +621,7 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
         { text = L["Important only"], active = level == "important", fn = function() S.notify = "important"; redraw() end },
         { text = L["Quiet"], active = level == "quiet", fn = function() S.notify = "quiet"; redraw() end },
     })
-    small(L["Important: levels, bosses, rare creatures and finds, deaths, dungeons, honours and letters."])
+    small(L["Important: levels, bosses, rare creatures and finds, dungeons, honours and letters."])
     y = y - 4
 
     caption(L["Keys while the mouse is over the book"])
@@ -476,6 +630,7 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
         { L["Home"], L["contents"] },
         { L["End"], L["today's entry"] },
         { L["Backspace"], L["back"] },
+        { L["Ctrl + F"], L["search the book"] },
         { L["Ctrl + mouse wheel"], L["size of the book"] },
         { L["Right-click the page number"], L["go to a page"] },
         { "/wfd", L["open or close the book"] },
@@ -537,7 +692,7 @@ UI:RegisterRenderer("appearance", function(pool, page, side, canvas)
         y = y - 22
     end
     local function small(text)
-        local t = pool:Text(10, c.inkFaint, UI.FONT)
+        local t = pool:Text(11, c.inkSoft, UI.FONT)
         t:SetWidth(tw)
         t:SetText(text)
         t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 4)

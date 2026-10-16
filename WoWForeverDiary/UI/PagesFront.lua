@@ -376,6 +376,18 @@ UI:RegisterRenderer("toc", function(pool, page, side, canvas)
             h:SetWidth(tw)
             h:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
             y = y - 26
+        elseif e.group then
+            -- a group of the appendix: a small heading with a stroke in the colour of its tabs
+            local mark = pool:Rect({ e.col[1] * 1.4, e.col[2] * 1.4, e.col[3] * 1.4 }, 1)
+            mark:SetSize(3, 11)
+            mark:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 4)
+            local h = pool:Text(10, c.inkSoft, UI.FONT)
+            h:SetText(e.text:upper())
+            h:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 9, y - 4)
+            local rule = pool:Grad("HORIZONTAL", { 0.78, 0.60, 0.26, 0.35 }, { 0.78, 0.60, 0.26, 0 })
+            rule:SetSize(max(10, tw - 16 - h:GetStringWidth()), 1)
+            rule:SetPoint("LEFT", h, "RIGHT", 8, 0)
+            y = y - 24
         else
             local ix = 0
             if e.icon then

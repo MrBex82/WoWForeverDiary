@@ -21,8 +21,40 @@ UI.spread = 1
 
 function UI:RegisterRenderer(kind, fn) self.renderers[kind] = fn end
 
+-- The order of the book, in one place: the parts in groups, from what you open every day to what you
+-- look things up in. Each group has its own tab colour and a heading in the contents.
+UI.GROUPS = {
+    { key = "front",     col = { 0.45, 0.28, 0.14 } },
+    { key = "goals",     col = { 0.66, 0.48, 0.10 }, label = "Goals and honour" },
+    { key = "chronicle", col = { 0.40, 0.20, 0.50 }, label = "Chronicle" },
+    { key = "world",     col = { 0.20, 0.42, 0.20 }, label = "The world" },
+    { key = "hunt",      col = { 0.56, 0.12, 0.08 }, label = "Hunt and loot" },
+    { key = "people",    col = { 0.16, 0.32, 0.54 }, label = "People and household" },
+    { key = "back",      col = { 0.34, 0.27, 0.20 }, label = "Keepsakes" },
+}
+UI.GROUP = {}
+for i, g in ipairs(UI.GROUPS) do g.index = i; UI.GROUP[g.key] = g end
+-- part = { group, order, tab } (tab false: reached through the contents and the search only)
+local LAYOUT = {
+    memoriam = { "front", 1 }, quests = { "front", 3 },
+    collection = { "goals", 5 }, honour = { "goals", 6 },
+    milestones = { "chronicle", 10 }, firsts = { "chronicle", 11 }, records = { "chronicle", 12 },
+    levels = { "chronicle", 13 }, gallery = { "chronicle", 14 },
+    atlas = { "world", 19 }, maps = { "world", 20 }, landmarks = { "world", 21 }, gathering = { "world", 22, false },
+    runs = { "world", 25 },
+    bestiary = { "hunt", 30 }, nemesis = { "hunt", 32 }, treasures = { "hunt", 35 },
+    people = { "people", 40 }, companions = { "people", 45, false }, ledger = { "people", 50 },
+    family = { "back", 86 }, capsule = { "back", 88 }, notes = { "back", 90 },
+}
+
 -- def = { key, label, icon, order, build = function(book) ... end }
 function UI:RegisterSection(def)
+    local lay = LAYOUT[def.key]
+    if lay then
+        def.group, def.order = lay[1], lay[2]
+        if lay[3] == false then def.thumb = false end
+    end
+    def.group = def.group or "back"
     self.sections[#self.sections + 1] = def
     table.sort(self.sections, function(a, b) return a.order < b.order end)
 end
@@ -111,8 +143,9 @@ function UI:Paginate()
     -- Heights as the contents page draws them: a chapter with its sub line 36, the appendix heading 36,
     -- a part of the appendix 26; the first page loses the room of its title.
     local TOC_FIRST, TOC_NEXT = UI.AREA_H - 76, UI.AREA_H
-    local function entryH(e) return (e.header or e.sub) and 36 or 26 end
-    local need = #chapters * 36 + 36 + #self.sections * 26
+    -- a group heading of the appendix takes 24
+    local function entryH(e) return e.group and 24 or ((e.header or e.sub) and 36 or 26) end
+    local need = #chapters * 36 + 36 + #self.sections * 26 + #UI.GROUPS * 24
     local tocPages = 1 + max(0, ceil((need - TOC_FIRST) / TOC_NEXT))
     book:Start("toc")
     local tocList = {}
@@ -142,15 +175,22 @@ function UI:Paginate()
         all[#all + 1] = { text = ch.roman .. ".  " .. ch.title, sub = ch.sub, page = ch.page }
     end
     all[#all + 1] = { header = true, text = L["Appendix"] }
+    local lastGroup
     for _, sec in ipairs(self.sections) do
         if book.sectionStart[sec.key] then
+            local g = UI.GROUP[sec.group]
+            if g and g.key ~= lastGroup and g.label then
+                all[#all + 1] = { group = true, text = L[g.label], col = g.col }
+            end
+            lastGroup = sec.group
             all[#all + 1] = { text = L[sec.label], page = book.sectionStart[sec.key], icon = sec.icon }
         end
     end
     local ti, room = 1, TOC_FIRST
     for _, e in ipairs(all) do
         local h = entryH(e)
-        if h > room and tocList[ti + 1] then
+        -- a group heading never stays alone at the foot of a page
+        if (h > room or (e.group and h + 26 > room)) and tocList[ti + 1] then
             ti = ti + 1
             room = TOC_NEXT
         end
@@ -306,7 +346,11 @@ function UI:RenderPage(side, index)
         n:SetPoint("BOTTOM", pg.canvas, "BOTTOMLEFT", tx + tw / 2, 22)
         local toc = self.book.sectionStart.toc
         if toc and page.kind ~= "toc" then
-            local hot = pool:Hot({ L["To the contents"], L["Right-click to go to a page."] }, function() UI:GoToPage(toc) end)
+            local hot = pool:Hot({ L["To the contents"], L["Right-click to go to a page."], L["Ctrl-click to set or remove a bookmark here."] },
+                function()
+                    if IsControlKeyDown() and UI.ToggleMark then UI:ToggleMark(index) return end
+                    UI:GoToPage(toc)
+                end)
             hot.onRight = function() if UI.AskPage then UI:AskPage() end end
             hot:SetPoint("TOPLEFT", n, "TOPLEFT", -6, 4)
             hot:SetPoint("BOTTOMRIGHT", n, "BOTTOMRIGHT", 6, -4)
@@ -414,24 +458,31 @@ function UI:Flip(dir)
 end
 
 ------------------------------------------------------------------------
--- Thumb index
+-- Thumb index (coloured by the groups in UI.GROUPS)
 ------------------------------------------------------------------------
-local TAB_COLORS = {
-    { 0.42, 0.26, 0.12 }, { 0.52, 0.10, 0.08 }, { 0.62, 0.46, 0.10 }, { 0.20, 0.38, 0.18 }, { 0.30, 0.14, 0.12 },
-    { 0.16, 0.28, 0.48 }, { 0.58, 0.36, 0.06 }, { 0.36, 0.16, 0.44 }, { 0.10, 0.36, 0.36 },
-}
 
 function UI:ThumbList()
     local list = {
-        { key = "toc", label = L["Contents"], icon = "journal" },
-        { key = "diary", label = L["Diary"], icon = "quill" },
+        { key = "toc", label = L["Contents"], icon = "journal", group = "front" },
+        -- the diary tab leads to today's entry (the beginning is one click away in the contents)
+        { key = "diary", label = L["Diary"], icon = "quill", target = function() return UI:TodayPage() end,
+          hint = L["Click to open today's entry."], group = "front" },
     }
     for _, sec in ipairs(self.sections) do
         if sec.thumb ~= false then
-            list[#list + 1] = { key = sec.key, label = sec.thumbText and sec.thumbText() or L[sec.label], icon = sec.icon }
+            list[#list + 1] = { key = sec.key, label = sec.thumbText and sec.thumbText() or L[sec.label], icon = sec.icon,
+                group = sec.group }
         end
     end
-    for i, t in ipairs(list) do t.col = TAB_COLORS[((i - 1) % #TAB_COLORS) + 1] end
+    -- the colour of its group; neighbours within a group a shade apart
+    local nth, last = 0, nil
+    for _, t in ipairs(list) do
+        if t.group ~= last then nth, last = 0, t.group end
+        nth = nth + 1
+        local g = UI.GROUP[t.group] or UI.GROUPS[#UI.GROUPS]
+        local k = (nth % 2 == 0) and 0.80 or 1
+        t.col = { g.col[1] * k, g.col[2] * k, g.col[3] * k }
+    end
     return list
 end
 
@@ -481,16 +532,64 @@ function UI:UpdateThumbs()
         paintTab(t, t.on, t.hover)
     end
     if self.PaintNewDots then self:PaintNewDots(activeKey) end
+    if UI.RefreshPlates then UI.RefreshPlates() end
+end
+
+-- name plates beside all tabs while the mouse is on any of them, so the whole index can be read at a glance;
+-- they stay a moment when the mouse crosses the small gap between two tabs
+local plateDriver = CreateFrame("Frame")
+plateDriver:Hide()
+plateDriver:SetScript("OnUpdate", function(self)
+    if self.hideAt and GetTime() >= self.hideAt then
+        self.hideAt = nil
+        self:Hide()
+        for _, t in ipairs(UI.thumbs or {}) do t.plate:Hide() end
+    end
+end)
+
+local function showPlates(keepTimer)
+    if not keepTimer then plateDriver.hideAt = nil end
+    local widest = 0
+    for _, t in ipairs(UI.thumbs) do
+        local p = t.plate
+        p:SetWidth(p.text:GetStringWidth() + 18)
+        widest = max(widest, p:GetWidth())
+        if t.on then p.text:SetTextColor(col4(c.gold))
+        elseif t.hover then p.text:SetTextColor(1, 1, 1, 1)
+        else p.text:SetTextColor(0.90, 0.84, 0.72, 1) end
+        p:Show()
+    end
+    UI.plateWidth = widest
+end
+-- after a turn of the page the open tab changes: repaint the plates that are out
+function UI.RefreshPlates()
+    local t = UI.thumbs and UI.thumbs[1]
+    if t and t.plate:IsShown() then showPlates(true) end
+end
+
+local function hidePlatesSoon()
+    plateDriver.hideAt = GetTime() + 0.15
+    plateDriver:Show()
 end
 
 local function buildThumbs(bf)
     UI.thumbs = {}
+    bf:HookScript("OnHide", function()
+        plateDriver.hideAt = nil
+        plateDriver:Hide()
+        for _, t in ipairs(UI.thumbs) do t.plate:Hide() end
+    end)
     local list = UI:ThumbList()
-    -- tabs shrink a little when the book has many sections, so they always fit beside the pages
-    local H = min(TAB_H, floor((PH - 12) / #list) - TAB_GAP)
-    local total = #list * (H + TAB_GAP) - TAB_GAP
+    -- a small gap between the groups; tabs shrink a little when the book has many sections,
+    -- so they always fit beside the pages
+    local GROUP_GAP = 8
+    local gaps = 0
+    for i = 2, #list do if list[i].group ~= list[i - 1].group then gaps = gaps + 1 end end
+    local H = min(TAB_H, floor((PH - 12 - gaps * GROUP_GAP) / #list) - TAB_GAP)
+    local total = #list * (H + TAB_GAP) - TAB_GAP + gaps * GROUP_GAP
     local y = -BRD - max(10, (PH - total) / 2)
-    for _, def in ipairs(list) do
+    for i, def in ipairs(list) do
+        if i > 1 and def.group ~= list[i - 1].group then y = y - GROUP_GAP end
         local t = CreateFrame("Button", nil, bf)
         t:SetSize(TAB_W + H / 2, H)
         t:SetFrameLevel(bf:GetFrameLevel() + 1)
@@ -526,9 +625,20 @@ local function buildThumbs(bf)
         t.icon:SetTexture(UI.Icon(def.icon))
         t.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
         UI.Round(t.icon, t)
-        t.key, t.label, t.y = def.key, def.label, y
+        t.key, t.label, t.y, t.target, t.hint = def.key, def.label, y, def.target, def.hint
+        -- the name plate right of the tab end (moves with the tab as it slides out)
+        local plate = UI.Frame(bf, 60, max(18, H - 10))
+        plate:SetFrameLevel(bf:GetFrameLevel() + 25)
+        plate:SetPoint("LEFT", t, "LEFT", TAB_W + H / 2 + 8, 0)
+        plate:EnableMouse(false)
+        UI.Backdrop(plate, "tooltip", 10, 2, { 0.06, 0.04, 0.02, 0.94 }, c.goldDk)
+        plate.text = UI.Text(plate, 12, { 0.90, 0.84, 0.72, 1 }, "LEFT", UI.FONT, true)
+        plate.text:SetPoint("LEFT", 9, 0)
+        plate.text:SetText(def.label)
+        plate:Hide()
+        t.plate = plate
         t:SetScript("OnClick", function(self)
-            local st = UI.book and UI.book.sectionStart[self.key]
+            local st = UI.book and (self.target and self.target() or UI.book.sectionStart[self.key])
             if st then
                 UI.wantTab = self.key
                 UI:GoToPage(st)
@@ -540,14 +650,18 @@ local function buildThumbs(bf)
             self.hover = true
             placeTab(self)
             paintTab(self, self.on, true)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            showPlates()
+            -- the tooltip beside the column of name plates, not over them
+            GameTooltip:SetOwner(self, "ANCHOR_NONE")
+            GameTooltip:ClearAllPoints()
+            GameTooltip:SetPoint("LEFT", self, "LEFT", TAB_W + H / 2 + 8 + (UI.plateWidth or 0) + 10, 0)
             GameTooltip:SetText(self.label, 1, 0.86, 0.5)
-            local st = UI.book and UI.book.sectionStart[self.key]
+            local st = UI.book and (self.target and self.target() or UI.book.sectionStart[self.key])
             if st then GameTooltip:AddLine(format(L["Page %d"], UI.PageNumber(st)), 0.8, 0.8, 0.8) end
             if self.newCount and self.newCount > 0 then
                 GameTooltip:AddLine(format(L["%d new since you last read"], self.newCount), 1, 0.45, 0.35)
             end
-            GameTooltip:AddLine(L["Click to open this part of the book."], 0.5, 0.8, 1)
+            GameTooltip:AddLine(self.hint or L["Click to open this part of the book."], 0.5, 0.8, 1)
             GameTooltip:Show()
         end)
         t:SetScript("OnLeave", function(self)
@@ -555,6 +669,7 @@ local function buildThumbs(bf)
             placeTab(self)
             paintTab(self, self.on, false)
             GameTooltip:Hide()
+            hidePlatesSoon()
         end)
         paintTab(t, false, false)
         UI.thumbs[#UI.thumbs + 1] = t
@@ -1237,6 +1352,7 @@ end
 -- (the endpaper with the ex libris and "this book belongs to")
 function UI:OpenBook(page)
     self:Build()
+    self.openedOnce = true
     self.holder:Show()
     self.cover:Hide()
     self.bookFrame:Show()
@@ -1265,9 +1381,17 @@ function UI:Hide()
     if self.holder then self.holder:Hide() end
 end
 
+-- the cover greets once per session; after that the book opens straight at the page where reading stopped
 function UI:Toggle()
     self:Build()
-    if self.holder:IsShown() then self:Hide() else self:Show() end
+    if self.holder:IsShown() then
+        self:Hide()
+    elseif self.openedOnce and not WFD.demo then
+        if self.card then self.card:Hide() end
+        self:OpenBook(UI.PlacePage)
+    else
+        self:Show()
+    end
 end
 
 function UI:DataSwitched()

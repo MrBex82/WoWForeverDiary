@@ -216,7 +216,9 @@ local CLICK_HINTS = {
     "Click to open the diary.", "Click to open this part of the book.", "Click to open today's entry.", "Click to open",
     "Click to read the letter.", "Click to read this day aloud in chat.", "Click to read this day.",
     "Click to set a marker on the map.", "Right-click for the map of this region.", "Right-click to go to a page.",
-    "Click to open.", "Right-click for the settings.",
+    "Click to open.", "Right-click for the settings.", "Click for the hunting grounds of this area.",
+    "Click to show only these.", "Click to show all again.", "Ctrl-click to set or remove a bookmark here.",
+    "Click to open, right-click to remove.",
 }
 local clickSet
 local function isHint(s)
@@ -510,6 +512,12 @@ function UI.MapSketch(parent, w, h)
                 p:SetPoint("CENTER", mf, "TOPLEFT", p.fx * mw * z, -p.fy * mh * z)
             end
         end
+        local me = rawget(self, "me")
+        if me and me:IsShown() and me.fx then
+            me:SetScale(1 / z)
+            me:ClearAllPoints()
+            me:SetPoint("CENTER", mf, "TOPLEFT", me.fx * mw * z, -me.fy * mh * z)
+        end
         self:LayoutLabels()
     end
     -- names next to the pins: where two would overlap only the first is written (zooming in makes room)
@@ -593,10 +601,14 @@ function UI.MapSketch(parent, w, h)
                 if not s.info then return end
                 GameTooltip:SetOwner(s, "ANCHOR_RIGHT")
                 GameTooltip:SetText(s.info[1], 1, 0.86, 0.5)
-                for k = 2, #s.info do GameTooltip:AddLine(s.info[k], 0.85, 0.85, 0.85, true) end
+                for k = 2, #s.info do
+                    if UI.IsClickHint(s.info[k]) then GameTooltip:AddLine(s.info[k], 0.5, 0.8, 1, true)
+                    else GameTooltip:AddLine(s.info[k], 0.85, 0.85, 0.85, true) end
+                end
                 GameTooltip:Show()
             end)
             p:SetScript("OnLeave", function() GameTooltip:Hide() end)
+            p:SetScript("OnClick", function(s) local fn = rawget(s, "onClick") if fn then fn() end end)
             box.pins[i] = p
         end
         return p
@@ -606,7 +618,14 @@ function UI.MapSketch(parent, w, h)
     local function drawArt(self, mapID)
         for _, t in ipairs(self.tiles) do t:Hide() end
         for _, t in ipairs(self.cells) do t:Hide() end
-        for _, p in ipairs(self.pins) do p:Hide(); p.label:SetText("") end
+        for _, p in ipairs(self.pins) do
+            p:Hide()
+            p.label:SetText("")
+            p.onClick = nil
+            p.rim:SetVertexColor(0.08, 0.04, 0.02, 1)
+        end
+        local me0 = rawget(self, "me")
+        if me0 then me0:Hide() end
         local CW, CH = w - 8, h - 8
         local layers = C_Map and C_Map.GetMapArtLayers and C_Map.GetMapArtLayers(mapID)
         local info = layers and layers[1]
@@ -707,26 +726,68 @@ function UI.MapSketch(parent, w, h)
         self:LayoutLabels()
     end
 
-    -- the map with small coloured dots: points = { { x, y, col, { tooltip lines } } }
+    -- the map with small coloured dots: points = { { x, y, col, { tooltip lines }, ring, onClick } }
+    -- a ring is drawn hollow (something seen, not had); onClick makes the pin a button
     function box:DrawPoints(mapID, points)
         local mw, mh = drawArt(self, mapID)
         local k = UI.CanRound() and 1 or 0.74
         for i = 1, math.min(#points, 400) do
             local pt = points[i]
             local p = pin(i)
-            p:SetSize(11, 11)
-            p.rim:SetSize(9 * k, 9 * k)
-            p.dot:SetSize(6 * k, 6 * k)
-            p.dot:SetVertexColor(col4(pt[3]))
+            if pt[5] then
+                p:SetSize(12, 12)
+                p.rim:SetSize(12 * k, 12 * k)
+                p.rim:SetVertexColor(col4(pt[3]))
+                p.dot:SetSize(6 * k, 6 * k)
+                p.dot:SetVertexColor(0.84, 0.74, 0.56, 1)      -- the map tone: the ring looks hollow
+            else
+                p:SetSize(14, 14)
+                p.rim:SetSize(12 * k, 12 * k)
+                p.dot:SetSize(8 * k, 8 * k)
+                p.dot:SetVertexColor(col4(pt[3]))
+            end
             p.num:SetText("")
             p.info = pt[4]
+            p.onClick = pt[6]
             p.fx, p.fy = pt[1], pt[2]
-            p:SetFrameLevel(mf:GetFrameLevel() + 6)
+            -- what you had sits above what you only saw
+            p:SetFrameLevel(mf:GetFrameLevel() + (pt[5] and 6 or 7))
             p:SetScale(1)
             p:ClearAllPoints()
             p:SetPoint("CENTER", mf, "TOPLEFT", pt[1] * mw, -pt[2] * mh)
             p:Show()
         end
+    end
+
+    -- where you stand right now: a small arrow turned the way you face (x, y: 0..1 on the drawn map)
+    function box:SetPlayer(x, y, facing)
+        local me = rawget(self, "me")
+        if not me then
+            me = CreateFrame("Frame", nil, mf)
+            me:SetSize(22, 22)
+            me.glow = UI.Circle(me, 20, { 1, 0.90, 0.55, 0.45 }, "ARTWORK", 0)
+            me.glow:SetPoint("CENTER")
+            me.arrow = me:CreateTexture(nil, "ARTWORK", nil, 1)
+            me.arrow:SetTexture("Interface\\Minimap\\MinimapArrow")
+            me.arrow:SetSize(20, 20)
+            me.arrow:SetPoint("CENTER")
+            me:EnableMouse(true)
+            me:SetScript("OnEnter", function(s)
+                GameTooltip:SetOwner(s, "ANCHOR_RIGHT")
+                GameTooltip:SetText(L["You are here."], 1, 0.86, 0.5)
+                GameTooltip:Show()
+            end)
+            me:SetScript("OnLeave", function() GameTooltip:Hide() end)
+            self.me = me
+        end
+        if not (x and y) then me:Hide() return end
+        me.fx, me.fy = x, y
+        if facing and me.arrow.SetRotation then me.arrow:SetRotation(facing) end
+        me:SetFrameLevel(mf:GetFrameLevel() + 9)
+        me:SetScale(1 / (self.zoom or 1))
+        me:ClearAllPoints()
+        me:SetPoint("CENTER", mf, "TOPLEFT", x * (self.mw or w) * (self.zoom or 1), -y * (self.mh or h) * (self.zoom or 1))
+        me:Show()
     end
 
     function box:Draw(mapID)

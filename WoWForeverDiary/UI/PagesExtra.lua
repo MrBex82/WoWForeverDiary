@@ -366,7 +366,7 @@ UI:RegisterRenderer("landmarks", function(pool, page, side, canvas)
 end)
 
 ------------------------------------------------------------------------
--- Treasure album: a display case of every notable find, grouped by quality
+-- Treasure album: a display case of every notable find, grouped by kind (the slot it is worn in, weapons, goods)
 ------------------------------------------------------------------------
 -- frame colours (bright) and ink colours (readable on parchment) per item quality
 local QFRAME = {
@@ -380,6 +380,90 @@ local QNAME = { [2] = "Uncommon", [3] = "Rare", [4] = "Epic", [5] = "Legendary" 
 -- the game's own name for a quality ("Selten", "Rar", "Episch" ...), else ours
 local function qualityName(q)
     return _G["ITEM_QUALITY" .. q .. "_DESC"] or L[QNAME[q] or "?"]
+end
+
+-- what kind of thing a find is: the slot it is worn in, in the order of the character sheet, then weapons,
+-- then the other kinds of goods. Names come from the game, in the language of the client.
+local SLOT_ORDER = {
+    "INVTYPE_HEAD", "INVTYPE_NECK", "INVTYPE_SHOULDER", "INVTYPE_CLOAK", "INVTYPE_CHEST", "INVTYPE_BODY",
+    "INVTYPE_TABARD", "INVTYPE_WRIST", "INVTYPE_HAND", "INVTYPE_WAIST", "INVTYPE_LEGS", "INVTYPE_FEET",
+    "INVTYPE_FINGER", "INVTYPE_TRINKET", "weapon", "INVTYPE_SHIELD", "INVTYPE_HOLDABLE", "INVTYPE_RANGED",
+    "INVTYPE_THROWN", "INVTYPE_RELIC", "INVTYPE_AMMO", "INVTYPE_QUIVER", "INVTYPE_BAG",
+}
+local SLOT_SAME = {
+    INVTYPE_ROBE = "INVTYPE_CHEST", INVTYPE_WEAPON = "weapon", INVTYPE_2HWEAPON = "weapon",
+    INVTYPE_WEAPONMAINHAND = "weapon", INVTYPE_WEAPONOFFHAND = "weapon", INVTYPE_RANGEDRIGHT = "INVTYPE_RANGED",
+}
+local SLOT_RANK = {}
+for i, k in ipairs(SLOT_ORDER) do SLOT_RANK[k] = i end
+-- the plural names of the auction house, where the client has them
+local CLASS_PLURAL = {
+    [0] = "AUCTION_CATEGORY_CONSUMABLES", [1] = "AUCTION_CATEGORY_CONTAINERS", [3] = "AUCTION_CATEGORY_GEMS",
+    [7] = "AUCTION_CATEGORY_TRADE_GOODS", [9] = "AUCTION_CATEGORY_RECIPES", [12] = "AUCTION_CATEGORY_QUEST_ITEMS",
+    [15] = "AUCTION_CATEGORY_MISCELLANEOUS",
+}
+
+-- key, heading and rank of the group a found item belongs to
+local function treasureGroup(link)
+    local fn = GetItemInfoInstant or (C_Item and C_Item.GetItemInfoInstant)
+    local itype, loc, classID
+    if fn and link then
+        local ok, _, t, _, l, _, cid = pcall(fn, link)
+        if ok then itype, loc, classID = t, l, cid end
+    end
+    loc = loc and (SLOT_SAME[loc] or loc)
+    if loc and SLOT_RANK[loc] then
+        local name = (loc == "weapon") and (rawget(_G, "AUCTION_CATEGORY_WEAPONS") or itype) or rawget(_G, loc)
+        return loc, name or itype or L["Other"], SLOT_RANK[loc]
+    end
+    if classID then
+        local plural = CLASS_PLURAL[classID] and rawget(_G, CLASS_PLURAL[classID])
+        return "class" .. classID, plural or itype or L["Other"], 100 + classID
+    end
+    return "other", L["Other"], 999
+end
+
+-- the doll: one place per slot, with the game's empty-slot picture; some kinds share a place
+local DOLL = {
+    { "head", "INVTYPE_HEAD", "Head" }, { "neck", "INVTYPE_NECK", "Neck" }, { "shoulder", "INVTYPE_SHOULDER", "Shoulder" },
+    { "back", "INVTYPE_CLOAK", "Chest" }, { "chest", "INVTYPE_CHEST", "Chest" }, { "wrist", "INVTYPE_WRIST", "Wrists" },
+    { "hand", "INVTYPE_HAND", "Hands" }, { "waist", "INVTYPE_WAIST", "Waist" },
+    { "legs", "INVTYPE_LEGS", "Legs" }, { "feet", "INVTYPE_FEET", "Feet" }, { "finger", "INVTYPE_FINGER", "Finger" },
+    { "trinket", "INVTYPE_TRINKET", "Trinket" }, { "main", "INVTYPE_WEAPONMAINHAND", "MainHand" },
+    { "off", "INVTYPE_SHIELD", "SecondaryHand" }, { "ranged", "INVTYPE_RANGED", "Ranged" },
+}
+local DOLL_OF = {
+    INVTYPE_HEAD = "head", INVTYPE_NECK = "neck", INVTYPE_SHOULDER = "shoulder", INVTYPE_CLOAK = "back",
+    INVTYPE_CHEST = "chest", INVTYPE_WRIST = "wrist", INVTYPE_HAND = "hand", INVTYPE_WAIST = "waist",
+    INVTYPE_LEGS = "legs", INVTYPE_FEET = "feet", INVTYPE_FINGER = "finger", INVTYPE_TRINKET = "trinket",
+    weapon = "main", INVTYPE_SHIELD = "off", INVTYPE_HOLDABLE = "off", INVTYPE_RANGED = "ranged", INVTYPE_THROWN = "ranged",
+}
+
+-- the items worn right now
+local function wornNow()
+    local set = {}
+    if GetInventoryItemID then
+        for slot = 1, 19 do
+            local ok, id = pcall(GetInventoryItemID, "player", slot)
+            if ok and id then set[id] = true end
+        end
+    end
+    return set
+end
+
+-- a creature named as the source of a find, for its wanted poster
+local function mobByName(name)
+    if not name then return nil end
+    for id, m in pairs(WFD.C.mobs or {}) do
+        if m.name == name then return id end
+    end
+end
+
+local function setTreasureFilter(q)
+    UI.treasureFilter = q
+    UI:Paginate()
+    local st = UI.book.sectionStart.treasures
+    if st then UI:ShowSpread(math.ceil(st / 2)) end
 end
 
 UI:RegisterSection({
@@ -402,26 +486,63 @@ UI:RegisterSection({
                 end
             end
         end
-        local byQ, counts, total = {}, {}, 0
+        -- grouped by kind (legs, chest, weapons, recipes ...); the quality shows in the frame and the ink.
+        -- A chosen quality (a click on its gem in the display case) leaves only those in the list.
+        local filter = UI.treasureFilter
+        local groups, byKey, counts, total, best = {}, {}, {}, 0, {}
         for _, a in pairs(agg) do
+            local key, name, rank = treasureGroup(a.link)
+            a.gkey = key
             local q = math.min(5, a.q)
-            byQ[q] = byQ[q] or {}
-            table.insert(byQ[q], a)
             counts[q] = (counts[q] or 0) + 1
             total = total + 1
-        end
-        book.treasureCount = total
-        local list = { { h = 76, summary = true, counts = counts } }
-        if total == 0 then list[#list + 1] = { h = 40, empty = L["No treasures found yet."] } end
-        for q = 5, 2, -1 do
-            local items = byQ[q]
-            if items then
-                table.sort(items, function(a, b) return a.day < b.day end)
-                list[#list + 1] = { h = 36, header = qualityName(q), count = tostring(#items), keep = 50 }
-                for i = 1, #items, 2 do list[#list + 1] = { h = 50, pair = { items[i], items[i + 1] } } end
+            -- the best find for each slot of the doll: the highest quality, the latest of those
+            local slot = DOLL_OF[key]
+            if slot then
+                local b = best[slot]
+                if not b or a.q > b.q or (a.q == b.q and a.day > b.day) then best[slot] = a end
+            end
+            if not filter or q == filter then
+                local g = byKey[key]
+                if not g then
+                    g = { key = key, name = name, rank = rank, items = {} }
+                    byKey[key] = g
+                    groups[#groups + 1] = g
+                end
+                table.insert(g.items, a)
             end
         end
+        table.sort(groups, function(a, b)
+            if a.rank ~= b.rank then return a.rank < b.rank end
+            return a.name < b.name
+        end)
+        book.treasureCount = total
+        local list = { { h = 76, summary = true, counts = counts } }
+        if total == 0 then
+            list[#list + 1] = { h = 40, empty = L["No treasures found yet."] }
+        else
+            list[#list + 1] = { h = 116, doll = true, best = best }
+        end
+        if filter then list[#list + 1] = { h = 26, filterNote = filter } end
+        for _, g in ipairs(groups) do
+            local items = g.items
+            -- the best first, then in the order they were found
+            table.sort(items, function(a, b)
+                if a.q ~= b.q then return a.q > b.q end
+                return a.day < b.day
+            end)
+            list[#list + 1] = { h = 36, header = g.name, gkey = g.key, count = tostring(#items), keep = 50 }
+            for i = 1, #items, 2 do list[#list + 1] = { h = 50, pair = { items[i], items[i + 1] } } end
+        end
+        local before = #book.pages
         rows(book, "treasures", list, L["Treasures"])
+        -- where each kind begins, for the slots of the doll
+        book.treasureGroupPage = {}
+        for i = before + 1, #book.pages do
+            for _, r in ipairs(book.pages[i].rows or {}) do
+                if r.gkey then book.treasureGroupPage[r.gkey] = i end
+            end
+        end
     end,
 })
 
@@ -433,10 +554,12 @@ UI:RegisterRenderer("treasures", function(pool, page, side, canvas)
     local top = -UI.TOP
     local GAP_X = 12
     local colW = (tw - GAP_X) / 2
+    local worn = wornNow()
+    local filter = UI.treasureFilter
     for _, r in ipairs(page.rows) do
         local y = top - r.y
         if r.summary then
-            -- the display case: one plaque per quality with the number of finds
+            -- the display case: one plaque per quality with the number of finds; a click shows only those
             local n = 4
             local step = tw / n
             for i, q in ipairs({ 2, 3, 4, 5 }) do
@@ -444,15 +567,73 @@ UI:RegisterRenderer("treasures", function(pool, page, side, canvas)
                 local cx = tx + step * (i - 0.5)
                 local icons = { [2] = "INV_Misc_Gem_Emerald_01", [3] = "INV_Misc_Gem_Sapphire_01",
                     [4] = "INV_Misc_Gem_Amethyst_01", [5] = "INV_Misc_Gem_Pearl_05" }
+                local lit = cnt > 0 and (not filter or filter == q)
                 local pl = pool:Plaque(cx, y - 16, 26, UI.IconPath({ icons[q], "INV_Misc_Gem_Variety_01" }, "gem"),
-                    QFRAME[q], cnt > 0, tostring(cnt))
-                local lab = pool:Text(9, cnt > 0 and QINK[q] or c.inkFaint, UI.FONT, "CENTER")
+                    QFRAME[q], lit, tostring(cnt))
+                local lab = pool:Text(9, lit and QINK[q] or c.inkFaint, UI.FONT, "CENTER")
                 lab:SetText(qualityName(q):upper())
                 lab:SetPoint("TOP", pl, "BOTTOM", 0, -5)
+                if filter == q then
+                    local u = pool:Rect(QINK[q], 1)
+                    u:SetSize(lab:GetStringWidth(), 1)
+                    u:SetPoint("TOP", lab, "BOTTOM", 0, -2)
+                end
+                if cnt > 0 then
+                    local hot = pool:Hot({ qualityName(q), tostring(cnt),
+                        filter == q and L["Click to show all again."] or L["Click to show only these."] },
+                        function() setTreasureFilter(filter ~= q and q or nil) end)
+                    hot:SetPoint("CENTER", pl, "CENTER", 0, -8)
+                    hot:SetSize(step - 6, 52)
+                end
             end
             local rule = pool:Grad("HORIZONTAL", { 0.78, 0.60, 0.26, 0 }, { 0.78, 0.60, 0.26, 0.5 })
             rule:SetSize(tw, 1)
             rule:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 64)
+        elseif r.doll then
+            -- the best find for every slot; empty slots show the game's own outline
+            local cap = pool:Text(10, c.redInk, UI.FONT)
+            cap:SetText(L["Best find for every slot"]:upper())
+            cap:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 2)
+            local key = pool:Text(9, c.inkSoft, UI.FONT, "RIGHT")
+            key:SetText(L["worn right now"])
+            key:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 3)
+            local tick = pool:Icon("Interface\\RAIDFRAME\\ReadyCheck-Ready", 12)
+            tick:SetTexCoord(0, 1, 0, 1)
+            tick:SetPoint("RIGHT", key, "LEFT", -3, 0)
+            local step = tw / 8
+            for i, d in ipairs(DOLL) do
+                local rowN = (i <= 8) and 0 or 1
+                local col = (i <= 8) and (i - 1) or (i - 9)
+                local cx = tx + step * (col + 0.5) + rowN * step / 2
+                local cy = y - 38 - rowN * 44
+                local a = r.best[d[1]]
+                local slotName = rawget(_G, d[2]) or d[3]
+                local hot
+                if a then
+                    local q = math.min(5, a.q)
+                    local pl = pool:Plaque(cx, cy, 28, WFD:ItemIcon(a.link) or UI.Icon("loot"), QFRAME[q], true)
+                    if worn[a.id] then
+                        local t = pool:Icon("Interface\\RAIDFRAME\\ReadyCheck-Ready", 14, "OVERLAY", 2)
+                        t:SetTexCoord(0, 1, 0, 1)
+                        t:SetPoint("CENTER", pl, "TOPRIGHT", -2, -2)
+                    end
+                    local gp = UI.book.treasureGroupPage and UI.book.treasureGroupPage[a.gkey]
+                    hot = pool:Hot(nil, gp and function() UI:GoToPage(gp) end, a.link)
+                    hot:SetPoint("CENTER", pl, "CENTER")
+                else
+                    local path = "Interface\\PaperDoll\\UI-PaperDoll-Slot-" .. d[3]
+                    local pl = pool:Plaque(cx, cy, 28, UI.Has(path) and path or UI.Icon("loot"), LOCKED, false)
+                    hot = pool:Hot({ slotName, L["not yet found"] })
+                    hot:SetPoint("CENTER", pl, "CENTER")
+                end
+                hot:SetSize(34, 34)
+            end
+        elseif r.filterNote then
+            local t = pool:Text(11, QINK[r.filterNote], UI.FONT)
+            t:SetText(format(L["Shown: %s only"], qualityName(r.filterNote)))
+            t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 4)
+            local link = pool:Link(L["Show all"] .. "  >", function() setTreasureFilter(nil) end, 12)
+            link:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 4)
         elseif r.empty then
             emptyText(pool, canvas, tx, tw, y - 6, r.empty)
         elseif r.header then
@@ -463,22 +644,41 @@ UI:RegisterRenderer("treasures", function(pool, page, side, canvas)
                 if it then
                     local q = math.min(5, it.q)
                     local x = tx + (k - 1) * (colW + GAP_X)
-                    pool:Plaque(x + 18, y - 20, 32, WFD:ItemIcon(it.link) or UI.Icon("loot"), QFRAME[q], true,
+                    local pl = pool:Plaque(x + 18, y - 20, 32, WFD:ItemIcon(it.link) or UI.Icon("loot"), QFRAME[q], true,
                         it.n > 1 and tostring(it.n) or nil)
+                    if worn[it.id] then
+                        local t = pool:Icon("Interface\\RAIDFRAME\\ReadyCheck-Ready", 14, "OVERLAY", 2)
+                        t:SetTexCoord(0, 1, 0, 1)
+                        t:SetPoint("CENTER", pl, "TOPRIGHT", -2, -2)
+                    end
                     local n = pool:Text(11, QINK[q], UI.FONT)
                     n:SetText(WFD:ItemName(it.link))
                     n:SetWidth(colW - 42)
                     if n.SetMaxLines then n:SetMaxLines(2) end
                     n:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 40, y - 3)
                     local s = pool:Text(9, c.inkFaint, UI.FONT)
-                    s:SetText(format(L["Day %d"], it.day) .. (it.src and ("  -  " .. it.src) or ""))
-                    s:SetWordWrap(false)
-                    s:SetWidth(colW - 42)
+                    s:SetText(format(L["Day %d"], it.day))
                     s:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 40, y - 31)
                     local p = UI.book.dayPage[it.day]
                     local hot = pool:Hot(nil, p and function() UI:GoToPage(p) end, it.link)
                     hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, y + 1)
                     hot:SetSize(colW, r.h - 4)
+                    -- where it came from: the creature's name leads to its wanted poster
+                    if it.src then
+                        local mob = mobByName(it.src)
+                        local src = pool:Text(9, mob and c.redInk or c.inkFaint, UI.FONT)
+                        src:SetText("-  " .. it.src)
+                        src:SetWordWrap(false)
+                        src:SetWidth(max(10, colW - 42 - s:GetStringWidth() - 6))
+                        src:SetPoint("LEFT", s, "RIGHT", 6, 0)
+                        if mob then
+                            local sh = pool:Hot({ it.src, L["Click for the wanted poster."] },
+                                function() UI:ShowCard("creature", mob) end)
+                            sh:SetPoint("TOPLEFT", src, "TOPLEFT", -2, 3)
+                            sh:SetPoint("BOTTOMRIGHT", src, "BOTTOMRIGHT", 2, -3)
+                            sh:SetFrameLevel(hot:GetFrameLevel() + 2)
+                        end
+                    end
                 end
             end
         end

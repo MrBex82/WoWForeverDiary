@@ -83,6 +83,25 @@ local function buildIndex()
             add("quest", q.title, UI.Icon("quests"), toPage(p), q.title .. " " .. (q.quote or ""), 3)
         end
     end
+    -- treasures: every notable find, leading to the page it is shown on
+    local treasurePage = {}
+    for _, p in ipairs(book.pages) do
+        if p.kind == "treasures" then
+            for _, r in ipairs(p.rows or {}) do
+                for _, it in ipairs(r.pair or {}) do treasurePage[it.id] = p.index end
+            end
+        end
+    end
+    local seenItem = {}
+    for _, d in pairs(C.days) do
+        for id, e in pairs(d.loot or {}) do
+            if (e.q or 1) >= 2 and not seenItem[id] and e.link then
+                seenItem[id] = true
+                add("treasure", WFD:ItemName(e.link), WFD:ItemIcon(e.link) or UI.Icon("loot"),
+                    toPage(treasurePage[id] or book.sectionStart.treasures), nil, 4)
+            end
+        end
+    end
     for _, h in ipairs(WFD.HONOURS or {}) do
         local tiers = C.honourTiers and C.honourTiers[h.key] or 0
         if not h.secret or tiers > 0 then
@@ -139,7 +158,7 @@ end
 ------------------------------------------------------------------------
 local KIND_LABEL = {
     part = "Contents", person = "Acquaintance", creature = "Bestiary", quest = "Quest", place = "Maps",
-    honour = "Honour", day = "Diary",
+    honour = "Honour", day = "Diary", treasure = "Treasures",
 }
 
 local panel
@@ -149,6 +168,14 @@ local function close()
         panel.edit:ClearFocus()
         panel:Hide()
     end
+end
+
+-- the chosen result (arrow keys, Tab or the mouse): Enter opens it
+local function choose(i)
+    local n = 0
+    for _, row in ipairs(panel.rows) do if row:IsShown() then n = n + 1 end end
+    panel.sel = n > 0 and ((((i or 1) - 1) % n) + 1) or nil
+    for k, row in ipairs(panel.rows) do row.sel:SetShown(k == panel.sel) end
 end
 
 local function showResults()
@@ -178,6 +205,7 @@ local function showResults()
     panel.more:SetText(format(L["%d more results - type a little more"], #hits - MAX_ROWS))
     local h = 52 + max(n, (typed and n == 0) and 1 or 0) * ROW_H + (#hits > MAX_ROWS and 18 or 0)
     panel:SetHeight(h)
+    choose(1)
 end
 
 local function open(row)
@@ -219,7 +247,14 @@ local function build(bf)
     end)
     e:SetScript("OnEscapePressed", close)
     e:SetScript("OnEnterPressed", function()
-        if p.rows[1]:IsShown() then open(p.rows[1]) end
+        local row = p.rows[p.sel or 1]
+        if row and row:IsShown() then open(row) end
+    end)
+    e:SetScript("OnArrowPressed", function(_, key)
+        if key == "UP" then choose((p.sel or 1) - 1) elseif key == "DOWN" then choose((p.sel or 0) + 1) end
+    end)
+    e:SetScript("OnTabPressed", function()
+        choose((p.sel or 0) + (IsShiftKeyDown() and -1 or 1))
     end)
     p.edit = e
 
@@ -232,6 +267,15 @@ local function build(bf)
         r.hl = UI.Fill(r, { 0.91, 0.76, 0.42 }, "BACKGROUND", 0, 0.10)
         r.hl:SetAllPoints()
         r.hl:Hide()
+        -- the chosen row: a warmer band with a gold mark at its start
+        r.sel = CreateFrame("Frame", nil, r)
+        r.sel:SetAllPoints()
+        UI.Fill(r.sel, { 0.91, 0.76, 0.42 }, "BACKGROUND", 1, 0.16):SetAllPoints()
+        local mark = UI.Fill(r.sel, c.gold, "ARTWORK", 0, 0.9)
+        mark:SetPoint("TOPLEFT", -6, 0)
+        mark:SetPoint("BOTTOMLEFT", -6, 0)
+        mark:SetWidth(2)
+        r.sel:Hide()
         r.icon = r:CreateTexture(nil, "ARTWORK")
         r.icon:SetSize(18, 18)
         r.icon:SetPoint("LEFT", 2, 0)
@@ -243,7 +287,7 @@ local function build(bf)
         r.text:SetPoint("LEFT", 26, 0)
         r.text:SetPoint("RIGHT", r.kind, "LEFT", -6, 0)
         r.text:SetWordWrap(false)
-        r:SetScript("OnEnter", function(s) s.hl:Show() end)
+        r:SetScript("OnEnter", function(s) s.hl:Show() choose(i) end)
         r:SetScript("OnLeave", function(s) s.hl:Hide() end)
         r:SetScript("OnClick", open)
         r:Hide()
@@ -301,6 +345,7 @@ local function addButton()
         GameTooltip:SetOwner(s, "ANCHOR_BOTTOM")
         GameTooltip:SetText(L["Search the diary"], 1, 0.86, 0.5)
         GameTooltip:AddLine(L["Days, people, creatures, quests and places."], 0.9, 0.9, 0.9, true)
+        GameTooltip:AddLine(L["Ctrl + F"], 0.5, 0.8, 1)
         GameTooltip:Show()
     end)
     b:SetScript("OnLeave", function()

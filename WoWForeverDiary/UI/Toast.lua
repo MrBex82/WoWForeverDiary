@@ -32,6 +32,8 @@ local TW, TH = 430, 112
 local TX = 92                -- where the words start
 local NAME_W = TW - TX - 80  -- room left of the points
 local IN, HOLD, OUT = 0.35, 6, 0.6
+local SCALE = 0.8            -- the note is drawn a little smaller than laid out
+local TOP_Y = -140 / SCALE   -- so it keeps its place below the top of the screen
 local queue = {}
 local toast
 
@@ -78,7 +80,8 @@ end
 local function build()
     local f = CreateFrame("Button", "WoWForeverDiaryToast", UIParent)
     f:SetSize(TW, TH)
-    f:SetPoint("TOP", UIParent, "TOP", 0, -140)
+    f:SetPoint("TOP", UIParent, "TOP", 0, TOP_Y)
+    f:SetScale(SCALE)
     f:SetFrameStrata("HIGH")
     f:SetClampedToScreen(true)
     local base = f:GetFrameLevel()
@@ -184,7 +187,7 @@ local function build()
         if self.phase == "in" then
             local a = min(1, self.t / IN)
             self:SetAlpha(a)
-            self:SetPoint("TOP", UIParent, "TOP", 0, -140 + (1 - a) * 28)
+            self:SetPoint("TOP", UIParent, "TOP", 0, TOP_Y + (1 - a) * 28)
             if a >= 1 then self.phase, self.t = "hold", 0 end
         elseif self.phase == "hold" then
             if self:IsMouseOver() then self.t = 0 end
@@ -321,8 +324,10 @@ function UI:Toast(ev)
     if not (toast and toast:IsShown()) then self:NextToast() end
 end
 
+-- a death is written into the diary, but no note pops up for it
 WFD:OnSignal("milestone", function(ev)
-    if ev.k ~= "kills" and (not WFD.ShouldNotify or WFD:ShouldNotify(ev.k)) then UI:Toast(ev) end
+    if ev.k == "kills" or WFD:IsDeathEvent(ev) then return end
+    if not WFD.ShouldNotify or WFD:ShouldNotify(ev.k) then UI:Toast(ev) end
 end)
 
 ------------------------------------------------------------------------
