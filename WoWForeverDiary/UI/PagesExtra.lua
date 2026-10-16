@@ -623,6 +623,12 @@ UI:RegisterRenderer("treasures", function(pool, page, side, canvas)
                 else
                     local path = "Interface\\PaperDoll\\UI-PaperDoll-Slot-" .. d[3]
                     local pl = pool:Plaque(cx, cy, 28, UI.Has(path) and path or UI.Icon("loot"), LOCKED, false)
+                    -- the game's slot outline, laid once more over the dimmed one so it can be made out
+                    if UI.Has(path) then
+                        local outline = pool:Icon(path, 28, "ARTWORK", 5)
+                        outline:SetPoint("CENTER", pl, "CENTER")
+                        outline:SetVertexColor(0.80, 0.74, 0.64, 1)
+                    end
                     hot = pool:Hot({ slotName, L["not yet found"] })
                     hot:SetPoint("CENTER", pl, "CENTER")
                 end

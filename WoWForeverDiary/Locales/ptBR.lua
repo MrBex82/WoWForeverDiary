@@ -1056,7 +1056,7 @@ L["The spyglass on the spine searches the whole book: days, people, creatures, q
 L["Your own bookmarks"] = "Seus marcadores"
 L["Ctrl-click a page number to keep that page. A ribbon then sticks out of the top of the book: a click opens the page, a right-click takes the ribbon away."] = "Ctrl-clique num número de página guarda essa página. Então uma fita aparece no alto do livro: um clique abre a página, um clique direito tira a fita."
 L["Ctrl + click on the page number"] = "Ctrl + clique no número da página"
-L["set or remove a bookmark"] = "pôr ou tirar um marcador"
+L["bookmark"] = "marcador"
 L["Goals and honour"] = "Metas e honra"
 L["The world"] = "O mundo"
 L["Hunt and loot"] = "Caça e espólio"

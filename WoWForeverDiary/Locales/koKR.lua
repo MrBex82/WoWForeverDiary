@@ -1051,7 +1051,7 @@ L["The spyglass on the spine searches the whole book: days, people, creatures, q
 L["Your own bookmarks"] = "나만의 책갈피"
 L["Ctrl-click a page number to keep that page. A ribbon then sticks out of the top of the book: a click opens the page, a right-click takes the ribbon away."] = "페이지 번호를 Ctrl-클릭하면 그 페이지를 기억합니다. 책 위쪽에 리본이 나오며, 클릭하면 그 페이지를 펼치고 오른쪽 클릭하면 리본을 뺍니다."
 L["Ctrl + click on the page number"] = "페이지 번호를 Ctrl + 클릭"
-L["set or remove a bookmark"] = "책갈피 꽂기 또는 빼기"
+L["bookmark"] = "책갈피"
 L["Goals and honour"] = "목표와 명예"
 L["The world"] = "세계"
 L["Hunt and loot"] = "사냥과 전리품"

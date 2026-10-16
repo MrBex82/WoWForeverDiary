@@ -1057,7 +1057,7 @@ L["The spyglass on the spine searches the whole book: days, people, creatures, q
 L["Your own bookmarks"] = "Свои закладки"
 L["Ctrl-click a page number to keep that page. A ribbon then sticks out of the top of the book: a click opens the page, a right-click takes the ribbon away."] = "Ctrl-щелчок по номеру страницы запоминает её. Сверху из книги выглядывает ленточка: щелчок открывает страницу, правый щелчок убирает ленточку."
 L["Ctrl + click on the page number"] = "Ctrl + щелчок по номеру страницы"
-L["set or remove a bookmark"] = "поставить или убрать закладку"
+L["bookmark"] = "закладка"
 L["Goals and honour"] = "Цели и почёт"
 L["The world"] = "Мир"
 L["Hunt and loot"] = "Охота и добыча"

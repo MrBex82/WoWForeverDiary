@@ -651,7 +651,7 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
         { L["Ctrl + F"], L["search the book"] },
         { L["Ctrl + mouse wheel"], L["size of the book"] },
         { L["Right-click the page number"], L["go to a page"] },
-        { L["Ctrl + click on the page number"], L["set or remove a bookmark"] },
+        { L["Ctrl + click on the page number"], L["bookmark"] },
         { "/wfd", L["open or close the book"] },
     }
     for _, r in ipairs(rows) do UI.LeaderLine(pool, canvas, tx, y, tw, r[1], r[2], 12, c.inkSoft); y = y - 17 end

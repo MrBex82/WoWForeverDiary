@@ -338,12 +338,14 @@ UI:RegisterRenderer("albumnext", function(pool, page, side, canvas)
         if a.left ~= b.left then return a.left < b.left end
         return (a.m.name or "") < (b.m.name or "")
     end)
-    -- sighted ones worth hunting: no critters, the area you are in first, then those nearest your level
+    -- sighted ones worth hunting: no critters and nothing far below you (grey to you, like a rat in the
+    -- city), the area you are in first, then those nearest your level
+    local lvl = UnitLevel("player") or 1
     local seen = {}
     for _, s in pairs(C.sighted or {}) do
-        if s.cls ~= "trivial" and s.cls ~= "minus" then seen[#seen + 1] = s end
+        local grey = s.lv and s.lv > 0 and s.lv < lvl - 7
+        if s.cls ~= "trivial" and s.cls ~= "minus" and not grey then seen[#seen + 1] = s end
     end
-    local lvl = UnitLevel("player") or 1
     table.sort(seen, function(a, b)
         local ah, bh = a.z == WFD.zoneName, b.z == WFD.zoneName
         if ah ~= bh then return ah end

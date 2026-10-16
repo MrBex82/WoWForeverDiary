@@ -1054,7 +1054,7 @@ L["The spyglass on the spine searches the whole book: days, people, creatures, q
 L["Your own bookmarks"] = "自己的書籤"
 L["Ctrl-click a page number to keep that page. A ribbon then sticks out of the top of the book: a click opens the page, a right-click takes the ribbon away."] = "Ctrl-點擊頁碼即可記住該頁。書的上方會露出一條緞帶：點擊翻到該頁，右鍵點擊則取下緞帶。"
 L["Ctrl + click on the page number"] = "Ctrl + 點擊頁碼"
-L["set or remove a bookmark"] = "放置或移除書籤"
+L["bookmark"] = "書籤"
 L["Goals and honour"] = "目標與榮譽"
 L["The world"] = "世界"
 L["Hunt and loot"] = "狩獵與戰利品"
