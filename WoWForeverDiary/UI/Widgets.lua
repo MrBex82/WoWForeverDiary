@@ -150,6 +150,7 @@ UI.ICONS = {
     capsule  = { I .. "INV_Letter_15", I .. "INV_Scroll_05", I .. "INV_Misc_Note_01" },
     family   = { I .. "Spell_Holy_PrayerOfFortitude", I .. "Ability_Warrior_RallyingCry" },
     gather   = { I .. "Trade_Herbalism", I .. "INV_Misc_Flower_02", I .. "Trade_Mining" },
+    fish     = { I .. "INV_Misc_Fish_02", I .. "Trade_Fishing", I .. "INV_Misc_Fish_03" },
     search   = { I .. "INV_Misc_Spyglass_02", I .. "INV_Misc_Spyglass_03" },
     -- the bookmarks
     quill    = { I .. "INV_Feather_05", I .. "INV_Misc_Book_11" },

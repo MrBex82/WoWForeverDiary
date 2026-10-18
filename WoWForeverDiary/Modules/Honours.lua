@@ -263,6 +263,8 @@ WFD.HONOURS = {
       tiers = { 75, 150, 225, 300 }, icon = { "Trade_Fishing", "INV_Fishingpole_02" } },
     { key = "catch", cat = "fortune", name = "Big Catch", desc = "Catch %d fish.", m = "fish",
       tiers = { 25, 100, 400, 1000 }, icon = { "INV_Misc_Fish_02", "INV_Misc_Fish_03" } },
+    { key = "fishlore", cat = "fortune", name = "Fish Lore", desc = "Land %d different catches.", m = "catchKinds",
+      tiers = { 5, 15, 30, 60 }, icon = { "INV_Misc_Fish_03", "INV_Misc_Fish_02" } },
     { key = "medic", cat = "fortune", name = "Field Medic", desc = "Raise First Aid to %d.", m = "firstAid",
       tiers = { 75, 150, 225, 300 }, icon = { "Spell_Holy_SealOfSacrifice", "INV_Misc_Bandage_15" } },
     { key = "cook", cat = "fortune", name = "Camp Cook", desc = "Raise Cooking to %d.", m = "cooking",
@@ -342,6 +344,8 @@ function WFD:HonourMetrics()
     end
     m.fishing, m.firstAid, m.cooking = skillOf(7620), skillOf(3273), skillOf(2550)
     m.fish = C.fishCaught or 0
+    m.catchKinds = 0
+    for _ in pairs(C.catch or {}) do m.catchKinds = m.catchKinds + 1 end
     local epicIds, run, steps = {}, 0, 0
     for d = 1, self:NumDays() do
         local day = C.days[d]

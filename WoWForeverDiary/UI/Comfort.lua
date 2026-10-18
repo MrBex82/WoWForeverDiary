@@ -410,6 +410,7 @@ local function newCounts(since)
     for _, p in pairs(C.npcs or {}) do if not p.obj and (p.first or 0) > since then add("people") end end
     for _, q in pairs(C.quests or {}) do if (q.done or 0) > since then add("quests") end end
     for _, t in pairs(C.rares or {}) do if type(t) == "number" and t > since then add("treasures") end end
+    for _, e in pairs(C.catch or {}) do if (e.first or 0) > since then add("fishbook") end end
     for _, z in pairs(C.zones or {}) do if (z.first or 0) > since then add("maps") end end
     for _, e in ipairs(C.events or {}) do
         if (e.t or 0) > since then
@@ -463,7 +464,7 @@ end
 ------------------------------------------------------------------------
 local TOUR = {
     { "thumbs", "The tabs", "The tabs on the right lead to the parts of the book, one colour for each group. Point at them to read their names. A red dot shows how much is new since you last read." },
-    { "search", "Search", "The spyglass on the spine searches the whole book: days, people, creatures, quests, places and treasures. Ctrl + F opens it too." },
+    { "search", "Search", "The spyglass on the spine searches the whole book: days, people, creatures, quests, places, treasures and catches. Ctrl + F opens it too." },
     { "ribbon", "Turning pages", "Turn the pages with the arrows, the mouse wheel or the arrow keys. The red ribbon below always leads to today; Backspace takes you back. Ctrl + mouse wheel changes the size of the book." },
     { "marks", "Your own bookmarks", "Ctrl-click a page number to keep that page. A ribbon then sticks out of the top of the book: a click opens the page, a right-click takes the ribbon away." },
     { "page", "Almost everything can be clicked", "Cards, names, days and maps open more. Right-click the page number to go to any page. The settings are in the scribe's notes at the very end." },

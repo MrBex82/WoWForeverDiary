@@ -442,12 +442,106 @@ local function renderPerson(card, key)
     end
 end
 
+------------------------------------------------------------------------
+-- A catch: what the line brought up
+------------------------------------------------------------------------
+local CATCH_MARKS = { 5, 25, 100, 250, 500, 1000 }
+
+local function renderCatch(card, id)
+    local C = WFD.C
+    local e = C.catch and C.catch[id]
+    if not e then return end
+    local pool, canvas = card.pool, card.canvas
+    local k = UI.FISH_KINDS[e.kind or "other"] or UI.FISH_KINDS.other
+    local qc = UI.FISH_QCOL[min(5, e.q or 1)] or UI.FISH_QCOL[1]
+
+    local head = pool:Text(36, c.ink, UI.HEAD, "CENTER")
+    head:SetText(L["CAUGHT"])
+    UI.FitText(head, W - 60, 36, 22)
+    head:SetPoint("TOP", canvas, "TOP", 0, -26)
+    local hw = head:GetStringWidth() / 2 + 14
+    for s = -1, 1, 2 do
+        local ln = pool:Grad("HORIZONTAL", { 0.91, 0.76, 0.42, s < 0 and 0 or 0.8 }, { 0.91, 0.76, 0.42, s < 0 and 0.8 or 0 })
+        ln:SetSize(W / 2 - hw, 2)
+        ln:SetPoint(s < 0 and "RIGHT" or "LEFT", canvas, "TOP", s * hw, -46)
+    end
+    chip(pool, canvas, -68, L[k.label], k.col)
+
+    local pl = pool:Plaque(CW / 2, -150, 84, UI.FishIcon(e, id), qc, true, UI.ShortCount(e.n or 0))
+    local ph = pool:Hot(nil, nil, e.link)
+    ph:SetPoint("CENTER", pl, "CENTER")
+    ph:SetSize(96, 96)
+
+    local n = pool:Text(24, c.ink, UI.HEAD, "CENTER")
+    n:SetText(e.name or "?")
+    UI.FitText(n, W, 24, 15)
+    n:SetWidth(W)
+    n:SetWordWrap(false)
+    n:SetPoint("TOP", canvas, "TOP", 0, -214)
+
+    -- the waters, most first
+    local waters, nWaters = {}, 0
+    for map, cnt in pairs(e.zones or {}) do
+        nWaters = nWaters + 1
+        waters[#waters + 1] = { map = map, n = cnt }
+    end
+    table.sort(waters, function(a, b) return a.n > b.n end)
+    local z = pool:Text(9, c.inkSoft, UI.FONT, "CENTER")
+    z:SetText((L["Mostly caught in"] .. " " .. (waters[1] and (WFD:MapName(waters[1].map) or "?") or "-")):upper())
+    z:SetWidth(W)
+    z:SetPoint("TOP", canvas, "TOP", 0, -244)
+
+    local share = (C.catchTotal or 0) > 0 and (e.n or 0) / C.catchTotal or 0
+    tiles(pool, canvas, -270, {
+        { e.n or 0, L["Caught"], c.ink },
+        { format("%d%%", floor(share * 100 + 0.5)), L["Of all catches"], c.ink },
+        { nWaters, L["Waters"], c.ink },
+    })
+
+    local firstTxt, firstGo = dayLink(e.first)
+    local lastTxt, lastGo = dayLink(e.last)
+    UI.LeaderLine(pool, canvas, PAD, -326, W, L["First catch"], firstTxt, 13, c.inkSoft, firstGo)
+    UI.LeaderLine(pool, canvas, PAD, -346, W, L["Last catch"], lastTxt, 13, c.inkSoft, lastGo)
+    if (e.lured or 0) > 0 then
+        UI.LeaderLine(pool, canvas, PAD, -366, W, L["On a lure"], tostring(e.lured), 13, c.inkSoft)
+    end
+
+    local wt = pool:Text(9, c.redInk, UI.FONT)
+    wt:SetText(L["WHERE IT BIT"])
+    wt:SetPoint("TOPLEFT", canvas, "TOPLEFT", PAD, -396)
+    for i = 1, min(3, #waters) do
+        UI.LeaderLine(pool, canvas, PAD, -412 - (i - 1) * 18, W, WFD:MapName(waters[i].map) or "?", tostring(waters[i].n), 13, c.inkSoft)
+    end
+
+    local prev, nextMark = 0, nil
+    for _, mk in ipairs(CATCH_MARKS) do
+        if (e.n or 0) < mk then nextMark = mk break end
+        prev = mk
+    end
+    local cap = pool:Text(9, c.redInk, UI.FONT)
+    cap:SetPoint("TOPLEFT", canvas, "TOPLEFT", PAD, -474)
+    local val = pool:Text(10, c.inkSoft, UI.FONT, "RIGHT")
+    val:SetPoint("TOPRIGHT", canvas, "TOPLEFT", PAD + W, -473)
+    if nextMark then
+        cap:SetText(format(L["Next mark: %d caught"], nextMark):upper())
+        val:SetText((e.n or 0) .. " / " .. nextMark)
+        UI.ProgressBar(pool, canvas, PAD, -487, W, 5, ((e.n or 0) - prev) / (nextMark - prev), k.col)
+    else
+        cap:SetText(L["Every mark reached"]:upper())
+        val:SetText(tostring(e.n or 0))
+        UI.ProgressBar(pool, canvas, PAD, -487, W, 5, 1, c.goldDk)
+    end
+end
+
 function UI:ShowCard(kind, key)
     if not self.holder then return end
     local card = self.card or buildCard(self)
     card.pool:Begin()
     card.overPool:Begin()
-    if kind == "creature" then renderCreature(card, key) else renderPerson(card, key) end
+    card.model:SetShown(kind ~= "catch")
+    if kind == "creature" then renderCreature(card, key)
+    elseif kind == "catch" then renderCatch(card, key)
+    else renderPerson(card, key) end
     card.pool:End()
     card.overPool:End()
     card:Show()

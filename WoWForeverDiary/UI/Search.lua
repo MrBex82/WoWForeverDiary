@@ -77,6 +77,9 @@ local function buildIndex()
     for id, m in pairs(C.mobs or {}) do
         if m.name then add("creature", m.name, UI.Icon("bestiary"), function() UI:ShowCard("creature", id) end, nil, 3) end
     end
+    for id, e in pairs(C.catch or {}) do
+        if e.name then add("catch", e.name, UI.FishIcon and UI.FishIcon(e, id) or UI.Icon("loot"), function() UI:ShowCard("catch", id) end, nil, 3) end
+    end
     for id, q in pairs(C.quests or {}) do
         if q.title then
             local p = pageOfQuest(book, id)
@@ -158,7 +161,7 @@ end
 ------------------------------------------------------------------------
 local KIND_LABEL = {
     part = "Contents", person = "Acquaintance", creature = "Bestiary", quest = "Quest", place = "Maps",
-    honour = "Honour", day = "Diary", treasure = "Treasures",
+    honour = "Honour", day = "Diary", treasure = "Treasures", catch = "Angler's log",
 }
 
 local panel

@@ -946,6 +946,7 @@ UI.SEAL = {
     weekly   = { col = { 0.30, 0.46, 0.18, 1 }, size = 18, icon = "task" },
     first    = { col = { 0.72, 0.45, 0.22, 1 }, size = 17, icon = "first" },
     capsule  = { col = { 0.55, 0.12, 0.10, 1 }, size = 18, icon = "capsule" },
+    catch    = { col = c.teal,   size = 16, icon = "fish" },
 }
 
 -- trophy icons for the five metals (bronze, silver, gold, mithril, legend)
@@ -963,7 +964,7 @@ UI.SEAL_LABEL = {
     level = "Level up", boss = "Boss", rare = "Rare", epic = "Epic find", rareitem = "Rare find",
     death = "Death", zone = "New land", dungeon = "Dungeon", quest = "Quest", wealth = "Wealth",
     skill = "Skill", kills = "Hunt", honour = "Honour", landmark = "Landmark", challenge = "Task of the day",
-    weekly = "Task of the week", first = "First time", capsule = "Time capsule",
+    weekly = "Task of the week", first = "First time", capsule = "Time capsule", catch = "Catch",
 }
 
 ------------------------------------------------------------------------
@@ -1030,6 +1031,11 @@ function UI.Painting(parent, w, h)
                 for _, id in pairs(ev.gear) do self.hero:TryOn("item:" .. id) end
             end
             self.hero:SetRotation(alone and 0.25 or 0.75)
+            -- full figure: the camera steps back (as for the creatures), more in a low frame,
+            -- so the head and the feet stay inside the picture
+            if self.hero.SetPortraitZoom then self.hero:SetPortraitZoom(0) end
+            if self.hero.SetCamDistanceScale then self.hero:SetCamDistanceScale(h < 120 and 1.4 or 1.15) end
+            if self.hero.SetPosition then self.hero:SetPosition(0, 0, 0) end
         end)
         -- the plaque names the subject only ("Späherkuppe", not "Landmark discovered: Späherkuppe")
         -- and is never wider than the painting; a long name ends in "..." instead of running over the frame

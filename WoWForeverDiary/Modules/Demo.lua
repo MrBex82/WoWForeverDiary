@@ -215,7 +215,7 @@ local function build()
         bosses = bosses,
         deaths = { { who = "Lyssa" }, { who = C.name, me = true, by = "Mr. Smite" } },
         loot = loot,
-        last = { name = "Edwin VanCleef", gear = WFD:CaptureGear(), t = runStart + 5300 },
+        last = { name = "Edwin VanCleef", gear = WFD:CaptureGear(), npc = 639, t = runStart + 5300 },
     } }
     C.instances = { ["The Deadmines"] = runStart }
     C.encounters = {}
@@ -271,6 +271,33 @@ local function build()
         [100] = { n = "Gruff Swiftbite", z = elwynn, lv = 12, cls = "rare", m = 1429, x = 0.22, y = 0.80 },
     }
     C.fishCaught = 12
+    -- an angler's log: a few catches on two waters, a rod
+    local lake, shore = MAPS[1], MAPS[2]
+    C.catch = {
+        [6291] = { name = "Raw Brilliant Smallfish", n = 14, q = 1, kind = "fish", first = at(2, 11), last = at(8, 14), day = 2,
+            zones = { [lake] = 14 } },
+        [6289] = { name = "Raw Longjaw Mud Snapper", n = 9, q = 1, kind = "fish", first = at(3, 10), last = at(7, 15), day = 3,
+            zones = { [lake] = 9 } },
+        [6308] = { name = "Raw Bristle Whisker Catfish", n = 4, q = 1, kind = "fish", first = at(5, 12), last = at(8, 9), day = 5,
+            zones = { [shore] = 4 } },
+        [6309] = { name = "17 Pound Catfish", n = 1, q = 1, kind = "other", first = at(6, 13), last = at(6, 13), day = 6,
+            zones = { [shore] = 1 } },
+        [6362] = { name = "Raw Rockscale Cod", n = 3, q = 1, kind = "fish", first = at(7, 16), last = at(8, 17), day = 7,
+            zones = { [shore] = 3 } },
+        [6352] = { name = "Waterlogged Crate", n = 1, q = 1, kind = "other", first = at(2, 12), last = at(2, 12), day = 2,
+            zones = { [lake] = 1 } },
+        [6458] = { name = "Oil Covered Fish", n = 2, q = 0, kind = "junk", first = at(4, 13), last = at(5, 13), day = 4,
+            zones = { [lake] = 2 } },
+        [21228] = { name = "Mithril Bound Trunk", n = 1, q = 3, kind = "treasure", first = at(8, 18), last = at(8, 18), day = 8,
+            zones = { [shore] = 1 } },
+    }
+    C.catchTotal, C.catchCasts, C.catchLured = 34, 52, 11
+    C.catchZone = { [lake] = { casts = 30, loot = 26 }, [shore] = { casts = 22, loot = 8 } }
+    C.tackle = {
+        [6256] = { n = 52, kind = "rod", name = "Fishing Pole", first = at(2, 12) },
+        [6529] = { n = 11, kind = "lure", name = "Shiny Bauble", first = at(5, 12) },
+        [19972] = { n = 20, kind = "gear", name = "Lucky Fishing Hat", first = at(6, 13) },
+    }
     -- an invented family for the family book
     local function sibling(name, race, class, classFile, level, days, kills, quests)
         return { name = name, realm = C.realm, race = race, class = class, classFile = classFile, level = level,

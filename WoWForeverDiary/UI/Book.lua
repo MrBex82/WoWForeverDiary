@@ -42,7 +42,7 @@ local LAYOUT = {
     levels = { "chronicle", 13 }, gallery = { "chronicle", 14 },
     atlas = { "world", 19 }, maps = { "world", 20 }, landmarks = { "world", 21 }, gathering = { "world", 22, false },
     runs = { "world", 25 },
-    bestiary = { "hunt", 30 }, nemesis = { "hunt", 32 }, treasures = { "hunt", 35 },
+    bestiary = { "hunt", 30 }, nemesis = { "hunt", 32 }, fishbook = { "hunt", 33 }, treasures = { "hunt", 35 },
     people = { "people", 40 }, companions = { "people", 45, false }, ledger = { "people", 50 },
     family = { "back", 86 }, capsule = { "back", 88 }, notes = { "back", 90 },
 }

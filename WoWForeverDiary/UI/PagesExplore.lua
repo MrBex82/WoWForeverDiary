@@ -50,6 +50,12 @@ local function gather()
     for _, t in ipairs(tiers) do
         if kinds < t[1] then nextTier = t break end
     end
+    local catches = 0
+    for _ in pairs(WFD.C.catch or {}) do catches = catches + 1 end
+    local nextFish
+    for _, t in ipairs(UI.FISH_TIERS or {}) do
+        if catches < t[1] then nextFish = t break end
+    end
     local dFound, dTotal = 0, 0
     for _, g in ipairs(groups) do
         if g.def.key == "dungeons" or g.def.key == "raids" then
@@ -66,6 +72,7 @@ local function gather()
     return {
         honours = honours, sum = sum, groups = groups, lmFound = lmFound, lmTotal = lmTotal,
         conts = conts, zVisited = zVisited, zTotal = zTotal, kinds = kinds, nextTier = nextTier,
+        catches = catches, nextFish = nextFish, lastFish = (UI.FISH_TIERS or {})[#(UI.FISH_TIERS or {})],
         lastTier = tiers[#tiers], dFound = dFound, dTotal = dTotal, sFound = sFound, sTotal = sTotal,
     }
 end
@@ -95,12 +102,14 @@ UI:RegisterRenderer("collection", function(pool, page, side, canvas)
         { L["Atlas"], g.zVisited, g.zTotal, UI.Icon("map"), GREEN, L["Regions explored"], "atlas" },
         { L["Bestiary"], g.kinds, beast[1], UI.Icon("bestiary"), c.bad,
           g.nextTier and format(L["Next rank: %s"], L[g.nextTier[2]]) or L["Complete!"], "bestiary" },
+        { L["Angler's log"], g.catches, (g.nextFish or g.lastFish or { 5 })[1], UI.Icon("fish"), { 0.30, 0.58, 0.86, 1 },
+          g.nextFish and format(L["Next rank: %s"], L[g.nextFish[2]]) or L["Complete!"], "fishbook" },
         { L["Dungeons"] .. " & " .. L["Raids"], g.dFound, g.dTotal, UI.Icon("key"), { 0.78, 0.42, 0.08, 1 },
           L["Dark places, rich rewards"], "landmarks" },
         { L["Secrets"], g.sFound, g.sTotal, QUESTION, { 0.70, 0.45, 0.85, 1 },
           L["Some honours stay hidden until you find them."], "honour" },
     }
-    local ROW = 54
+    local ROW = 48
     for i, it in ipairs(items) do
         local ry = y - (i - 1) * ROW
         local total = max(1, it[3])

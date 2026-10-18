@@ -73,7 +73,14 @@ WFD:On("GROUP_ROSTER_UPDATE", function() if not WFD.paused then addMembers() end
 
 WFD:OnSignal("kill", function(id)
     lastKillId = { id = id, t = time() }
-    if run then run.kills = run.kills + 1 end
+    if run then
+        run.kills = run.kills + 1
+        -- the kill is reported after the end of the encounter in newer clients: the boss it belongs to
+        -- gets its creature for the painting then (only if the names agree)
+        local l = run.last
+        local m = WFD.C and WFD.C.mobs and WFD.C.mobs[id]
+        if l and not l.npc and time() - (l.t or 0) < 15 and m and m.name == l.name then l.npc = id end
+    end
 end)
 
 WFD:OnSignal("death", function(by)
@@ -94,6 +101,12 @@ WFD:On("ENCOUNTER_END", function(_, encounterID, name, _, _, success)
     if run then
         run.bosses[#run.bosses + 1] = name
         local npc = lastKillId and time() - lastKillId.t < 15 and lastKillId.id or nil
+        if not npc then
+            -- no kill reported yet: a creature of this name slain before (the boss of an earlier run)
+            for id, m in pairs(C.mobs or {}) do
+                if m.name == name then npc = id break end
+            end
+        end
         run.last = { name = name, gear = WFD:CaptureGear(), npc = npc, t = time() }
     end
     if C.encounters[name] == 1 and lastBossMilestone ~= name and WFD:FirstBossNoted(name) then
