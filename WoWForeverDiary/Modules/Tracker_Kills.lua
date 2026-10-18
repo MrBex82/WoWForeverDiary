@@ -329,7 +329,8 @@ WFD:On("PLAYER_DEAD", function()
     end
 
     local map, x, y = WFD:PlayerPos()
-    if map then d.dpos[#d.dpos + 1] = { map, x, y } end
+    -- the killer goes with the grave: deathBy only holds the deaths whose killer is known
+    if map then d.dpos[#d.dpos + 1] = { map, x, y, by } end
     WFD:Signal("death", by)
 
     local zone = WFD.zoneName or "?"

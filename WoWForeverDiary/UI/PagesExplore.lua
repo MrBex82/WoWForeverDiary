@@ -187,7 +187,7 @@ UI:RegisterRenderer("nextgoals", function(pool, page, side, canvas)
                 ok:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 3)
             else
                 local pv = pool:Text(10, c.inkSoft, UI.FONT, "RIGHT")
-                pv:SetText(v .. " / " .. gl)
+                pv:SetText(WFD:TaskValueText(task, v) .. " / " .. gl)
                 pv:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 1)
                 UI.ProgressBar(pool, canvas, tx + tw - 70, y - 14, 70, 3, v / max(1, gl), GREEN)
             end
@@ -217,7 +217,7 @@ UI:RegisterRenderer("nextgoals", function(pool, page, side, canvas)
             ok:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 4)
         else
             local pv = pool:Text(10, c.inkSoft, UI.FONT, "RIGHT")
-            pv:SetText((wk.task.k == "wkm" and WFD:Dec(v) or v) .. " / " .. gl)
+            pv:SetText(WFD:TaskValueText(wk.task, v) .. " / " .. gl)
             pv:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 2)
             UI.ProgressBar(pool, canvas, tx + tw - 70, y - 15, 70, 3, v / max(1, gl), GOLD)
         end
@@ -278,7 +278,7 @@ UI:RegisterRenderer("nextgoals", function(pool, page, side, canvas)
         d:SetWidth(tw - 30 - 96)
         d:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 30, y - 16)
         local v = e.value
-        if e.def.m == "km" then v = floor(v * 10) / 10 end
+        if e.def.m == "km" then v = WFD:Dec(floor(v * 10) / 10) end
         local pv = pool:Text(10, c.inkSoft, UI.FONT, "RIGHT")
         pv:SetText(v .. " / " .. e.next)
         pv:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 2)

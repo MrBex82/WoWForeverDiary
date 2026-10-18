@@ -410,10 +410,15 @@ UI:RegisterRenderer("gathering", function(pool, page, side, canvas)
             map:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + MAT, y - 20 - MAT)
             map:SetFrameLevel(canvas:GetFrameLevel() + 2)
             local points, items = {}, {}
-            for _, s in ipairs(C.gather and C.gather[m.id] or {}) do
+            local spots = C.gather and C.gather[m.id] or {}
+            -- the map holds 400 pins: the newest spots, the counts below take them all
+            local from = math.max(1, #spots - 399)
+            for i, s in ipairs(spots) do
                 local k = kindOf(s.k)
                 if k then
-                    points[#points + 1] = { s.x, s.y, k.col, { s.item or kindName(k), format(L["Day %d"], s.day or 0) } }
+                    if i >= from then
+                        points[#points + 1] = { s.x, s.y, k.col, { s.item or kindName(k), format(L["Day %d"], s.day or 0) } }
+                    end
                     if s.item then items[s.item] = (items[s.item] or 0) + 1 end
                 end
             end

@@ -540,7 +540,7 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
                 if today and not done then
                     local v, g = WFD:ChallengeProgress(it.day, task)
                     local pv = pool:Text(10, c.inkFaint, UI.FONT, "RIGHT")
-                    pv:SetText(v .. " / " .. g)
+                    pv:SetText(WFD:TaskValueText(task, v) .. " / " .. g)
                     pv:SetPoint("TOPRIGHT", canvas, "TOPLEFT", textX + TCW - 6, ry)
                 end
             end

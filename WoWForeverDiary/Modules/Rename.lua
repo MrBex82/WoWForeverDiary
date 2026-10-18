@@ -190,12 +190,23 @@ local function applyAll(C)
         rekey(d.zones, sum)
         rekey(d.instances)
         for i, by in ipairs(d.deathBy or {}) do d.deathBy[i] = rn(by) end
+        for _, pos in ipairs(d.dpos or {}) do pos[4] = rn(pos[4]) end
         for _, e in pairs(d.loot or {}) do
             e.src = rn(e.src)
             e.link = retext(e.link)
         end
     end
     for _, q in pairs(C.quests or {}) do q.reward = retext(q.reward) end
+    -- the angler's log, the tackle and the gathering spots keep item names of their own
+    for _, tbl in ipairs({ C.catch or {}, C.tackle or {} }) do
+        for _, e in pairs(tbl) do
+            e.name = rn(e.name)
+            e.link = retext(e.link)
+        end
+    end
+    for _, list in pairs(C.gather or {}) do
+        for _, s in ipairs(list) do s.item = rn(s.item) end
+    end
     for _, ev in ipairs(C.events or {}) do ev.s = retext(ev.s) end
 end
 
@@ -291,6 +302,11 @@ local function start()
     for _, d in pairs(C.days or {}) do for _, e in pairs(d.loot or {}) do addLink(e.link) end end
     for _, r in ipairs(C.runs or {}) do for _, link in ipairs(r.loot or {}) do addLink(link) end end
     for _, q in pairs(C.quests or {}) do addLink(q.reward) end
+    for _, tbl in ipairs({ C.catch or {}, C.tackle or {} }) do
+        for id, e in pairs(tbl) do
+            if type(id) == "number" and e.name and not items[id] then items[id] = e.name end
+        end
+    end
     for id, old in pairs(items) do queue[#queue + 1] = { k = "item", id = id, old = old } end
     -- landmarks know their area: their names come straight from the game, no waiting
     if C_Map and C_Map.GetAreaInfo then

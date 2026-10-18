@@ -17,6 +17,12 @@ local UPPER = {
 local function lower(s)
     s = (s or ""):lower()
     for k, v in pairs(UPPER) do s = s:gsub(k, v) end
+    -- Cyrillic capitals: А-П (D0 90-9F) -> а-п (D0 B0-BF), Р-Я (D0 A0-AF) -> р-я (D1 80-8F), Ё -> ё
+    s = s:gsub("\208([\144-\175])", function(ch)
+        local b = ch:byte()
+        if b < 160 then return "\208" .. string.char(b + 32) end
+        return "\209" .. string.char(b - 32)
+    end):gsub("\208\129", "\209\145")
     return s
 end
 

@@ -876,12 +876,15 @@ function UI.MapSketch(parent, w, h)
         end
         local graves = 0
         for i, d in pairs(C.days) do
+            -- older graves do not carry their killer: the list of killers only lines up when every death had one
+            local aligned = #d.dpos == #d.deathBy and #d.deathBy == (d.deaths or 0)
             for j, pos in ipairs(d.dpos) do
                 if pos[1] == mapID then
                     graves = graves + 1
+                    local by = pos[4] or (#pos < 4 and aligned and d.deathBy[j]) or nil
                     addPin(pos[2], pos[3], { 0.55, 0.04, 0.04, 1 }, {
-                        L["You died here"], d.deathBy[j] and format(L["Killed by %s"], d.deathBy[j]) or "", format(L["Day %d"], i),
-                    }, (graves <= 2) and { kind = "grave", day = i, by = d.deathBy[j], num = math.min(6, #people) + graves } or nil)
+                        L["You died here"], by and format(L["Killed by %s"], by) or "", format(L["Day %d"], i),
+                    }, (graves <= 2) and { kind = "grave", day = i, by = by, num = math.min(6, #people) + graves } or nil)
                 end
             end
         end

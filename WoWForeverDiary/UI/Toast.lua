@@ -23,7 +23,7 @@ end
 
 -- where a milestone is best read
 local TARGET = { honour = "honour", landmark = "landmarks", dungeon = "runs", challenge = "collection", weekly = "collection",
-    first = "firsts", capsule = "capsule" }
+    first = "firsts", capsule = "capsule", catch = "fishbook" }
 
 ------------------------------------------------------------------------
 -- Toasts

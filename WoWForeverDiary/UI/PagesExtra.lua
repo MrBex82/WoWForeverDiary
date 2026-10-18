@@ -109,7 +109,7 @@ local LOCKED = { 0.46, 0.39, 0.30, 1 }
 
 local function progressText(e)
     local v = e.value
-    if e.def.m == "km" then v = floor(v * 10) / 10 end
+    if e.def.m == "km" then v = WFD:Dec(floor(v * 10) / 10) end
     return tostring(v) .. " / " .. tostring(e.next or e.def.tiers[e.n])
 end
 

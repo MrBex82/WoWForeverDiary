@@ -270,7 +270,7 @@ function UI:UpdateCompanion(relayout)
         for i, t in ipairs(tasks.list) do
             local v, g = WFD:ChallengeProgress(today, t)
             local done = tasks.done[i] and true or false
-            row(WFD:ChallengeText(t), done and L["done"] or (v .. "/" .. g), done and 1 or v / max(1, g), done,
+            row(WFD:ChallengeText(t), done and L["done"] or (WFD:TaskValueText(t, v) .. "/" .. g), done and 1 or v / max(1, g), done,
                 { L["Tasks of the day"], WFD:ChallengeText(t) }, goals)
         end
         y = y - 4
@@ -281,8 +281,8 @@ function UI:UpdateCompanion(relayout)
     if wk and wk.task then
         place(comp.capWeek, L["Task of the week"])
         local v, g = WFD:WeeklyProgress(w, wk.task)
-        if wk.task.k == "wkm" then v = WFD:Dec(v) end
-        row(WFD:WeeklyText(wk.task), wk.done and L["done"] or (v .. "/" .. g), wk.done and 1 or tonumber(v) and tonumber(v) / max(1, g) or 0,
+        -- the bar from the number itself: "3,2" (written the German way) is no number to Lua
+        row(WFD:WeeklyText(wk.task), wk.done and L["done"] or (WFD:TaskValueText(wk.task, v) .. "/" .. g), wk.done and 1 or v / max(1, g),
             wk.done, { L["Task of the week"], WFD:WeeklyText(wk.task) }, goals)
         y = y - 4
     end
@@ -331,7 +331,10 @@ function UI:ShowCompanion(show)
         honourAt = 0
         self:UpdateCompanion(true)
         if not ticker and C_Timer and C_Timer.NewTicker then
-            ticker = C_Timer.NewTicker(2, function() UI:UpdateCompanion() end)
+            ticker = C_Timer.NewTicker(2, function()
+                local ok, err = pcall(UI.UpdateCompanion, UI)
+                if not ok then WFD:Error("companion", err) end
+            end)
         end
     elseif comp then
         comp:Hide()

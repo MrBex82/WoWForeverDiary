@@ -18,7 +18,7 @@ local TEMPLATES = {
     "%s mastered up to %d", "Used the hearthstone", "Grouped with %s", "Landmark discovered: %s",
     "Honour earned: %s (%s)", "Honour earned: %s", "Task of the day done: %s", "Task of the week done: %s",
     "All tasks of the day done! %d days in a row.", "All tasks of the day done!",
-    "A letter for later was sealed.", "A letter from the past has opened.",
+    "A letter for later was sealed.", "A letter from the past has opened.", "New catch: %s",
 }
 -- sentences that can sit inside another one (the task in "Task of the day done: ...")
 local INNER = {

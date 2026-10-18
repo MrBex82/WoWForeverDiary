@@ -86,12 +86,13 @@ local TYPE_KEYS = {}
 for key, names in pairs({
     beast      = { "Beast", "Wildtier", "Bête", "Bestia", "Fera", "Животное", "야수", "野獸" },
     humanoid   = { "Humanoid", "Humanoider", "Humanoïde", "Humanoide", "Гуманоид", "인간형", "人型生物" },
-    undead     = { "Undead", "Untoter", "Mort-vivant", "No-muerto", "Morto-vivo", "Нежить", "언데드", "不死族" },
+    -- names as warcraft.wiki.gg (API UnitCreatureType) lists them per client language
+    undead     = { "Undead", "Untoter", "Mort-vivant", "No-muerto", "Morto-vivo", "Renegado", "Нежить", "언데드", "不死族" },
     demon      = { "Demon", "Dämon", "Démon", "Demonio", "Demônio", "Демон", "악마", "惡魔" },
     elemental  = { "Elemental", "Elementar", "Élémentaire", "Элементаль", "정령", "元素生物" },
-    dragonkin  = { "Dragonkin", "Drachkin", "Draconien", "Dragon", "Dracônico", "Дракон", "용족", "龍類" },
+    dragonkin  = { "Dragonkin", "Drachkin", "Draconien", "Dragon", "Dragón", "Dracônico", "Дракон", "용족", "龍類" },
     giant      = { "Giant", "Riese", "Géant", "Gigante", "Великан", "거인", "巨人" },
-    mechanical = { "Mechanical", "Mechanisch", "Mécanique", "Mecánico", "Mecânico", "Механизм", "기계", "機械" },
+    mechanical = { "Mechanical", "Mechanisch", "Mécanique", "Machine", "Mecánico", "Mecânico", "Механизм", "기계", "機械" },
     critter    = { "Critter", "Tier", "Kleintier", "Bestiole", "Alma", "Bicho", "Существо", "동물", "小動物" },
 }) do
     for _, n in ipairs(names) do TYPE_KEYS[n] = key end

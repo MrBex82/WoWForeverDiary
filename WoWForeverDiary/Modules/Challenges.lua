@@ -128,6 +128,12 @@ function WFD:ChallengeProgress(day, t)
     return 0, t.goal or 1
 end
 
+-- a value of a task as the pages write it: kilometres with the decimal mark of the diary language
+function WFD:TaskValueText(t, v)
+    if t and (t.k == "km" or t.k == "wkm") then return self:Dec(v) end
+    return tostring(v)
+end
+
 -- today's tasks, picked on first use (never for the demo)
 function WFD:TodayChallenges()
     local C = self.C
