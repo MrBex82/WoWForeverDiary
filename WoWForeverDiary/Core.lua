@@ -5,7 +5,7 @@ _G.WoWForeverDiary = WFD
 local floor, min, format = math.floor, math.min, string.format
 local time, date = time, date
 
-WFD.version = "0.1.10"
+WFD.version = "0.2.0"
 WFD.gameLocale = GetLocale()
 WFD.locale = WFD.gameLocale
 WFD.isDE = (WFD.locale == "deDE")
@@ -163,6 +163,7 @@ WFD:On("ADDON_LOADED", function(_, name)
     if S.minimap == nil then S.minimap = true end
     if S.toasts == nil then S.toasts = true end
     if S.recap == nil then S.recap = true end
+    if S.cover == nil then S.cover = true end
     S.angle = S.angle or 215
     S.scale = S.scale or 0.9
     WFD.S = S
@@ -416,11 +417,37 @@ function WFD:CoinText(c)
     return (neg and "-" or "") .. table.concat(parts, " ")
 end
 
+-- money in words for a sentence ("23 Silber 47 Kupfer"), with the game's own words; only the two largest
+-- coins, so it stays readable. Without those words in the client: the short form.
+function WFD:CoinWords(c)
+    c = floor(math.abs(c or 0))
+    local G, S, K = GOLD_AMOUNT, SILVER_AMOUNT, COPPER_AMOUNT
+    if not (G and S and K) then return self:CoinText(c) end
+    local g, s, k = floor(c / 10000), floor((c % 10000) / 100), c % 100
+    local parts = {}
+    if g > 0 then
+        parts[1] = format(G, g)
+        if s > 0 then parts[2] = format(S, s) end
+    elseif s > 0 then
+        parts[1] = format(S, s)
+        if k > 0 then parts[2] = format(K, k) end
+    else
+        parts[1] = format(K, k)
+    end
+    return table.concat(parts, " ")
+end
+
 -- a number with one decimal, written the way the diary language writes it (3.2 or 3,2)
 function WFD:Dec(v)
     local s = format("%.1f", v or 0):gsub("%.0$", "")   -- 7 km rather than 7.0 km
     local sep = self.loc and self.loc.decimal
     return sep and (s:gsub("%.", sep)) or s
+end
+
+-- a quotation in the marks of the diary language ("..." or „...")
+function WFD:Quote(s)
+    local q = self.loc and self.loc.quotes
+    return (q and q[1] or "\"") .. tostring(s or "") .. (q and q[2] or "\"")
 end
 
 -- case: "in" (where), "to" (where to), "over" (above). Languages without loc.place keep the name as it is,

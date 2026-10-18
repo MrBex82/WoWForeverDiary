@@ -35,6 +35,7 @@ end
 UI.LeaderLine = leader
 
 function UI.PageTitle(pool, canvas, side, text, sub, y)
+    UI.titled = true
     local tx, tw = UI.TextX(side), UI.TextW()
     local t = pool:Text(32, c.redInk, UI.HEAD, "CENTER")
     t:SetText(text)
@@ -43,8 +44,8 @@ function UI.PageTitle(pool, canvas, side, text, sub, y)
     t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y or -56)
     local ny = (y or -56) - 44
     if sub then
-        local s = pool:Text(10, c.inkSoft, UI.FONT, "CENTER")
-        s:SetText(sub:upper())
+        local s = pool:Text(11, c.inkSoft, UI.FONT, "CENTER")
+        s:SetText(UI.Upper(sub))
         s:SetWidth(tw)
         s:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, ny)
         ny = ny - 18
@@ -387,6 +388,11 @@ UI:RegisterRenderer("toc", function(pool, page, side, canvas)
             local rule = pool:Grad("HORIZONTAL", { 0.78, 0.60, 0.26, 0.35 }, { 0.78, 0.60, 0.26, 0 })
             rule:SetSize(max(10, tw - 16 - h:GetStringWidth()), 1)
             rule:SetPoint("LEFT", h, "RIGHT", 8, 0)
+            if e.page then
+                local hot = pool:Hot({ e.text, L["Click to open this part of the book."] }, function() UI:GoToPage(e.page) end)
+                hot:SetPoint("TOPLEFT", h, "TOPLEFT", -12, 4)
+                hot:SetPoint("BOTTOMRIGHT", h, "BOTTOMRIGHT", 6, -4)
+            end
             y = y - 20
         else
             local ix = 0
@@ -396,8 +402,9 @@ UI:RegisterRenderer("toc", function(pool, page, side, canvas)
                 ic:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 2)
                 ix = 26
             end
-            leader(pool, canvas, tx + ix, y, tw - ix, e.text, e.page and tostring(UI.PageNumber(e.page)) or "", 16, nil,
-                e.page and function() UI:GoToPage(e.page) end)
+            -- a part with nothing in it yet is written faintly
+            leader(pool, canvas, tx + ix, y, tw - ix, e.text, e.page and tostring(UI.PageNumber(e.page)) or "", 16,
+                e.dim and c.inkFaint or nil, e.page and function() UI:GoToPage(e.page) end)
             if e.sub then
                 local s = pool:Text(10, c.inkFaint, UI.FONT)
                 s:SetText(e.sub)

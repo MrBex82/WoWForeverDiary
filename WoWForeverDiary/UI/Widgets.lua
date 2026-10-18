@@ -41,8 +41,8 @@ end
 -- ink = main text, inkSoft / inkFaint = quieter text, redInk = the accent (gold), bad / good = loss and gain.
 UI.c = {
     ink       = { 0.96, 0.90, 0.78, 1 },
-    inkSoft   = { 0.83, 0.73, 0.57, 1 },
-    inkFaint  = { 0.67, 0.58, 0.45, 1 },
+    inkSoft   = { 0.87, 0.78, 0.62, 1 },
+    inkFaint  = { 0.76, 0.67, 0.53, 1 },
     redInk    = { 0.91, 0.76, 0.42, 1 },
     bad       = { 0.89, 0.47, 0.38, 1 },
     good      = { 0.58, 0.80, 0.45, 1 },
@@ -324,6 +324,14 @@ function UI.FitText(fs, maxW, size, minSize, font)
         fs:SetFont(font, s, "")
     end
     return s
+end
+
+-- capitals read well for a short heading only: a sentence keeps its own letters
+function UI.Upper(text)
+    text = text or ""
+    local words = 0
+    for _ in text:gmatch("%S+") do words = words + 1 end
+    return words <= 3 and text:upper() or text
 end
 
 -- small caps-ish label: upper case, small, spaced

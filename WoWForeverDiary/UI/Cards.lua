@@ -68,9 +68,62 @@ local function buildCard(self)
     card.over:SetFrameLevel(card:GetFrameLevel() + 14)
     card.overPool = UI.NewPool(card.over)
 
+    -- the book behind the card darkens a little; a click on it puts the card away
+    local shade = CreateFrame("Frame", nil, self.holder)
+    shade:SetAllPoints(self.bookFrame)
+    shade:SetFrameLevel(card:GetFrameLevel() - 1)
+    shade:EnableMouse(true)
+    local dim = shade:CreateTexture(nil, "BACKGROUND")
+    dim:SetAllPoints()
+    dim:SetColorTexture(0, 0, 0, 0.35)
+    shade:SetScript("OnMouseDown", function() card:Hide() end)
+    shade:Hide()
+    card:HookScript("OnShow", function() shade:Show() end)
+    card:HookScript("OnHide", function() shade:Hide() end)
+
+    -- arrows beside the card: the previous and the next one of the same album
+    local function step(dir)
+        local list = UI.CardOrder(card.kind)
+        for i, k in ipairs(list) do
+            if k == card.key then
+                local nxt = list[((i - 1 + dir) % #list) + 1]
+                if nxt ~= nil then UI:ShowCard(card.kind, nxt) end
+                return
+            end
+        end
+    end
+    card.prev = UI.PageArrow(card, "Prev", function() step(-1) end)
+    card.prev:SetPoint("RIGHT", card, "LEFT", -6, 0)
+    card.next = UI.PageArrow(card, "Next", function() step(1) end)
+    card.next:SetPoint("LEFT", card, "RIGHT", 6, 0)
+    card:EnableKeyboard(false)
+
     card:Hide()
     self.card = card
     return card
+end
+
+-- the order the cards of one kind are leafed through: as in their album
+function UI.CardOrder(kind)
+    local C = WFD.C
+    local arr = {}
+    if kind == "creature" then
+        for id, m in pairs(C.mobs or {}) do arr[#arr + 1] = { k = id, t = m.first or 0, n = m.name or "" } end
+    elseif kind == "catch" then
+        for id, e in pairs(C.catch or {}) do arr[#arr + 1] = { k = id, t = e.first or 0, n = e.name or "" } end
+    else
+        for key, p in pairs(C.npcs or {}) do
+            if not p.obj then arr[#arr + 1] = { k = key, t = 0, n = p.name or "" } end
+        end
+    end
+    table.sort(arr, function(a, b)
+        if a.t ~= b.t then return a.t < b.t end
+        if a.n ~= b.n then return a.n < b.n end
+        return tostring(a.k) < tostring(b.k)
+    end)
+    local out = {}
+    for i, e in ipairs(arr) do out[i] = e.k end
+    return out
 end
 
 -- the portrait box: position, height and a frame in the colour of the subject
@@ -276,7 +329,7 @@ local function renderCreature(card, id)
     z:SetPoint("TOP", canvas, "TOP", 0, -298)
     -- a line the character wrote beside it
     local note = pool:Text(11, c.inkSoft, UI.FONT, "CENTER")
-    note:SetText("\"" .. WFD:MarginNote(id, m) .. "\"")
+    note:SetText(WFD:Quote(WFD:MarginNote(id, m)))
     UI.FitText(note, W, 11, 9, UI.FONT)
     note:SetWidth(W)
     note:SetWordWrap(false)
@@ -487,7 +540,7 @@ local function renderCatch(card, id)
     end
     table.sort(waters, function(a, b) return a.n > b.n end)
     local z = pool:Text(9, c.inkSoft, UI.FONT, "CENTER")
-    z:SetText((L["Mostly caught in"] .. " " .. (waters[1] and (WFD:MapName(waters[1].map) or "?") or "-")):upper())
+    z:SetText((L["Mostly caught in"] .. " " .. (waters[1] and WFD:Place(WFD:MapName(waters[1].map) or "?", "in") or "-")):upper())
     z:SetWidth(W)
     z:SetPoint("TOP", canvas, "TOP", 0, -244)
 
@@ -536,6 +589,10 @@ end
 function UI:ShowCard(kind, key)
     if not self.holder then return end
     local card = self.card or buildCard(self)
+    card.kind, card.key = kind, key
+    local many = #UI.CardOrder(kind) > 1
+    card.prev:SetShown(many)
+    card.next:SetShown(many)
     card.pool:Begin()
     card.overPool:Begin()
     card.model:SetShown(kind ~= "catch")

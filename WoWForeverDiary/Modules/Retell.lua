@@ -39,6 +39,14 @@ local LEGACY = {
         ["Wealth reached: %s"] = "Vermögen erreicht: %s",
         ["First visit to the dungeon %s"] = "Erster Besuch im Dungeon %s",
         ["%s mastered up to %d"] = "%s bis %d gemeistert",
+        ["%d creatures slain in total"] = "Insgesamt %d Kreaturen erschlagen",
+        ["Honour earned: %s (%s)"] = "Ehre errungen: %s (%s)",
+        ["Honour earned: %s"] = "Ehre errungen: %s",
+        ["A letter from the past has opened."] = "Ein Brief aus der Vergangenheit ist aufgegangen.",
+        ["Walk %d kilometres today."] = "Wandere heute %d Kilometer.",
+        ["Walk %d kilometres this week."] = "Wandere diese Woche %d Kilometer.",
+        ["Earn %d honour tiers this week."] = "Erringe diese Woche %d Ehrenstufen.",
+        ["Set foot in %s."] = "Betritt %s.",
     },
 }
 

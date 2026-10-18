@@ -81,7 +81,7 @@ UI:RegisterRenderer("obituary", function(pool, page, side, canvas)
     pic:SetSize(tw, 132)
     pic:SetFrameLevel(canvas:GetFrameLevel() + 2)
     pic:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, -186)
-    pic:Paint({ npc = killerId, gear = o.gear, s = o.by and format(L["Fell to %s"], o.by) or L["The last moment"] })
+    pic:Paint({ npc = killerId, gear = o.gear, s = o.by and format(L["Killed by %s"], o.by) or L["The last moment"] })
 
     local place = pool:Text(14, c.ink, UI.FONT, "CENTER")
     place:SetWidth(tw)
@@ -206,7 +206,7 @@ UI:RegisterRenderer("honour", function(pool, page, side, canvas)
     local tx, tw = UI.TextX(side), UI.TextW()
     local s = UI.book.honour or { points = 0, maxPoints = 0, tiers = 0, totalTiers = 0, metals = { 0, 0, 0, 0, 0 } }
     if page.first then
-        UI.PageTitle(pool, canvas, side, L["Book of honour"], format(L["%d of %d honours earned"], s.tiers, s.totalTiers), -56)
+        UI.PageTitle(pool, canvas, side, L["Book of honour"], format(L["%d of %d honour tiers reached"], s.tiers, s.totalTiers), -56)
     end
     local top = -UI.TOP
     local NX = tx + 46
@@ -248,16 +248,16 @@ UI:RegisterRenderer("honour", function(pool, page, side, canvas)
             local n = pool:Text(15, earned and c.ink or c.inkSoft, UI.HEAD)
             n:SetText(e.hidden and "???" or L[h.name])
             n:SetWordWrap(false)
-            n:SetWidth(barW - e.n * 12 - 6)
+            n:SetWidth(barW - e.n * 14 - 6)
             n:SetPoint("TOPLEFT", canvas, "TOPLEFT", NX, y - 3)
             -- one diamond per tier, in the metal it is worth once earned
             local px = tx + tw - 4
             for i = e.n, 1, -1 do
                 local got = i <= e.tier
                 local col = got and WFD:MetalOf(i, e.n).col or { 0.58, 0.50, 0.38, 0.35 }
-                local d = pool:Diamond(got and 8 or 6, col)
+                local d = pool:Diamond(got and 10 or 8, col)
                 d:SetPoint("CENTER", canvas, "TOPLEFT", px, y - 10)
-                px = px - 12
+                px = px - 14
             end
             local d = pool:Text(11, e.hidden and c.inkSoft or c.inkFaint, UI.FONT)
             d:SetText(e.hidden and L[h.secret] or WFD:HonourText(h, e.next or h.tiers[e.n]))
@@ -275,7 +275,9 @@ UI:RegisterRenderer("honour", function(pool, page, side, canvas)
                 if frac > 0 then
                     local bar
                     if e.next then
-                        bar = pool:Grad("HORIZONTAL", { 0.70, 0.55, 0.28, 0.75 }, { 0.91, 0.76, 0.42, 1 })
+                        -- in the metal of the tier it is heading for
+                        local m = WFD:MetalOf(e.tier + 1, e.n).col
+                        bar = pool:Grad("HORIZONTAL", { m[1] * 0.7, m[2] * 0.7, m[3] * 0.7, 0.85 }, { m[1], m[2], m[3], 1 })
                     else
                         bar = pool:Grad("HORIZONTAL", { 0.70, 0.45, 0.16, 1 }, { 0.95, 0.75, 0.28, 1 })
                     end

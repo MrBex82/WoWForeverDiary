@@ -148,7 +148,7 @@ local function flashback(day)
                     break
                 end
             end
-            local txt = format(L["You were in %s."], WFD:Place(f.mainZone or "?", "in"))
+            local txt = format(L["I was in %s."], WFD:Place(f.mainZone or "?", "in"))
             if evText then
                 txt = txt .. " " .. evText
             elseif d.killTotal > 0 then
@@ -468,7 +468,7 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
             d:SetWidth(TCW - tabW - 6)
             d:SetPoint("TOPLEFT", canvas, "TOPLEFT", textX, y - 2)
             local has = WFD.C.dayNotes and WFD.C.dayNotes[it.day]
-            local ln = pool:Link(has and L["edit note"] or L["+ note"], function() UI:EditDayNote(it.day) end, 11, c.redInk)
+            local ln = pool:Link(has and L["edit note"] or L["+ note"], function() UI:EditDayNote(it.day) end, 13, c.redInk)
             ln:SetJustifyH("RIGHT")
             ln:SetPoint("TOPRIGHT", canvas, "TOPLEFT", textX + TCW, y - 25)
             local p = pool:Text(9, c.inkSoft, UI.FONT)

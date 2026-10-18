@@ -23,7 +23,7 @@ end
 
 -- where a milestone is best read
 local TARGET = { honour = "honour", landmark = "landmarks", dungeon = "runs", challenge = "collection", weekly = "collection",
-    first = "firsts", capsule = "capsule", catch = "fishbook" }
+    first = "firsts", capsule = "capsule", catch = "fishbook", summary = "today" }
 
 ------------------------------------------------------------------------
 -- Toasts
@@ -283,6 +283,11 @@ local function describe(ev)
     elseif ev.k == "weekly" then
         d.kicker = L["Task of the week"]
         d.hint = L["Click for the next goals."]
+    elseif ev.k == "summary" then
+        d.icon, d.col = UI.Icon("journal"), c.gold
+        d.kicker = L["Diary"]
+        d.name = format(L["%d new moments"], ev.n or 0)
+        d.hint = L["Click to open the diary."]
     elseif ev.k == "capsule" then
         d.kicker = L["Time capsule"]
         d.name = L["A letter from the past has opened."]
@@ -296,6 +301,11 @@ end
 function UI:NextToast()
     local ev = table.remove(queue, 1)
     if not ev then return end
+    -- many at once (a dungeon, a big fight): one note for all of them instead of a long line of notes
+    if #queue >= 2 then
+        ev = { k = "summary", n = #queue + 1, t = time() }
+        queue = {}
+    end
     toast = toast or build()
     local d = describe(ev)
     toast.plaque:Set(d.icon, d.col)

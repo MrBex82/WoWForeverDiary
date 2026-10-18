@@ -218,7 +218,8 @@ local CLICK_HINTS = {
     "Click to set a marker on the map.", "Right-click for the map of this region.", "Right-click to go to a page.",
     "Click to open.", "Right-click for the settings.", "Click for the hunting grounds of this area.",
     "Click to show only these.", "Click to show all again.", "Ctrl-click to set or remove a bookmark here.",
-    "Click to open, right-click to remove.",
+    "Click to open, right-click to remove.", "Click to go to a page.", "Right-click for the contents.",
+    "Click to set a bookmark here.", "Click to remove the bookmark.",
 }
 local clickSet
 local function isHint(s)
@@ -817,7 +818,7 @@ function UI.MapSketch(parent, w, h)
             end
         end
         paint(steps, { 0.55, 0.08, 0.05 }, 0.45, 0.08, 0.8, pi / 4)
-        paint(kills, { 0.08, 0.04, 0.02 }, 0.55, 0.12, 1.3, pi / 4)
+        paint(kills, { 0.16, 0.24, 0.62 }, 0.60, 0.12, 1.3, pi / 4)
 
         -- pins: the most important places get a number that matches the legend on the page
         local k = UI.CanRound() and 1 or 0.74

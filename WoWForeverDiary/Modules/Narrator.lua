@@ -46,7 +46,7 @@ local EN = {
     via = " (%s)",
     fly = " Flew the rest of the way.",
     kills = {
-        "{One enemy|%d enemies} fell by my hand.",
+        "{One enemy|%d enemies} down.",
         "Took down %d {creature|creatures}.",
         "{One enemy|%d enemies} fewer in the world.",
     },
@@ -184,7 +184,9 @@ local function moment(s)
     name = name:gsub("!$", "")
     -- lower case inside the sentence, except in languages that capitalise nouns
     local first, rest = what:match("^([%z\1-\127\194-\244][\128-\191]*)(.*)$")
-    if first and not WFD.loc.nounCase then what = first:lower() .. rest end
+    -- languages that capitalise nouns lower only the words listed as no nouns ("seltene Kreatur erlegt")
+    local word = what:match("^(%S+)")
+    if first and (not WFD.loc.nounCase or (WFD.loc.lowerFirst and WFD.loc.lowerFirst[word])) then what = first:lower() .. rest end
     return name .. " (" .. what .. ")"
 end
 
@@ -365,17 +367,17 @@ function WFD:Narrate(idx)
     if f.income > 0 or f.spend > 0 then
         local txt
         if f.net >= 0 then
-            txt = format(pick(T.gain, seed + 9), self:CoinText(f.net))
+            txt = format(pick(T.gain, seed + 9), self:CoinWords(f.net))
         else
-            txt = format(pick(T.loss, seed + 9), self:CoinText(-f.net))
+            txt = format(pick(T.loss, seed + 9), self:CoinWords(-f.net))
         end
         local bestIn = sortedByValue(d.income, 1)[1]
         if bestIn and bestIn.v > 0 then
-            txt = txt .. format(T.src, self:CatName(bestIn.k), self:CoinText(bestIn.v))
+            txt = txt .. format(T.src, self:CatName(bestIn.k), self:CoinWords(bestIn.v))
         end
         local bestOut = sortedByValue(d.spend, 1)[1]
         if bestOut and bestOut.v > 0 then
-            txt = txt .. format(T.spent, self:CatName(bestOut.k), self:CoinText(bestOut.v))
+            txt = txt .. format(T.spent, self:CatName(bestOut.k), self:CoinWords(bestOut.v))
         end
         p[#p + 1] = txt
         sections = sections + 1

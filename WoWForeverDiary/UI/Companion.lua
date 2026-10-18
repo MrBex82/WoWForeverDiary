@@ -342,6 +342,7 @@ function UI:ShowCompanion(show)
 end
 
 WFD:OnInit(function()
-    if WFD.S.companion == nil then WFD.S.companion = true end
+    -- off at first: the introduction offers it (a window nobody asked for would only be in the way)
+    if WFD.S.companion == nil then WFD.S.companion = false end
     if WFD.S.companion then UI:ShowCompanion(true) end
 end)

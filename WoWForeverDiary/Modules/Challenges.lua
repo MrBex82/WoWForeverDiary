@@ -96,7 +96,8 @@ function WFD:ChallengeText(t)
     if t.k == "km" then return t.goal == 1 and L["Walk one kilometre today."] or format(L["Walk %d kilometres today."], t.goal) end
     if t.k == "loot" then return L["Find an uncommon or better item."] end
     if t.k == "landmark" then return format(L["Visit the landmark %s."], t.name or "?") end
-    if t.k == "region" then return format(L["Set foot in %s."], t.name or "?") end
+    -- the region with the preposition its language needs ("Reise in die Sümpfe des Elends")
+    if t.k == "region" then return format(L["Set foot in %s."], self:Place(t.name or "?", "to")) end
     return "?"
 end
 

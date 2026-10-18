@@ -23,18 +23,18 @@ Den Ordner `WoWForeverDiary` nach `World of Warcraft\_classic_era_\Interface\Add
 | `/wfd export`, `/wfd import` | Umzugs-Code für einen anderen Rechner erstellen oder einlesen |
 | `/wfd restore` | Ein beiseitegelegtes Tagebuch zurückholen |
 
-Im Buch, in Gruppen mit eigener Reiterfarbe:
+Im Buch, in Gruppen; jede Gruppe hat einen Reiter, der eine Übersicht ihrer Teile öffnet:
 
-- **Vorne:** Inhalt, Tagebuch mit Kapiteln, Questbuch
+- **Vorne:** Inhalt, Heute (der Tag bis jetzt, Neues seit dem letzten Lesen, nächste Ziele), Tagebuch mit Kapiteln, Questbuch
 - **Ziele & Ruhm:** Sammelalbum mit nächsten Zielen, Ehrenbuch
 - **Chronik:** Meilensteine, Erste Male, Rekorde, Stufen-Zeitstrahl, Galerie
 - **Die Welt:** Atlas, Karten mit Gebietschronik, Sehenswürdigkeiten, Fundorte, Dungeon-Berichte
-- **Jagd & Beute:** Bestiarium mit Steckbriefen, „Fast geschafft“ und Jagdkarte, Erzfeinde, Schätze mit Ausrüstungspuppe
-- **Menschen & Haushalt:** Personen, Gefährten, Kassenbuch
+- **Jagd & Beute:** Bestiarium mit Steckbriefen, „Fast geschafft“ und Jagdkarte, Erzfeinde, Anglerbuch, Schätze mit Ausrüstungspuppe
+- **Leute & Geld:** Personen, Gefährten, Kassenbuch
 - **Andenken:** Familienbuch, Zeitkapsel, Notizen des Schreibers (Einstellungen)
 
-Die Lupe oben am Buchrücken (oder Strg + F) durchsucht alles. Strg-Klick auf eine Seitenzahl setzt ein eigenes
-Lesezeichen. Solange die Maus über dem Buch ist, blättern Pfeiltasten und Mausrad; Pos1 führt zum Inhalt, Ende zu heute,
+Die Lupe oben am Buchrücken (oder Strg + F) durchsucht alles, das „?“ darunter zeigt die Einführung. Ein Klick auf
+die Seitenzahl springt zu einer Seite, ein Klick auf das Eselsohr setzt ein eigenes Lesezeichen. Solange die Maus über dem Buch ist, blättern Pfeiltasten und Mausrad; Pos1 führt zum Inhalt, Ende zu heute,
 die Rücktaste zurück.
 
 Sprachen: Deutsch, Englisch, Französisch, Spanisch, Portugiesisch, Russisch, Koreanisch und Traditionelles Chinesisch.

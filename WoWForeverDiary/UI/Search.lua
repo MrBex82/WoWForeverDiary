@@ -144,13 +144,20 @@ local function snippet(full, hay, q)
     return text
 end
 
-local function find(q)
+-- the words searched for, marked in a warm colour (lower case keeps the length of every letter)
+local function mark(text, q)
+    local s, e = lower(text):find(q, 1, true)
+    if not s then return text end
+    return text:sub(1, s - 1) .. "|cffffb347" .. text:sub(s, e) .. "|r" .. text:sub(e + 1)
+end
+
+local function find(q, kind)
     q = lower(q):gsub("^%s+", ""):gsub("%s+$", "")
     if #q < 2 then return {} end
     if not index or indexBook ~= UI.book then buildIndex() end
     local hits = {}
     for _, e in ipairs(index) do
-        local pos = e.hay:find(q, 1, true)
+        local pos = (not kind or e.kind == kind) and e.hay:find(q, 1, true)
         if pos then hits[#hits + 1] = { e = e, starts = (pos == 1) } end
     end
     table.sort(hits, function(a, b)
@@ -188,7 +195,7 @@ local function choose(i)
 end
 
 local function showResults()
-    local hits, q = find(panel.edit:GetText() or "")
+    local hits, q = find(panel.edit:GetText() or "", rawget(panel, "filter"))
     panel.hits = hits
     for i, row in ipairs(panel.rows) do
         local h = hits[i]
@@ -196,9 +203,9 @@ local function showResults()
             local e = h.e
             row.icon:SetTexture(e.icon)
             if e.kind == "day" then
-                row.text:SetText("|cffe8c26a" .. e.text .. "|r  " .. snippet(e.full, e.hay, q))
+                row.text:SetText("|cffe8c26a" .. e.text .. "|r  " .. mark(snippet(e.full, e.hay, q), q))
             else
-                row.text:SetText(e.text)
+                row.text:SetText(mark(e.text, q))
             end
             row.kind:SetText(L[KIND_LABEL[e.kind] or "Diary"]:upper())
             row.go = e.go
@@ -212,7 +219,7 @@ local function showResults()
     panel.none:SetShown(typed and n == 0)
     panel.more:SetShown(#hits > MAX_ROWS)
     panel.more:SetText(format(L["%d more results - type a little more"], #hits - MAX_ROWS))
-    local h = 52 + max(n, (typed and n == 0) and 1 or 0) * ROW_H + (#hits > MAX_ROWS and 18 or 0)
+    local h = 78 + max(n, (typed and n == 0) and 1 or 0) * ROW_H + (#hits > MAX_ROWS and 18 or 0)
     panel:SetHeight(h)
     choose(1)
 end
@@ -268,11 +275,51 @@ local function build(bf)
     p.edit = e
 
     -- results
+    -- a row of small icons below the field: only one kind of result, or all of them
+    p.chips = {}
+    local CHIPS = { { nil, "search" }, { "day", "journal" }, { "person", "people" }, { "creature", "bestiary" },
+        { "quest", "quests" }, { "place", "map" }, { "treasure", "loot" }, { "catch", "fish" } }
+    local function paintChips()
+        for _, ch in ipairs(p.chips) do
+            local filter = rawget(p, "filter")
+            local on = ch.kind == filter
+            ch.ring:SetVertexColor(col4(on and c.gold or { 0.30, 0.22, 0.12, 1 }))
+            ch.icon:SetDesaturated(not on and filter ~= nil)
+            ch.icon:SetAlpha((on or filter == nil) and 1 or 0.6)
+        end
+    end
+    for i, def in ipairs(CHIPS) do
+        local ch = CreateFrame("Button", nil, p)
+        ch:SetSize(24, 24)
+        ch:SetPoint("TOPLEFT", 14 + (i - 1) * 30, -44)
+        ch.ring = UI.Fill(ch, { 0.30, 0.22, 0.12 }, "BACKGROUND", 0)
+        ch.ring:SetAllPoints()
+        ch.icon = ch:CreateTexture(nil, "ARTWORK")
+        ch.icon:SetPoint("TOPLEFT", 2, -2)
+        ch.icon:SetPoint("BOTTOMRIGHT", -2, 2)
+        ch.icon:SetTexture(UI.Icon(def[2]))
+        ch.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        ch.kind = def[1]
+        ch:SetScript("OnClick", function()
+            p.filter = def[1]
+            paintChips()
+            showResults()
+        end)
+        ch:SetScript("OnEnter", function(s)
+            GameTooltip:SetOwner(s, "ANCHOR_BOTTOM")
+            GameTooltip:SetText(def[1] and L[KIND_LABEL[def[1]] or "Diary"] or L["All"], 1, 0.86, 0.5)
+            GameTooltip:Show()
+        end)
+        ch:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        p.chips[i] = ch
+    end
+    p.paintChips = paintChips
+
     p.rows = {}
     for i = 1, MAX_ROWS do
         local r = CreateFrame("Button", nil, p)
         r:SetSize(PANEL_W - 24, ROW_H - 2)
-        r:SetPoint("TOPLEFT", 12, -44 - (i - 1) * ROW_H)
+        r:SetPoint("TOPLEFT", 12, -70 - (i - 1) * ROW_H)
         r.hl = UI.Fill(r, { 0.91, 0.76, 0.42 }, "BACKGROUND", 0, 0.10)
         r.hl:SetAllPoints()
         r.hl:Hide()
@@ -303,7 +350,7 @@ local function build(bf)
         p.rows[i] = r
     end
     p.none = UI.Text(p, 12, c.inkFaint, "CENTER", UI.FONT)
-    p.none:SetPoint("TOP", 0, -48)
+    p.none:SetPoint("TOP", 0, -74)
     p.none:SetText(L["Nothing found."])
     p.none:Hide()
     p.more = UI.Text(p, 9, c.inkFaint, "CENTER", UI.FONT)
@@ -323,6 +370,8 @@ function UI:ToggleSearch()
         close()
     else
         index = nil
+        panel.filter = nil
+        panel.paintChips()
         panel:Show()
         panel.edit:SetText("")
         showResults()
@@ -353,7 +402,7 @@ local function addButton()
         rim:SetVertexColor(col4(c.gold))
         GameTooltip:SetOwner(s, "ANCHOR_BOTTOM")
         GameTooltip:SetText(L["Search the diary"], 1, 0.86, 0.5)
-        GameTooltip:AddLine(L["Days, people, creatures, quests and places."], 0.9, 0.9, 0.9, true)
+        GameTooltip:AddLine(L["Days, people, creatures, quests, places, treasures and catches."], 0.9, 0.9, 0.9, true)
         GameTooltip:AddLine(L["Ctrl + F"], 0.5, 0.8, 1)
         GameTooltip:Show()
     end)
@@ -362,6 +411,35 @@ local function addButton()
         GameTooltip:Hide()
     end)
     UI.searchButton = b
+    -- below it a "?": the introduction once more
+    local q = CreateFrame("Button", nil, bf)
+    q:SetSize(24, 24)
+    q:SetPoint("TOP", b, "BOTTOM", 0, -4)
+    q:SetFrameLevel(bf:GetFrameLevel() + 30)
+    local qr = UI.Circle(q, 24, { 0.10, 0.05, 0.02, 1 }, "BACKGROUND", 0)
+    qr:SetPoint("CENTER")
+    local qrim = UI.Circle(q, 22, c.goldDk, "BORDER", 0)
+    qrim:SetPoint("CENTER")
+    local qin = UI.Circle(q, 18, { 0.16, 0.09, 0.04, 1 }, "ARTWORK", 0)
+    qin:SetPoint("CENTER")
+    local qt = UI.Text(q, 14, c.gold, "CENTER", UI.HEAD, true)
+    qt:SetPoint("CENTER", 0, 0)
+    qt:SetText("?")
+    q:SetScript("OnClick", function()
+        WFD.S.tourDone = nil
+        if UI.StartTour then UI:StartTour() end
+    end)
+    q:SetScript("OnEnter", function(s)
+        qrim:SetVertexColor(col4(c.gold))
+        GameTooltip:SetOwner(s, "ANCHOR_BOTTOM")
+        GameTooltip:SetText(L["Show the introduction again"], 1, 0.86, 0.5)
+        GameTooltip:Show()
+    end)
+    q:SetScript("OnLeave", function()
+        qrim:SetVertexColor(col4(c.goldDk))
+        GameTooltip:Hide()
+    end)
+    UI.helpButton = q
 end
 
 local build0 = UI.Build

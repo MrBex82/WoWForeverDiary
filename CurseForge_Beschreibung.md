@@ -20,10 +20,12 @@ I made it because I never remember later where I first met someone, which quest 
 
 ## What's in the book
 
+- **Today:** the book opens on today: your figures so far, how the day began, what's new since you last read, and your next goals
 - **Diary:** a double page per day, written as a short story
 - **World map:** where you've been, with a time slider
 - **Bestiary and people:** pinned cards for creatures (like a wanted poster) and for NPCs. Creatures you've only seen so far, or that your other characters know, are listed per area with a hint where to look. Click one and it puts a marker on your map
 - **Collector's album:** every creature card starts as a sketch, turns to colour after 10 kills and gets a gold frame once you're a connoisseur (50 kills). Cards show their rarity, the best loot it dropped, whether it ever killed you and a short note in your own words. There's a page sorted by creature type, an "Almost there" page with the creatures closest to their next stage, and a map of your hunting grounds that shows where you stand
+- **Angler's log:** everything the line brings up, collected on cards by water, with a page for your waters and tackle
 - **Treasures:** every notable find, sorted by kind (head, chest, legs, weapons, recipes ...), with a doll showing your best find for every slot and a tick on what you're wearing
 - **Quest book and statistics:** including the gold flow
 - **Honours:** a collection with bronze to legend tiers, some of them secret, including fishing, first aid and cooking. There are small daily tasks and a bigger weekly one
@@ -33,9 +35,9 @@ I made it because I never remember later where I first met someone, which quest 
 - **Export** as text or JSON if you want your diary somewhere else
 - **Moving to a new PC:** a moving code takes the whole diary of a character to another computer ("/wfd export" and "/wfd import")
 
-The parts of the book are grouped by theme, each group with its own tab colour, so you always know where you are.
+The parts of the book are grouped by theme. Each group has one tab in its own colour, which opens an overview of its parts.
 
-Small notes slide in when something worth remembering happens (a right-click puts them away), and you get a look back at the week. A small companion window beside the game shows today's figures, your tasks and the honours and creatures closest to their next step.
+Small notes slide in when something worth remembering happens (a right-click puts them away), and you get a look back at the week. If you like, a small companion window beside the game (the introduction offers it) shows today's figures, your tasks and the honours and creatures closest to their next step.
 
 The book comes in three styles (leather and gold, modern, strong contrast) and the writing can be made larger.
 
@@ -45,7 +47,7 @@ The book comes in three styles (leather and gold, modern, strong contrast) and t
 
 - Arrow keys and Page up/down turn the pages while the mouse is over the book; Home goes to the contents, End to today, Backspace back
 - Ctrl + mouse wheel changes the size of the book, and it remembers where you put it
-- Right-click a page number to jump to any page, Ctrl-click it to set your own bookmark
+- Click a page number to jump to any page; click the folded corner of a page to set your own bookmark
 - Ctrl + F searches the book; arrow keys and Enter pick a result
 - The tabs show a red dot with what's new since you last read, and their names when you point at them
 - Notifications can be set to all, important only, or quiet. All settings are also under Options > AddOns
@@ -86,10 +88,12 @@ Ich habe es gebaut, weil ich mir später nie merke, wo ich jemanden zum ersten M
 
 ## Was im Buch steht
 
+- **Heute:** Das Buch öffnet bei heute: deine Zahlen bis jetzt, wie der Tag angefangen hat, was seit dem letzten Lesen neu ist und deine nächsten Ziele
 - **Tagebuch:** pro Tag eine Doppelseite, als kleine Geschichte geschrieben
 - **Weltkarte:** wo du schon warst, mit Zeitregler
 - **Bestiarium und Personen:** angeheftete Karten für Kreaturen (wie ein Steckbrief) und für NPCs. Kreaturen, die du bisher nur gesehen hast oder die deine anderen Charaktere kennen, stehen pro Gebiet in einer Liste mit einem Hinweis, wo du suchen solltest. Ein Klick setzt eine Markierung auf deiner Karte
 - **Sammelalbum:** Jede Kreaturenkarte beginnt als Skizze, wird nach 10 Kills farbig und bekommt einen Goldrahmen, sobald du Kenner bist (50 Kills). Die Karten zeigen ihre Seltenheit, die beste Beute, ob dich das Tier schon einmal erwischt hat, und eine kurze Notiz in deinen eigenen Worten. Dazu gibt es eine Seite nach Kreaturentypen, eine Seite „Fast geschafft“ mit den Kreaturen, die ihrer nächsten Stufe am nächsten sind, und eine Karte deiner Jagdgründe, die auch zeigt, wo du stehst
+- **Anglerbuch:** alles, was die Angel heraufholt, auf Karten gesammelt und nach Gewässern sortiert, mit einer Seite für Gewässer und Angelzeug
 - **Schätze:** jeder bemerkenswerte Fund, nach Art sortiert (Kopf, Brust, Beine, Waffen, Rezepte ...), mit einer Ausrüstungspuppe, die deinen besten Fund für jeden Platz zeigt, und einem Häkchen an dem, was du gerade trägst
 - **Questbuch und Statistik:** inklusive Gold-Fluss
 - **Ehrungen:** eine Sammlung mit Stufen von Bronze bis Legende, einige davon geheim, auch für Angeln, Erste Hilfe und Kochen. Dazu kleine Tagesaufgaben und eine größere Wochenaufgabe
@@ -99,9 +103,9 @@ Ich habe es gebaut, weil ich mir später nie merke, wo ich jemanden zum ersten M
 - **Export** als Text oder JSON, falls du dein Tagebuch woanders haben willst
 - **Umzug auf einen neuen PC:** ein Umzugs-Code nimmt das ganze Tagebuch eines Charakters auf einen anderen Rechner mit („/wfd export“ und „/wfd import“)
 
-Die Teile des Buches sind nach Themen gruppiert, jede Gruppe mit ihrer eigenen Reiterfarbe, sodass du immer weißt, wo du bist.
+Die Teile des Buches sind nach Themen gruppiert. Jede Gruppe hat einen Reiter in ihrer eigenen Farbe, der eine Übersicht ihrer Teile öffnet.
 
-Wenn etwas Erinnerungswürdiges passiert, rutscht eine kleine Notiz ins Bild (ein Rechtsklick legt sie weg), und einmal pro Woche gibt es einen Rückblick. Ein kleines Begleitfenster neben dem Spiel zeigt die Zahlen von heute, deine Aufgaben und die Ehren und Kreaturen, die ihrem nächsten Schritt am nächsten sind.
+Wenn etwas Erinnerungswürdiges passiert, rutscht eine kleine Notiz ins Bild (ein Rechtsklick legt sie weg), und einmal pro Woche gibt es einen Rückblick. Wenn du magst, zeigt ein kleines Begleitfenster neben dem Spiel (die Einführung bietet es an) die Zahlen von heute, deine Aufgaben und die Ehrungen und Kreaturen, die ihrem nächsten Schritt am nächsten sind.
 
 Das Buch gibt es in drei Stilen (Leder und Gold, Modern, starker Kontrast), und die Schrift lässt sich vergrößern.
 
@@ -111,7 +115,7 @@ Das Buch gibt es in drei Stilen (Leder und Gold, Modern, starker Kontrast), und 
 
 - Pfeiltasten und Bild auf/ab blättern, solange die Maus über dem Buch ist; Pos1 führt zum Inhalt, Ende zum heutigen Tag, die Rücktaste zurück
 - Strg + Mausrad ändert die Größe des Buches, und es merkt sich, wo du es hingeschoben hast
-- Rechtsklick auf eine Seitenzahl springt zu jeder beliebigen Seite, Strg-Klick setzt ein eigenes Lesezeichen
+- Ein Klick auf die Seitenzahl springt zu jeder beliebigen Seite, ein Klick auf das Eselsohr einer Seite setzt ein eigenes Lesezeichen
 - Strg + F durchsucht das Buch; Pfeiltasten und Enter wählen einen Treffer
 - Die Reiter zeigen mit einem roten Punkt, was seit dem letzten Lesen neu ist, und ihre Namen, wenn du auf sie zeigst
 - Meldungen lassen sich auf alle, nur Wichtiges oder still stellen. Alle Einstellungen gibt es auch unter Optionen > AddOns

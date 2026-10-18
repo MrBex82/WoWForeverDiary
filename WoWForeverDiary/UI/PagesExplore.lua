@@ -77,13 +77,15 @@ local function gather()
     }
 end
 
+UI.CollectionState = gather       -- the "Today" page shows the next goals too
+
 ------------------------------------------------------------------------
 -- The collection: one bar per collection, and what to do next
 ------------------------------------------------------------------------
 UI:RegisterSection({
     key = "collection", label = "Collection", icon = "album", order = 5, leftStart = true,
     build = function(book)
-        book.collection = gather()
+        book.collection = book.collection or gather()      -- "Today" may have counted it already
         book:Add({ kind = "collection", numbered = true, head = L["Collection"] })
         book:Add({ kind = "nextgoals", numbered = true, head = L["Collection"] })
     end,
@@ -125,7 +127,7 @@ UI:RegisterRenderer("collection", function(pool, page, side, canvas)
         cnt:SetText(it[2] .. "|cffc2a880 / " .. it[3] .. "|r")
         cnt:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, ry - 3)
         local sub = pool:Text(9, c.inkSoft, UI.FONT)
-        sub:SetText(it[6]:upper())
+        sub:SetText(UI.Upper(it[6]))
         sub:SetWordWrap(false)
         sub:SetWidth(tw - 44 - 40)
         sub:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 44, ry - 21)

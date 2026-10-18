@@ -38,7 +38,8 @@ end
 local function buildBack(bf)
     local b = CreateFrame("Button", nil, bf)
     b:SetSize(30, 30)
-    b:SetPoint("TOPLEFT", bf, "TOPLEFT", -6, 6)
+    -- beside the arrow that turns back, where the hand already is
+    b:SetPoint("LEFT", UI.prevBtn, "RIGHT", 6, 0)
     b:SetFrameLevel(bf:GetFrameLevel() + 20)
     local ring = UI.Circle(b, 28, { 0.10, 0.05, 0.02, 1 }, "BACKGROUND", 0)
     ring:SetPoint("CENTER")
@@ -182,6 +183,7 @@ function UI:UpdateMarks()
                         table.remove(WFD.C.marks, s.i)
                         GameTooltip:Hide()
                         UI:UpdateMarks()
+                        UI:UpdateEars()
                     else
                         local to = resolveMark(WFD.C.marks[s.i])
                         if to then UI:GoToPage(to) end
@@ -220,6 +222,58 @@ function UI:UpdateMarks()
     end
 end
 
+-- the dog-ear in the upper outer corner of each page: a click keeps the page, a second click lets it go
+local earBtns = {}
+local function pageMarked(index)
+    for i, m in ipairs(WFD.C and WFD.C.marks or {}) do
+        if resolveMark(m) == index then return i end
+    end
+end
+local function paintEar(b)
+    local marked = b.index and pageMarked(b.index)
+    local col = marked and c.gold or { 0.42, 0.31, 0.19, 1 }
+    b.flap:SetVertexColor(col[1], col[2], col[3], 1)
+    b:SetAlpha((marked or b.hover) and 1 or 0.55)
+end
+function UI:UpdateEars()
+    local s = self.spread or 1
+    for side, b in pairs(earBtns) do
+        local index = (side == "left") and (s * 2 - 1) or (s * 2)
+        local page = self.book and self.book.pages[index]
+        b.index = index
+        b:SetShown(page ~= nil and page.kind ~= "endpaper")
+        paintEar(b)
+    end
+end
+local function buildEars()
+    for _, side in ipairs({ "left", "right" }) do
+        local pf = UI.pageFrames[side]
+        local corner = side == "left" and "TOPLEFT" or "TOPRIGHT"
+        local b = CreateFrame("Button", nil, pf)
+        b:SetSize(30, 30)
+        b:SetPoint(corner, pf, corner, 0, 0)
+        b:SetFrameLevel(pf.canvas:GetFrameLevel() + 10)
+        if b.SetClipsChildren then b:SetClipsChildren(true) end
+        local inner = CreateFrame("Frame", nil, b)
+        inner:SetAllPoints()
+        b.shadow = UI.Diamond(inner, 30, { 0, 0, 0, 0.45 }, "ARTWORK", 0)
+        b.shadow:SetPoint("CENTER", b, corner, 0, 0)
+        b.flap = UI.Diamond(inner, 24, { 0.42, 0.31, 0.19, 1 }, "ARTWORK", 1)
+        b.flap:SetPoint("CENTER", b, corner, 0, 0)
+        b:SetScript("OnClick", function(s) if s.index then UI:ToggleMark(s.index) end end)
+        b:SetScript("OnEnter", function(s)
+            s.hover = true
+            paintEar(s)
+            GameTooltip:SetOwner(s, "ANCHOR_TOP")
+            GameTooltip:SetText(L["Bookmark"], 1, 0.86, 0.5)
+            GameTooltip:AddLine(s.index and pageMarked(s.index) and L["Click to remove the bookmark."] or L["Click to set a bookmark here."], 0.5, 0.8, 1)
+            GameTooltip:Show()
+        end)
+        b:SetScript("OnLeave", function(s) s.hover = nil paintEar(s) GameTooltip:Hide() end)
+        earBtns[side] = b
+    end
+end
+
 function UI:ToggleMark(index)
     local C = WFD.C
     if not C or not self.book then return end
@@ -228,6 +282,7 @@ function UI:ToggleMark(index)
         if resolveMark(m) == index then
             table.remove(C.marks, i)
             self:UpdateMarks()
+            self:UpdateEars()
             return
         end
     end
@@ -236,6 +291,7 @@ function UI:ToggleMark(index)
     if #C.marks >= MAX_MARKS then table.remove(C.marks, 1) end
     C.marks[#C.marks + 1] = p
     self:UpdateMarks()
+    self:UpdateEars()
     UI.Sound("IG_ABILITY_PAGE_TURN", 836)
 end
 
@@ -420,12 +476,26 @@ local function newCounts(since)
     return n
 end
 
+-- what is new since the book was last put away, per part ({} in the demo); the "Today" page lists it
+function UI.NewCounts()
+    local since = UI.readSince
+    if not since or WFD.demo then return {} end
+    return newCounts(since)
+end
+
 function UI:PaintNewDots(activeKey)
     if not self.thumbs then return end
     self.visited = self.visited or {}
     if activeKey then self.visited[activeKey] = true end
     local since = self.readSince
     local counts = (since and not WFD.demo) and newCounts(since) or {}
+    -- a group's tab shows what is new in all of its parts
+    for _, sec in ipairs(UI.sections) do
+        local n = counts[sec.key]
+        if n and sec.group and not self.visited[sec.key] then
+            counts["grp_" .. sec.group] = (counts["grp_" .. sec.group] or 0) + n
+        end
+    end
     for _, t in ipairs(self.thumbs) do
         local n = (not self.visited[t.key]) and counts[t.key] or 0
         t.newCount = n
@@ -466,8 +536,9 @@ local TOUR = {
     { "thumbs", "The tabs", "The tabs on the right lead to the parts of the book, one colour for each group. Point at them to read their names. A red dot shows how much is new since you last read." },
     { "search", "Search", "The spyglass on the spine searches the whole book: days, people, creatures, quests, places, treasures and catches. Ctrl + F opens it too." },
     { "ribbon", "Turning pages", "Turn the pages with the arrows, the mouse wheel or the arrow keys. The red ribbon below always leads to today; Backspace takes you back. Ctrl + mouse wheel changes the size of the book." },
-    { "marks", "Your own bookmarks", "Ctrl-click a page number to keep that page. A ribbon then sticks out of the top of the book: a click opens the page, a right-click takes the ribbon away." },
-    { "page", "Almost everything can be clicked", "Cards, names, days and maps open more. Right-click the page number to go to any page. The settings are in the scribe's notes at the very end." },
+    { "marks", "Your own bookmarks", "Click the folded corner of a page to keep it. A ribbon then sticks out of the top of the book: a click opens the page, a right-click takes the ribbon away." },
+    { "companion", "The companion", "A small window beside the game shows today's figures, the tasks and the honours closest to their next tier. You can switch it on and off in the settings." },
+    { "page", "Almost everything can be clicked", "Cards, names, days and maps open more. Click the page number to go to any page. The settings are in the scribe's notes at the very end." },
 }
 local note
 -- only: a single step on its own (a step added after the reader already knew the introduction)
@@ -507,6 +578,11 @@ local function tourStep(i, only)
         end
         note.next = btn(L["Next"] .. "  >", -14, function() tourStep(note.only and (#TOUR + 1) or (note.i + 1)) end)
         note.skip = btn(L["Skip"], -110, function() tourStep(#TOUR + 1) end)
+        -- on the companion's note: switch it on right away
+        note.extra = btn(L["Show it"], -110, function()
+            if UI.ShowCompanion then UI:ShowCompanion(true) end
+            tourStep(note.only and (#TOUR + 1) or (note.i + 1))
+        end)
         note.pin = UI.Diamond(note, 14, c.gold, "OVERLAY", 0)
     end
     note.i, note.only = i, only
@@ -514,7 +590,9 @@ local function tourStep(i, only)
     note.text:SetText(L[step[3]])
     note.count:SetText(only and "" or (i .. " / " .. #TOUR))
     note.next.t:SetText((only or i == #TOUR) and L["Got it"] or (L["Next"] .. "  >"))
-    note.skip:SetShown(not only and i < #TOUR)
+    local offer = step[1] == "companion" and not WFD.S.companion
+    note.skip:SetShown(not only and i < #TOUR and not offer)
+    note.extra:SetShown(offer)
     note:SetHeight(max(110, note.text:GetStringHeight() + 74))
     note:ClearAllPoints()
     note.pin:ClearAllPoints()
@@ -527,6 +605,9 @@ local function tourStep(i, only)
     elseif step[1] == "ribbon" then
         note:SetPoint("BOTTOM", bf, "BOTTOM", 0, 60)
         note.pin:SetPoint("CENTER", note, "BOTTOM", 0, 0)
+    elseif step[1] == "companion" then
+        note:SetPoint("RIGHT", bf, "RIGHT", -60, 40)
+        note.pin:SetPoint("CENTER", note, "RIGHT", 0, 0)
     elseif step[1] == "marks" then
         -- below the top edge, where the ribbons stick out
         note:SetPoint("TOPLEFT", bf, "TOPLEFT", 50, -30)
@@ -561,6 +642,7 @@ function UI:Build()
     build0(self)
     if not fresh then return end
     buildBack(self.bookFrame)
+    buildEars()
     setupKeys(self.holder)
     restorePosition(self.holder)
     -- the own bookmarks belong to the open book, like the red ribbon
@@ -578,6 +660,7 @@ local spread0 = UI.ShowSpread
 function UI:ShowSpread(s)
     spread0(self, s)
     self:UpdateMarks()
+    self:UpdateEars()
 end
 
 local open0 = UI.OpenBook
@@ -651,8 +734,8 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
         { L["Backspace"], L["back"] },
         { L["Ctrl + F"], L["search the book"] },
         { L["Ctrl + mouse wheel"], L["size of the book"] },
-        { L["Right-click the page number"], L["go to a page"] },
-        { L["Ctrl + click on the page number"], L["bookmark"] },
+        { L["Click the page number"], L["go to a page"] },
+        { L["Click the folded corner"], L["bookmark"] },
         { "/wfd", L["open or close the book"] },
     }
     for _, r in ipairs(rows) do UI.LeaderLine(pool, canvas, tx, y, tw, r[1], r[2], 12, c.inkSoft); y = y - 17 end
@@ -787,6 +870,7 @@ local function buildOptions()
         { L["Show minimap button"], "minimap", function() UI:UpdateMinimapButton() end },
         { L["Show a note for new discoveries"], "toasts" },
         { L["Weekly look back at login"], "recap" },
+        { L["Show the cover when the book is first opened"], "cover" },
     }
     local boxes = {}
     for i, ch in ipairs(checks) do

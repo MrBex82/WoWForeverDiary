@@ -255,7 +255,7 @@ UI:RegisterRenderer("fishintro", function(pool, page, side, canvas)
     big:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + (tw - bw - gw) / 2, y + 2)
     goal:SetPoint("BOTTOMLEFT", big, "BOTTOMRIGHT", 0, 6)
     local bl = pool:Text(10, c.inkSoft, UI.FONT, "CENTER")
-    bl:SetText(format(L["catches collected  -  %d things landed"], sum.total):upper())
+    bl:SetText(UI.Upper(format(L["catches collected  -  %d things landed"], sum.total)))
     bl:SetWidth(tw)
     bl:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 46)
     y = y - 78

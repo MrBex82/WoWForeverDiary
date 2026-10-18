@@ -112,7 +112,7 @@ end
 UI:RegisterRenderer("albumkinds", function(pool, page, side, canvas)
     local C = WFD.C
     local tx, tw = UI.TextX(side), UI.TextW()
-    local y = UI.PageTitle(pool, canvas, side, L["Kinds of creatures"], L["Who fell to your blade, by kind"], -56)
+    local y = UI.PageTitle(pool, canvas, side, L["Kinds of creatures"], L["What you have slain, by type"], -56)
 
     local groups, byType = {}, {}
     for id, m in pairs(C.mobs) do
@@ -255,7 +255,7 @@ UI:RegisterRenderer("huntmap", function(pool, page, side, canvas, index)
         if mob.map == g.map and mob.x then
             slain = slain + 1
             points[#points + 1] = { mob.x, mob.y, PIN_COL[UI.RarityOf(mob)] or PIN_COL.normal,
-                { mob.name or "?", format(L["Slain %d times"], mob.kills or 0), "\"" .. WFD:MarginNote(id, mob) .. "\"",
+                { mob.name or "?", format(L["Slain %d times"], mob.kills or 0), WFD:Quote(WFD:MarginNote(id, mob)),
                   L["Click for the wanted poster."] },
                 false, function() UI:ShowCard("creature", id) end }
         end

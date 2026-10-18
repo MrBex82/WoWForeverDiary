@@ -17,7 +17,7 @@ loc.narrator = {
     },
 }
 L["Book of honour"] = "Book of honor"
-L["%d of %d honours earned"] = "%d of %d honors earned"
+L["%d of %d honour tiers reached"] = "%d of %d honor tiers reached"
 L["Walk 50 kilometres."] = "Walk 50 kilometers."
 L["Walk 250 kilometres."] = "Walk 250 kilometers."
 L["Walk %d kilometres."] = "Walk %d kilometers."

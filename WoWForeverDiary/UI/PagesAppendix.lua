@@ -241,7 +241,7 @@ UI:RegisterRenderer("map", function(pool, page, side, canvas)
     local cap = pool:Text(10, c.redInk, UI.FONT)
     cap:SetText(L["Places of note"]:upper())
     cap:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 12, y)
-    local sym = { { L["Route"], { 0.55, 0.08, 0.05, 1 } }, { L["Kill sites"], { 0.80, 0.72, 0.60, 1 } } }
+    local sym = { { L["Route"], { 0.55, 0.08, 0.05, 1 } }, { L["Kill sites"], { 0.30, 0.42, 0.86, 1 } } }
     local sx = tx + tw
     for i = #sym, 1, -1 do
         local t = pool:Text(9, c.inkSoft, UI.FONT, "RIGHT")
@@ -812,7 +812,7 @@ local function newCard(parent)
         GameTooltip:SetText(m.name or "?", 1, 0.86, 0.5)
         local kind = m.ctype and (m.fam and (m.ctype .. "  -  " .. m.fam) or m.ctype)
         if kind then GameTooltip:AddLine(kind, 0.75, 0.75, 0.75) end
-        GameTooltip:AddLine("\"" .. WFD:MarginNote(self.entry.id, m) .. "\"", 0.95, 0.85, 0.65, true)
+        GameTooltip:AddLine(WFD:Quote(WFD:MarginNote(self.entry.id, m)), 0.95, 0.85, 0.65, true)
         GameTooltip:AddLine(" ")
         GameTooltip:AddLine(format(L["Slain %d times"], m.kills), 0.9, 0.9, 0.9)
         local stage = WFD:MobStage(m)
@@ -1035,7 +1035,7 @@ UI:RegisterRenderer("albumintro", function(pool, page, side, canvas)
     big:SetPoint("TOPLEFT", canvas, "TOPLEFT", bx, y + 2)
     goal:SetPoint("BOTTOMLEFT", big, "BOTTOMRIGHT", 0, 6)
     local bl = pool:Text(10, c.inkSoft, UI.FONT, "CENTER")
-    bl:SetText(format(L["kinds collected  -  %d creatures slain"], kills):upper())
+    bl:SetText(UI.Upper(format(L["kinds collected  -  %d creatures slain"], kills)))
     bl:SetWidth(tw)
     bl:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 46)
     y = y - 78
@@ -1664,9 +1664,9 @@ UI:RegisterRenderer("ledger", function(pool, page, side, canvas)
         dt:SetText(date(WFD.loc.dayMonth, WFD:DayTime(d.day)))
         dt:SetPoint("BOTTOMLEFT", dn, "BOTTOMRIGHT", 6, 1)
         local vals = {
-            { d.inc, d.inc > 0 and GREEN or c.inkFaint, d.inc > 0 and ("+" .. UI.CoinIcons(d.inc, 10)) or "-" },
-            { d.sp, d.sp > 0 and c.bad or c.inkFaint, d.sp > 0 and ("-" .. UI.CoinIcons(d.sp, 10)) or "-" },
-            { d.saldo, d.saldo < 0 and c.bad or c.ink, (d.saldo < 0 and "-" or "") .. UI.CoinIcons(d.saldo, 11) },
+            { d.inc, d.inc > 0 and GREEN or c.inkFaint, d.inc > 0 and ("+" .. UI.CoinIcons(d.inc, 12)) or "-" },
+            { d.sp, d.sp > 0 and c.bad or c.inkFaint, d.sp > 0 and ("-" .. UI.CoinIcons(d.sp, 12)) or "-" },
+            { d.saldo, d.saldo < 0 and c.bad or c.ink, (d.saldo < 0 and "-" or "") .. UI.CoinIcons(d.saldo, 12) },
         }
         for i, v in ipairs(vals) do
             local t = pool:Text(i == 3 and 12 or 11, v[2], UI.FONT, "RIGHT")
@@ -1865,6 +1865,7 @@ UI:RegisterRenderer("settings", function(pool, page, side, canvas)
         { L["Show minimap button"], "minimap", function() UI:UpdateMinimapButton() end },
         { L["Show a note for new discoveries"], "toasts" },
         { L["Weekly look back at login"], "recap" },
+        { L["Show the cover when the book is first opened"], "cover" },
     }
     for _, ch in ipairs(checks) do
         local cb = pool:Check(ch[1], function() return S[ch[2]] end, function(v)
@@ -1896,6 +1897,7 @@ UI:RegisterRenderer("settings", function(pool, page, side, canvas)
     local note = pool:Text(11, c.inkSoft, UI.FONT)
     note:SetWidth(tw)
     note:SetText(L["The diary will reload the interface to switch the language."] .. " "
+        .. L["Names from the game (places, creatures, items) stay in the language of the game client."] .. " "
         .. L["Korean and Chinese text needs a game client with those fonts."])
     note:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 4)
     y = y - note:GetStringHeight() - 10

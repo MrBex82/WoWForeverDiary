@@ -23,36 +23,43 @@ function UI:RegisterRenderer(kind, fn) self.renderers[kind] = fn end
 
 -- The order of the book, in one place: the parts in groups, from what you open every day to what you
 -- look things up in. Each group has its own tab colour and a heading in the contents.
+-- Every group but the front one has a tab of its own that leads to its overview page (PagesToday.lua).
 UI.GROUPS = {
     { key = "front",     col = { 0.45, 0.28, 0.14 } },
-    { key = "goals",     col = { 0.66, 0.48, 0.10 }, label = "Goals and honour" },
-    { key = "chronicle", col = { 0.40, 0.20, 0.50 }, label = "Chronicle" },
-    { key = "world",     col = { 0.20, 0.42, 0.20 }, label = "The world" },
-    { key = "hunt",      col = { 0.56, 0.12, 0.08 }, label = "Hunt and loot" },
-    { key = "people",    col = { 0.16, 0.32, 0.54 }, label = "People and household" },
-    { key = "back",      col = { 0.34, 0.27, 0.20 }, label = "Keepsakes" },
+    { key = "goals",     col = { 0.66, 0.48, 0.10 }, label = "Goals and honour", icon = "album" },
+    { key = "chronicle", col = { 0.40, 0.20, 0.50 }, label = "Chronicle", icon = "records" },
+    { key = "world",     col = { 0.20, 0.42, 0.20 }, label = "The world", icon = "atlas" },
+    { key = "hunt",      col = { 0.56, 0.12, 0.08 }, label = "Hunt and loot", icon = "beast" },
+    { key = "people",    col = { 0.16, 0.32, 0.54 }, label = "People and money", icon = "party" },
+    { key = "back",      col = { 0.34, 0.27, 0.20 }, label = "Keepsakes", icon = "kin" },
 }
 UI.GROUP = {}
 for i, g in ipairs(UI.GROUPS) do g.index = i; UI.GROUP[g.key] = g end
--- part = { group, order, tab } (tab false: reached through the contents and the search only)
+-- part = { group, order, line on the group's overview page }. Parts have no tab of their own:
+-- the tabs are Contents, Today, Diary, Quest book and one per group.
 local LAYOUT = {
-    memoriam = { "front", 1 }, quests = { "front", 3 },
-    collection = { "goals", 5 }, honour = { "goals", 6 },
-    milestones = { "chronicle", 10 }, firsts = { "chronicle", 11 }, records = { "chronicle", 12 },
-    levels = { "chronicle", 13 }, gallery = { "chronicle", 14 },
-    atlas = { "world", 19 }, maps = { "world", 20 }, landmarks = { "world", 21 }, gathering = { "world", 22, false },
-    runs = { "world", 25 },
-    bestiary = { "hunt", 30 }, nemesis = { "hunt", 32 }, fishbook = { "hunt", 33 }, treasures = { "hunt", 35 },
-    people = { "people", 40 }, companions = { "people", 45, false }, ledger = { "people", 50 },
-    family = { "back", 86 }, capsule = { "back", 88 }, notes = { "back", 90 },
+    memoriam = { "front", 1 }, quests = { "front", 3, "Tasks taken and done" },
+    collection = { "goals", 5, "What is left to discover" }, honour = { "goals", 6, "Honour points" },
+    milestones = { "chronicle", 10, "The great moments of a life" }, firsts = { "chronicle", 11, "First times" },
+    records = { "chronicle", 12, "The best and the worst of days" },
+    levels = { "chronicle", 13, "How long each level took" }, gallery = { "chronicle", 14, "Moments, painted in the gear of their day" },
+    atlas = { "world", 19, "Regions explored" }, maps = { "world", 20, "Map of my travels" },
+    landmarks = { "world", 21, "Famous places of Azeroth" }, gathering = { "world", 22, "Where the good things grow" },
+    runs = { "world", 25, "Dark places, rich rewards" },
+    bestiary = { "hunt", 30, "A collector's album of every creature slain" }, nemesis = { "hunt", 32, "They sent me to the spirit healer" },
+    fishbook = { "hunt", 33, "A collector's album of everything the line brought up" }, treasures = { "hunt", 35, "Best find for every slot" },
+    people = { "people", 40, "Everyone I met on my way" }, companions = { "people", 45, "Who walked beside me" },
+    ledger = { "people", 50, "Every coin, in and out" },
+    family = { "back", 86, "Who got there first?" }, capsule = { "back", 88, "Letters to my future self" },
+    notes = { "back", 90, "How this book is kept" },
 }
 
 -- def = { key, label, icon, order, build = function(book) ... end }
 function UI:RegisterSection(def)
     local lay = LAYOUT[def.key]
     if lay then
-        def.group, def.order = lay[1], lay[2]
-        if lay[3] == false then def.thumb = false end
+        def.group, def.order, def.sub = lay[1], lay[2], lay[3]
+        if def.key ~= "quests" then def.thumb = false end
     end
     def.group = def.group or "back"
     self.sections[#self.sections + 1] = def
@@ -148,11 +155,12 @@ function UI:Paginate()
     local function entryH(e) return e.group and 20 or ((e.header or e.sub) and 36 or 22) end
     local present = 0
     for _, sec in ipairs(self.sections) do
-        if not sec.enabled or sec.enabled() then present = present + 1 end
+        -- the overview pages of the groups are reached through their headings, "Today" is one line
+        if not sec.index and (not sec.enabled or sec.enabled()) then present = present + 1 end
     end
     local headings = 0
     for _, g in ipairs(UI.GROUPS) do if g.label then headings = headings + 1 end end
-    local need = #chapters * 36 + 36 + present * 22 + headings * 20
+    local need = 22 + #chapters * 36 + 36 + present * 22 + headings * 20
     local tocPages = 1 + max(0, ceil((need - TOC_FIRST) / TOC_NEXT))
     book:Start("toc")
     local tocList = {}
@@ -160,12 +168,22 @@ function UI:Paginate()
         tocList[i] = book:Add({ kind = "toc", first = (i == 1), entries = {}, numbered = true })
     end
 
+    -- "Today" comes right after the contents, before the diary
+    for _, sec in ipairs(self.sections) do
+        if sec.key == "today" then
+            book:PadToLeft("today")
+            book:Start("today")
+            local ok, err = pcall(sec.build, book)
+            if not ok then WFD:Error("section today", err) end
+        end
+    end
+
     book:PadToLeft("diary")
     book:Start("diary")
     UI.LayoutDiary(book, chapters)
 
     for _, sec in ipairs(self.sections) do
-      if not sec.enabled or sec.enabled() then
+      if sec.key ~= "today" and (not sec.enabled or sec.enabled()) then
         -- spreads start on a left page, the rest flows on (a note page someone already wrote on stays)
         local wrote = WFD.C.notes and WFD.C.notes["before:" .. sec.key]
         if sec.leftStart or wrote then book:PadToLeft(sec.key) end
@@ -178,19 +196,25 @@ function UI:Paginate()
 
     -- fill the table of contents
     local all = {}
+    if book.sectionStart.today then
+        all[#all + 1] = { text = L["Today"], page = book.sectionStart.today, icon = "quill" }
+    end
     for i, ch in ipairs(chapters) do
         all[#all + 1] = { text = ch.roman .. ".  " .. ch.title, sub = ch.sub, page = ch.page }
     end
     all[#all + 1] = { header = true, text = L["Appendix"] }
     local lastGroup
     for _, sec in ipairs(self.sections) do
-        if book.sectionStart[sec.key] then
+        if book.sectionStart[sec.key] and not sec.index and sec.key ~= "today" then
             local g = UI.GROUP[sec.group]
             if g and g.key ~= lastGroup and g.label then
-                all[#all + 1] = { group = true, text = L[g.label], col = g.col }
+                -- the heading of a group leads to its overview page
+                all[#all + 1] = { group = true, text = L[g.label], col = g.col, page = book.sectionStart["grp_" .. g.key] }
             end
             lastGroup = sec.group
-            all[#all + 1] = { text = L[sec.label], page = book.sectionStart[sec.key], icon = sec.icon }
+            -- a part that has nothing in it yet stands dimmed
+            local empty = UI.IsEmptyPart and UI.IsEmptyPart(sec.key)
+            all[#all + 1] = { text = L[sec.label], page = book.sectionStart[sec.key], icon = sec.icon, dim = empty or nil }
         end
     end
     local ti, room = 1, TOC_FIRST
@@ -264,18 +288,16 @@ local function fadeIn(frame)
     end)
 end
 
--- traces of use on a page, more of them the older the book: a mug ring, foxing, a folded corner.
+-- traces of use on a page, more of them the older the book: a mug ring and foxing, both kept to the margins.
 -- Always the same traces on the same page.
 local function hash(n, salt) return ((n * 2654435761 + salt * 40503) % 997) / 997 end
-local ears = {}      -- page canvas -> its folded-corner frame
 function UI.DrawWear(pool, canvas, side, index)
     local w = UI.Wear and UI.Wear() or 0
-    if ears[canvas] then ears[canvas]:Hide() end
     if w <= 0 or index <= 2 then return end
-    -- a ring left by a mug: small dots around a circle
+    -- a ring left by a mug: small dots around a circle, in the lower outer corner where no text stands
     if hash(index, 1) < w * 0.30 then
-        local cx = PW * (0.25 + 0.5 * hash(index, 2))
-        local cy = PH * (0.22 + 0.56 * hash(index, 3))
+        local cx = (side == "left") and (24 + 30 * hash(index, 2)) or (PW - 24 - 30 * hash(index, 2))
+        local cy = PH - 30 - 24 * hash(index, 3)
         local r = 22 + 14 * hash(index, 4)
         local a = 0.06 + 0.07 * w
         for k = 0, 23 do
@@ -295,36 +317,7 @@ function UI.DrawWear(pool, canvas, side, index)
             d:SetPoint("CENTER", canvas, "TOPLEFT", x, -y)
         end
     end
-    -- a folded upper outer corner, drawn in a small frame of its own that cuts it at the page edge
-    -- (the whole page is not clipped: models in paintings and cards do not like that)
-    local ear = ears[canvas]
-    if not ear then
-        ear = CreateFrame("Frame", nil, canvas)
-        ear:SetSize(40, 40)
-        ear:SetFrameLevel(canvas:GetFrameLevel() + 8)
-        if ear.SetClipsChildren then ear:SetClipsChildren(true) end
-        local inner = CreateFrame("Frame", nil, ear)
-        inner:SetAllPoints()
-        ear.shadow = UI.Diamond(inner, 33, { 0, 0, 0, 0.38 }, "ARTWORK", 0)
-        ear.flap = UI.Diamond(inner, 26, { 0.29, 0.21, 0.13, 1 }, "ARTWORK", 1)
-        ear.ok = ear.SetClipsChildren ~= nil
-        ears[canvas] = ear
-    end
-    ear:ClearAllPoints()
-    ear:SetPoint(side == "left" and "TOPLEFT" or "TOPRIGHT", canvas, side == "left" and "TOPLEFT" or "TOPRIGHT", 0, 0)
-    if ear.ok and hash(index, 10) < w * 0.35 then
-        local s = 26 + 10 * hash(index, 11)
-        local corner = side == "left" and "TOPLEFT" or "TOPRIGHT"
-        ear.shadow:SetSize(s + 7, s + 7)
-        ear.shadow:ClearAllPoints()
-        ear.shadow:SetPoint("CENTER", ear, corner, 0, 0)
-        ear.flap:SetSize(s, s)
-        ear.flap:ClearAllPoints()
-        ear.flap:SetPoint("CENTER", ear, corner, 0, 0)
-        ear:Show()
-    else
-        ear:Hide()
-    end
+    -- (the folded upper corner is no wear any more: it is the bookmark, see Comfort.lua)
 end
 
 function UI:RenderPage(side, index)
@@ -336,7 +329,32 @@ function UI:RenderPage(side, index)
     if UI.HideMarble then UI.HideMarble(pg.canvas) end
     UI.DrawWear(pool, pg.canvas, side, index)
     local tx, tw = UI.TextX(side), UI.TextW()
-    if page.head then
+    if page.numbered ~= false and page.kind ~= "endpaper" and page.kind ~= "owner" then
+        local n = pool:Text(13, c.inkFaint, UI.HEAD, "CENTER")
+        n:SetText("~ " .. UI.PageNumber(index) .. " ~")
+        n:SetPoint("BOTTOM", pg.canvas, "BOTTOMLEFT", tx + tw / 2, 22)
+        local toc = self.book.sectionStart.toc
+        if toc and page.kind ~= "toc" then
+            -- a click on the number asks for a page; the contents are a right-click away
+            local hot = pool:Hot({ format(L["Page %d"], UI.PageNumber(index)), L["Click to go to a page."],
+                L["Right-click for the contents."], L["Ctrl-click to set or remove a bookmark here."] },
+                function()
+                    if IsControlKeyDown() and UI.ToggleMark then UI:ToggleMark(index) return end
+                    if UI.AskPage then UI:AskPage() else UI:GoToPage(toc) end
+                end)
+            hot.onRight = function() UI:GoToPage(toc) end
+            hot:SetPoint("TOPLEFT", n, "TOPLEFT", -6, 4)
+            hot:SetPoint("BOTTOMRIGHT", n, "BOTTOMRIGHT", 6, -4)
+        end
+    end
+    local fn = self.renderers[page.kind]
+    UI.titled = false          -- set by UI.PageTitle
+    if fn then
+        local ok, err = pcall(fn, pool, page, side, pg.canvas, index)
+        if not ok then WFD:Error("page " .. page.kind, err) end
+    end
+    -- the running head, unless the page already carries the part's big title
+    if page.head and not UI.titled then
         local h = pool:Text(9, c.inkFaint, UI.FONT, "CENTER")
         h:SetText(page.head:upper())
         h:SetPoint("TOP", pg.canvas, "TOPLEFT", tx + tw / 2, -24)
@@ -346,27 +364,6 @@ function UI:RenderPage(side, index)
         local r2 = pool:Grad("HORIZONTAL", { 0.78, 0.60, 0.26, 0.45 }, { 0.78, 0.60, 0.26, 0 })
         r2:SetSize(tw / 2, 1)
         r2:SetPoint("TOPLEFT", pg.canvas, "TOPLEFT", tx + tw / 2, -38)
-    end
-    if page.numbered ~= false and page.kind ~= "endpaper" and page.kind ~= "owner" then
-        local n = pool:Text(13, c.inkFaint, UI.HEAD, "CENTER")
-        n:SetText("~ " .. UI.PageNumber(index) .. " ~")
-        n:SetPoint("BOTTOM", pg.canvas, "BOTTOMLEFT", tx + tw / 2, 22)
-        local toc = self.book.sectionStart.toc
-        if toc and page.kind ~= "toc" then
-            local hot = pool:Hot({ L["To the contents"], L["Right-click to go to a page."], L["Ctrl-click to set or remove a bookmark here."] },
-                function()
-                    if IsControlKeyDown() and UI.ToggleMark then UI:ToggleMark(index) return end
-                    UI:GoToPage(toc)
-                end)
-            hot.onRight = function() if UI.AskPage then UI:AskPage() end end
-            hot:SetPoint("TOPLEFT", n, "TOPLEFT", -6, 4)
-            hot:SetPoint("BOTTOMRIGHT", n, "BOTTOMRIGHT", 6, -4)
-        end
-    end
-    local fn = self.renderers[page.kind]
-    if fn then
-        local ok, err = pcall(fn, pool, page, side, pg.canvas, index)
-        if not ok then WFD:Error("page " .. page.kind, err) end
     end
     pool:End()
 end
@@ -461,6 +458,17 @@ function UI:PointAt(side, again)
 end
 
 function UI:Flip(dir)
+    -- what waited while the mouse was on the book is laid out now, with the turn of the page
+    if WFD.dirty and self.bookFrame and self.bookFrame:IsShown() and not UI.noteFocus then
+        WFD.dirty = false
+        UI.storyCache[WFD:NumDays()] = nil
+        local follow = self.followToday
+        self:Paginate()
+        if follow and dir > 0 then
+            self:ShowSpread(math.ceil(self:TodayPage() / 2))
+            return
+        end
+    end
     self:ShowSpread(self.spread + dir)
 end
 
@@ -469,14 +477,15 @@ end
 ------------------------------------------------------------------------
 
 function UI:ThumbList()
-    local list = {
-        { key = "toc", label = L["Contents"], icon = "journal", group = "front" },
-        -- the diary tab leads to today's entry (the beginning is one click away in the contents)
-        { key = "diary", label = L["Diary"], icon = "quill", target = function() return UI:TodayPage() end,
-          hint = L["Click to open today's entry."], group = "front" },
-    }
+    local list = { { key = "toc", label = L["Contents"], icon = "journal", group = "front" } }
     for _, sec in ipairs(self.sections) do
-        if sec.thumb ~= false then
+        if sec.key == "today" then list[#list + 1] = { key = "today", label = L[sec.label], icon = sec.icon, group = "front" } end
+    end
+    -- the diary tab leads to today's entry (the beginning is one click away in the contents)
+    list[#list + 1] = { key = "diary", label = L["Diary"], icon = "quill", target = function() return UI:TodayPage() end,
+        hint = L["Click to open today's entry."], group = "front" }
+    for _, sec in ipairs(self.sections) do
+        if sec.thumb ~= false and sec.key ~= "today" then
             list[#list + 1] = { key = sec.key, label = sec.thumbText and sec.thumbText() or L[sec.label], icon = sec.icon,
                 group = sec.group }
         end
@@ -1296,7 +1305,7 @@ local function buildCover(holder)
     end)
     cv:SetScript("OnClick", function()
         if cv.dragEnd and GetTime() - cv.dragEnd < 0.3 then return end
-        UI:OpenBook(UI.PlacePage)
+        UI:OpenBook(UI.TodayStart or UI.PlacePage)
     end)
 end
 
@@ -1331,6 +1340,9 @@ function UI:Build()
         if acc < 10 then return end
         sinceTick = sinceTick + acc
         acc = 0
+        -- never while the mouse is on the book: the page would move under the reader. It waits until
+        -- the mouse leaves (or a page is turned, see ShowSpread).
+        if UI.bookFrame:IsShown() and UI.bookFrame:IsMouseOver() then return end
         if UI.bookFrame:IsShown() and (WFD.dirty or (WFD.ticked and sinceTick >= 60)) then
             WFD.dirty, WFD.ticked, sinceTick = false, false, 0
             UI:Reflow()
@@ -1396,6 +1408,10 @@ function UI:Toggle()
     elseif self.openedOnce and not WFD.demo then
         if self.card then self.card:Hide() end
         self:OpenBook(UI.PlacePage)
+    elseif WFD.S.cover == false and not WFD.demo then
+        -- no cover wanted: straight to today
+        if self.card then self.card:Hide() end
+        self:OpenBook(UI.TodayStart or UI.PlacePage)
     else
         self:Show()
     end

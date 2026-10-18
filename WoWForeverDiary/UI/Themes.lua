@@ -32,8 +32,10 @@ function UI.ApplyTheme(name)
     end
 end
 
--- a size in points, scaled by the chosen size of the writing
+-- a size in points, scaled by the chosen size of the writing. The smallest sizes are raised by a point:
+-- captions in 8 and 9 points were hard to read on the dark leather.
 function UI.FS(size)
+    if size < 10 then size = size + 1 end
     local k = UI.FONT_SCALE or 1
     if k == 1 then return size end
     return math.floor(size * k + 0.5)
