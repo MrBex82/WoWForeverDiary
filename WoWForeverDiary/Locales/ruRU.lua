@@ -1241,6 +1241,7 @@ L["Click to remove the bookmark."] = "Щёлкните, чтобы убрать 
 L["Click the folded corner of a page to keep it. A ribbon then sticks out of the top of the book: a click opens the page, a right-click takes the ribbon away."] = "Щёлкните по загнутому уголку страницы, чтобы запомнить её. Сверху из книги появится ленточка: щелчок открывает страницу, правый щелчок убирает ленточку."
 L["Cards, names, days and maps open more. Click the page number to go to any page. The settings have a tab of their own at the bottom."] = "Карточки, имена, дни и карты открывают больше. Щёлкните по номеру страницы, чтобы перейти на любую страницу. У настроек есть своя закладка внизу."
 L["Click to open the settings."] = "Нажмите, чтобы открыть настройки."
+L["Before the diary"] = "До дневника"
 L["Continue reading: %s, p. %d"] = "Продолжить чтение: %s, стр. %d"
 L["open a part: today, bestiary, honour, ledger, atlas, settings ... or a day number"] = "открыть раздел: today, bestiary, honour, ledger, atlas, settings ... или номер дня"
 L["Parchment"] = "Пергамент"

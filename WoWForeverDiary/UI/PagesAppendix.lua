@@ -1198,7 +1198,7 @@ UI:RegisterSection({
             end
         end
         table.sort(arr, function(a, b) return (a.n.name or "") < (b.n.name or "") end)
-        local rows = { { h = 74, summary = true, total = #arr, tally = tally } }
+        local rows = { { h = 98, summary = true, total = #arr, tally = tally } }
         -- count per letter, for the headings
         local perLetter = {}
         for _, e in ipairs(arr) do
@@ -1253,6 +1253,31 @@ UI:RegisterRenderer("people", function(pool, page, side, canvas)
             local rule = pool:Grad("HORIZONTAL", { 0.78, 0.60, 0.26, 0 }, { 0.78, 0.60, 0.26, 0.5 })
             rule:SetSize(tw, 1)
             rule:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 56)
+            -- the letters in use, as a register: a click leads to the first page of that letter
+            local first, order = {}, {}
+            for idx, pg in ipairs(UI.book and UI.book.pages or {}) do
+                if pg.section == "people" and pg.rows then
+                    for _, row in ipairs(pg.rows) do
+                        if row.letter and not first[row.letter] then
+                            first[row.letter] = idx
+                            order[#order + 1] = row.letter
+                        end
+                    end
+                end
+            end
+            if #order > 1 then
+                local step = min(24, tw / #order)
+                local bx = tx + (tw - step * #order) / 2
+                for i, letter in ipairs(order) do
+                    local lt = pool:Link(letter, function() UI:GoToPage(first[letter]) end, 14, c.redInk)
+                    lt:SetWidth(step)
+                    lt:SetJustifyH("CENTER")
+                    lt:SetPoint("TOPLEFT", canvas, "TOPLEFT", bx + (i - 1) * step, y - 66)
+                end
+                local rule2 = pool:Grad("HORIZONTAL", { 0.78, 0.60, 0.26, 0.5 }, { 0.78, 0.60, 0.26, 0 })
+                rule2:SetSize(tw, 1)
+                rule2:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 90)
+            end
         elseif r.empty then
             local e = pool:Text(14, c.inkFaint, UI.FONT, "CENTER")
             e:SetText(L["You have not talked to anyone yet."])
@@ -1732,7 +1757,10 @@ UI:RegisterSection({
         if #gone > 0 then
             table.sort(gone, function(a, b) return (a.q.acc or 0) < (b.q.acc or 0) end)
             list[#list + 1] = { h = 36, header = L["given up"], count = tostring(#gone), keep = 24 }
-            for _, e in ipairs(gone) do list[#list + 1] = { h = 24, id = e.id, q = e.q, gone = e.zone } end
+            -- a quest without an area was taken before the diary began: the short words say it
+            for _, e in ipairs(gone) do
+                list[#list + 1] = { h = 24, id = e.id, q = e.q, gone = e.q.zone or L["Before the diary"] }
+            end
         end
         paginateRows(book, "quests", list, { head = L["Quest Book"] })
     end,

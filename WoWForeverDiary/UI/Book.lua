@@ -715,6 +715,91 @@ local plateDriver = CreateFrame("Frame")
 plateDriver:Hide()
 local allPlatesOut = false
 
+-- the parts of a group: a small list beside the tabs while the mouse is on the tab of the group (or on the list
+-- itself), so that every part of the book is one click away from the tabs
+local flyout
+local FLY_W, FLY_ROW = 190, 24
+local function hideFlyout() if flyout then flyout:Hide() end end
+
+-- fills and shows the list of the group whose tab it is; false for tabs that are no group
+local function showFlyout(tab, H)
+    local group = tab.key and tab.key:match("^grp_(.+)$")
+    local book = UI.book
+    if not (group and book) then hideFlyout() return false end
+    local g = UI.GROUP[group]
+    local parts = {}
+    for _, sec in ipairs(UI.sections) do
+        if sec.group == group and not sec.index and book.sectionStart[sec.key] then parts[#parts + 1] = sec end
+    end
+    if #parts == 0 then hideFlyout() return false end
+    if not flyout then
+        flyout = UI.Frame(UI.bookFrame, FLY_W, 40)
+        flyout:SetFrameLevel(UI.bookFrame:GetFrameLevel() + 30)
+        flyout:EnableMouse(true)
+        UI.Backdrop(flyout, "tooltip", 12, 3, { 0.06, 0.04, 0.02, 0.96 }, c.goldDk)
+        flyout.title = UI.Text(flyout, 11, c.gold, "LEFT", UI.HEAD, true)
+        flyout.title:SetPoint("TOPLEFT", 12, -9)
+        flyout.rows = {}
+        flyout:SetScript("OnEnter", function() plateDriver.hideAt = nil end)
+        flyout:SetScript("OnLeave", function()
+            plateDriver.hideAt = GetTime() + 0.3
+            plateDriver:Show()
+        end)
+    end
+    flyout.title:SetText(L[g.label])
+    local counts = UI.NewCounts and UI.NewCounts() or {}
+    for i, sec in ipairs(parts) do
+        local row = flyout.rows[i]
+        if not row then
+            row = CreateFrame("Button", nil, flyout)
+            row:SetSize(FLY_W - 12, FLY_ROW)
+            row.hl = row:CreateTexture(nil, "BACKGROUND")
+            row.hl:SetAllPoints()
+            row.hl:SetColorTexture(1, 0.85, 0.5, 0.16)
+            row.hl:Hide()
+            row.icon = row:CreateTexture(nil, "ARTWORK")
+            row.icon:SetSize(18, 18)
+            row.icon:SetPoint("LEFT", 4, 0)
+            row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+            row.text = UI.Text(row, 12, { 0.92, 0.86, 0.74, 1 }, "LEFT", UI.FONT, true)
+            row.text:SetPoint("LEFT", row.icon, "RIGHT", 7, 0)
+            row.text:SetWidth(FLY_W - 12 - 60)
+            row.text:SetWordWrap(false)
+            row.new = UI.Text(row, 11, c.redInk, "RIGHT", UI.HEAD, true)
+            row.new:SetPoint("RIGHT", -4, 0)
+            row:SetScript("OnEnter", function(self)
+                self.hl:Show()
+                plateDriver.hideAt = nil
+            end)
+            row:SetScript("OnLeave", function(self)
+                self.hl:Hide()
+                plateDriver.hideAt = GetTime() + 0.3
+                plateDriver:Show()
+            end)
+            row:SetScript("OnClick", function(self)
+                local st = UI.book and UI.book.sectionStart[self.key]
+                if st then UI:GoToPage(st) end
+            end)
+            flyout.rows[i] = row
+        end
+        row.key = sec.key
+        row:SetPoint("TOPLEFT", flyout, "TOPLEFT", 6, -26 - (i - 1) * FLY_ROW)
+        row.icon:SetTexture(UI.Icon(sec.icon))
+        local empty = UI.IsEmptyPart and UI.IsEmptyPart(sec.key)
+        row.text:SetText(L[sec.label])
+        row.text:SetTextColor(empty and 0.60 or 0.92, empty and 0.55 or 0.86, empty and 0.48 or 0.74, 1)
+        local n = counts[sec.key]
+        row.new:SetText((n and n > 0) and ("+" .. n) or "")
+        row:Show()
+    end
+    for i = #parts + 1, #flyout.rows do flyout.rows[i]:Hide() end
+    flyout:SetHeight(34 + #parts * FLY_ROW)
+    flyout:ClearAllPoints()
+    flyout:SetPoint("LEFT", tab, "LEFT", TAB_W + H / 2 + 8 + (UI.plateWidth or 0) + 8, 0)
+    flyout:Show()
+    return true
+end
+
 -- the open tab keeps its name on show, the others only while the mouse is on the index
 local function showActivePlate()
     for _, t in ipairs(UI.thumbs or {}) do
@@ -734,6 +819,7 @@ plateDriver:SetScript("OnUpdate", function(self)
         self.hideAt = nil
         self:Hide()
         allPlatesOut = false
+        hideFlyout()
         showActivePlate()
     end
 end)
@@ -760,7 +846,7 @@ function UI.RefreshPlates()
 end
 
 local function hidePlatesSoon()
-    plateDriver.hideAt = GetTime() + 0.15
+    plateDriver.hideAt = GetTime() + 0.3
     plateDriver:Show()
 end
 
@@ -770,6 +856,7 @@ local function buildThumbs(bf)
         plateDriver.hideAt = nil
         plateDriver:Hide()
         allPlatesOut = false
+        hideFlyout()
         for _, t in ipairs(UI.thumbs) do t.plate:Hide() end
     end)
     local list = UI:ThumbList()
@@ -844,6 +931,8 @@ local function buildThumbs(bf)
             placeTab(self)
             paintTab(self, self.on, true)
             showPlates()
+            if showFlyout(self, H) then return end      -- a group: the list of its parts says it all
+            hideFlyout()
             -- the tooltip beside the column of name plates, not over them
             GameTooltip:SetOwner(self, "ANCHOR_NONE")
             GameTooltip:ClearAllPoints()
