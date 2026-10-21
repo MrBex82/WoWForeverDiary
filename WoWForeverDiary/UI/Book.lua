@@ -312,51 +312,31 @@ local function drawWornParchment(pool, canvas, side, index)
         end
         return x, y
     end
-    -- blood: a dark red blotch with drops and a short trail
+    -- the stains are one painted picture (Media\stains.tga, made by tools/gen_stains.py) of four cells:
+    -- blood, a second blood splash, sweat and tears. Some pages are mirrored, so no two look alike.
+    local STAINS = "Interface\\AddOns\\" .. ADDON .. "\\Media\\stains"
+    local function stain(cellX, cellY, size, x, y, alpha, k)
+        local t = pool:Icon(STAINS, size, "BACKGROUND", 2)
+        local u0, v0 = cellX * 0.5, cellY * 0.5
+        local mirrorX, mirrorY = R(k, 61) < 0.5, R(k, 62) < 0.5
+        t:SetTexCoord(mirrorX and u0 + 0.5 or u0, mirrorX and u0 or u0 + 0.5, mirrorY and v0 + 0.5 or v0, mirrorY and v0 or v0 + 0.5)
+        t:SetAlpha(alpha)
+        t:SetPoint("CENTER", canvas, "TOPLEFT", x, -y)
+    end
+    -- blood: a splash with spray and a drip
     if R(1, 31) < 0.38 then
         local x, y = spot(1)
-        for k = 1, 7 do
-            local a = R(k, 32) * math.pi * 2
-            local d = pool:Circle(8 + 12 * R(k, 33), { 0.34, 0.04, 0.03, 0.20 }, "BACKGROUND", 2)
-            d:SetPoint("CENTER", canvas, "TOPLEFT", x + math.cos(a) * 6 * R(k, 34), -(y + math.sin(a) * 6 * R(k, 34)))
-        end
-        local core = pool:Circle(9, { 0.30, 0.03, 0.02, 0.38 }, "BACKGROUND", 2)
-        core:SetPoint("CENTER", canvas, "TOPLEFT", x, -y)
-        for k = 1, 5 do
-            local a = R(k, 35) * math.pi * 2
-            local dist = 16 + 22 * R(k, 36)
-            local d = pool:Circle(2 + 3 * R(k, 37), { 0.30, 0.03, 0.02, 0.50 }, "BACKGROUND", 2)
-            d:SetPoint("CENTER", canvas, "TOPLEFT", x + math.cos(a) * dist, -(y + math.sin(a) * dist))
-        end
+        stain(R(1, 33) < 0.5 and 0 or 1, 0, 120 + 50 * R(1, 34), x, y, 0.85, 1)
     end
-    -- sweat: a pale salty ring with a darker rim
+    -- sweat: salty tide marks
     if R(2, 41) < 0.42 then
         local x, y = spot(2)
-        local r = 12 + 14 * R(2, 42)
-        local halo = pool:Circle(r * 2, { 0.66, 0.52, 0.26, 0.10 }, "BACKGROUND", 2)
-        halo:SetPoint("CENTER", canvas, "TOPLEFT", x, -y)
-        for k = 0, 17 do
-            local a = k / 18 * math.pi * 2
-            local wob = 1 + 0.10 * math.sin(a * 3 + index)
-            local d = pool:Circle(3 + 2 * R(k, 43), { 0.42, 0.27, 0.10, 0.12 }, "BACKGROUND", 2)
-            d:SetPoint("CENTER", canvas, "TOPLEFT", x + math.cos(a) * r * wob, -(y + math.sin(a) * r * wob))
-        end
+        stain(0, 1, 100 + 60 * R(2, 42), x, y, 0.9, 2)
     end
-    -- tears: a few small bleached drops, each with a faint dark rim
+    -- tears: small rings with a paler middle
     if R(3, 51) < 0.42 then
         local x, y = spot(3)
-        for k = 1, 2 + floor(3 * R(3, 52)) do
-            local ox, oy = (R(k, 53) - 0.5) * 34, (R(k, 54) - 0.5) * 22
-            local r = 4 + 4 * R(k, 55)
-            -- a drop leaves a ring of dried dust round a slightly paler middle, not a disc
-            for j = 0, 9 do
-                local a = j / 10 * math.pi * 2
-                local d = pool:Circle(2 + R(j, 56), { 0.40, 0.25, 0.10, 0.16 }, "BACKGROUND", 2)
-                d:SetPoint("CENTER", canvas, "TOPLEFT", x + ox + math.cos(a) * r, -(y + oy + math.sin(a) * r * 0.85))
-            end
-            local pale = pool:Circle(r * 1.6, { 0.96, 0.89, 0.70, 0.16 }, "BACKGROUND", 2)
-            pale:SetPoint("CENTER", canvas, "TOPLEFT", x + ox, -(y + oy))
-        end
+        stain(1, 1, 90 + 50 * R(3, 52), x, y, 0.9, 3)
     end
 end
 
