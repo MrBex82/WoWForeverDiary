@@ -131,7 +131,7 @@ end
 
 -- a value of a task as the pages write it: kilometres with the decimal mark of the diary language
 function WFD:TaskValueText(t, v)
-    if t and (t.k == "km" or t.k == "wkm") then return self:Dec(v) end
+    if t and (t.k == "km" or t.k == "wkm" or t.k == "mkm") then return self:Dec(v) end
     return tostring(v)
 end
 
@@ -207,39 +207,46 @@ function WFD:WeeklyText(t)
     return "?"
 end
 
--- progress of the week's task: value, goal
-function WFD:WeeklyProgress(w, t)
-    local C = self.C
-    local from, to = self:WeekDays(w)
-    local t0, t1 = self:DayTime(from) - 43200, self:DayTime(to) + 43200
-    local function inWeek(ts) return ts and ts >= t0 and ts < t1 end
+-- progress of a task over the diary days from..to (a week or a month); the kind is the task's key without
+-- its first letter ("wkills" and "mkills" both count kills)
+local function periodProgress(from, to, t)
+    local C = WFD.C
+    local kind = t.k:sub(2)
+    local t0, t1 = WFD:DayTime(from) - 43200, WFD:DayTime(to) + 43200
+    local function inPeriod(ts) return ts and ts >= t0 and ts < t1 end
     local v = 0
-    if t.k == "wkills" or t.k == "wquests" or t.k == "wkm" then
+    if kind == "kills" or kind == "quests" or kind == "km" then
         for d = from, to do
             local day = C.days[d]
             if day then
-                if t.k == "wkills" then v = v + day.killTotal
-                elseif t.k == "wquests" then v = v + #day.qd
+                if kind == "kills" then v = v + day.killTotal
+                elseif kind == "quests" then v = v + #day.qd
                 else v = v + (day.steps or 0) * 0.9144 / 1000 end
             end
         end
-        if t.k == "wkm" then v = floor(v * 10) / 10 end
-    elseif t.k == "wpeople" then
-        for _, p in pairs(C.npcs) do if inWeek(p.first) then v = v + 1 end end
-    elseif t.k == "wregions" then
+        if kind == "km" then v = floor(v * 10) / 10 end
+    elseif kind == "people" then
+        for _, p in pairs(C.npcs) do if inPeriod(p.first) then v = v + 1 end end
+    elseif kind == "regions" then
         local seen = {}
         for d = from, to do
             for z in pairs(C.days[d] and C.days[d].zones or {}) do seen[z] = true end
         end
         for _ in pairs(seen) do v = v + 1 end
-    elseif t.k == "whonours" then
-        for _, ev in ipairs(C.events) do if ev.k == "honour" and inWeek(ev.t) then v = v + 1 end end
-    elseif t.k == "wdungeon" then
-        for _, r in ipairs(C.runs or {}) do if r.t1 and inWeek(r.t0) then v = v + 1 end end
-    elseif t.k == "wlandmarks" then
-        for _, ts in pairs(C.landmarks or {}) do if inWeek(ts) then v = v + 1 end end
+    elseif kind == "honours" then
+        for _, ev in ipairs(C.events) do if ev.k == "honour" and inPeriod(ev.t) then v = v + 1 end end
+    elseif kind == "dungeon" then
+        for _, r in ipairs(C.runs or {}) do if r.t1 and inPeriod(r.t0) then v = v + 1 end end
+    elseif kind == "landmarks" then
+        for _, ts in pairs(C.landmarks or {}) do if inPeriod(ts) then v = v + 1 end end
     end
     return v, t.goal
+end
+
+-- progress of the week's task: value, goal
+function WFD:WeeklyProgress(w, t)
+    local from, to = self:WeekDays(w)
+    return periodProgress(from, to, t)
 end
 
 -- this week's task, picked on first use (never for the demo)
@@ -269,8 +276,75 @@ local function checkWeek()
     end
 end
 
+------------------------------------------------------------------------
+-- The task of the month: the biggest goal, four weeks (diary days 1-28, 29-56, ...)
+------------------------------------------------------------------------
+local MONTH = 28
+function WFD:MonthIndex(day) return floor(((day or self:DayIndex()) - 1) / MONTH) + 1 end
+function WFD:MonthDays(m) return (m - 1) * MONTH + 1, m * MONTH end
+
+local function generateMonth(m)
+    local C = WFD.C
+    local first = WFD:MonthDays(m)
+    local avgK, avgQ, avgKm = averages(C, first)
+    local r = rng(m * 130363 + (C.born or 0) % 10007)
+    local pool = {
+        { k = "mkills", goal = max(200, floor(avgK * MONTH * 0.45 / 100 + 0.5) * 100) },
+        { k = "mquests", goal = max(30, min(200, floor(avgQ * MONTH * 0.45 + 0.5))) },
+        { k = "mkm", goal = max(20, min(200, floor(avgKm * MONTH * 0.45 + 0.5))) },
+        { k = "mpeople", goal = 40 },
+        { k = "mregions", goal = 8 },
+        { k = "mhonours", goal = 8 },
+        { k = "mdungeon", goal = 3 },
+    }
+    local _, _, lmTotal = WFD:LandmarkState()
+    local found = 0
+    for _ in pairs(C.landmarks or {}) do found = found + 1 end
+    if lmTotal and found < lmTotal - 5 then pool[#pool + 1] = { k = "mlandmarks", goal = 5 } end
+    return { task = pool[r(#pool)] }
+end
+
+function WFD:MonthlyText(t)
+    if t.k == "mkills" then return format(L["Slay %d creatures this month."], t.goal) end
+    if t.k == "mquests" then return format(L["Complete %d quests this month."], t.goal) end
+    if t.k == "mkm" then return format(L["Walk %d kilometres this month."], t.goal) end
+    if t.k == "mpeople" then return format(L["Meet %d new people this month."], t.goal) end
+    if t.k == "mregions" then return format(L["Visit %d different regions this month."], t.goal) end
+    if t.k == "mhonours" then return format(L["Earn %d honour tiers this month."], t.goal) end
+    if t.k == "mdungeon" then return format(L["Finish %d dungeon runs this month."], t.goal) end
+    if t.k == "mlandmarks" then return format(L["Find %d new landmarks this month."], t.goal) end
+    return "?"
+end
+
+function WFD:MonthlyProgress(m, t)
+    local from, to = self:MonthDays(m)
+    return periodProgress(from, to, t)
+end
+
+-- this month's task, picked on first use (never for the demo)
+function WFD:ThisMonth()
+    local C = self.C
+    if not C then return end
+    local m = self:MonthIndex()
+    if self.paused or self.demo then return C.monthly and C.monthly[m], m end
+    C.monthly = C.monthly or {}
+    if not C.monthly[m] then C.monthly[m] = generateMonth(m) end
+    return C.monthly[m], m
+end
+
+local function checkMonth()
+    local mo, m = WFD:ThisMonth()
+    if not mo or mo.done or WFD.paused or WFD.demo then return end
+    local v, g = WFD:MonthlyProgress(m, mo.task)
+    if v >= g then
+        mo.done = time()
+        WFD:Milestone("weekly", format(L["Task of the month done: %s"], WFD:MonthlyText(mo.task)), true, { month = true })
+    end
+end
+
 local function check()
     checkWeek()
+    checkMonth()
     local ch = WFD:TodayChallenges()
     if not ch or WFD.paused or WFD.demo then return end
     local day = WFD:DayIndex()

@@ -39,6 +39,7 @@ for i, g in ipairs(UI.GROUPS) do g.index = i; UI.GROUP[g.key] = g end
 -- the tabs are Contents, Today, Diary, Quest book and one per group.
 local LAYOUT = {
     memoriam = { "front", 1 }, quests = { "front", 3, "Tasks taken and done" },
+    tasks = { "goals", 4.8, "Day, week and month" },
     collection = { "goals", 5, "What is left to discover" }, honour = { "goals", 6, "Honour points" },
     milestones = { "chronicle", 10, "The great moments of a life" }, firsts = { "chronicle", 11, "First times" },
     records = { "chronicle", 12, "The best and the worst of days" },

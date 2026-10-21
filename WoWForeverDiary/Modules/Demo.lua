@@ -242,6 +242,7 @@ local function build()
         boss = { t = runStart + 600, day = 6, zone = WFD:MapName(MAPS[2]), s = "Rhahk'Zor" },
     }
     C.weekly = { [2] = { task = { k = "wkills", goal = 150 } }, [1] = { task = { k = "wquests", goal = 12 }, done = at(6, 21) } }
+    C.monthly = { [1] = { task = { k = "mkills", goal = 500 } } }
     C.capsules = {
         { t = at(1, 22), day = 1, level = 1, openDay = 7, opened = at(7, 9),
           text = L["Dear me, if you are reading this, you made it through the first week. Did you ever find out who was stealing the candles in the mine?"] },

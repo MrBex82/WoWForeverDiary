@@ -160,6 +160,76 @@ local function destination(g)
     return cand[(WFD:NumDays() * 7919) % #cand + 1], mainCont
 end
 
+-- the map a landmark can be pointed to on: its own map (a zone or a city), or the zone around a dungeon.
+-- Small places inside a zone have no map and no known position: nothing is guessed for them.
+local landmarkMaps
+-- the zone around the entrance of a dungeon, as the area ID of that zone (names then come from the game in every
+-- language). Only entrances that lie in one clear zone: Blackrock Mountain lies between two and is left out.
+local DUNGEON_ZONE = {
+    [2437] = 1637,  -- Ragefire Chasm: Orgrimmar
+    [1581] = 40,    -- The Deadmines: Westfall
+    [718] = 17,     -- Wailing Caverns: The Barrens
+    [209] = 130,    -- Shadowfang Keep: Silverpine Forest
+    [717] = 1519,   -- The Stockade: Stormwind City
+    [719] = 331,    -- Blackfathom Deeps: Ashenvale
+    [721] = 1,      -- Gnomeregan: Dun Morogh
+    [491] = 17,     -- Razorfen Kraul: The Barrens
+    [796] = 85,     -- Scarlet Monastery: Tirisfal Glades
+    [722] = 17,     -- Razorfen Downs: The Barrens
+    [1337] = 3,     -- Uldaman: Badlands
+    [1176] = 440,   -- Zul'Farrak: Tanaris
+    [2100] = 405,   -- Maraudon: Desolace
+    [1477] = 8,     -- The Temple of Atal'Hakkar: Swamp of Sorrows
+    [2557] = 357,   -- Dire Maul: Feralas
+    [2057] = 139,   -- Stratholme: Eastern Plaguelands
+    [2017] = 28,    -- Scholomance: Western Plaguelands
+}
+local function landmarkMap(it)
+    if not (C_Map and C_Map.GetMapChildrenInfo and C_Map.SetUserWaypoint) then return nil end
+    if not landmarkMaps then
+        landmarkMaps = {}
+        for _, cont in ipairs(WFD.CONTINENTS) do
+            local ok, kids = pcall(C_Map.GetMapChildrenInfo, cont, nil, true)
+            if ok and type(kids) == "table" then
+                for _, k in ipairs(kids) do
+                    if k.name and k.mapID and not landmarkMaps[k.name] then landmarkMaps[k.name] = k.mapID end
+                end
+            end
+        end
+    end
+    -- the map of a name: the same name, or the only map whose name contains it ("Brachland" - "Das Brachland")
+    local function find(name)
+        if not name or name == "" then return nil end
+        if landmarkMaps[name] then return landmarkMaps[name] end
+        local found, count = nil, 0
+        for n, mid in pairs(landmarkMaps) do
+            if n:find(name, 1, true) then found, count = mid, count + 1 end
+        end
+        return count == 1 and found or nil
+    end
+    local id = landmarkMaps[it.name]
+    if not id and DUNGEON_ZONE[it.id] and C_Map.GetAreaInfo then
+        local ok, zoneName = pcall(C_Map.GetAreaInfo, DUNGEON_ZONE[it.id])
+        id = ok and find(zoneName) or nil
+    end
+    if id and C_Map.CanSetUserWaypointOnMap and not C_Map.CanSetUserWaypointOnMap(id) then return nil end
+    return id
+end
+
+-- the waypoint of the game, in the middle of the map: the arrow shows the way into the area
+local function setWaypoint(mapID)
+    local ok = pcall(function()
+        local pt = UiMapPoint and UiMapPoint.CreateFromCoordinates and UiMapPoint.CreateFromCoordinates(mapID, 0.5, 0.5)
+            or { uiMapID = mapID, position = CreateVector2D(0.5, 0.5) }
+        C_Map.SetUserWaypoint(pt)
+        if C_SuperTrack and C_SuperTrack.SetSuperTrackedUserWaypoint then C_SuperTrack.SetSuperTrackedUserWaypoint(true) end
+    end)
+    if ok then
+        print("|cffffd100WoW Forever Diary:|r " .. format(L["Waypoint set: %s"], WFD:MapName(mapID)))
+    end
+    return ok
+end
+
 UI:RegisterRenderer("nextgoals", function(pool, page, side, canvas)
     local g = UI.book.collection
     if not g then return end
@@ -180,8 +250,7 @@ UI:RegisterRenderer("nextgoals", function(pool, page, side, canvas)
             pool:Plaque(tx + 10, y - 9, 16, UI.Icon("task"), done and GREEN or LOCKED, done and true or false)
             local t = pool:Text(12, done and c.inkSoft or c.ink, UI.FONT)
             t:SetText(WFD:ChallengeText(task))
-            t:SetWordWrap(false)
-            t:SetWidth(tw - 26 - 96)
+            t:SetWidth(tw - 26 - 96)       -- a long task wraps onto a second line
             t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 26, y - 3)
             if done then
                 local ok = pool:Text(10, GREEN, UI.FONT, "RIGHT")
@@ -193,7 +262,7 @@ UI:RegisterRenderer("nextgoals", function(pool, page, side, canvas)
                 pv:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 1)
                 UI.ProgressBar(pool, canvas, tx + tw - 70, y - 14, 70, 3, v / max(1, gl), GREEN)
             end
-            y = y - 22
+            y = y - max(22, t:GetStringHeight() + 9)
         end
         y = y - 10
     end
@@ -210,7 +279,6 @@ UI:RegisterRenderer("nextgoals", function(pool, page, side, canvas)
         pool:Plaque(tx + 12, y - 11, 20, UI.Icon("first"), done and GREEN or GOLD, true)
         local t = pool:Text(12, done and c.inkSoft or c.ink, UI.FONT)
         t:SetText(WFD:WeeklyText(wk.task))
-        t:SetWordWrap(false)
         t:SetWidth(tw - 30 - 96)
         t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 30, y - 4)
         if done then
@@ -223,7 +291,7 @@ UI:RegisterRenderer("nextgoals", function(pool, page, side, canvas)
             pv:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 2)
             UI.ProgressBar(pool, canvas, tx + tw - 70, y - 15, 70, 3, v / max(1, gl), GOLD)
         end
-        y = y - 34
+        y = y - max(34, t:GetStringHeight() + 22)
     end
 
     -- destination of the day
@@ -244,7 +312,19 @@ UI:RegisterRenderer("nextgoals", function(pool, page, side, canvas)
         local h = pool:Text(11, c.inkSoft, UI.FONT)
         h:SetText(L["You have not seen this place yet."])
         h:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 54, y - 41)
-        local hot = pool:Hot({ it.name, L["You have not seen this place yet."], L["Click for all landmarks."] }, goTo("landmarks"))
+        local mapID = landmarkMap(it)
+        local hot
+        if mapID then
+            hot = pool:Hot({ it.name, L["You have not seen this place yet."], L["Click to set a waypoint on the map."] },
+                function()
+                    if not setWaypoint(mapID) then
+                        local fallback = goTo("landmarks")
+                        if fallback then fallback() end
+                    end
+                end)
+        else
+            hot = pool:Hot({ it.name, L["You have not seen this place yet."], L["Click for all landmarks."] }, goTo("landmarks"))
+        end
         hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 2)
         hot:SetSize(tw, 56)
     else
@@ -447,5 +527,93 @@ UI:RegisterRenderer("atlaslist", function(pool, page, side, canvas)
                 hot:SetSize(colW, r.h - 4)
             end
         end
+    end
+end)
+
+------------------------------------------------------------------------
+-- Tasks: the day, the week and the month on one spread, every text in full
+------------------------------------------------------------------------
+UI:RegisterSection({
+    key = "tasks", label = "Tasks", icon = "task", order = 4.8, leftStart = true,
+    build = function(book)
+        book:Add({ kind = "tasks", numbered = true, head = L["Tasks"], part = 1 })
+        book:Add({ kind = "tasks", numbered = true, head = L["Tasks"], part = 2 })
+    end,
+})
+
+-- one task: its text in full (it wraps), under it the progress; returns the y of the next one
+local function taskRow(pool, canvas, tx, tw, y, text, done, value, goal, frac, col, icon)
+    pool:Plaque(tx + 11, y - 12, 22, UI.Icon(icon), done and GREEN or col, true)
+    local t = pool:Text(13, done and c.inkSoft or c.ink, UI.FONT)
+    t:SetWidth(tw - 34)
+    t:SetText(text)
+    t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 30, y - 2)
+    local by = y - 2 - max(16, t:GetStringHeight()) - 6
+    if done then
+        local ok = pool:Text(11, GREEN, UI.FONT, "RIGHT")
+        ok:SetText(L["done"])
+        ok:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, by)
+    else
+        local pv = pool:Text(11, c.inkSoft, UI.FONT, "RIGHT")
+        pv:SetText(value .. " / " .. goal)
+        pv:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, by)
+        UI.ProgressBar(pool, canvas, tx + 30, by - 4, tw - 30 - 74, 5, frac, col)
+    end
+    return by - 22
+end
+
+UI:RegisterRenderer("tasks", function(pool, page, side, canvas)
+    local tx, tw = UI.TextX(side), UI.TextW()
+    local y = UI.PageTitle(pool, canvas, side, L["Tasks"], L["Day, week and month"], -56)
+
+    if page.part == 1 then
+        local tasks = WFD.TodayChallenges and WFD:TodayChallenges()
+        local today = WFD:DayIndex()
+        local doneN = 0
+        if tasks then for _ in pairs(tasks.done) do doneN = doneN + 1 end end
+        UI.SectionHead(pool, canvas, tx, tw, y + 18, 32, L["Tasks of the day"], tasks and (doneN .. " / " .. #tasks.list) or nil)
+        y = y - 26
+        for i, task in ipairs(tasks and tasks.list or {}) do
+            local done = tasks.done[i] and true or false
+            local v, gl = WFD:ChallengeProgress(today, task)
+            y = taskRow(pool, canvas, tx, tw, y, WFD:ChallengeText(task), done, WFD:TaskValueText(task, v), gl,
+                v / max(1, gl), GREEN, "task")
+        end
+        local full, total, best = WFD:ChallengeStats()
+        y = y - 8
+        UI.Tiles(pool, canvas, tx, y, tw, {
+            { full, L["Perfect days"], c.ink },
+            { best, L["Longest run"], c.ink },
+            { total, L["Tasks done"], c.ink },
+        })
+    else
+        local wk, w
+        if WFD.ThisWeek then wk, w = WFD:ThisWeek() end
+        if wk and wk.task then
+            local from, to = WFD:WeekDays(w)
+            UI.SectionHead(pool, canvas, tx, tw, y + 18, 32, L["Task of the week"], format(L["Days %d-%d"], from, to))
+            y = y - 26
+            local v, gl = WFD:WeeklyProgress(w, wk.task)
+            y = taskRow(pool, canvas, tx, tw, y, WFD:WeeklyText(wk.task), wk.done, WFD:TaskValueText(wk.task, v), gl,
+                v / max(1, gl), GOLD, "first")
+            y = y - 6
+        end
+        local mo, m
+        if WFD.ThisMonth then mo, m = WFD:ThisMonth() end
+        if mo and mo.task then
+            local from, to = WFD:MonthDays(m)
+            UI.SectionHead(pool, canvas, tx, tw, y + 18, 32, L["Task of the month"], format(L["Days %d-%d"], from, to))
+            y = y - 26
+            local v, gl = WFD:MonthlyProgress(m, mo.task)
+            y = taskRow(pool, canvas, tx, tw, y, WFD:MonthlyText(mo.task), mo.done, WFD:TaskValueText(mo.task, v), gl,
+                v / max(1, gl), TEAL, "records")
+            y = y - 6
+        end
+        local months = 0
+        for _, e in pairs(WFD.C and WFD.C.monthly or {}) do if e.done then months = months + 1 end end
+        UI.Tiles(pool, canvas, tx, y - 4, tw, {
+            { WFD:WeeksDone(), L["Weeks done"], c.ink },
+            { months, L["Months done"], c.ink },
+        })
     end
 end)

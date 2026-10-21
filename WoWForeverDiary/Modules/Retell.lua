@@ -17,6 +17,7 @@ local TEMPLATES = {
     "Discovered: %s (%s)", "First visit to the dungeon %s", "Entered the dungeon %s", "%s increased to %d",
     "%s mastered up to %d", "Used the hearthstone", "Grouped with %s", "Landmark discovered: %s",
     "Honour earned: %s (%s)", "Honour earned: %s", "Task of the day done: %s", "Task of the week done: %s",
+    "Task of the month done: %s",
     "All tasks of the day done! %d days in a row.", "All tasks of the day done!",
     "A letter for later was sealed.", "A letter from the past has opened.", "New catch: %s",
 }
@@ -27,6 +28,9 @@ local INNER = {
     "Visit the landmark %s.", "Set foot in %s.", "Slay %d creatures this week.", "Complete %d quests this week.",
     "Walk %d kilometres this week.", "Meet %d new people this week.", "Visit %d different regions this week.",
     "Earn %d honour tiers this week.", "Finish a dungeon run this week.", "Find %d new landmarks this week.",
+    "Slay %d creatures this month.", "Complete %d quests this month.", "Walk %d kilometres this month.",
+    "Meet %d new people this month.", "Visit %d different regions this month.", "Earn %d honour tiers this month.",
+    "Finish %d dungeon runs this month.", "Find %d new landmarks this month.",
 }
 
 -- earlier wordings of a translation, so entries written before a rewording are still recognised

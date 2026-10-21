@@ -185,6 +185,16 @@ local function keepsakes(f)
     return { items = items, moments = moments, h = h }
 end
 
+-- the height of each task line (a long task takes two lines) and of the whole box
+local function taskRowHeights(list, w)
+    local rows, sum = {}, 0
+    for i, task in ipairs(list) do
+        rows[i] = max(17, UI.Measure(WFD:ChallengeText(task), 11, w, 0, UI.FONT) + 5)
+        sum = sum + rows[i]
+    end
+    return rows, 22 + sum + 6
+end
+
 function UI.LayoutDiary(book, chapters)
     if WFD.TodayChallenges then WFD:TodayChallenges() end     -- pick today's tasks before laying out today
     local AREA = UI.AREA_H
@@ -228,7 +238,7 @@ function UI.LayoutDiary(book, chapters)
             -- the tasks of that day, ticked off
             local tasks = WFD.C.challenges and WFD.C.challenges[day]
             if tasks and #tasks.list > 0 then
-                local th = 22 + #tasks.list * 17 + 6
+                local _, th = taskRowHeights(tasks.list, TCW - 26 - 52)
                 if y + th > AREA then newPage(head) end
                 put({ t = "tasks", day = day, ch = tasks }, th + GAP)
             end
@@ -527,7 +537,7 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
             fs:SetText(redFirstSentence(it.text))
             fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", textX + it.capW, y)
         elseif it.t == "tasks" then
-            local th = 22 + #it.ch.list * 17 + 6
+            local rows, th = taskRowHeights(it.ch.list, TCW - 26 - 52)
             local bg = pool:Rect(c.paperDk, 0.40)
             bg:SetSize(TCW, th)
             bg:SetPoint("TOPLEFT", canvas, "TOPLEFT", textX, y)
@@ -538,8 +548,10 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
             cap:SetText(L["Tasks of the day"]:upper())
             cap:SetPoint("TOPLEFT", canvas, "TOPLEFT", textX + 10, y - 7)
             local today = it.day == WFD:NumDays()
+            local offset = 22
             for i, task in ipairs(it.ch.list) do
-                local ry = y - 22 - (i - 1) * 17
+                local ry = y - offset
+                offset = offset + rows[i]
                 local done = it.ch.done[i]
                 local box = pool:Rect(c.inkSoft, 0.9)
                 box:SetSize(11, 11)
@@ -555,7 +567,6 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
                 end
                 local t = pool:Text(11, done and c.inkSoft or c.ink, UI.FONT)
                 t:SetText(WFD:ChallengeText(task))
-                t:SetWordWrap(false)
                 t:SetWidth(TCW - 26 - 52)
                 t:SetPoint("TOPLEFT", canvas, "TOPLEFT", textX + 26, ry)
                 if today and not done then

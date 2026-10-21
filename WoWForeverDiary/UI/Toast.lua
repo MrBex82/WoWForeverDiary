@@ -281,7 +281,7 @@ local function describe(ev)
         end
         d.hint = L["Click for all first times."]
     elseif ev.k == "weekly" then
-        d.kicker = L["Task of the week"]
+        d.kicker = ev.month and L["Task of the month"] or L["Task of the week"]
         d.hint = L["Click for the next goals."]
     elseif ev.k == "summary" then
         d.icon, d.col = UI.Icon("journal"), c.gold
