@@ -321,6 +321,36 @@ function UI.DrawWear(pool, canvas, side, index)
     -- (the folded upper corner is no wear any more: it is the bookmark, see Comfort.lua)
 end
 
+-- the steps of the path above a page: the group, the part, and what the page itself adds (a chapter, an area)
+function UI:CrumbItems(page, index)
+    local key, b = page.section, self.book
+    if not key or not b or page.kind == "endpaper" or page.kind == "owner" then return nil end
+    local items = {}
+    if key == "toc" then
+        items[1] = { text = L["Contents"] }
+    elseif key == "diary" then
+        items[1] = { text = L["Diary"], page = b.sectionStart.diary }
+    else
+        local sec
+        for _, sc in ipairs(self.sections) do if sc.key == key then sec = sc break end end
+        if not sec then return nil end
+        local g = UI.GROUP[sec.group]
+        if g and g.label then
+            items[#items + 1] = { text = L[g.label], page = b.sectionStart["grp_" .. g.key] }
+        end
+        if not sec.index then
+            items[#items + 1] = { text = L[sec.label], page = b.sectionStart[key] }
+        end
+    end
+    -- a chapter of the diary, an area of the albums: what the running head said
+    local head = page.head
+    local last = items[#items]
+    if head and last and head:lower() ~= last.text:lower() and L[head]:lower() ~= last.text:lower() then
+        items[#items + 1] = { text = L[head] }
+    end
+    return #items > 0 and items or nil
+end
+
 function UI:RenderPage(side, index)
     local pg = self.pageFrames[side]
     local pool = pg.pool
@@ -354,8 +384,53 @@ function UI:RenderPage(side, index)
         local ok, err = pcall(fn, pool, page, side, pg.canvas, index)
         if not ok then WFD:Error("page " .. page.kind, err) end
     end
-    -- the running head, unless the page already carries the part's big title
-    if page.head and not UI.titled then
+    -- where this page lies: "Hunt and loot > Bestiary", each step before the current one a link
+    local items = self:CrumbItems(page, index)
+    if items then
+        local size = UI.FS(11)
+        local sep = " > "
+        local function total()
+            local w = 0
+            for i, it in ipairs(items) do
+                it.w = UI.MeasureWidth(it.text, size, UI.FONT)
+                w = w + it.w + (i > 1 and UI.MeasureWidth(sep, size, UI.FONT) or 0)
+            end
+            return w
+        end
+        local width = total()
+        while width > tw and #items > 1 do      -- too long for the page: the first steps drop out
+            table.remove(items, 1)
+            width = total()
+        end
+        local x = tx + max(0, (tw - width) / 2)
+        for i, it in ipairs(items) do
+            if i > 1 then
+                local sp = pool:Text(11, c.inkFaint, UI.FONT)
+                sp:SetText(sep)
+                sp:SetPoint("TOPLEFT", pg.canvas, "TOPLEFT", x, -21)
+                x = x + UI.MeasureWidth(sep, size, UI.FONT)
+            end
+            local fs
+            if it.page and i < #items then
+                fs = pool:Link(it.text, function() UI:GoToPage(it.page) end, 11, c.inkSoft)
+            else
+                fs = pool:Text(11, i == #items and c.redInk or c.inkSoft, UI.FONT)
+                fs:SetText(it.text)
+            end
+            fs:SetWordWrap(false)
+            fs:SetPoint("TOPLEFT", pg.canvas, "TOPLEFT", x, -21)
+            x = x + it.w
+        end
+        if not UI.titled then
+            local r = pool:Grad("HORIZONTAL", { 0.78, 0.60, 0.26, 0 }, { 0.78, 0.60, 0.26, 0.45 })
+            r:SetSize(tw / 2, 1)
+            r:SetPoint("TOPLEFT", pg.canvas, "TOPLEFT", tx, -40)
+            local r2 = pool:Grad("HORIZONTAL", { 0.78, 0.60, 0.26, 0.45 }, { 0.78, 0.60, 0.26, 0 })
+            r2:SetSize(tw / 2, 1)
+            r2:SetPoint("TOPLEFT", pg.canvas, "TOPLEFT", tx + tw / 2, -40)
+        end
+    elseif page.head and not UI.titled then
+        -- the running head, unless the page already carries the part's big title
         local h = pool:Text(9, c.inkFaint, UI.FONT, "CENTER")
         h:SetText(page.head:upper())
         h:SetPoint("TOP", pg.canvas, "TOPLEFT", tx + tw / 2, -24)
@@ -415,13 +490,14 @@ function UI:RememberPlace(s)
     else
         local start = page.section and b.sectionStart[page.section]
         C.lastPlace = { section = page.section, offset = start and (left - start) or nil, day = day }
+        -- the place "continue reading" leads to: the start pages themselves do not count
+        if page.section ~= "today" and page.section ~= "toc" then C.resumePlace = C.lastPlace end
     end
 end
 
--- the page to open at: where reading stopped, else the start
-function UI.PlacePage(book)
-    local p = WFD.C and WFD.C.lastPlace
-    if not p then return 1 end
+-- the page of a stored place, or nil if it is gone
+local function placeToPage(book, p)
+    if not p then return nil end
     if p.day and book.dayPage[p.day] then return book.dayPage[p.day] end
     local start = p.section and book.sectionStart[p.section]
     if start then
@@ -431,7 +507,29 @@ function UI.PlacePage(book)
         if page and page.section == p.section then return idx end
         return start
     end
-    return 1
+    return nil
+end
+
+-- the page to open at: where reading stopped, else the start
+function UI.PlacePage(book)
+    return placeToPage(book, WFD.C and WFD.C.lastPlace) or 1
+end
+
+-- where "continue reading" leads: the page, and in words where it is (nil if nothing was read yet)
+function UI.ResumePlace(book)
+    local p = WFD.C and WFD.C.resumePlace
+    local page = placeToPage(book, p)
+    if not page then return nil end
+    local label
+    if p.day and book.dayPage[p.day] == page then
+        label = L["Diary"] .. ", " .. format(L["Day %d"], p.day)
+    else
+        for _, sec in ipairs(UI.sections) do
+            if sec.key == p.section then label = L[sec.label] break end
+        end
+        label = label or L["Diary"]
+    end
+    return page, label
 end
 
 -- a soft gold glow around one page that fades away

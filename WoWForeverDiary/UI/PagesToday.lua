@@ -85,6 +85,16 @@ UI:RegisterRenderer("today", function(pool, page, side, canvas)
         local link = pool:Link(L["To today's entry"] .. "  >", function() UI:GoToPage(dp) end, 13)
         link:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
     end
+    -- where reading stopped last time (the start pages do not count)
+    local rp, rlabel = UI.ResumePlace(UI.book)
+    if rp then
+        y = y - 20
+        local cont = pool:Link(format(L["Continue reading: %s, p. %d"], rlabel, UI.PageNumber(rp)) .. "  >",
+            function() UI:GoToPage(rp) end, 13)
+        cont:SetWordWrap(false)
+        cont:SetWidth(tw)
+        cont:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+    end
     y = y - 30
 
     -- what came into the book since it was last put away

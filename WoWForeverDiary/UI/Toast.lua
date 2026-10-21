@@ -21,6 +21,39 @@ function UI:OpenAt(target)
     end)
 end
 
+-- the words that open a part with "/wfd <word>": the key of the part, in English and German
+local PART_WORDS = {
+    today = "today", heute = "today", diary = "diary", tagebuch = "diary", contents = "toc", inhalt = "toc",
+    tasks = "tasks", aufgaben = "tasks", collection = "collection", sammelalbum = "collection", honour = "honour",
+    honor = "honour", ehrenbuch = "honour", ehren = "honour", milestones = "milestones", meilensteine = "milestones",
+    firsts = "firsts", erstes = "firsts", records = "records", rekorde = "records", levels = "levels", stufen = "levels",
+    gallery = "gallery", galerie = "gallery", atlas = "atlas", maps = "maps", karten = "maps",
+    landmarks = "landmarks", sehenswuerdigkeiten = "landmarks", ["sehenswürdigkeiten"] = "landmarks",
+    gathering = "gathering", fundorte = "gathering", runs = "runs", dungeons = "runs", bestiary = "bestiary",
+    bestiarium = "bestiary", nemesis = "nemesis", nemeses = "nemesis", erzfeinde = "nemesis", fishbook = "fishbook",
+    fishing = "fishbook", angeln = "fishbook", anglerbuch = "fishbook", treasures = "treasures", schaetze = "treasures",
+    ["schätze"] = "treasures", people = "people", personen = "people", companions = "companions",
+    gefaehrten = "companions", ["gefährten"] = "companions", ledger = "ledger", kassenbuch = "ledger",
+    quests = "quests", questbuch = "quests", family = "family", familie = "family", capsule = "capsule",
+    zeitkapsel = "capsule", settings = "notes", einstellungen = "notes", options = "notes",
+}
+
+-- opens the book at a part by one of its words, or at a diary day by its number; false if the word is unknown
+function UI:OpenPart(word)
+    word = strlower(strtrim(word or ""))
+    local day = tonumber(word)
+    if day then
+        self:OpenAt(floor(day))
+        return true
+    end
+    local key = PART_WORDS[word]
+    if not key then return false end
+    -- "diary" leads to today's entry, as the tab of the diary does; "today" to the page called Today
+    if key == "diary" then self:OpenBook(function() return UI:TodayPage() end) return true end
+    self:OpenAt(key)
+    return true
+end
+
 -- where a milestone is best read
 local TARGET = { honour = "honour", landmark = "landmarks", dungeon = "runs", challenge = "collection", weekly = "collection",
     first = "firsts", capsule = "capsule", catch = "fishbook", summary = "today" }

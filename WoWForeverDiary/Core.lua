@@ -617,9 +617,12 @@ SlashCmdList["WOWFOREVERDIARY"] = function(msg)
         for _, h in ipairs({ { "/wfd", "open or close the diary" }, { "/wfd demo", "explore with invented data" },
             { "/wfd shot", "screenshots on or off" }, { "/wfd minimap", "minimap button on or off" },
             { "/wfd export", "moving code of this character" }, { "/wfd import", "read a moving code" },
-            { "/wfd companion", "show or hide the companion" }, { "/wfd restore", "bring back the diary put aside" } }) do
+            { "/wfd companion", "show or hide the companion" }, { "/wfd restore", "bring back the diary put aside" },
+            { "/wfd bestiary", "open a part: today, bestiary, honour, ledger, atlas, settings ... or a day number" } }) do
             print("|cffffd100" .. h[1] .. "|r - " .. L[h[2]])
         end
+    elseif WFD.UI:OpenPart(msg) then
+        -- "/wfd bestiary", "/wfd 12": the book opens at that part or day
     else
         WFD.UI:Toggle()
     end
