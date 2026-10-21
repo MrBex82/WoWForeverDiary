@@ -292,7 +292,107 @@ end
 -- traces of use on a page, more of them the older the book: a mug ring and foxing, both kept to the margins.
 -- Always the same traces on the same page.
 local function hash(n, salt) return ((n * 2654435761 + salt * 40503) % 997) / 997 end
+-- the worn look of the parchment: a torn, scorched edge all round and stains of a hard life - blood, sweat
+-- and tears - kept to the margins, so no text lies on them. The same on the same page every time.
+local function drawWornParchment(pool, canvas, side, index)
+    local function R(n, salt) return hash(index * 131 + n, salt) end
+    local outer = side == "left" and "LEFT" or "RIGHT"
+    -- the edge: dark nibbles right at the border, scorched brown a little further in
+    local function edgeDot(x, y, size, col, sub)
+        local d = pool:Circle(size, col, "BACKGROUND", sub)
+        d:SetPoint("CENTER", canvas, "TOPLEFT", x, -y)
+    end
+    local n = 0
+    local function edge(len, fixed, horizontal, fromSpine, strength)
+        local step = 5
+        for pos = 0, len, step do
+            n = n + 1
+            local r1, r2, r3 = R(n, 11), R(n, 12), R(n, 13)
+            if r1 < 0.85 * strength then
+                local depth = (0.5 + 5.5 * r2 * r2) * strength          -- how far this bite reaches inward
+                local size = 4 + 7 * r3
+                local x, y
+                if horizontal then x, y = pos + (r3 - 0.5) * 4, fixed(depth)
+                else x, y = fixed(depth), pos + (r3 - 0.5) * 4 end
+                edgeDot(x, y, size, { 0.13, 0.08, 0.04, 0.85 }, 3)       -- the nibble, dark like the binding behind
+                edgeDot(x + (horizontal and 0 or (fromSpine and -1 or 1)) * 3, y + (horizontal and (fixed(0) < 5 and 3 or -3) or 0),
+                    size * 1.5, { 0.38, 0.21, 0.08, 0.50 }, 2)           -- the scorched rim inside it
+            end
+        end
+    end
+    local OUT = side == "left" and 0 or PW
+    local dir = side == "left" and 1 or -1
+    edge(PH, function(d) return OUT + dir * d end, false, false, 1)             -- the outer edge, the most worn
+    edge(PW, function(d) return d end, true, false, 0.8)                         -- the top
+    edge(PW, function(d) return PH - d end, true, false, 0.9)                    -- the bottom
+    edge(PH, function(d) return (PW - OUT) + (-dir) * d end, false, true, 0.25)  -- the spine edge, hardly
+
+    -- stains in the margins: the zone is chosen by the page, so they never sit under the writing
+    local function spot(k)
+        local zone = floor(R(k, 21) * 3)
+        local x, y
+        if zone == 0 then      -- the outer strip
+            x = (side == "left") and (14 + 34 * R(k, 22)) or (PW - 14 - 34 * R(k, 22))
+            y = 50 + (PH - 100) * R(k, 23)
+        elseif zone == 1 then  -- the foot, away from the page number
+            x = (R(k, 22) < 0.5) and (30 + 70 * R(k, 24)) or (PW - 30 - 70 * R(k, 24))
+            y = PH - 22 - 30 * R(k, 23)
+        else                   -- the head, away from the path
+            x = (R(k, 22) < 0.5) and (30 + 60 * R(k, 24)) or (PW - 30 - 60 * R(k, 24))
+            y = 14 + 16 * R(k, 23)
+        end
+        return x, y
+    end
+    -- blood: a dark red blotch with drops and a short trail
+    if R(1, 31) < 0.38 then
+        local x, y = spot(1)
+        for k = 1, 7 do
+            local a = R(k, 32) * math.pi * 2
+            local d = pool:Circle(8 + 12 * R(k, 33), { 0.34, 0.04, 0.03, 0.20 }, "BACKGROUND", 2)
+            d:SetPoint("CENTER", canvas, "TOPLEFT", x + math.cos(a) * 6 * R(k, 34), -(y + math.sin(a) * 6 * R(k, 34)))
+        end
+        local core = pool:Circle(9, { 0.30, 0.03, 0.02, 0.38 }, "BACKGROUND", 2)
+        core:SetPoint("CENTER", canvas, "TOPLEFT", x, -y)
+        for k = 1, 5 do
+            local a = R(k, 35) * math.pi * 2
+            local dist = 16 + 22 * R(k, 36)
+            local d = pool:Circle(2 + 3 * R(k, 37), { 0.30, 0.03, 0.02, 0.50 }, "BACKGROUND", 2)
+            d:SetPoint("CENTER", canvas, "TOPLEFT", x + math.cos(a) * dist, -(y + math.sin(a) * dist))
+        end
+    end
+    -- sweat: a pale salty ring with a darker rim
+    if R(2, 41) < 0.42 then
+        local x, y = spot(2)
+        local r = 12 + 14 * R(2, 42)
+        local halo = pool:Circle(r * 2, { 0.66, 0.52, 0.26, 0.10 }, "BACKGROUND", 2)
+        halo:SetPoint("CENTER", canvas, "TOPLEFT", x, -y)
+        for k = 0, 17 do
+            local a = k / 18 * math.pi * 2
+            local wob = 1 + 0.10 * math.sin(a * 3 + index)
+            local d = pool:Circle(3 + 2 * R(k, 43), { 0.42, 0.27, 0.10, 0.12 }, "BACKGROUND", 2)
+            d:SetPoint("CENTER", canvas, "TOPLEFT", x + math.cos(a) * r * wob, -(y + math.sin(a) * r * wob))
+        end
+    end
+    -- tears: a few small bleached drops, each with a faint dark rim
+    if R(3, 51) < 0.42 then
+        local x, y = spot(3)
+        for k = 1, 2 + floor(3 * R(3, 52)) do
+            local ox, oy = (R(k, 53) - 0.5) * 34, (R(k, 54) - 0.5) * 22
+            local r = 4 + 4 * R(k, 55)
+            -- a drop leaves a ring of dried dust round a slightly paler middle, not a disc
+            for j = 0, 9 do
+                local a = j / 10 * math.pi * 2
+                local d = pool:Circle(2 + R(j, 56), { 0.40, 0.25, 0.10, 0.16 }, "BACKGROUND", 2)
+                d:SetPoint("CENTER", canvas, "TOPLEFT", x + ox + math.cos(a) * r, -(y + oy + math.sin(a) * r * 0.85))
+            end
+            local pale = pool:Circle(r * 1.6, { 0.96, 0.89, 0.70, 0.16 }, "BACKGROUND", 2)
+            pale:SetPoint("CENTER", canvas, "TOPLEFT", x + ox, -(y + oy))
+        end
+    end
+end
+
 function UI.DrawWear(pool, canvas, side, index)
+    if UI.THEME == "parchment" and index > 2 then drawWornParchment(pool, canvas, side, index) end
     local w = UI.Wear and UI.Wear() or 0
     if w <= 0 or index <= 2 then return end
     -- a ring left by a mug: small dots around a circle, in the lower outer corner where no text stands
