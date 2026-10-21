@@ -360,27 +360,8 @@ local function drawWornParchment(pool, canvas, side, index)
     end
 end
 
--- the torn, browned outer edge of the game's own quest paper (Interface\QuestFrame\QuestBG): a strip of its
--- right margin, laid over a dark strip so the ragged line stands against the binding. Mirrored on the left page.
-local TEAR = { u0 = 0.545, u1 = 0.585, v0 = 0.03, v1 = 0.62 }
-local TEAR_W = 22
-local function drawTornEdge(pool, canvas, side)
-    local x = (side == "left") and 0 or (PW - TEAR_W)
-    local dark = pool:Rect({ 0.07, 0.04, 0.02 }, 1, "BACKGROUND", 2)
-    dark:SetSize(TEAR_W, PH)
-    dark:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, 0)
-    local t = pool:Icon("Interface\\QuestFrame\\QuestBG", TEAR_W, "BACKGROUND", 3)
-    t:SetSize(TEAR_W, PH)
-    if side == "left" then t:SetTexCoord(TEAR.u1, TEAR.u0, TEAR.v0, TEAR.v1)
-    else t:SetTexCoord(TEAR.u0, TEAR.u1, TEAR.v0, TEAR.v1) end
-    t:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, 0)
-end
-
 function UI.DrawWear(pool, canvas, side, index)
-    if UI.THEME == "parchment" and index > 2 then
-        drawTornEdge(pool, canvas, side)
-        drawWornParchment(pool, canvas, side, index)
-    end
+    if UI.THEME == "parchment" and index > 2 then drawWornParchment(pool, canvas, side, index) end
     local w = UI.Wear and UI.Wear() or 0
     if w <= 0 or index <= 2 then return end
     -- a ring left by a mug: small dots around a circle, in the lower outer corner where no text stands
