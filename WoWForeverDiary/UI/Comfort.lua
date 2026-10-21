@@ -538,7 +538,7 @@ local TOUR = {
     { "ribbon", "Turning pages", "Turn the pages with the arrows, the mouse wheel or the arrow keys. The red ribbon below always leads to today; Backspace takes you back. Ctrl + mouse wheel changes the size of the book." },
     { "marks", "Your own bookmarks", "Click the folded corner of a page to keep it. A ribbon then sticks out of the top of the book: a click opens the page, a right-click takes the ribbon away." },
     { "companion", "The companion", "A small window beside the game shows today's figures, the tasks and the honours closest to their next tier. You can switch it on and off in the settings." },
-    { "page", "Almost everything can be clicked", "Cards, names, days and maps open more. Click the page number to go to any page. The settings are in the scribe's notes at the very end." },
+    { "page", "Almost everything can be clicked", "Cards, names, days and maps open more. Click the page number to go to any page. The settings have a tab of their own at the bottom." },
 }
 local note
 -- only: a single step on its own (a step added after the reader already knew the introduction)

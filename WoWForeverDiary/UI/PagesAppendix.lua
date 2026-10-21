@@ -1802,11 +1802,11 @@ end)
 -- The scribe's notes: settings and transcript
 ------------------------------------------------------------------------
 UI:RegisterSection({
-    key = "notes", label = "Scribe's notes", icon = "settings", order = 90,
+    key = "notes", label = "Settings", icon = "settings", order = 90,
     build = function(book)
-        book:Add({ kind = "settings", numbered = true, head = L["Scribe's notes"] })
-        book:Add({ kind = "handling", numbered = true, head = L["Scribe's notes"] })
-        book:Add({ kind = "appearance", numbered = true, head = L["Scribe's notes"] })
+        book:Add({ kind = "settings", numbered = true, head = L["Settings"] })
+        book:Add({ kind = "handling", numbered = true, head = L["Settings"] })
+        book:Add({ kind = "appearance", numbered = true, head = L["Settings"] })
     end,
 })
 
@@ -1828,7 +1828,7 @@ end
 
 UI:RegisterRenderer("settings", function(pool, page, side, canvas)
     local tx, tw = UI.TextX(side), UI.TextW()
-    local y = UI.PageTitle(pool, canvas, side, L["Scribe's notes"], L["How this book is kept"], -56)
+    local y = UI.PageTitle(pool, canvas, side, L["Settings"], L["How this book is kept"], -56)
     local S = WFD.S
 
     local function caption(text)
@@ -1873,9 +1873,9 @@ UI:RegisterRenderer("settings", function(pool, page, side, canvas)
             if ch[3] then ch[3]() end
         end)
         cb:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-        y = y - 21
+        y = y - 19
     end
-    y = y - 6
+    y = y - 4
 
     -- language
     caption(L["Language"])

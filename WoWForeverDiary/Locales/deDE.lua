@@ -78,7 +78,7 @@ local T = {
     ["Expenses"] = "Ausgaben",
     ["Net"] = "Bilanz",
     ["Fallen foes"] = "Gefallene Gegner",
-    ["... and %d more kinds"] = "... und %d weitere Arten",
+    ["... and %d more kinds"] = "… und %d weitere Arten",
     ["Completed quests"] = "Abgeschlossene Quests",
     ["Spoken to"] = "Gesprochen mit",
     ["Loot (%d items)"] = "Beute (%d Gegenstände)",
@@ -110,7 +110,6 @@ local T = {
     ["Level"] = "Stufe",
     ["Recent"] = "Zuletzt",
     ["Foes"] = "Gegner",
-    ["Nemeses"] = "Erzfeinde",
     ["Bosses and rares"] = "Bosse und Seltene",
     ["Boss"] = "Boss",
     ["Rare"] = "Selten",
@@ -440,7 +439,7 @@ loc.narrator = {
     },
     ongoing = {
         "Der Tag ist noch nicht vorbei.",
-        "Fortsetzung folgt ...",
+        "Fortsetzung folgt …",
         "Mal sehen, was der Tag noch bringt.",
     },
     close = {
@@ -506,7 +505,6 @@ L["Creatures slain here"] = "Hier erlegt"
 L["Acquaintances here"] = "Bekanntschaften hier"
 L["A naturalist's notes"] = "Notizen eines Naturkundlers"
 L["Slain %d times"] = "%d-mal erlegt"
-L["Killed you %d times"] = "Hat dich %d-mal getötet"
 L["Every creature, by number slain"] = "Alle Kreaturen, die häufigsten zuerst"
 L["Everyone I met on my way"] = "Alle, die mir unterwegs begegnet sind"
 L["Every coin, in and out"] = "Jede Münze, rein wie raus"
@@ -520,7 +518,7 @@ L["Copy the diary as JSON"] = "Tagebuch als JSON kopieren"
 L["Ledger"] = "Kassenbuch"
 
 -- own notes
-L["Click here to write your own notes ..."] = "Hier klicken, um eigene Notizen zu schreiben ..."
+L["Click here to write your own notes ..."] = "Hier klicken, um eigene Notizen zu schreiben …"
 L["My own thoughts:"] = "Eigene Gedanken:"
 L["+ note"] = "+ Notiz"
 L["edit note"] = "Notiz bearbeiten"
@@ -535,7 +533,7 @@ L["Click for the portrait."] = "Klicken für das Porträt."
 
 -- collector's album
 L["A collector's album of every creature slain"] = "Ein Sammelalbum aller erlegten Kreaturen"
-L["kinds collected  -  %d creatures slain"] = "Arten gesammelt  -  %d Kreaturen erlegt"
+L["kinds collected  -  %d creatures slain"] = "Arten gesammelt - %d Kreaturen erlegt"
 L["Bronze"] = "Bronze"
 L["Silver"] = "Silber"
 L["Mithril"] = "Mithril"
@@ -577,7 +575,7 @@ L["Most hunted here"] = "Hier am häufigsten gejagt"
 L["Places discovered"] = "Entdeckte Orte"
 
 -- companions, honours, treasures, memories, obituary
-L["%d days of life  -  %d creatures slain  -  %d quests completed"] = "%d Lebenstage  -  %d Kreaturen erlegt  -  %d Quests erledigt"
+L["%d days of life  -  %d creatures slain  -  %d quests completed"] = "%d Lebenstage - %d Kreaturen erlegt - %d Quests erledigt"
 L["%d days"] = "%d Tage"
 L["%d enemies fell that day."] = "An diesem Tag fielen %d Gegner."
 L["%d kills together"] = "%d gemeinsame Kills"
@@ -590,7 +588,7 @@ L["Book of honour"] = "Ehrenbuch"
 L["Companions"] = "Gefährten"
 L["Copy for forum or Discord (Markdown)"] = "Für Forum oder Discord kopieren (Markdown)"
 L["Fell in %s"] = "Gefallen in %s"
-L["Fell to %s"] = "Gefallen durch %s"
+L["Fell to %s"] = "Getötet von %s"
 L["Fellow adventurers"] = "Weggefährten"
 L["Grouped with %s"] = "Gemeinsam unterwegs mit %s"
 L["In memoriam"] = "In memoriam"
@@ -776,15 +774,15 @@ L["Die %d times in a single day."] = "Stirb %d-mal an einem einzigen Tag."
 L["Spend %d hours in the world on a single day."] = "Verbringe an einem einzigen Tag %d Stunden in der Welt."
 L["Rest at %d places."] = "Raste an %d Orten."
 L["Visit %d regions in a single day."] = "Besuche %d Regionen an einem einzigen Tag."
-L["Up, up and away ..."] = "Hoch hinaus ..."
-L["When the moon stands highest ..."] = "Wenn der Mond am höchsten steht ..."
-L["The early bird catches the worm ..."] = "Der frühe Vogel fängt den Wurm ..."
-L["A familiar face ..."] = "Ein vertrautes Gesicht ..."
-L["There is no place like home ..."] = "Daheim ist es doch am schönsten ..."
-L["Not every day is a good day ..."] = "Nicht jeder Tag ist ein guter Tag ..."
-L["Just one more quest ..."] = "Nur noch eine Quest ..."
-L["Every journey needs a pause ..."] = "Jede Reise braucht eine Pause ..."
-L["So many roads, so little time ..."] = "So viele Wege, so wenig Zeit ..."
+L["Up, up and away ..."] = "Hoch hinaus …"
+L["When the moon stands highest ..."] = "Wenn der Mond am höchsten steht …"
+L["The early bird catches the worm ..."] = "Der frühe Vogel fängt den Wurm …"
+L["A familiar face ..."] = "Ein vertrautes Gesicht …"
+L["There is no place like home ..."] = "Daheim ist es doch am schönsten …"
+L["Not every day is a good day ..."] = "Nicht jeder Tag ist ein guter Tag …"
+L["Just one more quest ..."] = "Nur noch eine Quest …"
+L["Every journey needs a pause ..."] = "Jede Reise braucht eine Pause …"
+L["So many roads, so little time ..."] = "So viele Wege, so wenig Zeit …"
 
 -- ledger, quest book, collection, atlas
 L["done"] = "erledigt"
@@ -813,7 +811,7 @@ L["Every region of this continent is explored."] = "Jede Region dieses Kontinent
 L["%d of %d regions explored"] = "%d von %d Regionen erkundet"
 L["Not yet explored"] = "Noch nicht erkundet"
 L["Explored"] = "Erkundet"
-L["Mouse wheel: zoom  -  drag: move  -  right click: reset"] = "Mausrad: zoomen  -  ziehen: verschieben  -  Rechtsklick: zurücksetzen"
+L["Mouse wheel: zoom  -  drag: move  -  right click: reset"] = "Mausrad: zoomen - ziehen: verschieben - Rechtsklick: zurücksetzen"
 L["Explorer's checklist"] = "Entdecker-Checkliste"
 L["Click for the map of this region."] = "Klicken für die Karte dieser Region."
 
@@ -961,8 +959,8 @@ L["Log in with your other characters once, and they will appear here."] = "Logg 
 
 L["Time capsule"] = "Zeitkapsel"
 L["Letters to my future self"] = "Briefe an mein zukünftiges Ich"
-L["Dear me, when you read this ..."] = "Liebes Ich, wenn du das hier liest ..."
-L["Seal the letter and open it ..."] = "Versiegeln und öffnen ..."
+L["Dear me, when you read this ..."] = "Liebes Ich, wenn du das hier liest …"
+L["Seal the letter and open it ..."] = "Versiegeln und öffnen …"
 L["in a week"] = "in einer Woche"
 L["in a month"] = "in einem Monat"
 L["at level %d"] = "auf Stufe %d"
@@ -1002,7 +1000,7 @@ L["Complete %d tasks of the week."] = "Erfülle %d Wochenaufgaben."
 
 L["Search the diary"] = "Tagebuch durchsuchen"
 L["Days, people, creatures, quests, places, treasures and catches."] = "Tage, Personen, Kreaturen, Quests, Orte, Schätze und Fänge."
-L["Search: a name, a quest, a place ..."] = "Suche: ein Name, eine Quest, ein Ort ..."
+L["Search: a name, a quest, a place ..."] = "Suche: ein Name, eine Quest, ein Ort …"
 L["Nothing found."] = "Nichts gefunden."
 L["%d more results - type a little more"] = "%d weitere Treffer - tipp noch etwas mehr"
 
@@ -1149,7 +1147,7 @@ L["Every kind known here is collected."] = "Jede hier bekannte Art ist gesammelt
 L["Kinds of creatures"] = "Kreaturentypen"
 L["What you have slain, by type"] = "Was du erlegt hast, nach Typ"
 L["Unknown kind"] = "Unbekannte Art"
-L["%d kinds  -  %d slain"] = "%d Arten  -  %d erlegt"
+L["%d kinds  -  %d slain"] = "%d Arten - %d erlegt"
 L["Hunting grounds"] = "Jagdgründe"
 L["Sighted"] = "Gesichtet"
 L["Kinds slain here"] = "Hier erlegte Arten"
@@ -1180,7 +1178,7 @@ L["A strange creature. I made a note, just in case."] = "Ein seltsames Wesen. Ic
 L["Worth remembering, or at least worth writing down."] = "Einer Erinnerung wert, oder wenigstens einer Notiz."
 L["Back"] = "Zurück"
 L["To the page you came from (Backspace)."] = "Zur Seite, von der du kamst (Rücktaste)."
-L["Go to page (1 - %d):"] = "Gehe zu Seite (1 - %d):"
+L["Go to page (1 - %d):"] = "Gehe zu Seite (1-%d):"
 L["Size: %d%%"] = "Größe: %d%%"
 L["The bookmarks"] = "Die Lesezeichen"
 L["The bookmarks on the right lead to the parts of the book. A red dot shows how much is new since you last read."] = "Die Lesezeichen rechts führen zu den Teilen des Buches. Ein roter Punkt zeigt, wie viel seit dem letzten Lesen neu ist."
@@ -1189,7 +1187,6 @@ L["The spyglass on the spine searches the whole book: days, people, creatures, q
 L["Turning pages"] = "Blättern"
 L["Turn the pages with the arrows, the mouse wheel or the arrow keys. The red ribbon below always leads to today; Backspace takes you back. Ctrl + mouse wheel changes the size of the book."] = "Blättere mit den Pfeilen, dem Mausrad oder den Pfeiltasten. Das rote Bändchen unten führt immer zum heutigen Tag, die Rücktaste bringt dich zurück. Strg + Mausrad ändert die Größe des Buches."
 L["Almost everything can be clicked"] = "Fast alles ist anklickbar"
-L["Cards, names, days and maps open more. Right-click the page number to go to any page. The settings are in the scribe's notes at the very end."] = "Karten, Namen, Tage und Landkarten öffnen mehr. Ein Rechtsklick auf die Seitenzahl springt zu jeder Seite. Die Einstellungen stehen ganz hinten bei den Notizen des Schreibers."
 L["Next"] = "Weiter"
 L["Skip"] = "Überspringen"
 L["Got it"] = "Verstanden"
@@ -1231,7 +1228,7 @@ L["The code could not be made."] = "Der Code konnte nicht erstellt werden."
 L["%d days, %d characters. Now press Ctrl+C."] = "%d Tage, %d Zeichen. Jetzt Strg+C drücken."
 L["Read a moving code"] = "Umzugs-Code einlesen"
 L["Paste the moving code of this character with Ctrl+V. The diary written on this computer is then replaced by the one from the code, and the interface is reloaded."] = "Füge den Umzugs-Code dieses Charakters mit Strg+V ein. Das Tagebuch auf diesem PC wird dann durch das aus dem Code ersetzt und die Oberfläche neu geladen."
-L["Waiting for a code ..."] = "Warte auf einen Code ..."
+L["Waiting for a code ..."] = "Warte auf einen Code …"
 L["Replace the diary and reload"] = "Tagebuch ersetzen und neu laden"
 L["This is not a moving code of the diary."] = "Das ist kein Umzugs-Code des Tagebuchs."
 L["The code is damaged or incomplete. Copy it again, all of it."] = "Der Code ist beschädigt oder unvollständig. Kopiere ihn noch einmal, und zwar ganz."
@@ -1274,7 +1271,7 @@ L["The diary put aside is back. The interface is reloaded."] = "Das beiseitegele
 -- Angler's log
 L["Angler's log"] = "Anglerbuch"
 L["A collector's album of everything the line brought up"] = "Ein Sammelalbum von allem, was die Angel heraufgeholt hat"
-L["catches collected  -  %d things landed"] = "Fänge gesammelt  -  %d Dinge an Land gezogen"
+L["catches collected  -  %d things landed"] = "Fänge gesammelt - %d Dinge an Land gezogen"
 L["Land %d different catches."] = "Zieh %d verschiedene Fänge an Land."
 L["Casts"] = "Würfe"
 L["Fish"] = "Fisch"
@@ -1315,7 +1312,8 @@ L["Right-click for the contents."] = "Rechtsklick für das Inhaltsverzeichnis."
 L["Click to set a bookmark here."] = "Klicken, um hier ein Lesezeichen zu setzen."
 L["Click to remove the bookmark."] = "Klicken, um das Lesezeichen zu entfernen."
 L["Click the folded corner of a page to keep it. A ribbon then sticks out of the top of the book: a click opens the page, a right-click takes the ribbon away."] = "Klick auf die Eselsohr-Ecke einer Seite merkt sie dir. Oben aus dem Buch ragt dann ein Bändchen: Ein Klick schlägt die Seite auf, ein Rechtsklick nimmt das Bändchen wieder weg."
-L["Cards, names, days and maps open more. Click the page number to go to any page. The settings are in the scribe's notes at the very end."] = "Karten, Namen, Tage und Landkarten öffnen mehr. Ein Klick auf die Seitenzahl springt zu jeder Seite. Die Einstellungen stehen ganz hinten bei den Notizen des Schreibers."
+L["Cards, names, days and maps open more. Click the page number to go to any page. The settings have a tab of their own at the bottom."] = "Karten, Namen, Tage und Landkarten öffnen mehr. Ein Klick auf die Seitenzahl springt zu jeder Seite. Die Einstellungen haben unten einen eigenen Reiter."
+L["Click to open the settings."] = "Klicken, um die Einstellungen zu öffnen."
 L["Click the page number"] = "Klick auf die Seitenzahl"
 L["Click the folded corner"] = "Klick auf das Eselsohr"
 L["New since you last read"] = "Neu seit dem letzten Lesen"

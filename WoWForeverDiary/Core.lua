@@ -159,7 +159,7 @@ WFD:On("ADDON_LOADED", function(_, name)
     WFDiaryDB = WFDiaryDB or {}
     local S = WFDiaryDB
     if S.screenshots == nil then S.screenshots = true end
-    if S.chat == nil then S.chat = true end
+    if S.chat == nil then S.chat = false end
     if S.minimap == nil then S.minimap = true end
     if S.toasts == nil then S.toasts = true end
     if S.recap == nil then S.recap = true end

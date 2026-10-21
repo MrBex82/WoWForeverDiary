@@ -464,6 +464,7 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
             n:SetPoint("CENTER", tab, "CENTER", 0, 0)
             local d = pool:Text(17, c.redInk, UI.HEAD)
             d:SetText(WFD:LongDate(it.day))
+            UI.FitText(d, TCW - tabW - 6, 17, 13, UI.HEAD)   -- a long date shrinks instead of being cut
             d:SetWordWrap(false)
             d:SetWidth(TCW - tabW - 6)
             d:SetPoint("TOPLEFT", canvas, "TOPLEFT", textX, y - 2)
@@ -474,7 +475,12 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
             local p = pool:Text(9, c.inkSoft, UI.FONT)
             p:SetText((it.place or ""):upper() .. (it.time and ("   |cffc2a880" .. it.time .. "|r") or ""))
             p:SetWordWrap(false)
-            p:SetWidth(TCW - ln:GetStringWidth() - 12)
+            local pw = TCW - ln:GetStringWidth() - 12
+            -- the place alone, if place and time together are too wide for the line
+            if it.time and p.GetUnboundedStringWidth and p:GetUnboundedStringWidth() > pw then
+                p:SetText((it.place or ""):upper())
+            end
+            p:SetWidth(pw)
             p:SetPoint("TOPLEFT", canvas, "TOPLEFT", textX, y - 26)
             local r = pool:Grad("HORIZONTAL", { 0.91, 0.76, 0.42, 0.6 }, { 0.91, 0.76, 0.42, 0.04 })
             r:SetSize(TCW, 1)

@@ -490,12 +490,15 @@ function UI:ThumbList()
                 group = sec.group }
         end
     end
+    -- the settings have a tab of their own at the very end: no wandering through the keepsakes to find them
+    list[#list + 1] = { key = "notes", label = L["Settings"], icon = "settings", group = "settings",
+        hint = L["Click to open the settings."] }
     -- the colour of its group; neighbours within a group a shade apart
     local nth, last = 0, nil
     for _, t in ipairs(list) do
         if t.group ~= last then nth, last = 0, t.group end
         nth = nth + 1
-        local g = UI.GROUP[t.group] or UI.GROUPS[#UI.GROUPS]
+        local g = UI.GROUP[t.group] or { col = { 0.30, 0.30, 0.34 } }
         local k = (nth % 2 == 0) and 0.80 or 1
         t.col = { g.col[1] * k, g.col[2] * k, g.col[3] * k }
     end
