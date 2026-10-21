@@ -292,41 +292,10 @@ end
 -- traces of use on a page, more of them the older the book: a mug ring and foxing, both kept to the margins.
 -- Always the same traces on the same page.
 local function hash(n, salt) return ((n * 2654435761 + salt * 40503) % 997) / 997 end
--- the worn look of the parchment: a torn, scorched edge all round and stains of a hard life - blood, sweat
--- and tears - kept to the margins, so no text lies on them. The same on the same page every time.
+-- the worn look of the parchment: stains of a hard life - blood, sweat and tears - kept to the margins, so no
+-- text lies on them. The same on the same page every time. (An edge made of dots looked bad: left out.)
 local function drawWornParchment(pool, canvas, side, index)
     local function R(n, salt) return hash(index * 131 + n, salt) end
-    local outer = side == "left" and "LEFT" or "RIGHT"
-    -- the edge: dark nibbles right at the border, scorched brown a little further in
-    local function edgeDot(x, y, size, col, sub)
-        local d = pool:Circle(size, col, "BACKGROUND", sub)
-        d:SetPoint("CENTER", canvas, "TOPLEFT", x, -y)
-    end
-    local n = 0
-    local function edge(len, fixed, horizontal, fromSpine, strength)
-        local step = 5
-        for pos = 0, len, step do
-            n = n + 1
-            local r1, r2, r3 = R(n, 11), R(n, 12), R(n, 13)
-            if r1 < 0.85 * strength then
-                local depth = (0.5 + 5.5 * r2 * r2) * strength          -- how far this bite reaches inward
-                local size = 4 + 7 * r3
-                local x, y
-                if horizontal then x, y = pos + (r3 - 0.5) * 4, fixed(depth)
-                else x, y = fixed(depth), pos + (r3 - 0.5) * 4 end
-                edgeDot(x, y, size, { 0.13, 0.08, 0.04, 0.85 }, 3)       -- the nibble, dark like the binding behind
-                edgeDot(x + (horizontal and 0 or (fromSpine and -1 or 1)) * 3, y + (horizontal and (fixed(0) < 5 and 3 or -3) or 0),
-                    size * 1.5, { 0.38, 0.21, 0.08, 0.50 }, 2)           -- the scorched rim inside it
-            end
-        end
-    end
-    local OUT = side == "left" and 0 or PW
-    local dir = side == "left" and 1 or -1
-    edge(PH, function(d) return OUT + dir * d end, false, false, 1)             -- the outer edge, the most worn
-    edge(PW, function(d) return d end, true, false, 0.8)                         -- the top
-    edge(PW, function(d) return PH - d end, true, false, 0.9)                    -- the bottom
-    edge(PH, function(d) return (PW - OUT) + (-dir) * d end, false, true, 0.25)  -- the spine edge, hardly
-
     -- stains in the margins: the zone is chosen by the page, so they never sit under the writing
     local function spot(k)
         local zone = floor(R(k, 21) * 3)
