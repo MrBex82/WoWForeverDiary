@@ -1679,8 +1679,8 @@ UI:RegisterRenderer("ledger", function(pool, page, side, canvas)
         if day then
             for _, cat in ipairs(WFD.moneyCats) do
                 local a, b = day.income[cat], day.spend[cat]
-                if a and a > 0 then lines[#lines + 1] = "|cff60c060+" .. UI.CoinIcons(a, 11) .. "|r  " .. WFD:CatName(cat) end
-                if b and b > 0 then lines[#lines + 1] = "|cffe06050-" .. UI.CoinIcons(b, 11) .. "|r  " .. WFD:CatName(cat) end
+                if a and a > 0 then lines[#lines + 1] = "|cff" .. UI.Hex(c.good) .. "+" .. UI.CoinIcons(a, 11) .. "|r  " .. WFD:CatName(cat) end
+                if b and b > 0 then lines[#lines + 1] = "|cff" .. UI.Hex(c.bad) .. "-" .. UI.CoinIcons(b, 11) .. "|r  " .. WFD:CatName(cat) end
             end
         end
         lines[#lines + 1] = L["Click to read this day."]
@@ -1780,7 +1780,7 @@ UI:RegisterRenderer("quests", function(pool, page, side, canvas)
             end
             local giver = q.giver and C.npcs[q.giver]
             local t = pool:Text(12, q.abandoned and c.inkFaint or c.ink, UI.FONT)
-            t:SetText((q.title or ("#" .. r.id)) .. (giver and ("  |cffc2a880" .. giver.name .. "|r") or ""))
+            t:SetText((q.title or ("#" .. r.id)) .. (giver and ("  |cff" .. UI.Hex(c.inkFaint) .. giver.name .. "|r") or ""))
             t:SetWidth(tw - 26 - 44)
             t:SetWordWrap(false)
             t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 26, y - 5)

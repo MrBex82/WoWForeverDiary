@@ -377,6 +377,14 @@ local QFRAME = {
 local QINK = {
     [2] = { 0.40, 0.90, 0.30, 1 }, [3] = { 0.40, 0.66, 1.0, 1 }, [4] = { 0.78, 0.50, 1.0, 1 }, [5] = { 1, 0.62, 0.20, 1 },
 }
+-- the same colours deepened for the light parchment (read at drawing time: the look is set after loading)
+local QINK_PARCHMENT = {
+    [2] = { 0.10, 0.45, 0.05, 1 }, [3] = { 0.05, 0.28, 0.65, 1 }, [4] = { 0.45, 0.12, 0.62, 1 }, [5] = { 0.68, 0.32, 0.00, 1 },
+}
+local function qink(q)
+    if UI.THEME == "parchment" then return QINK_PARCHMENT[q] or QINK[q] end
+    return QINK[q]
+end
 local QNAME = { [2] = "Uncommon", [3] = "Rare", [4] = "Epic", [5] = "Legendary" }
 
 -- the game's own name for a quality ("Selten", "Rar", "Episch" ...), else ours
@@ -572,11 +580,11 @@ UI:RegisterRenderer("treasures", function(pool, page, side, canvas)
                 local lit = cnt > 0 and (not filter or filter == q)
                 local pl = pool:Plaque(cx, y - 16, 26, UI.IconPath({ icons[q], "INV_Misc_Gem_Variety_01" }, "gem"),
                     QFRAME[q], lit, tostring(cnt))
-                local lab = pool:Text(9, lit and QINK[q] or c.inkFaint, UI.FONT, "CENTER")
+                local lab = pool:Text(9, lit and qink(q) or c.inkFaint, UI.FONT, "CENTER")
                 lab:SetText(qualityName(q):upper())
                 lab:SetPoint("TOP", pl, "BOTTOM", 0, -5)
                 if filter == q then
-                    local u = pool:Rect(QINK[q], 1)
+                    local u = pool:Rect(qink(q), 1)
                     u:SetSize(lab:GetStringWidth(), 1)
                     u:SetPoint("TOP", lab, "BOTTOM", 0, -2)
                 end
@@ -637,7 +645,7 @@ UI:RegisterRenderer("treasures", function(pool, page, side, canvas)
                 hot:SetSize(34, 34)
             end
         elseif r.filterNote then
-            local t = pool:Text(11, QINK[r.filterNote], UI.FONT)
+            local t = pool:Text(11, qink(r.filterNote), UI.FONT)
             t:SetText(format(L["Shown: %s only"], qualityName(r.filterNote)))
             t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 4)
             local link = pool:Link(L["Show all"] .. "  >", function() setTreasureFilter(nil) end, 12)
@@ -659,7 +667,7 @@ UI:RegisterRenderer("treasures", function(pool, page, side, canvas)
                         t:SetTexCoord(0, 1, 0, 1)
                         t:SetPoint("CENTER", pl, "TOPRIGHT", -2, -2)
                     end
-                    local n = pool:Text(11, QINK[q], UI.FONT)
+                    local n = pool:Text(11, qink(q), UI.FONT)
                     n:SetText(WFD:ItemName(it.link))
                     n:SetWidth(colW - 42)
                     if n.SetMaxLines then n:SetMaxLines(2) end
@@ -788,13 +796,13 @@ UI:RegisterRenderer("companions", function(pool, page, side, canvas)
             local ic = pool:Icon(UI.IconPath({ "INV_Misc_Coin_02" }, "coin"), 18)
             ic:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 4, y - 5)
             local n = pool:Text(12, c.ink, UI.FONT)
-            n:SetText(r.trade.name .. "  |cffc2a880" .. format(L["%dx traded"], t.count) .. "|r")
+            n:SetText(r.trade.name .. "  |cff" .. UI.Hex(c.inkFaint) .. format(L["%dx traded"], t.count) .. "|r")
             n:SetWordWrap(false)
             n:SetWidth(tw - 30 - 120)
             n:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 28, y - 8)
             local money = {}
-            if (t.got or 0) > 0 then money[#money + 1] = "|cff94cc73+" .. UI.CoinIcons(t.got, 10) .. "|r" end
-            if (t.gave or 0) > 0 then money[#money + 1] = "|cffe37861-" .. UI.CoinIcons(t.gave, 10) .. "|r" end
+            if (t.got or 0) > 0 then money[#money + 1] = "|cff" .. UI.Hex(c.good) .. "+" .. UI.CoinIcons(t.got, 10) .. "|r" end
+            if (t.gave or 0) > 0 then money[#money + 1] = "|cff" .. UI.Hex(c.bad) .. "-" .. UI.CoinIcons(t.gave, 10) .. "|r" end
             local m = pool:Text(11, c.inkSoft, UI.FONT, "RIGHT")
             m:SetText(#money > 0 and table.concat(money, "  ") or "-")
             m:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw - 4, y - 8)

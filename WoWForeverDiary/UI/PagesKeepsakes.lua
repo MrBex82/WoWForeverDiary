@@ -212,7 +212,7 @@ UI:RegisterRenderer("family", function(pool, page, side, canvas)
         elseif r.race then
             line(pool, canvas, tx + 12, y - 3, tw * 0.5, raceLabel(r.race), 12, c.ink)
             local who = pool:Text(12, UI.ClassColor(r.best.classFile), UI.FONT, "RIGHT")
-            who:SetText(r.best.name .. "  |cffc2a880" .. format(L["Day %d"], r.best.day) .. "|r")
+            who:SetText(r.best.name .. "  |cff" .. UI.Hex(c.inkFaint) .. format(L["Day %d"], r.best.day) .. "|r")
             who:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 3)
             local dot = pool:Diamond(5, c.redInk)
             dot:SetPoint("CENTER", canvas, "TOPLEFT", tx + 4, y - 9)
