@@ -344,8 +344,8 @@ UI:RegisterRenderer("mapinfo", function(pool, page, side, canvas)
     UI.Tiles(pool, canvas, tx, y, tw, {
         { WFD:DurationText(e.sec), L["Time spent"], c.ink },
         { z and z.visits or 1, L["Visits"], c.ink },
-        { e.kills, L["Creatures slain here"], c.ink },
-        { quests, L["Quests completed here"], c.ink },
+        { e.kills, L["Kills"], c.ink },
+        { quests, L["Quests"], c.ink },
     })
     UI.Tiles(pool, canvas, tx, y - 50, tw, {
         { format(L["Day %d"], e.first), L["First visit"], c.redInk, go(p) },

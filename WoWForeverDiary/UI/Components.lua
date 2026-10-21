@@ -494,6 +494,26 @@ function UI.MapSketch(parent, w, h)
     north:SetPoint("BOTTOM", rose, "TOP", 0, -8)
     north:SetText("N")
 
+    -- a small "?" under the compass rose: what the mouse can do on every map
+    local help = CreateFrame("Button", nil, canvas)
+    help:SetSize(20, 20)
+    help:SetPoint("TOP", rose, "BOTTOM", 0, -12)
+    help:SetFrameLevel(mf:GetFrameLevel() + 10)
+    local hring = UI.Circle(help, 18, { 0.25, 0.14, 0.05, 0.75 }, "ARTWORK", 0)
+    hring:SetPoint("CENTER")
+    local hq = UI.Text(help, 12, { 0.95, 0.88, 0.70, 1 }, "CENTER", UI.HEAD)
+    hq:SetPoint("CENTER", 0, 0)
+    hq:SetText("?")
+    help:SetScript("OnEnter", function(s)
+        GameTooltip:SetOwner(s, "ANCHOR_LEFT")
+        GameTooltip:SetText(L["Map controls"], 1, 0.86, 0.5)
+        GameTooltip:AddLine(L["Mouse wheel: zoom"], 0.85, 0.85, 0.85)
+        GameTooltip:AddLine(L["Drag: move the map"], 0.85, 0.85, 0.85)
+        GameTooltip:AddLine(L["Right click: reset"], 0.85, 0.85, 0.85)
+        GameTooltip:Show()
+    end)
+    help:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
     -- zoom with the mouse wheel, drag to pan, right click to reset
     box.zoom, box.panX, box.panY = 1, 0, 0
     function box:ApplyZoom()
@@ -593,6 +613,10 @@ function UI.MapSketch(parent, w, h)
             p.dot:SetPoint("CENTER")
             p.num = UI.Text(p, 9, { 1, 1, 1, 1 }, "CENTER", UI.FONT, true)
             p.num:SetPoint("CENTER", 0, 0)
+            -- a skull for graves: readable without the colour red
+            p.skull = p:CreateTexture(nil, "OVERLAY", nil, 2)
+            p.skull:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Skull")
+            p.skull:Hide()
             -- name written next to the pin (continent atlas)
             p.label = UI.Text(p, 9, { 0.16, 0.09, 0.03, 1 }, "LEFT", UI.FONT)
             p.label:SetShadowColor(1, 0.95, 0.80, 0.9)
@@ -620,6 +644,7 @@ function UI.MapSketch(parent, w, h)
         for _, t in ipairs(self.tiles) do t:Hide() end
         for _, t in ipairs(self.cells) do t:Hide() end
         for _, p in ipairs(self.pins) do
+            if p.skull then p.skull:Hide() end
             p:Hide()
             p.label:SetText("")
             p.onClick = nil
@@ -825,7 +850,7 @@ function UI.MapSketch(parent, w, h)
         local np = 0
         local legend = {}
         local placed = {}       -- numbered pins already on the map, so close ones can step aside
-        local function addPin(x, y, col, infoLines, numbered)
+        local function addPin(x, y, col, infoLines, numbered, grave)
             if np >= 400 then return end
             if numbered then
                 for _ = 1, 8 do
@@ -845,7 +870,7 @@ function UI.MapSketch(parent, w, h)
             end
             np = np + 1
             local p = pin(np)
-            local size = numbered and 18 or 9
+            local size = numbered and 18 or (grave and 14 or 9)
             p:SetSize(size + 2, size + 2)
             p.rim:SetSize(size * k, size * k)
             p.dot:SetSize((size - 3) * k, (size - 3) * k)
@@ -857,6 +882,19 @@ function UI.MapSketch(parent, w, h)
                 p.num:SetText(tostring(numbered.num))
             else
                 p.num:SetText("")
+            end
+            p.skull:ClearAllPoints()
+            if grave and numbered then
+                -- the number belongs to the legend: the skull sits on the edge of the pin
+                p.skull:SetSize(15 * k, 15 * k)
+                p.skull:SetPoint("CENTER", p, "TOPRIGHT", -1, -1)
+                p.skull:Show()
+            elseif grave then
+                p.skull:SetSize((size + 2) * k, (size + 2) * k)
+                p.skull:SetPoint("CENTER")
+                p.skull:Show()
+            else
+                p.skull:Hide()
             end
             p:SetFrameLevel(mf:GetFrameLevel() + (numbered and 7 or 6))
             p.fx, p.fy = x, y
@@ -885,7 +923,7 @@ function UI.MapSketch(parent, w, h)
                     local by = pos[4] or (#pos < 4 and aligned and d.deathBy[j]) or nil
                     addPin(pos[2], pos[3], { 0.55, 0.04, 0.04, 1 }, {
                         L["You died here"], by and format(L["Killed by %s"], by) or "", format(L["Day %d"], i),
-                    }, (graves <= 2) and { kind = "grave", day = i, by = by, num = math.min(6, #people) + graves } or nil)
+                    }, (graves <= 2) and { kind = "grave", day = i, by = by, num = math.min(6, #people) + graves } or nil, true)
                 end
             end
         end

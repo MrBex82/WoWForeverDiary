@@ -218,7 +218,9 @@ function UI.LayoutDiary(book, chapters)
             book.dayPage[day] = page.index
             local dayY = y
             put({ t = "day", day = day, place = f and f.mainZone or ch.zone, time = f and timeLine(f.d) }, H_DAY)
-            if f then page.notes[#page.notes + 1] = { y = dayY + 4, list = marginNotes(f) } end
+            -- the facts of the day in one line under the date (they stood small in the margin before)
+            local facts = f and marginNotes(f)
+            if facts and #facts > 0 then put({ t = "facts", list = facts }, 22) end
             if day == WFD:NumDays() then
                 local fb = flashback(day)
                 if fb then put({ t = "flashback", fb = fb }, 62) end
@@ -469,7 +471,9 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
             d:SetWidth(TCW - tabW - 6)
             d:SetPoint("TOPLEFT", canvas, "TOPLEFT", textX, y - 2)
             local has = WFD.C.dayNotes and WFD.C.dayNotes[it.day]
-            local ln = pool:Link(has and L["edit note"] or L["+ note"], function() UI:EditDayNote(it.day) end, 13, c.redInk)
+            -- a quill in front of the words makes it read as a button
+            local quill = "|T" .. UI.Icon("quill") .. ":15:15:0:-2:64:64:5:59:5:59|t "
+            local ln = pool:Link(quill .. (has and L["edit note"] or L["+ note"]), function() UI:EditDayNote(it.day) end, 13, c.redInk)
             ln:SetJustifyH("RIGHT")
             ln:SetPoint("TOPRIGHT", canvas, "TOPLEFT", textX + TCW, y - 25)
             local p = pool:Text(9, c.inkSoft, UI.FONT)
@@ -493,6 +497,17 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
             end)
             hot:SetPoint("TOPLEFT", d, "TOPLEFT", -4, 4)
             hot:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", 2, -2)
+        elseif it.t == "facts" then
+            local parts = {}
+            for _, n in ipairs(it.list) do
+                local k = n[2]
+                parts[#parts + 1] = format("|cff%02x%02x%02x%s|r", floor(k[1] * 255), floor(k[2] * 255), floor(k[3] * 255), n[1])
+            end
+            local fs = pool:Text(12, c.inkSoft, UI.FONT)
+            fs:SetWidth(TCW)
+            fs:SetWordWrap(false)
+            fs:SetText(concat(parts, "   |cff8a7a5c·|r   "))
+            fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", textX, y - 2)
         elseif it.t == "para" then
             local fs = pool:Text(FONT_SIZE, c.ink, UI.FONT)
             fs:SetSpacing(SPACING)

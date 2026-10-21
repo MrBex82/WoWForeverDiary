@@ -100,8 +100,15 @@ function UI.Tiles(pool, canvas, x0, y, w, list, h)
         if l:GetStringWidth() > tw - 6 then
             -- capitals are wide: a caption on two lines is written as it is
             l:SetText(t[2])
-            l:SetFont(UI.FONT, 9, "")
-            UI.FitText(l, (tw - 6) * 2, 9, 8, UI.FONT)
+            -- a long single word ("Bekanntschaften") shrinks until it fits the box, down to 9 points
+            local size = UI.FS(9)
+            local widest = 0
+            for word in t[2]:gmatch("%S+") do widest = max(widest, UI.MeasureWidth(word, size, UI.FONT)) end
+            while size > 9 and widest > tw - 6 do
+                size = size - 1
+                widest = widest * size / (size + 1)
+            end
+            l:SetFont(UI.FONT, size, "")
             l:SetWordWrap(true)
             if l.SetMaxLines then l:SetMaxLines(2) end
             l:SetPoint("TOP", bg, "TOP", 0, -24)

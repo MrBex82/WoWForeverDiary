@@ -248,16 +248,16 @@ UI:RegisterRenderer("honour", function(pool, page, side, canvas)
             local n = pool:Text(15, earned and c.ink or c.inkSoft, UI.HEAD)
             n:SetText(e.hidden and "???" or L[h.name])
             n:SetWordWrap(false)
-            n:SetWidth(barW - e.n * 14 - 6)
+            n:SetWidth(barW - e.n * 17 - 6)
             n:SetPoint("TOPLEFT", canvas, "TOPLEFT", NX, y - 3)
             -- one diamond per tier, in the metal it is worth once earned
             local px = tx + tw - 4
             for i = e.n, 1, -1 do
                 local got = i <= e.tier
                 local col = got and WFD:MetalOf(i, e.n).col or { 0.58, 0.50, 0.38, 0.35 }
-                local d = pool:Diamond(got and 10 or 8, col)
+                local d = pool:Diamond(got and 13 or 10, col)
                 d:SetPoint("CENTER", canvas, "TOPLEFT", px, y - 10)
-                px = px - 14
+                px = px - 17
             end
             local d = pool:Text(11, e.hidden and c.inkSoft or c.inkFaint, UI.FONT)
             d:SetText(e.hidden and L[h.secret] or WFD:HonourText(h, e.next or h.tiers[e.n]))

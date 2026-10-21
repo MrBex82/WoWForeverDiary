@@ -461,6 +461,7 @@ function UI:Flip(dir)
     -- what waited while the mouse was on the book is laid out now, with the turn of the page
     if WFD.dirty and self.bookFrame and self.bookFrame:IsShown() and not UI.noteFocus then
         WFD.dirty = false
+        if self.freshNote then self.freshNote:Hide() end
         UI.storyCache[WFD:NumDays()] = nil
         local follow = self.followToday
         self:Paginate()
@@ -558,15 +559,33 @@ end
 -- they stay a moment when the mouse crosses the small gap between two tabs
 local plateDriver = CreateFrame("Frame")
 plateDriver:Hide()
+local allPlatesOut = false
+
+-- the open tab keeps its name on show, the others only while the mouse is on the index
+local function showActivePlate()
+    for _, t in ipairs(UI.thumbs or {}) do
+        local p = t.plate
+        if t.on then
+            p:SetWidth(p.text:GetStringWidth() + 18)
+            p.text:SetTextColor(col4(c.gold))
+            p:Show()
+        else
+            p:Hide()
+        end
+    end
+end
+
 plateDriver:SetScript("OnUpdate", function(self)
     if self.hideAt and GetTime() >= self.hideAt then
         self.hideAt = nil
         self:Hide()
-        for _, t in ipairs(UI.thumbs or {}) do t.plate:Hide() end
+        allPlatesOut = false
+        showActivePlate()
     end
 end)
 
 local function showPlates(keepTimer)
+    allPlatesOut = true
     if not keepTimer then plateDriver.hideAt = nil end
     local widest = 0
     for _, t in ipairs(UI.thumbs) do
@@ -582,8 +601,8 @@ local function showPlates(keepTimer)
 end
 -- after a turn of the page the open tab changes: repaint the plates that are out
 function UI.RefreshPlates()
-    local t = UI.thumbs and UI.thumbs[1]
-    if t and t.plate:IsShown() then showPlates(true) end
+    if not UI.thumbs then return end
+    if allPlatesOut then showPlates(true) else showActivePlate() end
 end
 
 local function hidePlatesSoon()
@@ -596,6 +615,7 @@ local function buildThumbs(bf)
     bf:HookScript("OnHide", function()
         plateDriver.hideAt = nil
         plateDriver:Hide()
+        allPlatesOut = false
         for _, t in ipairs(UI.thumbs) do t.plate:Hide() end
     end)
     local list = UI:ThumbList()
@@ -1345,7 +1365,11 @@ function UI:Build()
         acc = 0
         -- never while the mouse is on the book: the page would move under the reader. It waits until
         -- the mouse leaves (or a page is turned, see ShowSpread).
-        if UI.bookFrame:IsShown() and UI.bookFrame:IsMouseOver() then return end
+        if UI.bookFrame:IsShown() and UI.bookFrame:IsMouseOver() then
+            -- something new is waiting: say so, and let the reader decide when the page may change
+            if WFD.dirty and UI.ShowFreshNote then UI:ShowFreshNote() end
+            return
+        end
         if UI.bookFrame:IsShown() and (WFD.dirty or (WFD.ticked and sinceTick >= 60)) then
             WFD.dirty, WFD.ticked, sinceTick = false, false, 0
             UI:Reflow()
@@ -1354,12 +1378,34 @@ function UI:Build()
     h:Hide()
 end
 
+-- a small note at the foot of the book: "New in the diary. Click to refresh."
+function UI:ShowFreshNote()
+    local note = self.freshNote
+    if not note then
+        note = UI.Frame(self.bookFrame, 100, 24, "Button")
+        note:SetFrameStrata("DIALOG")
+        note:SetFrameLevel(self.bookFrame:GetFrameLevel() + 100)
+        UI.Backdrop(note, "tooltip", 10, 2, { 0.06, 0.04, 0.02, 0.94 }, c.goldDk)
+        note.text = UI.Text(note, 12, c.gold, "CENTER", UI.FONT, true)
+        note.text:SetPoint("CENTER")
+        note.text:SetText(L["New in the diary. Click to refresh."])
+        note:SetSize(note.text:GetStringWidth() + 28, 24)
+        note:SetPoint("BOTTOM", self.bookFrame, "BOTTOM", 0, 26)
+        note:SetScript("OnClick", function() UI:Reflow() end)
+        self.bookFrame:HookScript("OnHide", function() note:Hide() end)
+        self.freshNote = note
+    end
+    note:Show()
+end
+
 function UI:Reflow()
     if not self.bookFrame then return end
+    if self.freshNote then self.freshNote:Hide() end
     if UI.noteFocus then
         WFD.dirty = true      -- do not disturb while the player is writing; try again later
         return
     end
+    WFD.dirty = false
     local follow = self.followToday
     UI.storyCache[WFD:NumDays()] = nil
     self:Paginate()
