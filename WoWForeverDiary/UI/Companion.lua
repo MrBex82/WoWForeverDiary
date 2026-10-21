@@ -8,8 +8,8 @@ local col4 = UI.col4
 local floor, max, min, format = math.floor, math.max, math.min, string.format
 local unpack = unpack or table.unpack
 
-local W = 252
-local ROW = 20
+local W = 284
+local ROW = 23
 local comp
 
 local BG = { 0.045, 0.05, 0.06, 0.90 }
@@ -35,7 +35,8 @@ end
 -- Building
 ------------------------------------------------------------------------
 local function text(parent, size, col, justify)
-    local fs = UI.Text(parent, size, col, justify, UI.FONT, true)
+    -- the dark shadow lifts light writing off the dark window; under dark ink on the parchment it only smudges
+    local fs = UI.Text(parent, size, col, justify, UI.FONT, UI.THEME ~= "parchment")
     fs:SetWordWrap(false)
     return fs
 end
@@ -50,11 +51,12 @@ local function newRow(parent)
     r.hl:Hide()
     r.mark = UI.Fill(r, c.redInk, "ARTWORK", 0)
     r.mark:SetSize(4, 4)
-    r.mark:SetPoint("LEFT", 2, 1)
+    -- the writing sits in the upper part of the row, the bar below it with room between
+    r.mark:SetPoint("LEFT", 2, 3)
     r.label = text(r, 11, c.ink, "LEFT")
-    r.label:SetPoint("LEFT", 12, 1)
+    r.label:SetPoint("LEFT", 12, 3)
     r.value = text(r, 11, c.inkSoft, "RIGHT")
-    r.value:SetPoint("RIGHT", -2, 1)
+    r.value:SetPoint("RIGHT", -2, 3)
     local tv = veil(0.08)
     r.track = UI.Fill(r, tv, "ARTWORK", 0, tv[4])
     r.track:SetHeight(2)
@@ -122,6 +124,9 @@ local function build()
         q:SetTexCoord(0, 0.586, 0, 0.654)
         q:SetPoint("TOPLEFT", -10, 10)
         q:SetPoint("BOTTOMRIGHT", 10, -10)
+        -- a light wash evens out the dark mottling of that paper behind the writing
+        local wash = UI.Fill(f, { 0.96, 0.89, 0.72, 0.45 }, "BACKGROUND", 1)
+        wash:SetAllPoints()
     else
         UI.Backdrop(f, nil, 1, 0, BG, veil(0.09))
     end

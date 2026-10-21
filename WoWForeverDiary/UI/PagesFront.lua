@@ -58,22 +58,33 @@ function UI.PageTitle(pool, canvas, side, text, sub, y, tabs)
     return ny - 22
 end
 
--- the three pages of the settings (general, handling, appearance) lie one after the other: a row of links
--- above each of them leads to the other two
+-- the four pages of the settings (general, handling, keys, appearance) lie one after the other: a row of links
+-- above each of them leads to the others
 function UI.SettingsTabs(current)
     return function(pool, canvas, tx, tw, y)
-        local names = { L["General"], L["Handling"], L["Appearance"] }
-        local items, total, gap = {}, 0, 24
+        local names = { L["General"], L["Handling"], L["Keys"], L["Appearance"] }
+        local items, total, gap = {}, 0, 18
         for i, name in ipairs(names) do
             local on = i == current
             local fs = pool:Link(name, function()
                 local first = UI.book and UI.book.sectionStart.notes
                 if first then UI:GoToPage(first + i - 1) end
             end, 13, on and c.redInk or c.inkSoft)
-            items[i] = { fs = fs, w = fs:GetStringWidth(), on = on }
-            total = total + items[i].w
+            items[i] = { fs = fs, on = on }
         end
-        total = total + gap * (#names - 1)
+        -- four names in one row: in a long language (or with bigger writing) they become smaller together
+        local size = 13
+        while true do
+            total = 0
+            for _, it in ipairs(items) do
+                it.fs:SetFont(UI.FONT, UI.FS(size), "")
+                it.w = it.fs:GetStringWidth()
+                total = total + it.w
+            end
+            total = total + gap * (#names - 1)
+            if total <= tw or size <= 11 then break end
+            size = size - 1
+        end
         local x = tx + (tw - total) / 2
         for i, it in ipairs(items) do
             it.fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, y)

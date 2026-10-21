@@ -34,7 +34,7 @@ Im Buch, in Gruppen; jede Gruppe hat einen Reiter, der eine Übersicht ihrer Tei
 - **Jagd & Beute:** Bestiarium mit Steckbriefen, „Fast geschafft“ und Jagdkarte, Erzfeinde, Anglerbuch, Schätze mit Ausrüstungspuppe
 - **Leute & Geld:** Personen, Gefährten, Kassenbuch
 - **Andenken:** Familienbuch, Zeitkapsel
-- **Einstellungen:** eigener Reiter ganz unten, in drei Seiten (Allgemein, Bedienung, Aussehen) mit Stil, Schriftgröße und Sprache
+- **Einstellungen:** eigener Reiter ganz unten, in vier Seiten (Allgemein, Bedienung, Tasten, Aussehen) mit Stil, Schriftgröße und Sprache
 
 Die Lupe oben am Buchrücken (oder Strg + F) durchsucht alles, das „?“ darunter zeigt die Einführung. Ein Klick auf
 die Seitenzahl springt zu einer Seite, ein Klick auf das Eselsohr setzt ein eigenes Lesezeichen (bis zu zwölf). Eine Zeile oben auf jeder Seite zeigt, wo du bist. Solange die Maus über dem Buch ist, blättern Pfeiltasten und Mausrad; Pos1 führt zum Inhalt, Ende zu heute,

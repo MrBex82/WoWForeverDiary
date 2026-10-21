@@ -720,14 +720,14 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
             end
             x = x + w + 16
         end
-        y = y - 22
+        y = y - 24
     end
     local function small(text)
-        local t = pool:Text(11, c.inkSoft, UI.FONT)
+        local t = pool:Text(12, c.inkSoft, UI.FONT)
         t:SetWidth(tw)
         t:SetText(text)
-        t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 4)
-        y = y - t:GetStringHeight() - 6
+        t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+        y = y - t:GetStringHeight() - 10
     end
     local redraw = function() UI:ShowSpread(UI.spread) end
 
@@ -740,20 +740,11 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
     })
     small(L["Important: levels, bosses, rare creatures and finds, dungeons, honours and letters."])
 
-    caption(L["Keys while the mouse is over the book"])
-    local rows = {
-        { L["Arrow keys, Page up / down"], L["turn the page"] },
-        { L["Home"], L["contents"] },
-        { L["End"], L["today's entry"] },
-        { L["Backspace"], L["back"] },
-        { L["Ctrl + F"], L["search the book"] },
-        { L["Ctrl + mouse wheel"], L["size of the book"] },
-        { L["Click the page number"], L["go to a page"] },
-        { L["Click the folded corner"], L["bookmark"] },
-        { "/wfd", L["open or close the book"] },
-    }
-    for _, r in ipairs(rows) do UI.LeaderLine(pool, canvas, tx, y, tw, r[1], r[2], 12, c.inkSoft); y = y - 16 end
-    small(L["A key to open the book can be set in the game's key bindings, under AddOns."])
+    caption(L["Companion"])
+    local cb = pool:Check(L["Show the companion beside the game"], function() return S.companion end, function(v) UI:ShowCompanion(v) end)
+    cb:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+    y = y - 26
+    small(L["A small window with today's figures, the tasks and the honours closest to their next tier. Drag it by its title, fold it with the minus."])
 
     caption(L["The book"])
     links({
@@ -770,6 +761,35 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
 end)
 
 ------------------------------------------------------------------------
+-- The page of the keys: what the keyboard and the mouse do in the book
+------------------------------------------------------------------------
+UI:RegisterRenderer("keys", function(pool, page, side, canvas)
+    local tx, tw = UI.TextX(side), UI.TextW()
+    local y = UI.PageTitle(pool, canvas, side, L["Keys"], nil, -56, UI.SettingsTabs(3))
+    local t = pool:Text(10, c.redInk, UI.FONT)
+    t:SetText(L["Keys while the mouse is over the book"]:upper())
+    t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+    y = y - 22
+    local rows = {
+        { L["Arrow keys, Page up / down"], L["turn the page"] },
+        { L["Home"], L["contents"] },
+        { L["End"], L["today's entry"] },
+        { L["Backspace"], L["back"] },
+        { L["Ctrl + F"], L["search the book"] },
+        { L["Ctrl + mouse wheel"], L["size of the book"] },
+        { L["Click the page number"], L["go to a page"] },
+        { L["Click the folded corner"], L["bookmark"] },
+        { "/wfd", L["open or close the book"] },
+    }
+    for _, r in ipairs(rows) do UI.LeaderLine(pool, canvas, tx, y, tw, r[1], r[2], 13, c.inkSoft); y = y - 22 end
+    y = y - 8
+    local n = pool:Text(12, c.inkSoft, UI.FONT)
+    n:SetWidth(tw)
+    n:SetText(L["A key to open the book can be set in the game's key bindings, under AddOns."])
+    n:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+end)
+
+------------------------------------------------------------------------
 -- The page of the look: the style of the book, the size of the writing, the companion
 ------------------------------------------------------------------------
 local THEME_NAMES = { codex = "Leather and gold", parchment = "Parchment", modern = "Modern", contrast = "Strong contrast" }
@@ -782,7 +802,7 @@ UI.SetAndReload = setAndReload
 
 UI:RegisterRenderer("appearance", function(pool, page, side, canvas)
     local tx, tw = UI.TextX(side), UI.TextW()
-    local y = UI.PageTitle(pool, canvas, side, L["Appearance"], nil, -56, UI.SettingsTabs(3))
+    local y = UI.PageTitle(pool, canvas, side, L["Appearance"], nil, -56, UI.SettingsTabs(4))
     local S = WFD.S
     local function caption(text)
         local t = pool:Text(10, c.redInk, UI.FONT)
@@ -804,13 +824,13 @@ UI:RegisterRenderer("appearance", function(pool, page, side, canvas)
             end
             x = x + w + 16
         end
-        y = y - 22
+        y = y - 24
     end
     local function small(text)
-        local t = pool:Text(11, c.inkSoft, UI.FONT)
+        local t = pool:Text(12, c.inkSoft, UI.FONT)
         t:SetWidth(tw)
         t:SetText(text)
-        t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 4)
+        t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
         y = y - t:GetStringHeight() - 10
     end
 
@@ -854,15 +874,9 @@ UI:RegisterRenderer("appearance", function(pool, page, side, canvas)
     end
     links(items)
 
-    caption(L["Companion"])
-    local cb = pool:Check(L["Show the companion beside the game"], function() return S.companion end, function(v) UI:ShowCompanion(v) end)
-    cb:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-    y = y - 22
-    small(L["A small window with today's figures, the tasks and the honours closest to their next tier. Drag it by its title, fold it with the minus."])
-
     caption(L["Turning the pages"])
-    local cb2 = pool:Check(L["Turn the leaves visibly"], function() return S.turnAnim ~= false end, function(v) if v then S.turnAnim = nil else S.turnAnim = false end end)
-    cb2:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+    local cb = pool:Check(L["Turn the leaves visibly"], function() return S.turnAnim ~= false end, function(v) if v then S.turnAnim = nil else S.turnAnim = false end end)
+    cb:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
 end)
 
 ------------------------------------------------------------------------

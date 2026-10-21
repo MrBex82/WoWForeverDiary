@@ -1851,6 +1851,7 @@ UI:RegisterSection({
     build = function(book)
         book:Add({ kind = "settings", numbered = true, head = L["Settings"] })
         book:Add({ kind = "handling", numbered = true, head = L["Settings"] })
+        book:Add({ kind = "keys", numbered = true, head = L["Settings"] })
         book:Add({ kind = "appearance", numbered = true, head = L["Settings"] })
     end,
 })
@@ -1939,7 +1940,7 @@ UI:RegisterRenderer("settings", function(pool, page, side, canvas)
         }
     end
     linkRow(items, 13)
-    local note = pool:Text(11, c.inkSoft, UI.FONT)
+    local note = pool:Text(12, c.inkSoft, UI.FONT)
     note:SetWidth(tw)
     note:SetText(L["The diary will reload the interface to switch the language."] .. " "
         .. L["Names from the game (places, creatures, items) stay in the language of the game client."] .. " "

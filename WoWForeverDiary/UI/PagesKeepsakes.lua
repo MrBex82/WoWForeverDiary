@@ -223,7 +223,7 @@ end)
 ------------------------------------------------------------------------
 -- Time capsule: letters to yourself
 ------------------------------------------------------------------------
-local DRAFT_H = 210
+local DRAFT_H = 244          -- the sheet, the choices (up to two rows) and the note (up to two lines)
 local LETTER_LINE = 17
 
 local function letterHeight(letter)
@@ -280,11 +280,19 @@ UI:RegisterRenderer("capsule", function(pool, page, side, canvas)
         if r.draft then
             -- a sheet of letter paper with ruled lines
             local boxH = 128
-            local sheet = pool:Rect({ 0.30, 0.22, 0.13 }, 0.30)
+            -- on the light parchment a dark veil looks like a smudge: there the letter is a lighter sheet
+            -- with a fine brown edge and brown lines
+            local light = UI.THEME == "parchment"
+            if light then
+                local edge = pool:Rect({ 0.45, 0.30, 0.14 }, 0.55, "ARTWORK", -2)
+                edge:SetSize(tw + 2, boxH + 2)
+                edge:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx - 1, y + 1)
+            end
+            local sheet = light and pool:Rect({ 0.97, 0.91, 0.76 }, 0.30, "ARTWORK", -1) or pool:Rect({ 0.30, 0.22, 0.13 }, 0.30)
             sheet:SetSize(tw, boxH)
             sheet:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
             for ly = 8 + LETTER_LINE, boxH - 4, LETTER_LINE do
-                local ln = pool:Rect({ 0.78, 0.60, 0.26 }, 0.14)
+                local ln = light and pool:Rect({ 0.45, 0.30, 0.14 }, 0.30, "ARTWORK", 1) or pool:Rect({ 0.78, 0.60, 0.26 }, 0.14)
                 ln:SetSize(tw - 16, 1)
                 ln:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 8, y - ly)
             end
@@ -306,16 +314,20 @@ UI:RegisterRenderer("capsule", function(pool, page, side, canvas)
                 local goal = min(top60, (floor(lvl / 10) + 1) * 10)
                 opts[#opts + 1] = { format(L["at level %d"], goal), "level", goal }
             end
-            local x = tx
+            -- the choices wrap onto a second row when they do not fit (long languages, bigger writing)
+            local x, oy = tx, sy - 20
             for _, o in ipairs(opts) do
                 local fs = pool:Link(o[1], sealWith(eb, o[2], o[3]), 13, c.ink)
+                local w = fs:GetStringWidth()
+                if x > tx and x + 14 + w > tx + tw then x, oy = tx, oy - 20 end
                 fs:ClearAllPoints()
-                fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 14, sy - 20)
+                fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 14, oy)
                 local d = pool:Diamond(6, WAX)
                 d:SetPoint("RIGHT", fs, "LEFT", -5, 0)
-                x = x + fs:GetStringWidth() + 34
+                x = x + w + 34
             end
-            line(pool, canvas, tx, sy - 44, tw, L["Until then the letter stays sealed - not even you can read it."], 10, c.inkSoft)
+            local note = line(pool, canvas, tx, oy - 24, tw, L["Until then the letter stays sealed - not even you can read it."], 10, c.inkSoft)
+            note:SetWordWrap(true)
         elseif r.empty then
             emptyNote(pool, canvas, tx, tw, y - 6, L["No letters yet."])
         elseif r.letter then
