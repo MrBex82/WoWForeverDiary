@@ -1828,7 +1828,7 @@ end
 
 UI:RegisterRenderer("settings", function(pool, page, side, canvas)
     local tx, tw = UI.TextX(side), UI.TextW()
-    local y = UI.PageTitle(pool, canvas, side, L["Settings"], L["How this book is kept"], -56)
+    local y = UI.PageTitle(pool, canvas, side, L["Settings"], nil, -56, UI.SettingsTabs(1))
     local S = WFD.S
 
     local function caption(text)
@@ -1901,29 +1901,6 @@ UI:RegisterRenderer("settings", function(pool, page, side, canvas)
         .. L["Korean and Chinese text needs a game client with those fonts."])
     note:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 4)
     y = y - note:GetStringHeight() - 10
-
-    -- size
-    caption(L["Size of the book"])
-    local sizes = {}
-    -- a size set with Ctrl + mouse wheel joins the row, so the current one is always marked
-    local cur, steps = S.scale or 0.9, { 0.75, 0.8, 0.9, 1, 1.1 }
-    local known = false
-    for _, s in ipairs(steps) do if math.abs(cur - s) < 0.001 then known = true end end
-    if not known then
-        steps[#steps + 1] = cur
-        table.sort(steps)
-    end
-    for _, s in ipairs(steps) do
-        sizes[#sizes + 1] = {
-            text = floor(s * 100 + 0.5) .. "%",
-            active = math.abs(cur - s) < 0.001,
-            fn = function()
-                UI:SetScale(s)
-                UI:ShowSpread(UI.spread)
-            end,
-        }
-    end
-    linkRow(sizes, 14)
 
     -- transcript and demo
     caption(L["Transcript"] .. "  &  " .. L["Demo"])

@@ -34,7 +34,8 @@ local function leader(pool, canvas, x, y, w, label, value, size, labelCol, onCli
 end
 UI.LeaderLine = leader
 
-function UI.PageTitle(pool, canvas, side, text, sub, y)
+-- tabs: a function(pool, canvas, tx, tw, y) that draws a row of its own in the place of the subtitle
+function UI.PageTitle(pool, canvas, side, text, sub, y, tabs)
     UI.titled = true
     local tx, tw = UI.TextX(side), UI.TextW()
     local t = pool:Text(32, c.redInk, UI.HEAD, "CENTER")
@@ -49,9 +50,45 @@ function UI.PageTitle(pool, canvas, side, text, sub, y)
         s:SetWidth(tw)
         s:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, ny)
         ny = ny - 18
+    elseif tabs then
+        tabs(pool, canvas, tx, tw, ny)
+        ny = ny - 18
     end
     UI.PageDivider(pool, canvas, tx + tw / 2, ny - 4, 240)
     return ny - 22
+end
+
+-- the three pages of the settings (general, handling, appearance) lie one after the other: a row of links
+-- above each of them leads to the other two
+function UI.SettingsTabs(current)
+    return function(pool, canvas, tx, tw, y)
+        local names = { L["General"], L["Handling"], L["Appearance"] }
+        local items, total, gap = {}, 0, 24
+        for i, name in ipairs(names) do
+            local on = i == current
+            local fs = pool:Link(name, function()
+                local first = UI.book and UI.book.sectionStart.notes
+                if first then UI:GoToPage(first + i - 1) end
+            end, 13, on and c.redInk or c.inkSoft)
+            items[i] = { fs = fs, w = fs:GetStringWidth(), on = on }
+            total = total + items[i].w
+        end
+        total = total + gap * (#names - 1)
+        local x = tx + (tw - total) / 2
+        for i, it in ipairs(items) do
+            it.fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, y)
+            if it.on then
+                local u = pool:Rect(c.redInk, 1)
+                u:SetSize(it.w, 1)
+                u:SetPoint("TOPLEFT", it.fs, "BOTTOMLEFT", 0, -2)
+            end
+            if i < #items then
+                local d = pool:Diamond(4, c.inkFaint)
+                d:SetPoint("CENTER", canvas, "TOPLEFT", x + it.w + gap / 2, y - 7)
+            end
+            x = x + it.w + gap
+        end
+    end
 end
 
 -- red caps heading with a diamond, an optional count on the right and a fading rule; h = row height

@@ -683,7 +683,7 @@ end
 ------------------------------------------------------------------------
 UI:RegisterRenderer("handling", function(pool, page, side, canvas)
     local tx, tw = UI.TextX(side), UI.TextW()
-    local y = UI.PageTitle(pool, canvas, side, L["Handling"], L["Keys and comfort"], -56)
+    local y = UI.PageTitle(pool, canvas, side, L["Handling"], nil, -56, UI.SettingsTabs(2))
     local S = WFD.S
     local function caption(text)
         local t = pool:Text(10, c.redInk, UI.FONT)
@@ -712,7 +712,7 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
         t:SetWidth(tw)
         t:SetText(text)
         t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 4)
-        y = y - t:GetStringHeight() - 8
+        y = y - t:GetStringHeight() - 6
     end
     local redraw = function() UI:ShowSpread(UI.spread) end
 
@@ -724,7 +724,6 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
         { text = L["Quiet"], active = level == "quiet", fn = function() S.notify = "quiet"; redraw() end },
     })
     small(L["Important: levels, bosses, rare creatures and finds, dungeons, honours and letters."])
-    y = y - 4
 
     caption(L["Keys while the mouse is over the book"])
     local rows = {
@@ -738,16 +737,14 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
         { L["Click the folded corner"], L["bookmark"] },
         { "/wfd", L["open or close the book"] },
     }
-    for _, r in ipairs(rows) do UI.LeaderLine(pool, canvas, tx, y, tw, r[1], r[2], 12, c.inkSoft); y = y - 17 end
+    for _, r in ipairs(rows) do UI.LeaderLine(pool, canvas, tx, y, tw, r[1], r[2], 12, c.inkSoft); y = y - 16 end
     small(L["A key to open the book can be set in the game's key bindings, under AddOns."])
-    y = y - 4
 
     caption(L["The book"])
     links({
         { text = L["Reset the position"], fn = function() UI:ResetPosition() end },
         { text = L["Show the introduction again"], fn = function() WFD.S.tourDone = nil; UI:StartTour() end },
     })
-    y = y - 4
 
     caption(L["Moving to another computer"])
     links({
@@ -770,7 +767,7 @@ UI.SetAndReload = setAndReload
 
 UI:RegisterRenderer("appearance", function(pool, page, side, canvas)
     local tx, tw = UI.TextX(side), UI.TextW()
-    local y = UI.PageTitle(pool, canvas, side, L["Appearance"], L["How the book looks"], -56)
+    local y = UI.PageTitle(pool, canvas, side, L["Appearance"], nil, -56, UI.SettingsTabs(3))
     local S = WFD.S
     local function caption(text)
         local t = pool:Text(10, c.redInk, UI.FONT)
@@ -821,6 +818,25 @@ UI:RegisterRenderer("appearance", function(pool, page, side, canvas)
     end
     links(items)
     small(L["Both reload the interface. With bigger writing a few long lines may run close together."])
+
+    caption(L["Size of the book"])
+    items = {}
+    -- a size set with Ctrl + mouse wheel joins the row, so the current one is always marked
+    local cur, steps = S.scale or 0.9, { 0.75, 0.8, 0.9, 1, 1.1 }
+    local known = false
+    for _, st in ipairs(steps) do if math.abs(cur - st) < 0.001 then known = true end end
+    if not known then
+        steps[#steps + 1] = cur
+        table.sort(steps)
+    end
+    for _, st in ipairs(steps) do
+        items[#items + 1] = { text = floor(st * 100 + 0.5) .. "%", active = math.abs(cur - st) < 0.001,
+            fn = function()
+                UI:SetScale(st)
+                UI:ShowSpread(UI.spread)
+            end }
+    end
+    links(items)
 
     caption(L["Companion"])
     local cb = pool:Check(L["Show the companion beside the game"], function() return S.companion end, function(v) UI:ShowCompanion(v) end)
