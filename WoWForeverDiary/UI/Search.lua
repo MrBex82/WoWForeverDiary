@@ -48,6 +48,31 @@ local function buildIndex()
         out[#out + 1] = { kind = kind, text = text, icon = icon, go = go, hay = lower(hay or text), rank = rank or 5 }
     end
     local function toPage(p) return p and function() UI:GoToPage(p) end end
+    -- where a creature, a catch or a person stands in the book: the album page, the register page
+    local where = { creature = {}, catch = {}, person = {} }
+    for i, p in ipairs(book.pages) do
+        if p.kind == "album" then
+            for _, e in ipairs(p.cards or {}) do
+                if e.id and not where.creature[e.id] then where.creature[e.id] = i end
+            end
+        elseif p.kind == "fishalbum" then
+            for _, e in ipairs(p.cards or {}) do
+                if e.id and not where.catch[e.id] then where.catch[e.id] = i end
+            end
+        elseif p.kind == "people" then
+            for _, r in ipairs(p.rows or {}) do
+                if r.e and r.e.key and not where.person[r.e.key] then where.person[r.e.key] = i end
+            end
+        end
+    end
+    -- the book turns to that page and the card lies over it: when it is put away the reader stands there
+    local function toCard(kind, key)
+        local pg = where[kind][key]
+        return function()
+            if pg then UI:GoToPage(pg) end
+            UI:ShowCard(kind, key)
+        end
+    end
     -- parts of the book and chapters, as in the contents
     for _, p in ipairs(book.pages) do
         if p.kind == "toc" then
@@ -78,13 +103,13 @@ local function buildIndex()
         end
     end
     for key, n in pairs(C.npcs or {}) do
-        if n.name then add("person", n.name, UI.Icon("people"), function() UI:ShowCard("person", key) end, nil, 2) end
+        if n.name then add("person", n.name, UI.Icon("people"), toCard("person", key), nil, 2) end
     end
     for id, m in pairs(C.mobs or {}) do
-        if m.name then add("creature", m.name, UI.Icon("bestiary"), function() UI:ShowCard("creature", id) end, nil, 3) end
+        if m.name then add("creature", m.name, UI.Icon("bestiary"), toCard("creature", id), nil, 3) end
     end
     for id, e in pairs(C.catch or {}) do
-        if e.name then add("catch", e.name, UI.FishIcon and UI.FishIcon(e, id) or UI.Icon("loot"), function() UI:ShowCard("catch", id) end, nil, 3) end
+        if e.name then add("catch", e.name, UI.FishIcon and UI.FishIcon(e, id) or UI.Icon("loot"), toCard("catch", id), nil, 3) end
     end
     for id, q in pairs(C.quests or {}) do
         if q.title then

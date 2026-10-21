@@ -121,7 +121,7 @@ end
 local MARK_COLS = {
     { 0.18, 0.40, 0.62 }, { 0.22, 0.48, 0.24 }, { 0.66, 0.48, 0.12 }, { 0.44, 0.20, 0.56 }, { 0.10, 0.46, 0.46 }, { 0.62, 0.26, 0.10 },
 }
-local MAX_MARKS, MARK_W, MARK_H = 6, 20, 46
+local MAX_MARKS, MARK_W, MARK_H = 12, 20, 46
 local markFrames = {}
 
 local function placeOf(index)
@@ -131,7 +131,8 @@ local function placeOf(index)
     local day
     for d, i in pairs(b.dayPage) do if i == index then day = d end end
     local start = page.section and b.sectionStart[page.section]
-    return { section = page.section, offset = start and (index - start) or nil, day = day }
+    -- head: what the page itself calls its place (the area of an album, the chapter of the diary)
+    return { section = page.section, offset = start and (index - start) or nil, day = day, head = page.head }
 end
 
 local function resolveMark(m)
@@ -151,6 +152,16 @@ local function sectionLabel(key)
     if key == "diary" then return L["Diary"] end
     for _, s in ipairs(UI.sections) do if s.key == key then return L[s.label] end end
     return ""
+end
+
+-- the name of a bookmark, written when it is read so that it follows the language: "Diary, day 9",
+-- "Bestiary, Westfall"
+local function markTitle(mk)
+    local part = sectionLabel(mk.section)
+    if mk.day then return part .. ", " .. format(L["Day %d"], mk.day) end
+    local head = mk.head and L[mk.head]
+    if head and head ~= "" and head ~= part then return part .. ", " .. head end
+    return part
 end
 
 function UI:UpdateMarks()
@@ -194,9 +205,7 @@ function UI:UpdateMarks()
                     local mk = WFD.C.marks[s.i]
                     local to = resolveMark(mk)
                     GameTooltip:SetOwner(s, "ANCHOR_TOP")
-                    GameTooltip:SetText(L["Bookmark"], 1, 0.86, 0.5)
-                    if mk then GameTooltip:AddLine(sectionLabel(mk.section), 1, 1, 1) end
-                    if mk and mk.day then GameTooltip:AddLine(format(L["Day %d"], mk.day), 0.8, 0.8, 0.8) end
+                    GameTooltip:SetText(mk and markTitle(mk) or L["Bookmark"], 1, 0.86, 0.5)
                     if to then GameTooltip:AddLine(format(L["Page %d"], UI.PageNumber(to)), 0.8, 0.8, 0.8) end
                     GameTooltip:AddLine(L["Click to open, right-click to remove."], 0.5, 0.8, 1)
                     GameTooltip:Show()
@@ -288,7 +297,11 @@ function UI:ToggleMark(index)
     end
     local p = placeOf(index)
     if not p then return end
-    if #C.marks >= MAX_MARKS then table.remove(C.marks, 1) end
+    if #C.marks >= MAX_MARKS then
+        -- no quiet loss of the oldest: say that the book is full
+        print("|cffffd100WoW Forever Diary:|r " .. format(L["All %d bookmarks are in use. Remove one first."], MAX_MARKS))
+        return
+    end
     C.marks[#C.marks + 1] = p
     self:UpdateMarks()
     self:UpdateEars()
