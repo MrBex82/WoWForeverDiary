@@ -315,7 +315,13 @@ local function drawWornParchment(pool, canvas, side, index)
     -- the stains are one painted picture (Media\stains.tga, made by tools/gen_stains.py) of four cells:
     -- blood, a second blood splash, sweat and tears. Some pages are mirrored, so no two look alike.
     local STAINS = "Interface\\AddOns\\" .. ADDON .. "\\Media\\stains"
-    local function stain(cellX, cellY, size, x, y, alpha, k)
+    -- reach = how far the visible stain reaches from the middle of its picture, as a part of the size: the
+    -- middle is moved in so that it never lies beyond the torn edge of the paper
+    local EDGE = 18
+    local function stain(cellX, cellY, size, x, y, alpha, k, reach)
+        local r = size * reach
+        x = max(EDGE + r, min(PW - EDGE - r, x))
+        y = max(EDGE + r, min(PH - EDGE - r, y))
         local t = pool:Icon(STAINS, size, "BACKGROUND", 2)
         local u0, v0 = cellX * 0.5, cellY * 0.5
         local mirrorX, mirrorY = R(k, 61) < 0.5, R(k, 62) < 0.5
@@ -326,17 +332,17 @@ local function drawWornParchment(pool, canvas, side, index)
     -- blood: a splash with spray and a drip
     if R(1, 31) < 0.38 then
         local x, y = spot(1)
-        stain(R(1, 33) < 0.5 and 0 or 1, 0, 120 + 50 * R(1, 34), x, y, 0.85, 1)
+        stain(R(1, 33) < 0.5 and 0 or 1, 0, 100 + 40 * R(1, 34), x, y, 0.85, 1, 0.30)
     end
     -- sweat: salty tide marks
     if R(2, 41) < 0.42 then
         local x, y = spot(2)
-        stain(0, 1, 100 + 60 * R(2, 42), x, y, 0.9, 2)
+        stain(0, 1, 80 + 50 * R(2, 42), x, y, 0.9, 2, 0.36)
     end
     -- tears: small rings with a paler middle
     if R(3, 51) < 0.42 then
         local x, y = spot(3)
-        stain(1, 1, 90 + 50 * R(3, 52), x, y, 0.9, 3)
+        stain(1, 1, 80 + 40 * R(3, 52), x, y, 0.9, 3, 0.30)
     end
 end
 
