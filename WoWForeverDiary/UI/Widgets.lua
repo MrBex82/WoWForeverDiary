@@ -459,12 +459,26 @@ function UI.Page(parent, w, h, spine)
         -- round, the rest of the picture is transparent. There is no base colour, so the binding shows through
         -- behind the tears. At the spine the sheet is cut straight (that edge is bound, not torn).
         base:SetAlpha(0)
-        local q = p:CreateTexture(nil, "BACKGROUND", nil, 1)
-        q:SetTexture("Interface\\QuestFrame\\QuestBG")
-        local u0, u1 = 0, 0.586
-        if spine == "right" then u1 = 0.55 elseif spine == "left" then u0 = 0.036 end
-        q:SetTexCoord(u0, u1, 0, 0.654)
-        q:SetAllPoints()
+        -- The torn edges of the sheet are strongest at its foot and on its right, weak at the top and the left:
+        -- so the page is four quarters, every one of them the lower right quarter of the sheet, mirrored as
+        -- needed. Then all four edges look like the strong ones.
+        local MID_U, MID_V, END_U, END_V, CUT_U = 0.293, 0.327, 0.586, 0.654, 0.55
+        local rightU = (spine == "right") and CUT_U or END_U     -- the spine side is cut straight, not torn
+        local leftU = (spine == "left") and CUT_U or END_U
+        local hw, hh = w / 2, h / 2
+        local quarters = {
+            { "TOPLEFT", 0, 0, leftU, MID_U, END_V, MID_V },
+            { "TOPRIGHT", hw, 0, MID_U, rightU, END_V, MID_V },
+            { "BOTTOMLEFT", 0, -hh, leftU, MID_U, MID_V, END_V },
+            { "BOTTOMRIGHT", hw, -hh, MID_U, rightU, MID_V, END_V },
+        }
+        for _, qd in ipairs(quarters) do
+            local q = p:CreateTexture(nil, "BACKGROUND", nil, 1)
+            q:SetTexture("Interface\\QuestFrame\\QuestBG")
+            q:SetTexCoord(qd[4], qd[5], qd[6], qd[7])
+            q:SetSize(hw, hh)
+            q:SetPoint("TOPLEFT", p, "TOPLEFT", qd[2], qd[3])
+        end
         -- the bend into the spine
         if spine then
             UI.EdgeFade(p, spine == "left" and "LEFT" or "RIGHT", 70, { 0, 0, 0 }, 0.38, "BORDER", 1)
