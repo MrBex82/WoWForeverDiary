@@ -1697,24 +1697,28 @@ UI:RegisterSection({
     build = function(book)
         local zones, byZone = {}, {}
         local done, open, gaveUp = 0, 0, 0
+        local gone = {}                     -- quests given up have a place of their own at the end
         for id, q in pairs(WFD.C.quests) do
             local z = q.zone or L["Already in the quest log"]
-            local e = byZone[z]
-            if not e then
-                e = { zone = z, list = {}, t = math.huge, done = 0 }
-                byZone[z] = e
-                zones[#zones + 1] = e
-            end
-            e.list[#e.list + 1] = { id = id, q = q }
-            local t = q.acc or q.done or 0
-            if t < e.t then e.t = t end
-            if q.done then
-                e.done = e.done + 1
-                done = done + 1
-            elseif q.abandoned then
+            if q.abandoned and not q.done then
                 gaveUp = gaveUp + 1
+                gone[#gone + 1] = { id = id, q = q, zone = z }
             else
-                open = open + 1
+                local e = byZone[z]
+                if not e then
+                    e = { zone = z, list = {}, t = math.huge, done = 0 }
+                    byZone[z] = e
+                    zones[#zones + 1] = e
+                end
+                e.list[#e.list + 1] = { id = id, q = q }
+                local t = q.acc or q.done or 0
+                if t < e.t then e.t = t end
+                if q.done then
+                    e.done = e.done + 1
+                    done = done + 1
+                else
+                    open = open + 1
+                end
             end
         end
         table.sort(zones, function(a, b) return a.t < b.t end)
@@ -1724,6 +1728,11 @@ UI:RegisterSection({
             table.sort(z.list, function(a, b) return (a.q.acc or a.q.done or 0) < (b.q.acc or b.q.done or 0) end)
             list[#list + 1] = { h = 36, header = z.zone, count = z.done .. " / " .. #z.list, keep = 24 }
             for _, e in ipairs(z.list) do list[#list + 1] = { h = 24, id = e.id, q = e.q } end
+        end
+        if #gone > 0 then
+            table.sort(gone, function(a, b) return (a.q.acc or 0) < (b.q.acc or 0) end)
+            list[#list + 1] = { h = 36, header = L["given up"], count = tostring(#gone), keep = 24 }
+            for _, e in ipairs(gone) do list[#list + 1] = { h = 24, id = e.id, q = e.q, gone = e.zone } end
         end
         paginateRows(book, "quests", list, { head = L["Quest Book"] })
     end,
@@ -1768,7 +1777,13 @@ UI:RegisterRenderer("quests", function(pool, page, side, canvas)
             local inner = pool:Rect({ 0.10, 0.07, 0.04 }, 1, "ARTWORK", 1)
             inner:SetSize(11, 11)
             inner:SetPoint("CENTER", box, "CENTER")
-            if q.done then
+            if r.gone then
+                -- in the section of its own: no box with a cross, a small diamond
+                box:Hide()
+                inner:Hide()
+                local dm = pool:Diamond(7, c.bad)
+                dm:SetPoint("CENTER", canvas, "TOPLEFT", tx + 10, y - 11)
+            elseif q.done then
                 local tick = pool:Icon("Interface\\Buttons\\UI-CheckBox-Check", 22, "ARTWORK", 2)
                 tick:SetTexCoord(0, 1, 0, 1)
                 tick:SetVertexColor(0.95, 0.80, 0.40, 1)
@@ -1780,7 +1795,9 @@ UI:RegisterRenderer("quests", function(pool, page, side, canvas)
             end
             local giver = q.giver and C.npcs[q.giver]
             local t = pool:Text(12, q.abandoned and c.inkFaint or c.ink, UI.FONT)
-            t:SetText((q.title or ("#" .. r.id)) .. (giver and ("  |cff" .. UI.Hex(c.inkFaint) .. giver.name .. "|r") or ""))
+            -- a given-up quest names its area (the list is no longer sorted by area), the others their giver
+            local note = r.gone or (giver and giver.name)
+            t:SetText((q.title or ("#" .. r.id)) .. (note and ("  |cff" .. UI.Hex(c.inkFaint) .. note .. "|r") or ""))
             t:SetWidth(tw - 26 - 44)
             t:SetWordWrap(false)
             t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 26, y - 5)

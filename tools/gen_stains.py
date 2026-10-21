@@ -119,45 +119,61 @@ def splatter(seed, spray_dir, size):
 
 
 def sweat(seed):
+    """a damp patch that dried: an uneven outline, darker where the water pooled, blotchy inside - no rings"""
     r = np.random.default_rng(seed)
     layers = []
     cx, cy = C / 2, C / 2
-    n1, n2, n3 = fbm(seed, 3, 4) - 0.5, fbm(seed + 9, 5, 3), fbm(seed + 21, 6, 3)
-    ang = np.arctan2(YY - cy, XX - cx)
-    dist = np.sqrt((XX - cx) ** 2 + (YY - cy) ** 2)
-    outer = 88 * (1 + 0.20 * n1 * 2)
-    fill = 1 - smoothstep(outer - 6, outer + 2, dist)
-    # the damp patch: faint, slightly darker in the middle
-    layers.append((fill * (0.10 + 0.05 * n2), (0.62, 0.46, 0.20)))
-    # tide marks: where the salt dried, several rings drawn closer and closer together, broken by gaps
-    for k, f in enumerate((1.0, 0.86, 0.70, 0.52)):
-        rr = outer * f * (1 + 0.05 * (fbm(seed + 40 + k, 4, 3) - 0.5) * 2)
-        ring = np.exp(-((dist - rr) ** 2) / (2 * (2.2 - 0.3 * k) ** 2))
-        gap = smoothstep(0.38, 0.62, fbm(seed + 70 + k, 7, 3))
-        layers.append((ring * gap * (0.46 - 0.07 * k), (0.52, 0.36, 0.14)))
-    # crystals of salt: a few tiny pale flecks
-    for _ in range(40):
+    sd = blob(cx, cy, 54, 0.80, seed + 3)                      # a lumpy outline
+    mott = fbm(seed + 9, 5, 4)                                 # the water dried unevenly
+    edge_noise = fbm(seed + 21, 7, 3)
+    # a darker tide line at the edge, thick on one side, thin or missing on the other
+    side = 0.5 + 0.5 * np.cos(np.arctan2(YY - cy, XX - cx) - 0.9)
+    rim = np.exp(-np.clip(sd, 0, None) / 3.2) * smoothstep(-0.5, 1.5, sd)
+    rim *= (0.25 + 0.75 * smoothstep(0.25, 0.65, edge_noise)) * (0.35 + 0.65 * side)
+    inside = smoothstep(-1.0, 3.0, sd)
+    layers.append((inside * (0.06 + 0.16 * mott), (0.60, 0.44, 0.20)))      # the faint blotchy patch
+    layers.append((rim * 0.55, (0.46, 0.30, 0.11)))                          # the tide line
+    # a second, fainter line inside where it dried a moment later, only in pieces
+    sd2 = blob(cx + 3, cy + 2, 40, 0.8, seed + 5)
+    rim2 = np.exp(-np.clip(sd2, 0, None) / 2.2) * smoothstep(-0.5, 1.5, sd2)
+    rim2 *= smoothstep(0.50, 0.66, fbm(seed + 31, 6, 3)) * 0.8
+    layers.append((rim2 * 0.30, (0.50, 0.34, 0.14)))
+    # dirt carried to the edge: a few dark specks along it
+    for i in range(14):
         a = r.uniform(0, 2 * np.pi)
-        rr = 88 * r.uniform(0.2, 1.0)
-        px, py = cx + np.cos(a) * rr, cy + np.sin(a) * rr
-        d = blob(px, py, r.uniform(1.0, 2.2), 0.3, seed + 500 + int(rr))
-        layers.append((wet(d, 0.8) * 0.35, (1.0, 0.96, 0.82)))
+        px, py = cx + np.cos(a) * r.uniform(42, 60), cy + np.sin(a) * r.uniform(42, 60)
+        d = blob(px, py, r.uniform(1.0, 2.2), 0.4, seed + 500 + i)
+        layers.append((wet(d, 0.8) * 0.35, (0.40, 0.26, 0.10)))
     return compose(layers)
 
 
 def tears(seed):
+    """tears: small separate drops, each a thin dried rim round a middle that is only a shade cleaner, a few of
+    them running into a short streak. No pale disc: a tear does not bleach the paper, it leaves its edge."""
     r = np.random.default_rng(seed)
     layers = []
-    for i, (px, py, rad) in enumerate(((C * 0.30, C * 0.34, 30), (C * 0.66, C * 0.52, 22), (C * 0.40, C * 0.74, 17))):
-        sd = blob(px, py, rad, 0.55, seed + i * 11)
-        dist_in = np.clip(sd, 0, None)
-        rim = np.exp(-dist_in / 2.6) * smoothstep(-1.0, 1.2, sd)
-        gap = smoothstep(0.38, 0.52, fbm(seed + 90 + i, 6, 3))       # the ring breaks where it dried unevenly
-        layers.append((wet(sd, 1.2) * 0.13, (1.0, 0.95, 0.80)))        # the middle is a little paler
-        layers.append((rim * (0.10 + 0.36 * gap), (0.46, 0.30, 0.12)))  # the dried rim
-        # a faint outer halo
-        halo = np.exp(-np.clip(-sd, 0, None) / 5.0) * (sd < 0)
-        layers.append((halo * 0.10, (0.50, 0.34, 0.14)))
+    drops = []
+    # a falling track from top left to bottom right, drops growing and thinning out
+    for i in range(6):
+        t = i / 5
+        drops.append((C * (0.22 + 0.55 * t) + r.uniform(-9, 9), C * (0.18 + 0.62 * t) + r.uniform(-9, 9),
+                      r.uniform(13, 21) if i % 2 == 0 else r.uniform(8, 13)))
+    for i, (px, py, rad) in enumerate(drops):
+        sd = blob(px, py, rad, 0.45, seed + i * 11)
+        inside = smoothstep(-0.5, 1.5, sd)
+        rim = np.exp(-np.clip(sd, 0, None) / 2.2) * inside
+        gap = smoothstep(0.34, 0.50, fbm(seed + 90 + i, 6, 3))
+        layers.append((inside * 0.05, (0.50, 0.34, 0.14)))                    # a shade darker inside, not paler
+        layers.append((rim * (0.20 + 0.50 * gap), (0.44, 0.28, 0.10)))          # the dried rim, broken
+        # a faint dust halo just outside: the water carried a little dirt to its edge
+        halo = np.exp(-np.clip(-sd, 0, None) / 2.5) * (sd < 0)
+        layers.append((halo * 0.12, (0.50, 0.34, 0.14)))
+        if i in (1, 3):
+            # a streak running down from the drop
+            for k in range(int(rad * 3.5)):
+                tt = k / (rad * 3.5)
+                d = blob(px + np.sin(k * 0.2) * 0.8, py + rad + k, 1.6 * (1 - 0.6 * tt) + 0.4, 0.1, seed + 300 + i * 5 + k % 3)
+                layers.append((wet(d, 0.8) * (0.22 * (1 - tt)), (0.46, 0.30, 0.12)))
     return compose(layers)
 
 
