@@ -164,7 +164,8 @@ UI.ICONS = {
 
 function UI.Icon(key)
     local list = UI.ICONS[key]
-    return list and UI.Pick(list) or UI.Pick(UI.ICONS.journal)
+    -- never nil: the result is joined into texture strings ("|T" .. icon .. "|t")
+    return list and UI.Pick(list) or UI.Pick(UI.ICONS.journal) or UI.ICONS.journal[1]
 end
 
 -- first existing icon of a list of bare icon names ("INV_Misc_Map_01"), else an icon key

@@ -72,7 +72,7 @@ local function Tick(el)
         local dx, dy = wx - lastPos.wx, wy - lastPos.wy
         local dist = sqrt(dx * dx + dy * dy)
         if dist < 600 then
-            if UnitOnTaxi("player") then
+            if onTaxi then
                 d.flown = (d.flown or 0) + dist
             else
                 d.steps = d.steps + dist

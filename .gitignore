@@ -4,3 +4,6 @@ release/*.zip
 # internal review notes
 Lektorat.md
 UX-Review.md
+
+# Python caches
+__pycache__/
