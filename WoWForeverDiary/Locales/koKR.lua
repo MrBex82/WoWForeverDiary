@@ -404,7 +404,6 @@ L["in %s, on the first day of my life"] = "%s에서, 내 생애 첫날에"
 L["of"] = "기록자"
 
 -- book pages (diary, appendix)
-L["\"Whoever wanders, gathers stories.\""] = "\"떠도는 자는 이야기를 모은다.\""
 L["Arrival in %s"] = "%s 도착"
 L["Days in %s"] = "%s에서의 나날"
 L["Shadows over %s"] = "%s에 드리운 그림자"

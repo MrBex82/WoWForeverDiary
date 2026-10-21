@@ -409,7 +409,6 @@ L["in %s, on the first day of my life"] = "%s, no primeiro dia da minha vida"
 L["of"] = "de"
 
 -- book pages (diary, appendix)
-L["\"Whoever wanders, gathers stories.\""] = "\"Quem viaja, coleciona histórias.\""
 L["Arrival in %s"] = "Chegada: %s"
 L["Days in %s"] = "Dias de viagem: %s"
 L["Shadows over %s"] = "Sombras sobre %s"

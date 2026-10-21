@@ -1,2 +1,6 @@
 # build results: made from the WoWForeverDiary folder for each release
 release/*.zip
+
+# internal review notes
+Lektorat.md
+UX-Review.md

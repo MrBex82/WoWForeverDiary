@@ -1,6 +1,6 @@
 # ENGLISH
 
-> **🚧 Work in progress:** This addon is still being actively built. Things can change between versions, and now and then something may not work as it should. Your diary is kept safe across updates. If you notice anything, please leave a comment, it helps a lot.
+> **Work in progress:** This addon is still being actively built. Things can change between versions, and now and then something may not work as it should. Your diary is kept safe across updates. If you notice anything, please leave a comment, it helps a lot.
 
 **WoW Forever Diary** keeps a diary for your character, and you don't have to do anything for it. Log in, play, and the addon writes down what happened. At the end of the day there's an entry in plain sentences, like "Today I helped three people in Elwynn Forest, lost 40 copper to a vendor and died once to a Defias Pillager", instead of a table of numbers.
 
@@ -28,18 +28,18 @@ I made it because I never remember later where I first met someone, which quest 
 - **Angler's log:** everything the line brings up, collected on cards by water, with a page for your waters and tackle
 - **Treasures:** every notable find, sorted by kind (head, chest, legs, weapons, recipes ...), with a doll showing your best find for every slot and a tick on what you're wearing
 - **Quest book and statistics:** including the gold flow
-- **Honours:** a collection with bronze to legend tiers, some of them secret, including fishing, first aid and cooking. There are small daily tasks and a bigger weekly one
+- **Honours:** a collection with bronze to legend tiers, some of them secret, including fishing, first aid and cooking. There are small daily tasks, a bigger weekly one and a task of the month, all on one page
 - **Time capsules:** write a letter to yourself that stays sealed until a certain day or level
 - **Family book:** an overview of all your characters on the account and who got where first
 - **Search** across everything in the book (Ctrl + F)
 - **Export** as text or JSON if you want your diary somewhere else
 - **Moving to a new PC:** a moving code takes the whole diary of a character to another computer ("/wfd export" and "/wfd import")
 
-The parts of the book are grouped by theme. Each group has one tab in its own colour, which opens an overview of its parts.
+The parts of the book are grouped by theme. Each group has one tab in its own colour, which opens an overview of its parts. Point at a tab and a list of its parts opens beside it, so you can jump straight to one.
 
 Small notes slide in when something worth remembering happens (a right-click puts them away), and you get a look back at the week. If you like, a small companion window beside the game (the introduction offers it) shows today's figures, your tasks and the honours and creatures closest to their next step.
 
-The book comes in three styles (leather and gold, modern, strong contrast) and the writing can be made larger.
+The book comes in four styles (leather and gold, parchment, modern, strong contrast) and the writing can be made larger. The parchment style uses the light paper of the game's own quest frames, with torn edges and the stains of a hard life in its margins.
 
 ## Usage
 
@@ -47,11 +47,13 @@ The book comes in three styles (leather and gold, modern, strong contrast) and t
 
 - Arrow keys and Page up/down turn the pages while the mouse is over the book; Home goes to the contents, End to today, Backspace back
 - Ctrl + mouse wheel changes the size of the book, and it remembers where you put it
-- Click a page number to jump to any page; click the folded corner of a page to set your own bookmark
+- Click a page number to jump to any page; click the folded corner of a page to set your own bookmark (twelve, each with a name)
+- A line at the top of each page shows where you are; the steps before are links. "Continue reading" on the Today page leads back to where you stopped
 - Ctrl + F searches the book; arrow keys and Enter pick a result
 - The tabs show a red dot with what's new since you last read, and their names when you point at them
 - Notifications can be set to all, important only, or quiet. All settings are also under Options > AddOns
 
+- "/wfd bestiary", "/wfd honour", "/wfd ledger", "/wfd settings" and so on open the book at that part, "/wfd 12" at day 12
 - "/wfd demo" fills the book with sample data, only in memory, so you can look around before you have a real diary
 - "/wfd shot" turns screenshots at milestones on or off
 - "/wfd minimap" shows or hides the minimap button
@@ -68,7 +70,7 @@ The book comes in three styles (leather and gold, modern, strong contrast) and t
 
 # DEUTSCH
 
-> **🚧 Work in Progress:** Dieses Addon wird noch aktiv weiterentwickelt. Zwischen den Versionen kann sich einiges ändern, und hin und wieder funktioniert vielleicht etwas noch nicht wie gedacht. Dein Tagebuch bleibt bei Updates erhalten. Wenn dir etwas auffällt, schreib gern einen Kommentar, das hilft sehr.
+> **Work in Progress:** Dieses Addon wird noch aktiv weiterentwickelt. Zwischen den Versionen kann sich einiges ändern, und hin und wieder funktioniert vielleicht etwas noch nicht wie gedacht. Dein Tagebuch bleibt bei Updates erhalten. Wenn dir etwas auffällt, schreib gern einen Kommentar, das hilft sehr.
 
 **WoW Forever Diary** führt ein Tagebuch für deinen Charakter, ohne dass du etwas dafür tun musst. Einloggen, spielen, und das Addon schreibt mit. Am Ende des Tages steht ein Eintrag in ganz normalen Sätzen da, zum Beispiel "Heute habe ich drei Leuten im Wald von Elwynn geholfen, 40 Kupfer an einen Händler verloren und bin einmal an einem Defias-Räuber gestorben", statt einer Tabelle voller Zahlen.
 
@@ -96,18 +98,18 @@ Ich habe es gebaut, weil ich mir später nie merke, wo ich jemanden zum ersten M
 - **Anglerbuch:** alles, was die Angel heraufholt, auf Karten gesammelt und nach Gewässern sortiert, mit einer Seite für Gewässer und Angelzeug
 - **Schätze:** jeder bemerkenswerte Fund, nach Art sortiert (Kopf, Brust, Beine, Waffen, Rezepte ...), mit einer Ausrüstungspuppe, die deinen besten Fund für jeden Platz zeigt, und einem Häkchen an dem, was du gerade trägst
 - **Questbuch und Statistik:** inklusive Gold-Fluss
-- **Ehrungen:** eine Sammlung mit Stufen von Bronze bis Legende, einige davon geheim, auch für Angeln, Erste Hilfe und Kochen. Dazu kleine Tagesaufgaben und eine größere Wochenaufgabe
+- **Ehrungen:** eine Sammlung mit Stufen von Bronze bis Legende, einige davon geheim, auch für Angeln, Erste Hilfe und Kochen. Dazu kleine Tagesaufgaben, eine größere Wochenaufgabe und eine Monatsaufgabe, alle auf einer Seite
 - **Zeitkapseln:** schreib dir selbst einen Brief, der bis zu einem bestimmten Tag oder Level versiegelt bleibt
 - **Familienbuch:** alle Charaktere deines Accounts im Überblick, und wer was zuerst geschafft hat
 - **Suche** durch alles, was im Buch steht (Strg + F)
 - **Export** als Text oder JSON, falls du dein Tagebuch woanders haben willst
 - **Umzug auf einen neuen PC:** ein Umzugs-Code nimmt das ganze Tagebuch eines Charakters auf einen anderen Rechner mit („/wfd export“ und „/wfd import“)
 
-Die Teile des Buches sind nach Themen gruppiert. Jede Gruppe hat einen Reiter in ihrer eigenen Farbe, der eine Übersicht ihrer Teile öffnet.
+Die Teile des Buches sind nach Themen gruppiert. Jede Gruppe hat einen Reiter in ihrer eigenen Farbe, der eine Übersicht ihrer Teile öffnet. Zeigst du auf einen Reiter, klappt daneben eine Liste seiner Teile auf, und ein Klick führt dich direkt hin.
 
 Wenn etwas Erinnerungswürdiges passiert, rutscht eine kleine Notiz ins Bild (ein Rechtsklick legt sie weg), und einmal pro Woche gibt es einen Rückblick. Wenn du magst, zeigt ein kleines Begleitfenster neben dem Spiel (die Einführung bietet es an) die Zahlen von heute, deine Aufgaben und die Ehrungen und Kreaturen, die ihrem nächsten Schritt am nächsten sind.
 
-Das Buch gibt es in drei Stilen (Leder und Gold, Modern, starker Kontrast), und die Schrift lässt sich vergrößern.
+Das Buch gibt es in vier Stilen (Leder und Gold, Pergament, Modern, starker Kontrast), und die Schrift lässt sich vergrößern. Der Stil Pergament nutzt das helle Papier der Questfenster des Spiels, mit zerrissenen Rändern und den Flecken eines harten Lebens in den Rändern.
 
 ## Bedienung
 
@@ -115,11 +117,13 @@ Das Buch gibt es in drei Stilen (Leder und Gold, Modern, starker Kontrast), und 
 
 - Pfeiltasten und Bild auf/ab blättern, solange die Maus über dem Buch ist; Pos1 führt zum Inhalt, Ende zum heutigen Tag, die Rücktaste zurück
 - Strg + Mausrad ändert die Größe des Buches, und es merkt sich, wo du es hingeschoben hast
-- Ein Klick auf die Seitenzahl springt zu jeder beliebigen Seite, ein Klick auf das Eselsohr einer Seite setzt ein eigenes Lesezeichen
+- Ein Klick auf die Seitenzahl springt zu jeder beliebigen Seite, ein Klick auf das Eselsohr einer Seite setzt ein eigenes Lesezeichen (zwölf, jedes mit Namen)
+- Eine Zeile oben auf jeder Seite zeigt, wo du bist, die Schritte davor sind Links. „Weiterlesen“ auf der Heute-Seite führt dahin zurück, wo du aufgehört hast
 - Strg + F durchsucht das Buch; Pfeiltasten und Enter wählen einen Treffer
 - Die Reiter zeigen mit einem roten Punkt, was seit dem letzten Lesen neu ist, und ihre Namen, wenn du auf sie zeigst
 - Meldungen lassen sich auf alle, nur Wichtiges oder still stellen. Alle Einstellungen gibt es auch unter Optionen > AddOns
 
+- „/wfd bestiarium“, „/wfd ehrenbuch“, „/wfd kassenbuch“, „/wfd einstellungen“ und so weiter öffnen das Buch gleich an dem Teil, „/wfd 12“ am Tag 12
 - „/wfd demo“ füllt das Buch mit Beispieldaten, nur im Speicher, damit du dich umsehen kannst, bevor du ein echtes Tagebuch hast
 - „/wfd shot“ schaltet Screenshots bei Meilensteinen an oder aus
 - „/wfd minimap“ blendet den Minimap-Button ein oder aus

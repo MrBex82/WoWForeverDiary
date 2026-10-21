@@ -6,12 +6,19 @@ local L = WFD.L
 local c = UI.c
 local col4 = UI.col4
 local floor, max, min, format = math.floor, math.max, math.min, string.format
+local unpack = unpack or table.unpack
 
 local W = 252
 local ROW = 20
 local comp
 
-local BG, LINE, HEAD = { 0.045, 0.05, 0.06, 0.90 }, { 1, 1, 1, 0.09 }, { 1, 1, 1, 0.05 }
+local BG = { 0.045, 0.05, 0.06, 0.90 }
+
+-- lines, tracks and highlights: light veils on the dark window, dark brown ink on the parchment of that look
+local function veil(a)
+    if UI.THEME == "parchment" then return { 0.28, 0.16, 0.05, min(1, a * 3.2) } end
+    return { 1, 1, 1, a }
+end
 
 local function pageOf(kind)
     return function(book)
@@ -39,7 +46,7 @@ local function newRow(parent)
     r.hl = r:CreateTexture(nil, "BACKGROUND")
     r.hl:SetTexture(UI.WHITE)
     r.hl:SetAllPoints()
-    r.hl:SetVertexColor(1, 1, 1, 0.06)
+    r.hl:SetVertexColor(unpack(veil(0.06)))
     r.hl:Hide()
     r.mark = UI.Fill(r, c.redInk, "ARTWORK", 0)
     r.mark:SetSize(4, 4)
@@ -48,7 +55,8 @@ local function newRow(parent)
     r.label:SetPoint("LEFT", 12, 1)
     r.value = text(r, 11, c.inkSoft, "RIGHT")
     r.value:SetPoint("RIGHT", -2, 1)
-    r.track = UI.Fill(r, { 1, 1, 1 }, "ARTWORK", 0, 0.08)
+    local tv = veil(0.08)
+    r.track = UI.Fill(r, tv, "ARTWORK", 0, tv[4])
     r.track:SetHeight(2)
     r.track:SetPoint("BOTTOMLEFT", 12, 1)
     r.track:SetPoint("BOTTOMRIGHT", -2, 1)
@@ -93,7 +101,7 @@ end
 
 local function caption(parent)
     local t = text(parent, 10, c.redInk, "LEFT")
-    local ln = UI.Fill(parent, LINE, "ARTWORK", 0)
+    local ln = UI.Fill(parent, veil(0.09), "ARTWORK", 0)
     ln:SetHeight(1)
     ln:SetPoint("LEFT", t, "RIGHT", 6, 0)
     ln:SetPoint("RIGHT", parent, "RIGHT", -10, 0)
@@ -107,7 +115,16 @@ local function build()
     f:SetClampedToScreen(true)
     f:SetMovable(true)
     f:EnableMouse(true)
-    UI.Backdrop(f, nil, 1, 0, BG, LINE)
+    if UI.THEME == "parchment" then
+        -- the game's own quest paper with its torn border, a little larger than the window
+        local q = f:CreateTexture(nil, "BACKGROUND", nil, 0)
+        q:SetTexture("Interface\\QuestFrame\\QuestBG")
+        q:SetTexCoord(0, 0.586, 0, 0.654)
+        q:SetPoint("TOPLEFT", -10, 10)
+        q:SetPoint("BOTTOMRIGHT", 10, -10)
+    else
+        UI.Backdrop(f, nil, 1, 0, BG, veil(0.09))
+    end
     local p = WFD.S.compPos
     if p then f:SetPoint(p[1], UIParent, p[2], p[3], p[4]) else f:SetPoint("RIGHT", UIParent, "RIGHT", -40, 120) end
 
@@ -123,7 +140,7 @@ local function build()
         local a, _, b, x, y = f:GetPoint(1)
         WFD.S.compPos = { a, b, x, y }
     end)
-    local hb = UI.Fill(head, HEAD, "BACKGROUND", 0)
+    local hb = UI.Fill(head, veil(0.05), "BACKGROUND", 0)
     hb:SetAllPoints()
     local icon = head:CreateTexture(nil, "ARTWORK")
     icon:SetTexture(UI.Icon("journal"))

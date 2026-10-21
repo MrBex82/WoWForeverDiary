@@ -407,7 +407,6 @@ L["in %s, on the first day of my life"] = "於%s，在我生命的第一天"
 L["of"] = "記錄者"
 
 -- book pages (diary, appendix)
-L["\"Whoever wanders, gathers stories.\""] = "「行萬里路，拾萬般故事。」"
 L["Arrival in %s"] = "抵達%s"
 L["Days in %s"] = "%s的日子"
 L["Shadows over %s"] = "籠罩%s的陰影"

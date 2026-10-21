@@ -15,9 +15,16 @@ from pathlib import Path
 LOCALES = Path(__file__).resolve().parent.parent / "WoWForeverDiary" / "Locales"
 LANGS = ["deDE", "esES", "frFR", "koKR", "ptBR", "ruRU", "zhTW"]
 
-STR = r'"((?:[^"\\]|\\.)*)"'
+# a Lua string in double or single quotes (some texts hold quotation marks and use single quotes)
+DQ = r'"((?:[^"\\]|\\.)*)"'
+SQ = r"'((?:[^'\\]|\\.)*)'"
+STR = "(?:" + DQ + "|" + SQ + ")"
 ENTRY = re.compile(r'(?<!\w)(?:L)?\[\s*' + STR + r'\s*\]\s*=\s*' + STR)
 PLACEHOLDER = re.compile(r"%(?:\d+\$)?[ds]")
+
+
+def unescape(s):
+    return s.replace('\\"', '"').replace("\\'", "'")
 
 
 def entries(lang):
@@ -25,7 +32,9 @@ def entries(lang):
     text = re.sub(r"(?m)^\s*--.*$", "", text)
     found = []
     for m in ENTRY.finditer(text):
-        found.append((m.group(1), m.group(2)))
+        key = m.group(1) if m.group(1) is not None else m.group(2)
+        val = m.group(3) if m.group(3) is not None else m.group(4)
+        found.append((unescape(key), val))
     return found
 
 
