@@ -455,10 +455,24 @@ function UI.Page(parent, w, h, spine)
         return p
     end
     -- the painted leaf (Media\page.tga, seamless), repeated at its own size; grain drawn by hand without it
-    local hasLeaf = UI.TiledArt(p, UI.PAGE_ART, "BACKGROUND", 1) ~= nil
+    local light = UI.THEME == "parchment"      -- light parchment: softer shadows, no warm glow
+    local hasLeaf
+    if light then
+        -- the quest paper of the game itself (Interface\QuestFrame\QuestBG): the inner part of its parchment,
+        -- left out of its torn border
+        local q = p:CreateTexture(nil, "BACKGROUND", nil, 1)
+        q:SetTexture("Interface\\QuestFrame\\QuestBG")
+        q:SetTexCoord(0.03, 0.55, 0.03, 0.61)
+        q:SetAllPoints()
+        hasLeaf = true
+    else
+        hasLeaf = UI.TiledArt(p, UI.PAGE_ART, "BACKGROUND", 1) ~= nil
+    end
     -- a little warmer light in the middle of the leaf
-    local glow = UI.GradRect(p, "VERTICAL", { 0.05, 0.03, 0.02, 0.35 }, { 0.36, 0.25, 0.15, 0.30 }, "BACKGROUND", 2)
-    glow:SetAllPoints()
+    if not light then
+        local glow = UI.GradRect(p, "VERTICAL", { 0.05, 0.03, 0.02, 0.35 }, { 0.36, 0.25, 0.15, 0.30 }, "BACKGROUND", 2)
+        glow:SetAllPoints()
+    end
     -- leather grain
     if not hasLeaf then UI.Grain(p, { 0.55, 0.38, 0.22 }, 0.18, "BACKGROUND", 3) end
     -- strong contrast: the leaf darkened, so the writing stands out
@@ -468,14 +482,15 @@ function UI.Page(parent, w, h, spine)
     end
     -- darkened edges
     local k = min(1, h / 300)
-    UI.EdgeFade(p, "TOP", max(8, 34 * k), c.paperBurn, 0.45 * max(0.6, k), "BORDER", 0)
-    UI.EdgeFade(p, "BOTTOM", max(8, 40 * k), c.paperBurn, 0.55 * max(0.6, k), "BORDER", 0)
-    UI.EdgeFade(p, spine == "left" and "RIGHT" or "LEFT", 38, c.paperBurn, 0.50, "BORDER", 0)
-    if not spine then UI.EdgeFade(p, "RIGHT", 38, c.paperBurn, 0.50, "BORDER", 0) end
+    local edge = light and 0.55 or 1       -- the light leaf burns less at its edges
+    UI.EdgeFade(p, "TOP", max(8, 34 * k), c.paperBurn, 0.45 * max(0.6, k) * edge, "BORDER", 0)
+    UI.EdgeFade(p, "BOTTOM", max(8, 40 * k), c.paperBurn, 0.55 * max(0.6, k) * edge, "BORDER", 0)
+    UI.EdgeFade(p, spine == "left" and "RIGHT" or "LEFT", 38, c.paperBurn, 0.50 * edge, "BORDER", 0)
+    if not spine then UI.EdgeFade(p, "RIGHT", 38, c.paperBurn, 0.50 * edge, "BORDER", 0) end
     -- the bend into the spine
     if spine then
-        UI.EdgeFade(p, spine == "left" and "LEFT" or "RIGHT", 70, { 0, 0, 0 }, 0.60, "BORDER", 1)
-        UI.EdgeFade(p, spine == "left" and "LEFT" or "RIGHT", 6, { 0, 0, 0 }, 0.7, "BORDER", 2)
+        UI.EdgeFade(p, spine == "left" and "LEFT" or "RIGHT", 70, { 0, 0, 0 }, light and 0.38 or 0.60, "BORDER", 1)
+        UI.EdgeFade(p, spine == "left" and "LEFT" or "RIGHT", 6, { 0, 0, 0 }, light and 0.45 or 0.7, "BORDER", 2)
     end
     -- thin gold hairline inside the edge, and a dark outline
     if h >= 120 then
@@ -1079,6 +1094,15 @@ function UI.ClassColor(classFile)
     local col = classFile and RAID_CLASS_COLORS and RAID_CLASS_COLORS[classFile]
     if col then return { col.r, col.g, col.b, 1 } end
     return c.gold
+end
+
+-- the colour of a metal or a rarity as a hex code for written text; on the light parchment it is darkened,
+-- else gold and silver would vanish on the paper
+function UI.InkHex(col)
+    if UI.THEME == "parchment" then
+        return string.format("%02x%02x%02x", floor(col[1] * 140), floor(col[2] * 140), floor(col[3] * 140))
+    end
+    return string.format("%02x%02x%02x", floor(col[1] * 255), floor(col[2] * 255), floor(col[3] * 255))
 end
 
 function UI.Hex(col)

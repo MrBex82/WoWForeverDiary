@@ -5,7 +5,7 @@ local ADDON, WFD = ...
 local UI = WFD.UI
 local c = UI.c
 
-UI.THEMES = { "codex", "modern", "contrast" }
+UI.THEMES = { "codex", "parchment", "modern", "contrast" }
 local PALETTES = {
     modern = {
         ink = { 0.94, 0.95, 0.97 }, inkSoft = { 0.74, 0.77, 0.82 }, inkFaint = { 0.56, 0.60, 0.66 },
@@ -14,6 +14,12 @@ local PALETTES = {
         leather = { 0.075, 0.08, 0.095 }, leatherHi = { 0.15, 0.16, 0.19 }, leatherLo = { 0.03, 0.03, 0.04 },
         gold = { 0.62, 0.80, 1.00 }, goldDk = { 0.36, 0.52, 0.72 }, cream = { 0.95, 0.96, 0.98 },
         black = { 0.05, 0.055, 0.065 },
+    },
+    -- light quest parchment inside the dark leather binding: dark ink, the gold stays on the binding
+    parchment = {
+        ink = { 0.16, 0.09, 0.04 }, inkSoft = { 0.30, 0.20, 0.10 }, inkFaint = { 0.43, 0.31, 0.18 },
+        redInk = { 0.52, 0.09, 0.05 }, bad = { 0.64, 0.13, 0.09 }, good = { 0.16, 0.40, 0.10 },
+        paper = { 0.885, 0.775, 0.570 }, paperDk = { 0.55, 0.40, 0.22 }, paperBurn = { 0.30, 0.17, 0.06 },
     },
     contrast = {
         ink = { 1, 1, 1 }, inkSoft = { 0.94, 0.92, 0.87 }, inkFaint = { 0.84, 0.81, 0.74 },

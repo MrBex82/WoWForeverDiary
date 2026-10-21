@@ -409,7 +409,9 @@ function UI:TurnSweep(dir)
         sheet = CreateFrame("Frame", nil, self.bookFrame)
         sheet.base = UI.Fill(sheet, c.paper, "ARTWORK", 0)
         sheet.base:SetAllPoints()
-        if UI.THEME ~= "modern" then sheet.art = UI.TiledArt(sheet, UI.PAGE_ART, "ARTWORK", 1) end
+        if UI.THEME ~= "modern" then
+            sheet.art = UI.TiledArt(sheet, UI.PAGE_ART, "ARTWORK", 1)
+        end
         sheet.shade = sheet:CreateTexture(nil, "ARTWORK", nil, 2)
         sheet.shade:SetAllPoints()
         sheet.dark = UI.Fill(sheet, { 0, 0, 0 }, "ARTWORK", 3, 0)
@@ -757,7 +759,7 @@ end)
 ------------------------------------------------------------------------
 -- The page of the look: the style of the book, the size of the writing, the companion
 ------------------------------------------------------------------------
-local THEME_NAMES = { codex = "Leather and gold", modern = "Modern", contrast = "Strong contrast" }
+local THEME_NAMES = { codex = "Leather and gold", parchment = "Parchment", modern = "Modern", contrast = "Strong contrast" }
 local SIZES = { 1, 1.1, 1.2 }
 local function setAndReload(key, value)
     WFD.S[key] = value
@@ -808,6 +810,7 @@ UI:RegisterRenderer("appearance", function(pool, page, side, canvas)
     end
     links(items)
     small(L["Leather and gold is the old book. Modern is flat and calm, strong contrast makes all writing brighter."])
+    small(L["Parchment is bright, like old quest paper."])
 
     caption(L["Size of the writing"])
     items = {}

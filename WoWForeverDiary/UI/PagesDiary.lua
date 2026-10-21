@@ -341,7 +341,7 @@ end
 local function redFirstSentence(text)
     local s, e = text:find("^.-[%.!%?]%s")
     if s and e <= 60 then
-        return "|cffe8c26a" .. text:sub(1, e - 1) .. "|r" .. text:sub(e)
+        return "|cff" .. (UI.THEME == "parchment" and UI.Hex(c.redInk) or "e8c26a") .. text:sub(1, e - 1) .. "|r" .. text:sub(e)
     end
     return text
 end
