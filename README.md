@@ -14,7 +14,7 @@ Den Ordner `WoWForeverDiary` nach `World of Warcraft\_classic_era_\Interface\Add
 | Befehl | Wirkung |
 |---|---|
 | `/wfd` (oder `/diary`, `/tagebuch`) | Tagebuch öffnen oder schließen, auch über den Minimap-Button |
-| `/wfd bestiarium`, `/wfd ehrenbuch`, `/wfd kassenbuch`, `/wfd einstellungen` ... | Das Buch gleich an diesem Teil öffnen (englisch geht auch: `bestiary`, `honour`, `ledger`, `settings`) |
+| `/wfd bestiarium`, `/wfd ehrenbuch`, `/wfd kassenbuch`, `/wfd einstellungen` ... | Das Buch gleich an diesem Teil öffnen (englisch geht auch: `bestiary`, `honour`, `ledger`, `settings`; `/wfd schicksal` oder `fate` für die Tode) |
 | `/wfd 12` | Das Buch am Tag 12 öffnen |
 | `/wfd demo` | Beispieldaten nur im Speicher, zum Anschauen der Oberfläche |
 | `/wfd shot` | Screenshots bei Meilensteinen an oder aus |
@@ -32,7 +32,7 @@ Im Buch, in Gruppen; jede Gruppe hat einen Reiter, der eine Übersicht ihrer Tei
 - **Ziele & Ruhm:** Aufgaben (Tag, Woche, Monat), Sammelalbum mit nächsten Zielen, Ehrenbuch
 - **Chronik:** Meilensteine, Erste Male, Rekorde, Stufen-Zeitstrahl, Galerie
 - **Die Welt:** Atlas, Karten mit Gebietschronik, Sehenswürdigkeiten, Fundorte, Dungeon-Berichte
-- **Jagd & Beute:** Bestiarium mit Steckbriefen, „Fast geschafft“ und Jagdkarte, Erzfeinde, Anglerbuch, Schätze mit Ausrüstungspuppe
+- **Jagd & Beute:** Bestiarium mit Steckbriefen, „Fast geschafft“ und Jagdkarte, Schicksal (jeder Tod auf der Karte, wo und gegen wen am häufigsten), Erzfeinde, Anglerbuch, Schätze mit Ausrüstungspuppe
 - **Leute & Geld:** Personen, Gefährten, Kassenbuch
 - **Andenken:** Familienbuch, Zeitkapsel
 - **Einstellungen:** eigener Reiter ganz unten, in vier Seiten (Allgemein, Bedienung, Tasten, Aussehen) mit Stil, Schriftgröße und Sprache

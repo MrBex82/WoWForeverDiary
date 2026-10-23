@@ -1309,3 +1309,20 @@ loc.narrator.jubilee = {
     hours = "Já são %d horas neste mundo. É muito chão.",
     level = "Já faz {um ano|%d anos} que cheguei ao nível %d.",
 }
+
+-- fate: every death
+L["Fate"] = "Destino"
+L["Every fall on the way"] = "Cada queda no caminho"
+L["Places of death"] = "Lugares de morte"
+L["Last death"] = "Última morte"
+L["None of the graves has a place on a map yet."] = "Nenhum túmulo tem ainda um lugar no mapa."
+L["Graves here: %d"] = "Túmulos aqui: %d"
+L["Where you fall most"] = "Onde você mais cai"
+L["Who defeated you most"] = "Quem mais te derrotou"
+L["Deaths by level"] = "Mortes por nível"
+L["Foe unknown: %d"] = "Inimigo desconhecido: %d"
+L["Every death"] = "Todas as mortes"
+L["Cause unknown"] = "Causa desconhecida"
+L["Group: %d"] = "Grupo: %d"
+L["Stubborn"] = "Teimoso"
+L["Defeat a foe that has defeated you three times."] = "Derrote um inimigo que te derrotou três vezes."

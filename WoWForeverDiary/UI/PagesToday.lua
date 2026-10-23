@@ -22,6 +22,7 @@ local EMPTY = {
     gathering = function(C) return next(C.gather or {}) == nil end,
     bestiary = function(C) return next(C.mobs or {}) == nil and next(C.sighted or {}) == nil end,
     nemesis = function(C) return next(C.nemesis or {}) == nil end,
+    fates = function() return #WFD:Fates() == 0 end,
     fishbook = function(C) return next(C.catch or {}) == nil end,
     companions = function(C) return next(C.companions or {}) == nil and next(C.traders or {}) == nil end,
     capsule = function(C) return #(C.capsules or {}) == 0 end,

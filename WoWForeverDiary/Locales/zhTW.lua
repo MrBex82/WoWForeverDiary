@@ -1307,3 +1307,20 @@ loc.narrator.jubilee = {
     hours = "在這個世界已經待了%d小時。走了好長一段路。",
     level = "%d年前的這個時候，我升到了%d級。",
 }
+
+-- fate: every death
+L["Fate"] = "命運"
+L["Every fall on the way"] = "旅途中的每一次倒下"
+L["Places of death"] = "死亡地點"
+L["Last death"] = "最近一次死亡"
+L["None of the graves has a place on a map yet."] = "還沒有任何墳墓標在地圖上。"
+L["Graves here: %d"] = "此處墳墓：%d"
+L["Where you fall most"] = "最常倒下的地方"
+L["Who defeated you most"] = "最常擊敗你的敵人"
+L["Deaths by level"] = "各等級的死亡"
+L["Foe unknown: %d"] = "敵人不明：%d"
+L["Every death"] = "所有死亡"
+L["Cause unknown"] = "原因不明"
+L["Group: %d"] = "隊伍：%d人"
+L["Stubborn"] = "不屈"
+L["Defeat a foe that has defeated you three times."] = "擊敗一個曾三次擊敗你的敵人。"

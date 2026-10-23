@@ -39,6 +39,7 @@ Modules\Retell.lua
 Modules\Rename.lua
 Modules\Tracker_Path.lua
 Modules\Tracker_Kills.lua
+Modules\Fates.lua
 Modules\Creatures.lua
 Modules\Tracker_NPC.lua
 Modules\Tracker_Quests.lua
@@ -68,6 +69,7 @@ UI\PagesToday.lua
 UI\PagesDiary.lua
 UI\PagesAppendix.lua
 UI\PagesBestiary.lua
+UI\PagesFate.lua
 UI\PagesFishing.lua
 UI\PagesExtra.lua
 UI\PagesExplore.lua

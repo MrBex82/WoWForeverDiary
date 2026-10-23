@@ -240,6 +240,8 @@ WFD.HONOURS = {
       tiers = { 24, 100, 250, 500 }, icon = { "INV_Misc_PocketWatch_01" } },
     { key = "phoenix", cat = "adventure", name = "Phoenix", desc = "Die %d times and rise again.", m = "deaths",
       tiers = { 10, 50, 150 }, icon = { "Spell_Holy_Resurrection" } },
+    { key = "stubborn", cat = "adventure", name = "Stubborn", desc = "Defeat a foe that has defeated you three times.",
+      m = "revenge", tiers = { 1 }, icon = { "Ability_Warrior_Revenge", "INV_Misc_Bone_HumanSkull_01" } },
     { key = "crawler", cat = "adventure", name = "Dungeon Crawler", desc = "Finish %d dungeon runs.", m = "runs",
       tiers = { 3, 15, 40, 80 }, icon = { "INV_Misc_Key_04", "INV_Misc_Key_03" } },
     { key = "diligent", cat = "adventure", name = "Diligent", desc = "Do all tasks of the day on %d days.", m = "challengeDays",
@@ -325,6 +327,15 @@ function WFD:HonourMetrics()
         if (mob.kills or 0) >= WFD.STAGE_MASTER then m.connoisseur = m.connoisseur + 1 end
     end
     for _, z in pairs(C.zones or {}) do m.subzones = m.subzones + count(z.sub) end
+    -- foes that defeated you three times or more and fell to you after that
+    local slainLast = {}
+    for _, mob in pairs(C.mobs or {}) do
+        if mob.name and (mob.kills or 0) > 0 and mob.last then slainLast[mob.name] = max(slainLast[mob.name] or 0, mob.last) end
+    end
+    m.revenge = 0
+    for name, n in pairs(C.nemesis or {}) do
+        if (n.n or 0) >= 3 and n.last and slainLast[name] and slainLast[name] > n.last then m.revenge = m.revenge + 1 end
+    end
     for _, n in pairs(C.npcs or {}) do
         m.people = m.people + 1
         local r = n.roles or {}

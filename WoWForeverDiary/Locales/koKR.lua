@@ -1304,3 +1304,20 @@ loc.narrator.jubilee = {
     hours = "이 세상에서 보낸 시간이 벌써 %d시간이다. 꽤 먼 길을 왔다.",
     level = "%d년 전 이맘때 %d레벨에 도달했다.",
 }
+
+-- fate: every death
+L["Fate"] = "운명"
+L["Every fall on the way"] = "길 위의 모든 쓰러짐"
+L["Places of death"] = "죽은 장소"
+L["Last death"] = "마지막 죽음"
+L["None of the graves has a place on a map yet."] = "지도에 자리가 있는 무덤이 아직 없습니다."
+L["Graves here: %d"] = "이곳의 무덤: %d"
+L["Where you fall most"] = "가장 자주 쓰러진 곳"
+L["Who defeated you most"] = "나를 가장 많이 쓰러뜨린 적"
+L["Deaths by level"] = "레벨별 죽음"
+L["Foe unknown: %d"] = "알 수 없는 적: %d"
+L["Every death"] = "모든 죽음"
+L["Cause unknown"] = "원인 불명"
+L["Group: %d"] = "파티: %d명"
+L["Stubborn"] = "끈기"
+L["Defeat a foe that has defeated you three times."] = "나를 세 번 쓰러뜨린 적을 처치하세요."

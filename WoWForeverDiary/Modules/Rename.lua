@@ -160,6 +160,10 @@ local function applyAll(C)
     for _, s in pairs(C.sighted or {}) do s.z = rn(s.z) end
     for _, n in pairs(C.npcs or {}) do n.zone = rn(n.zone) end
     for _, n in pairs(C.nemesis or {}) do n.zone = rn(n.zone) end
+    for _, f in ipairs(C.fates or {}) do
+        f.zone = rn(f.zone)
+        f.by = rn(f.by)
+    end
     for _, q in pairs(C.quests or {}) do
         q.zone = rn(q.zone)
         q.giverName = rn(q.giverName)

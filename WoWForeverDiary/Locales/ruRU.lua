@@ -1317,3 +1317,20 @@ loc.narrator.jubilee = {
     hours = "%d часов в этом мире. Немало дорог пройдено.",
     level = "{Прошёл год|Прошло %d года|Прошло %d лет} с тех пор, как был достигнут уровень %d.",
 }
+
+-- fate: every death
+L["Fate"] = "Судьба"
+L["Every fall on the way"] = "Каждое падение в пути"
+L["Places of death"] = "Места гибели"
+L["Last death"] = "Последняя смерть"
+L["None of the graves has a place on a map yet."] = "Ни одна могила пока не отмечена на карте."
+L["Graves here: %d"] = "Могил здесь: %d"
+L["Where you fall most"] = "Где вы гибнете чаще всего"
+L["Who defeated you most"] = "Кто побеждал вас чаще всего"
+L["Deaths by level"] = "Смерти по уровням"
+L["Foe unknown: %d"] = "Противник неизвестен: %d"
+L["Every death"] = "Все смерти"
+L["Cause unknown"] = "Причина неизвестна"
+L["Group: %d"] = "Группа: %d"
+L["Stubborn"] = "Упорство"
+L["Defeat a foe that has defeated you three times."] = "Победите противника, который трижды побеждал вас."
