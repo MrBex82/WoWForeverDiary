@@ -250,12 +250,6 @@ UI:RegisterRenderer("map", function(pool, page, side, canvas)
         local x = tx + col * (colW + GAP_X)
         local ly = y - row * ROW_H
         local grave = it.kind == "grave"
-        -- faint card behind every other row keeps the columns readable
-        if row % 2 == 0 then
-            local band = pool:Rect(c.paperDk, 0.35)
-            band:SetSize(colW, ROW_H - 3)
-            band:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, ly + 2)
-        end
         local rim = pool:Circle(19, { 0.08, 0.04, 0.02, 1 }, "ARTWORK", 1)
         rim:SetPoint("CENTER", canvas, "TOPLEFT", x + 12, ly - 10)
         local dot = pool:Circle(15, grave and { 0.55, 0.04, 0.04, 1 } or { 0.80, 0.55, 0.12, 1 }, "ARTWORK", 2)
@@ -1376,7 +1370,7 @@ UI:RegisterSection({
                 page = book:Add({ kind = "ledger", rows = {}, numbered = true, head = L["Ledger"], facts = first and facts or nil })
                 y = HEAD_H + (first and FACTS_H or 0)
             end
-            page.rows[#page.rows + 1] = { y = y, h = 26, d = r, alt = (i % 2 == 0) }
+            page.rows[#page.rows + 1] = { y = y, h = 26, d = r }
             y = y + 26
         end
         if not page then book:Add({ kind = "ledger", rows = {}, numbered = true, head = L["Ledger"], empty = true }) end
@@ -1665,11 +1659,6 @@ UI:RegisterRenderer("ledger", function(pool, page, side, canvas)
     for _, r in ipairs(page.rows) do
         local y = rowTop - r.y
         local d = r.d
-        if r.alt then
-            local band = pool:Rect(c.paperDk, 0.35)
-            band:SetSize(tw, r.h)
-            band:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-        end
         -- a small diamond: green for a day with profit, red for a loss
         local net = d.inc - d.sp
         local mark = pool:Diamond(6, net > 0 and c.good or (net < 0 and c.bad or c.inkFaint))

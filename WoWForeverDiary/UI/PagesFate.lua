@@ -62,7 +62,7 @@ UI:RegisterSection({
         y = 34
         for i = #fates, 1, -1 do
             if y + ROW > UI.AREA_H then newPage() end
-            page.rows[#page.rows + 1] = { y = y, f = fates[i], alt = (i % 2 == 0) }
+            page.rows[#page.rows + 1] = { y = y, f = fates[i] }
             y = y + ROW
         end
     end,
@@ -265,11 +265,6 @@ UI:RegisterRenderer("fatelist", function(pool, page, side, canvas)
             UI.SectionHead(pool, canvas, tx, tw, y + 4, 32, L["Every death"], tostring(r.count))
         else
             local f = r.f
-            if r.alt then
-                local band = pool:Rect(c.paperDk, 0.35)
-                band:SetSize(tw, ROW - 3)
-                band:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 2)
-            end
             pool:Plaque(tx + 14, y - ROW / 2 + 2, 20, UI.Icon("skull"), GRAVE, true)
             local lv = pool:Text(11, c.inkSoft, UI.FONT, "RIGHT")
             lv:SetText(f.level and format(L["Level %d"], f.level) or "")

@@ -724,7 +724,7 @@ UI:RegisterSection({
         for name, t in pairs(C.traders or {}) do tr[#tr + 1] = { name = name, t = t } end
         table.sort(tr, function(a, b) return a.t.count > b.t.count end)
         list[#list + 1] = { h = 44, header = L["Trading partners"], count = tostring(#tr), keep = 28 }
-        for i, x in ipairs(tr) do list[#list + 1] = { h = 28, trade = x, alt = (i % 2 == 0) } end
+        for i, x in ipairs(tr) do list[#list + 1] = { h = 28, trade = x } end
         if #tr == 0 then list[#list + 1] = { h = 30, empty = L["No trades yet."] } end
         book:AddRows("companions", list, { head = L["Companions"] })
     end,
@@ -787,11 +787,6 @@ UI:RegisterRenderer("companions", function(pool, page, side, canvas)
             hot:SetSize(tw, r.h - 4)
         elseif r.trade then
             local t = r.trade.t
-            if r.alt then
-                local band = pool:Rect(c.paperDk, 0.35)
-                band:SetSize(tw, r.h)
-                band:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-            end
             local ic = pool:Icon(UI.IconPath({ "INV_Misc_Coin_02" }, "coin"), 18)
             ic:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 4, y - 5)
             local n = pool:Text(12, c.ink, UI.FONT)
