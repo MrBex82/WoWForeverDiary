@@ -738,6 +738,12 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
         { text = L["Important only"], active = level == "important", fn = function() S.notify = "important"; redraw() end },
         { text = L["Quiet"], active = level == "quiet", fn = function() S.notify = "quiet"; redraw() end },
     })
+    -- this day in an earlier year: on the Today page, and as a note at login
+    for _, ch in ipairs({ { L["A memory on the Today page"], "memoryPage" }, { L["A memory as a note at login"], "memoryToast" } }) do
+        local mc = pool:Check(ch[1], function() return S[ch[2]] end, function(v) S[ch[2]] = v end)
+        mc:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 2)
+        y = y - 22
+    end
     small(L["Important: levels, bosses, rare creatures and finds, dungeons, honours and letters."])
 
     caption(L["Companion"])
@@ -916,6 +922,8 @@ local function buildOptions()
         { L["Show minimap button"], "minimap", function() UI:UpdateMinimapButton() end },
         { L["Show a note for new discoveries"], "toasts" },
         { L["Weekly look back at login"], "recap" },
+        { L["A memory on the Today page"], "memoryPage" },
+        { L["A memory as a note at login"], "memoryToast" },
         { L["Show the cover when the book is first opened"], "cover" },
     }
     local boxes = {}

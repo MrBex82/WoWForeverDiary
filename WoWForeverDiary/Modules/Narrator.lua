@@ -131,6 +131,21 @@ local EN = {
         "All in all %s on my feet. More tomorrow.",
     },
     none = "There is no entry for this day.",
+    -- a day from an earlier year (or 30, 100, 365 days ago), told on the Today page
+    memory = {
+        years = "{A year ago today|%d years ago today}",
+        days = "%d days ago",
+        intro = {
+            "%s I was in %s.",
+            "%s my road led through %s.",
+        },
+        first = "And a first time: %s.",
+    },
+    jubilee = {
+        born = "It's been {a year|%d years} since I wrote the first page of this diary.",
+        hours = "%d hours in the world so far. That's a lot of road.",
+        level = "It's been {a year|%d years} since I reached level %d.",
+    },
 }
 
 -- The language is applied at ADDON_LOADED (after this file loads), so templates are looked up per call.
@@ -147,8 +162,13 @@ end
 
 -- A template that counts something: "{one|many}" picks the singular or plural wording for n,
 -- and the first %d is n (the singular may leave the number out: "{once|%d times}").
+-- Languages with three forms (Russian: 1 год, 2 года, 5 лет) write "{one|few|many}" and give loc.plural(n) -> 1, 2 or 3.
 local function counted(tpl, n, ...)
-    local s = tpl:gsub("{([^|{}]*)|([^|{}]*)}", n == 1 and "%1" or "%2")
+    local s = tpl:gsub("{([^|{}]*)|([^|{}]*)|([^|{}]*)}", function(one, few, many)
+        local form = WFD.loc.plural and WFD.loc.plural(n) or (n == 1 and 1 or 3)
+        return form == 1 and one or form == 2 and few or many
+    end)
+    s = s:gsub("{([^|{}]*)|([^|{}]*)}", n == 1 and "%1" or "%2")
     s = s:gsub("%%d", tostring(n), 1)
     return format(s, ...)
 end
@@ -407,4 +427,68 @@ function WFD:Narrate(idx)
         paras[#paras + 1] = pick(T.close, seed + 13)
     end
     return join(paras, "\n\n")
+end
+
+------------------------------------------------------------------------
+-- Memories and anniversaries (Modules\Anniversary.lua finds them, this tells them)
+------------------------------------------------------------------------
+-- m: { idx, years or days, kind, zone, ev, first, d } -> adds when, title and text
+function WFD:NarrateMemory(m)
+    local C = self.C
+    local T = templates()
+    local M = T.memory
+    local SPACE = self.loc.sentenceSep or " "
+    local seed = m.idx * 7 + (C.born % 13)
+    local d = m.d
+    local zone = m.zone or T.far
+    m.when = m.years and counted(M.years, m.years) or counted(M.days, m.days or 0)
+    local tpl = pick(M.intro, seed):gsub("<in>", (WFD:Place(zone, "in"):gsub("%%", "%%%%")))
+    local intro = format(tpl, m.when, zone)
+    local detail
+    if m.kind == "first" then
+        local def
+        for _, f in ipairs(self.FIRSTS or {}) do if f.key == m.first then def = f end end
+        local e = C.firsts[m.first]
+        m.title = def and L[def.label] or m.first
+        local what = (e and e.s and e.s ~= "") and (m.title .. " (" .. e.s .. ")") or m.title
+        detail = format(M.first, what)
+    elseif m.ev and m.ev.k == "level" and #(d.levels or {}) > 0 then
+        local lv = {}
+        for i, v in ipairs(d.levels) do lv[i] = tostring(v) end
+        m.title = m.ev.s
+        detail = format(pick(T.levels, seed + 11), listing(lv))
+    elseif m.ev then
+        m.title = m.ev.s
+        detail = format(T.special, moment(m.ev.s or ""))
+    elseif m.kind == "kills" then
+        m.title = format(L["%d kills"], d.killTotal)
+        detail = counted(pick(T.kills, seed + 2), d.killTotal)
+    elseif m.kind == "quests" then
+        local quotes = self.loc.quotes
+        local Q1, Q2 = quotes and quotes[1] or "\"", quotes and quotes[2] or "\""
+        local names, seen = {}, {}
+        for _, id in ipairs(d.qd) do
+            local q = C.quests[id]
+            local title = q and q.title
+            if title and not seen[title] and #names < 3 then
+                seen[title] = true
+                names[#names + 1] = Q1 .. title .. Q2
+            end
+        end
+        m.title = format(L["%d quests completed"], #d.qd)
+        detail = counted(pick(T.questDone, seed + 6), #d.qd, #names > 0 and listing(names) or "?")
+    else
+        m.title = zone
+        detail = format(pick(T.walk, seed + 1), self:Dec((d.steps or 0) * 0.9144 / 1000), "")
+    end
+    m.text = intro .. SPACE .. detail
+    return m
+end
+
+-- j: { kind = "born" | "hours" | "level", n, level }
+function WFD:NarrateJubilee(j)
+    local J = templates().jubilee
+    if j.kind == "hours" then return format(J.hours, j.n) end
+    if j.kind == "level" then return counted(J.level, j.n, j.level) end
+    return counted(J.born, j.n)
 end

@@ -1283,3 +1283,28 @@ L["The companion"] = "Le compagnon"
 L["A small window beside the game shows today's figures, the tasks and the honours closest to their next tier. You can switch it on and off in the settings."] = "Une petite fenêtre à côté du jeu montre les chiffres du jour, les tâches et les honneurs les plus proches de leur prochain palier. Vous pouvez l'activer ou la désactiver dans les réglages."
 L["Show it"] = "L'afficher"
 L["Names from the game (places, creatures, items) stay in the language of the game client."] = "Les noms venant du jeu (lieux, créatures, objets) restent dans la langue du client."
+
+-- memories and anniversaries
+L["A memory"] = "Souvenir"
+L["Read that day (day %d)"] = "Lire ce jour (jour %d)"
+L["The diary's birthday"] = "L'anniversaire du carnet"
+L["%d hours in the world"] = "%d heures dans ce monde"
+L["Anniversary"] = "Anniversaire"
+L["Nothing from earlier days to remember today."] = "Aucun souvenir d'un jour passé pour aujourd'hui."
+L["A memory on the Today page"] = "Un souvenir sur la page Aujourd'hui"
+L["A memory as a note at login"] = "Un souvenir en note à la connexion"
+L["show today's memory again"] = "afficher à nouveau le souvenir du jour"
+loc.narrator.memory = {
+    years = "{Il y a un an jour pour jour|Il y a %d ans jour pour jour}",
+    days = "Il y a %d jours",
+    intro = {
+        "%s, j'étais du côté de %s.",
+        "%s, la route me menait du côté de %s.",
+    },
+    first = "Et une première fois : %s.",
+}
+loc.narrator.jubilee = {
+    born = "Voilà {un an|%d ans} que j'ai écrit la première page de ce carnet.",
+    hours = "Déjà %d heures passées dans ce monde. Ça en fait, du chemin.",
+    level = "Voilà {un an|%d ans} que j'ai atteint le niveau %d.",
+}

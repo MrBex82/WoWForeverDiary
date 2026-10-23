@@ -321,6 +321,11 @@ local function describe(ev)
         d.kicker = L["Diary"]
         d.name = format(L["%d new moments"], ev.n or 0)
         d.hint = L["Click to open the diary."]
+    elseif ev.k == "memory" then
+        d.icon, d.col = UI.Icon(ev.jubilee and "honour" or "time"), c.gold
+        d.kicker = ev.when or L["A memory"]
+        d.name = ev.title or ""
+        d.hint = ev.hint or L["Click to read this day."]
     elseif ev.k == "capsule" then
         d.kicker = L["Time capsule"]
         d.name = L["A letter from the past has opened."]
@@ -371,11 +376,13 @@ function UI:NextToast()
     toast.phase, toast.t, toast.life = "in", 0, 0
     toast:SetAlpha(0)
     toast:Show()
+    if ev.quiet then return end
     UI.Sound(ev.k == "honour" and "IG_QUEST_LIST_COMPLETE" or "IG_ABILITY_PAGE_TURN", ev.k == "honour" and 878 or 836)
 end
 
-function UI:Toast(ev)
-    if not ev or (WFD.S and WFD.S.toasts == false) then return end
+-- force: shown even with the notes switched off (asked for with /wfd memory)
+function UI:Toast(ev, force)
+    if not ev or (WFD.S and WFD.S.toasts == false and not force) then return end
     queue[#queue + 1] = ev
     if not (toast and toast:IsShown()) then self:NextToast() end
 end
@@ -384,6 +391,45 @@ end
 WFD:OnSignal("milestone", function(ev)
     if ev.k == "kills" or WFD:IsDeathEvent(ev) then return end
     if not WFD.ShouldNotify or WFD:ShouldNotify(ev.k) then UI:Toast(ev) end
+end)
+
+------------------------------------------------------------------------
+-- A memory at login, without a sound: an anniversary once, otherwise this day in an earlier year once a day
+------------------------------------------------------------------------
+local JUBILEE_TITLE = { born = "The diary's birthday", hours = "%d hours in the world", level = "Level %d" }
+
+-- force: show it now, even if it was shown today or the notes are switched off
+function UI:ShowMemory(force)
+    local C, S = WFD.C, WFD.S
+    if not (C and S and WFD.OnThisDay) then return end
+    if not force and (WFD.paused or S.memoryToast == false or S.toasts == false or S.notify == "quiet") then return end
+    for _, j in ipairs(WFD:Jubilees()) do
+        if force or not j.shown then
+            WFD:JubileeShown(j)
+            local title = L[JUBILEE_TITLE[j.kind]]
+            if j.kind ~= "born" then title = format(title, j.kind == "level" and j.level or j.n) end
+            self:Toast({ k = "memory", jubilee = true, when = L["Anniversary"], title = title, hint = j.text,
+                day = j.idx, t = time(), quiet = true }, force)
+            return
+        end
+    end
+    local today = date("%Y-%m-%d")
+    if not force and C.memoryDay == today then return end
+    local m = WFD:OnThisDay()
+    if not m then
+        if force then print("|cffffd100WoW Forever Diary:|r " .. L["Nothing from earlier days to remember today."]) end
+        return
+    end
+    if not WFD.demo then C.memoryDay = today end
+    self:Toast({ k = "memory", when = m.when, title = m.title, day = m.idx, t = time(), quiet = true }, force)
+end
+
+WFD:OnInit(function()
+    if not (C_Timer and C_Timer.After) then return end
+    C_Timer.After(12, function()
+        local ok, err = pcall(UI.ShowMemory, UI, false)
+        if not ok then WFD:Error("memory", err) end
+    end)
 end)
 
 ------------------------------------------------------------------------

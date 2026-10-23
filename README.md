@@ -22,12 +22,13 @@ Den Ordner `WoWForeverDiary` nach `World of Warcraft\_classic_era_\Interface\Add
 | `/wfd recap` | Wochenrückblick anzeigen |
 | `/wfd help` | Befehle im Chat auflisten |
 | `/wfd companion` | Begleitfenster neben dem Spiel ein- oder ausblenden |
+| `/wfd erinnerung` (oder `memory`) | Die Erinnerung von heute noch einmal als Notiz zeigen |
 | `/wfd export`, `/wfd import` | Umzugs-Code für einen anderen Rechner erstellen oder einlesen |
 | `/wfd restore` | Ein beiseitegelegtes Tagebuch zurückholen |
 
 Im Buch, in Gruppen; jede Gruppe hat einen Reiter, der eine Übersicht ihrer Teile öffnet. Zeigst du auf den Reiter, klappt eine Liste seiner Teile auf:
 
-- **Vorne:** Inhalt, Heute (der Tag bis jetzt, Neues seit dem letzten Lesen, nächste Ziele), Tagebuch mit Kapiteln, Questbuch
+- **Vorne:** Inhalt, Heute (der Tag bis jetzt, eine Erinnerung an diesen Tag in einem früheren Jahr, Neues seit dem letzten Lesen, nächste Ziele), Tagebuch mit Kapiteln, Questbuch
 - **Ziele & Ruhm:** Aufgaben (Tag, Woche, Monat), Sammelalbum mit nächsten Zielen, Ehrenbuch
 - **Chronik:** Meilensteine, Erste Male, Rekorde, Stufen-Zeitstrahl, Galerie
 - **Die Welt:** Atlas, Karten mit Gebietschronik, Sehenswürdigkeiten, Fundorte, Dungeon-Berichte

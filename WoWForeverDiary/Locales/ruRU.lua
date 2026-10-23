@@ -1283,3 +1283,35 @@ L["The companion"] = "Спутник"
 L["A small window beside the game shows today's figures, the tasks and the honours closest to their next tier. You can switch it on and off in the settings."] = "Небольшое окно рядом с игрой показывает цифры за сегодня, задания и почести, ближе всего к следующей ступени. Его можно включить и выключить в настройках."
 L["Show it"] = "Показать"
 L["Names from the game (places, creatures, items) stay in the language of the game client."] = "Названия из игры (места, существа, предметы) остаются на языке игрового клиента."
+
+-- memories and anniversaries
+L["A memory"] = "Воспоминание"
+L["Read that day (day %d)"] = "Прочитать тот день (день %d)"
+L["The diary's birthday"] = "День рождения дневника"
+L["%d hours in the world"] = "%d часов в этом мире"
+L["Anniversary"] = "Годовщина"
+L["Nothing from earlier days to remember today."] = "На сегодня воспоминаний о прошлых днях нет."
+L["A memory on the Today page"] = "Воспоминание на странице «Сегодня»"
+L["A memory as a note at login"] = "Воспоминание-заметка при входе"
+L["show today's memory again"] = "снова показать воспоминание дня"
+-- 1 год, 2 года, 5 лет: "{one|few|many}" in the diary templates
+function loc.plural(n)
+    local a, b = n % 10, n % 100
+    if a == 1 and b ~= 11 then return 1 end
+    if a >= 2 and a <= 4 and (b < 12 or b > 14) then return 2 end
+    return 3
+end
+loc.narrator.memory = {
+    years = "{Ровно год назад|Ровно %d года назад|Ровно %d лет назад}",
+    days = "%d дней назад",
+    intro = {
+        "%s. Главное место дня — %s.",
+        "%s. Путь лежал по краю под названием %s.",
+    },
+    first = "И кое-что впервые: %s.",
+}
+loc.narrator.jubilee = {
+    born = "{Прошёл год|Прошло %d года|Прошло %d лет} с тех пор, как была написана первая страница этого дневника.",
+    hours = "%d часов в этом мире. Немало дорог пройдено.",
+    level = "{Прошёл год|Прошло %d года|Прошло %d лет} с тех пор, как был достигнут уровень %d.",
+}

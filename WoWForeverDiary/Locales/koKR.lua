@@ -1277,3 +1277,28 @@ L["The companion"] = "동반자 창"
 L["A small window beside the game shows today's figures, the tasks and the honours closest to their next tier. You can switch it on and off in the settings."] = "게임 옆의 작은 창에 오늘의 수치, 과제, 다음 단계에 가장 가까운 명예가 표시됩니다. 설정에서 켜고 끌 수 있습니다."
 L["Show it"] = "보이기"
 L["Names from the game (places, creatures, items) stay in the language of the game client."] = "게임에서 오는 이름(장소, 몬스터, 아이템)은 게임 클라이언트의 언어로 남습니다."
+
+-- memories and anniversaries
+L["A memory"] = "추억"
+L["Read that day (day %d)"] = "그날 읽기 (%d일째)"
+L["The diary's birthday"] = "일기의 생일"
+L["%d hours in the world"] = "이 세상에서 %d시간"
+L["Anniversary"] = "기념일"
+L["Nothing from earlier days to remember today."] = "오늘 떠올릴 지난날의 기록이 없습니다."
+L["A memory on the Today page"] = "오늘 페이지에 추억 표시"
+L["A memory as a note at login"] = "접속 시 추억 알림 표시"
+L["show today's memory again"] = "오늘의 추억 다시 보기"
+loc.narrator.memory = {
+    years = "%d년 전 오늘",
+    days = "%d일 전",
+    intro = {
+        "%s, 나는 %s에 있었다.",
+        "%s, 나는 %s 쪽을 걷고 있었다.",
+    },
+    first = "그리고 처음 해 본 일: %s.",
+}
+loc.narrator.jubilee = {
+    born = "이 일기의 첫 장을 쓴 지 벌써 %d년이 지났다.",
+    hours = "이 세상에서 보낸 시간이 벌써 %d시간이다. 꽤 먼 길을 왔다.",
+    level = "%d년 전 이맘때 %d레벨에 도달했다.",
+}

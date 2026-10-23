@@ -1280,3 +1280,28 @@ L["The companion"] = "隨行視窗"
 L["A small window beside the game shows today's figures, the tasks and the honours closest to their next tier. You can switch it on and off in the settings."] = "遊戲旁的小視窗會顯示今天的數字、任務，以及最接近下一階段的榮譽。可在設定中開啟或關閉。"
 L["Show it"] = "顯示"
 L["Names from the game (places, creatures, items) stay in the language of the game client."] = "來自遊戲的名稱（地點、生物、物品）會維持遊戲用戶端的語言。"
+
+-- memories and anniversaries
+L["A memory"] = "回憶"
+L["Read that day (day %d)"] = "閱讀那一天（第%d天）"
+L["The diary's birthday"] = "日記的生日"
+L["%d hours in the world"] = "在這個世界%d小時"
+L["Anniversary"] = "紀念日"
+L["Nothing from earlier days to remember today."] = "今天沒有可以回顧的往日記錄。"
+L["A memory on the Today page"] = "在「今天」頁顯示回憶"
+L["A memory as a note at login"] = "登入時以便箋顯示回憶"
+L["show today's memory again"] = "再次顯示今天的回憶"
+loc.narrator.memory = {
+    years = "%d年前的今天",
+    days = "%d天前",
+    intro = {
+        "%s，我在%s。",
+        "%s，我的路途經過%s。",
+    },
+    first = "還有一個第一次：%s。",
+}
+loc.narrator.jubilee = {
+    born = "寫下這本日記的第一頁，已經是%d年前的事了。",
+    hours = "在這個世界已經待了%d小時。走了好長一段路。",
+    level = "%d年前的這個時候，我升到了%d級。",
+}

@@ -20,7 +20,7 @@ I made it because I never remember later where I first met someone, which quest 
 
 ## What's in the book
 
-- **Today:** the book opens on today: your figures so far, how the day began, what's new since you last read, and your next goals
+- **Today:** the book opens on today: your figures so far, how the day began, what happened on this day a year ago (or two, or three), what's new since you last read, and your next goals
 - **Diary:** a double page per day, written as a short story
 - **World map:** where you've been, with a time slider
 - **Bestiary and people:** pinned cards for creatures (like a wanted poster) and for NPCs. Creatures you've only seen so far, or that your other characters know, are listed per area with a hint where to look. Click one and it puts a marker on your map
@@ -37,7 +37,7 @@ I made it because I never remember later where I first met someone, which quest 
 
 The parts of the book are grouped by theme. Each group has one tab in its own colour, which opens an overview of its parts. Point at a tab and a list of its parts opens beside it, so you can jump straight to one.
 
-Small notes slide in when something worth remembering happens (a right-click puts them away), and you get a look back at the week. If you like, a small companion window beside the game (the introduction offers it) shows today's figures, your tasks and the honours and creatures closest to their next step.
+Small notes slide in when something worth remembering happens (a right-click puts them away), and you get a look back at the week. When you log in, a quiet note may remind you of this day in an earlier year, or of an anniversary: the diary's birthday, 100, 500 or 1000 hours in the world, a year since level 10, 20 ... 60. If you like, a small companion window beside the game (the introduction offers it) shows today's figures, your tasks and the honours and creatures closest to their next step.
 
 The book comes in four styles (leather and gold, parchment, modern, strong contrast) and the writing can be made larger. The parchment style uses the light paper of the game's own quest frames, with torn edges and the stains of a hard life in its margins.
 
@@ -90,7 +90,7 @@ Ich habe es gebaut, weil ich mir später nie merke, wo ich jemanden zum ersten M
 
 ## Was im Buch steht
 
-- **Heute:** Das Buch öffnet bei heute: deine Zahlen bis jetzt, wie der Tag angefangen hat, was seit dem letzten Lesen neu ist und deine nächsten Ziele
+- **Heute:** Das Buch öffnet bei heute: deine Zahlen bis jetzt, wie der Tag angefangen hat, was heute vor einem Jahr (oder zwei, drei) passiert ist, was seit dem letzten Lesen neu ist und deine nächsten Ziele
 - **Tagebuch:** pro Tag eine Doppelseite, als kleine Geschichte geschrieben
 - **Weltkarte:** wo du schon warst, mit Zeitregler
 - **Bestiarium und Personen:** angeheftete Karten für Kreaturen (wie ein Steckbrief) und für NPCs. Kreaturen, die du bisher nur gesehen hast oder die deine anderen Charaktere kennen, stehen pro Gebiet in einer Liste mit einem Hinweis, wo du suchen solltest. Ein Klick setzt eine Markierung auf deiner Karte
@@ -107,7 +107,7 @@ Ich habe es gebaut, weil ich mir später nie merke, wo ich jemanden zum ersten M
 
 Die Teile des Buches sind nach Themen gruppiert. Jede Gruppe hat einen Reiter in ihrer eigenen Farbe, der eine Übersicht ihrer Teile öffnet. Zeigst du auf einen Reiter, klappt daneben eine Liste seiner Teile auf, und ein Klick führt dich direkt hin.
 
-Wenn etwas Erinnerungswürdiges passiert, rutscht eine kleine Notiz ins Bild (ein Rechtsklick legt sie weg), und einmal pro Woche gibt es einen Rückblick. Wenn du magst, zeigt ein kleines Begleitfenster neben dem Spiel (die Einführung bietet es an) die Zahlen von heute, deine Aufgaben und die Ehrungen und Kreaturen, die ihrem nächsten Schritt am nächsten sind.
+Wenn etwas Erinnerungswürdiges passiert, rutscht eine kleine Notiz ins Bild (ein Rechtsklick legt sie weg), und einmal pro Woche gibt es einen Rückblick. Beim Einloggen erinnert dich eine stille Notiz an diesen Tag in einem früheren Jahr oder an ein Jubiläum: den Geburtstag des Tagebuchs, 100, 500 oder 1000 Stunden in der Welt, ein Jahr seit Stufe 10, 20 ... 60. Wenn du magst, zeigt ein kleines Begleitfenster neben dem Spiel (die Einführung bietet es an) die Zahlen von heute, deine Aufgaben und die Ehrungen und Kreaturen, die ihrem nächsten Schritt am nächsten sind.
 
 Das Buch gibt es in vier Stilen (Leder und Gold, Pergament, Modern, starker Kontrast), und die Schrift lässt sich vergrößern. Der Stil Pergament nutzt das helle Papier der Questfenster des Spiels, mit zerrissenen Rändern und den Flecken eines harten Lebens in den Rändern.
 

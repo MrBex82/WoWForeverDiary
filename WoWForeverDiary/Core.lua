@@ -164,6 +164,8 @@ WFD:On("ADDON_LOADED", function(_, name)
     if S.toasts == nil then S.toasts = true end
     if S.recap == nil then S.recap = true end
     if S.cover == nil then S.cover = true end
+    if S.memoryPage == nil then S.memoryPage = true end
+    if S.memoryToast == nil then S.memoryToast = true end
     S.angle = S.angle or 215
     S.scale = S.scale or 0.9
     WFD.S = S
@@ -603,6 +605,8 @@ SlashCmdList["WOWFOREVERDIARY"] = function(msg)
         end
     elseif msg == "recap" or msg == "woche" then
         WFD.UI:ShowRecap(true)
+    elseif msg == "memory" or msg == "erinnerung" then
+        WFD.UI:ShowMemory(true)
     elseif msg == "companion" and WFD.UI.ShowCompanion then
         WFD.UI:ShowCompanion()
     elseif msg == "export" and WFD.UI.ShowMovingExport then
@@ -617,7 +621,8 @@ SlashCmdList["WOWFOREVERDIARY"] = function(msg)
         for _, h in ipairs({ { "/wfd", "open or close the diary" }, { "/wfd demo", "explore with invented data" },
             { "/wfd shot", "screenshots on or off" }, { "/wfd minimap", "minimap button on or off" },
             { "/wfd export", "moving code of this character" }, { "/wfd import", "read a moving code" },
-            { "/wfd companion", "show or hide the companion" }, { "/wfd restore", "bring back the diary put aside" },
+            { "/wfd companion", "show or hide the companion" },
+            { "/wfd memory", "show today's memory again" }, { "/wfd restore", "bring back the diary put aside" },
             { "/wfd bestiary", "open a part: today, bestiary, honour, ledger, atlas, settings ... or a day number" } }) do
             print("|cffffd100" .. h[1] .. "|r - " .. L[h[2]])
         end

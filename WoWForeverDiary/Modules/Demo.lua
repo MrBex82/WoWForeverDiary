@@ -36,8 +36,12 @@ local ITEMS = {
 local function build()
     seed = 12345
     local now = time()
+    -- the character began two years ago today, played a little, rested and came back nine days ago:
+    -- so the Today page has a memory and an anniversary to show
+    local t = date("*t", now)
+    local born = time({ year = t.year - 2, month = t.month, day = (t.month == 2 and t.day == 29) and 28 or t.day, hour = 10 })
     local C = {
-        born = now - 8 * 86400, name = UnitName("player") or "Demo", realm = GetRealmName(),
+        born = born, name = UnitName("player") or "Demo", realm = GetRealmName(),
         class = UnitClass("player") or "Warrior", race = UnitRace("player") or "Human",
         classFile = select(2, UnitClass("player")), startLevel = 1, fresh = true,
         days = {}, mobs = {}, npcs = {}, quests = {}, events = {}, zones = {}, skills = {}, nemesis = {},
@@ -46,17 +50,45 @@ local function build()
     }
     local real = WFD.C
     WFD.C = C
+    local OFF = WFD:DayIndex(now) - 9       -- the nine recent days are OFF + 1 ... OFF + 9
     for i, mid in ipairs(MAPS) do
         local name = WFD:MapName(mid)
         if i == 1 then C.startZone = name end
-        C.zones[name] = { first = C.born, day = i, sub = {}, visits = 2 }
+        local first = i == 1 and 1 or OFF + 1 + (i - 1) * 3
+        C.zones[name] = { first = WFD:DayTime(first), day = first, sub = {}, visits = 2 }
     end
 
-    local level, money, qid = 1, 0, 1000
-    for day = 1, 9 do
+    -- the first day and the same date a year ago
+    local function oldDay(idx, mob, n, lvl)
+        local d = WFD:Day(idx)
+        local base = WFD:DayTime(idx)
+        local zone = WFD:MapName(MAPS[1])
+        d.zones[zone] = 3600 + n * 90
+        d.online = d.zones[zone]
+        d.t0 = base - 43200 + 18 * 3600
+        d.t1 = d.t0 + d.online
+        d.hours = { [18] = d.online }
+        d.steps = 2500 + n * 60
+        d.kills[mob[1]] = n
+        d.killTotal = n
+        local m = C.mobs[mob[1]] or { name = mob[2], kills = 0, first = base, level = mob[3], cls = mob[4], ctype = mob[5], zone = zone }
+        C.mobs[mob[1]] = m
+        m.kills = m.kills + n
+        m.last = base
+        C.killTotal = C.killTotal + n
+        d.levels[1] = lvl
+        C.levelTimes[lvl] = base + 3600
+        C.events[#C.events + 1] = { t = base + 3600, day = idx, k = "level", s = format(L["Level %d reached!"], lvl), gear = WFD:CaptureGear() }
+    end
+    oldDay(1, MOBS[4], 6, 2)
+    oldDay(WFD:DayIndex(time({ year = t.year - 1, month = t.month, day = (t.month == 2 and t.day == 29) and 28 or t.day, hour = 12 })), MOBS[1], 23, 3)
+
+    local level, money, qid = 3, 0, 1000
+    for r = 1, 9 do
+        local day = OFF + r
         local d = WFD:Day(day)
         local base = WFD:DayTime(day)
-        local mapID = MAPS[1 + floor((day - 1) / 3)]
+        local mapID = MAPS[1 + floor((r - 1) / 3)]
         local zone = WFD:MapName(mapID)
         d.zones[zone] = rnd(5000, 12000)
         d.online = d.zones[zone]
@@ -86,7 +118,7 @@ local function build()
         for _ = 1, rnd(4, 9) do
             local m = MOBS[rnd(1, #MOBS)]
             local id, name, lv, cls, ctype, boss = m[1], m[2], m[3], m[4], m[5], m[6]
-            if not (boss and day < 4) and not (cls == "rare" and day < 2) then
+            if not (boss and r < 4) and not (cls == "rare" and r < 2) then
                 local n = rnd(2, 14)
                 if boss or cls == "rare" then n = 1 end
                 d.kills[id] = (d.kills[id] or 0) + n
@@ -181,31 +213,31 @@ local function build()
             C.nemesis[by] = n
             C.events[#C.events + 1] = { t = base + 70000 + _ * 60, day = day, k = "death", s = format(L["Died to %s in %s"], by, zone) }
         end
-        if day % 3 == 1 and day > 1 then
+        if r % 3 == 1 and r > 1 then
             C.events[#C.events + 1] = { t = base + 20000, day = day, k = "zone", s = format(L["Discovered a new land: %s"], zone) }
         end
     end
     -- companions, trading partners and resting places
     C.companions = {
-        Brannok = { name = "Brannok", class = "Paladin", classFile = "PALADIN", level = 7, first = C.born + 90000, last = now,
-            days = { [2] = true, [3] = true, [5] = true }, kills = 64, groups = 3, zone = WFD:MapName(MAPS[1]) },
-        Lyssa = { name = "Lyssa", class = "Mage", classFile = "MAGE", level = 9, first = C.born + 300000, last = now,
-            days = { [4] = true }, kills = 21, groups = 1, zone = WFD:MapName(MAPS[2]) },
+        Brannok = { name = "Brannok", class = "Paladin", classFile = "PALADIN", level = 7, first = WFD:DayTime(OFF + 2), last = now,
+            days = { [OFF + 2] = true, [OFF + 3] = true, [OFF + 5] = true }, kills = 64, groups = 3, zone = WFD:MapName(MAPS[1]) },
+        Lyssa = { name = "Lyssa", class = "Mage", classFile = "MAGE", level = 9, first = WFD:DayTime(OFF + 4), last = now,
+            days = { [OFF + 4] = true }, kills = 21, groups = 1, zone = WFD:MapName(MAPS[2]) },
     }
-    C.traders = { Brannok = { first = C.born + 95000, count = 2, got = 1500, gave = 0, zone = WFD:MapName(MAPS[1]) } }
+    C.traders = { Brannok = { first = WFD:DayTime(OFF + 2) + 3600, count = 2, got = 1500, gave = 0, zone = WFD:MapName(MAPS[1]) } }
     C.rests = {
-        { t = C.born + 50000, map = MAPS[1], x = 0.42, y = 0.65, zone = WFD:MapName(MAPS[1]), sub = "Goldshire", dur = 30000 },
-        { t = C.born + 400000, map = MAPS[2], x = 0.56, y = 0.47, zone = WFD:MapName(MAPS[2]), sub = "Sentinel Hill", dur = 50000 },
+        { t = WFD:DayTime(OFF + 1) + 20000, map = MAPS[1], x = 0.42, y = 0.65, zone = WFD:MapName(MAPS[1]), sub = "Goldshire", dur = 30000 },
+        { t = WFD:DayTime(OFF + 5) + 20000, map = MAPS[2], x = 0.56, y = 0.47, zone = WFD:MapName(MAPS[2]), sub = "Sentinel Hill", dur = 50000 },
     }
     -- a dungeon run and tasks of the day, so the newer pages have something to show
     local loot = {}
     for _, it in ipairs(ITEMS) do
         if it[3] >= 2 then loot[#loot + 1] = "|cff1eff00|Hitem:" .. it[1] .. "::::::::1:::::::|h[" .. it[2] .. "]|h|r" end
     end
-    local runStart = WFD:DayTime(6) - 43200 + 19 * 3600
+    local runStart = WFD:DayTime(OFF + 6) - 43200 + 19 * 3600
     local bosses = { "Rhahk'Zor", "Sneed", "Gilnid", "Mr. Smite", "Captain Greenskin", "Edwin VanCleef" }
     C.runs = { {
-        name = "The Deadmines", t0 = runStart, t1 = runStart + 5400, day = 6, level = level, kills = 142,
+        name = "The Deadmines", t0 = runStart, t1 = runStart + 5400, day = OFF + 6, level = level, kills = 142,
         party = {
             Brannok = { classFile = "PALADIN", class = "Paladin", level = 17 },
             Lyssa = { classFile = "MAGE", class = "Mage", level = 18 },
@@ -221,32 +253,35 @@ local function build()
     C.encounters = {}
     for _, b in ipairs(bosses) do C.encounters[b] = 1 end
     C.challenges = {}
-    for day = 6, 9 do
+    for day = OFF + 6, OFF + 9 do
         local list = { { k = "kills", goal = 30 }, { k = "quests", goal = 2 }, { k = "places", goal = 1 } }
         local done = { [1] = WFD:DayTime(day), [2] = WFD:DayTime(day) }
-        if day < 9 then done[3] = WFD:DayTime(day) end
-        C.challenges[day] = { list = list, done = done, all = day < 9 and WFD:DayTime(day) or nil }
+        if day < OFF + 9 then done[3] = WFD:DayTime(day) end
+        C.challenges[day] = { list = list, done = done, all = day < OFF + 9 and WFD:DayTime(day) or nil }
     end
     -- first times, a task of the week, letters in the time capsule, gathering spots, quest givers' words
-    local function at(day, h) return WFD:DayTime(day) - 43200 + h * 3600 end
+    -- at(r, h): hour h of recent day r; first(h): hour h of the very first day
+    local function at(r, h) return WFD:DayTime(OFF + r) - 43200 + h * 3600 end
+    local function first(h) return WFD:DayTime(1) - 43200 + h * 3600 end
     C.firsts = {
-        kill = { t = at(1, 10), day = 1, zone = WFD:MapName(MAPS[1]), s = "Kobold Vermin" },
-        quest = { t = at(1, 11), day = 1, zone = WFD:MapName(MAPS[1]), s = QUESTS[1] },
-        level = { t = at(1, 12), day = 1, zone = WFD:MapName(MAPS[1]), s = format(L["Level %d reached!"], 2) },
-        green = { t = at(2, 14), day = 2, zone = WFD:MapName(MAPS[1]), s = "Medium Quiver" },
-        death = { t = at(2, 16), day = 2, zone = WFD:MapName(MAPS[1]), s = "Kobold Vermin" },
-        group = { t = at(2, 18), day = 2, zone = WFD:MapName(MAPS[1]), s = "Brannok" },
-        trade = { t = at(2, 19), day = 2, zone = WFD:MapName(MAPS[1]), s = "Brannok" },
-        flight = { t = at(5, 20), day = 5, zone = WFD:MapName(MAPS[2]), s = "Stormwind" },
-        dungeon = { t = runStart, day = 6, zone = WFD:MapName(MAPS[2]), s = "The Deadmines" },
-        boss = { t = runStart + 600, day = 6, zone = WFD:MapName(MAPS[2]), s = "Rhahk'Zor" },
+        kill = { t = first(10), day = 1, zone = WFD:MapName(MAPS[1]), s = "Kobold Vermin" },
+        quest = { t = first(11), day = 1, zone = WFD:MapName(MAPS[1]), s = QUESTS[1] },
+        level = { t = first(12), day = 1, zone = WFD:MapName(MAPS[1]), s = format(L["Level %d reached!"], 2) },
+        green = { t = at(2, 14), day = OFF + 2, zone = WFD:MapName(MAPS[1]), s = "Medium Quiver" },
+        death = { t = at(2, 16), day = OFF + 2, zone = WFD:MapName(MAPS[1]), s = "Kobold Vermin" },
+        group = { t = at(2, 18), day = OFF + 2, zone = WFD:MapName(MAPS[1]), s = "Brannok" },
+        trade = { t = at(2, 19), day = OFF + 2, zone = WFD:MapName(MAPS[1]), s = "Brannok" },
+        flight = { t = at(5, 20), day = OFF + 5, zone = WFD:MapName(MAPS[2]), s = "Stormwind" },
+        dungeon = { t = runStart, day = OFF + 6, zone = WFD:MapName(MAPS[2]), s = "The Deadmines" },
+        boss = { t = runStart + 600, day = OFF + 6, zone = WFD:MapName(MAPS[2]), s = "Rhahk'Zor" },
     }
-    C.weekly = { [2] = { task = { k = "wkills", goal = 150 } }, [1] = { task = { k = "wquests", goal = 12 }, done = at(6, 21) } }
-    C.monthly = { [1] = { task = { k = "mkills", goal = 500 } } }
+    local week, month = WFD:WeekIndex(OFF + 9), WFD:MonthIndex(OFF + 9)
+    C.weekly = { [week] = { task = { k = "wkills", goal = 150 } }, [week - 1] = { task = { k = "wquests", goal = 12 }, done = at(6, 21) } }
+    C.monthly = { [month] = { task = { k = "mkills", goal = 500 } } }
     C.capsules = {
-        { t = at(1, 22), day = 1, level = 1, openDay = 7, opened = at(7, 9),
+        { t = at(1, 22), day = OFF + 1, level = 1, openDay = OFF + 7, opened = at(7, 9),
           text = L["Dear me, if you are reading this, you made it through the first week. Did you ever find out who was stealing the candles in the mine?"] },
-        { t = at(5, 22), day = 5, level = 8, openLevel = 20, text = "sealed" },
+        { t = at(5, 22), day = OFF + 5, level = 8, openLevel = 20, text = "sealed" },
     }
     C.gather = {}
     local HERBS = { "Peacebloom", "Silverleaf", "Earthroot" }
@@ -254,7 +289,7 @@ local function build()
         local map = MAPS[1 + (i % 2)]
         C.gather[map] = C.gather[map] or {}
         local kind = (i % 3 == 0) and "ore" or "herb"
-        C.gather[map][#C.gather[map] + 1] = { x = 0.2 + rnd() * 0.6, y = 0.2 + rnd() * 0.6, k = kind, t = at(1 + i % 8, 12), day = 1 + i % 8,
+        C.gather[map][#C.gather[map] + 1] = { x = 0.2 + rnd() * 0.6, y = 0.2 + rnd() * 0.6, k = kind, t = at(1 + i % 8, 12), day = OFF + 1 + i % 8,
             item = kind == "ore" and "Copper Ore" or HERBS[1 + i % 3] }
     end
     local n = 0
@@ -275,21 +310,21 @@ local function build()
     -- an angler's log: a few catches on two waters, a rod
     local lake, shore = MAPS[1], MAPS[2]
     C.catch = {
-        [6291] = { name = "Raw Brilliant Smallfish", n = 14, q = 1, kind = "fish", first = at(2, 11), last = at(8, 14), day = 2,
+        [6291] = { name = "Raw Brilliant Smallfish", n = 14, q = 1, kind = "fish", first = at(2, 11), last = at(8, 14), day = OFF + 2,
             zones = { [lake] = 14 } },
-        [6289] = { name = "Raw Longjaw Mud Snapper", n = 9, q = 1, kind = "fish", first = at(3, 10), last = at(7, 15), day = 3,
+        [6289] = { name = "Raw Longjaw Mud Snapper", n = 9, q = 1, kind = "fish", first = at(3, 10), last = at(7, 15), day = OFF + 3,
             zones = { [lake] = 9 } },
-        [6308] = { name = "Raw Bristle Whisker Catfish", n = 4, q = 1, kind = "fish", first = at(5, 12), last = at(8, 9), day = 5,
+        [6308] = { name = "Raw Bristle Whisker Catfish", n = 4, q = 1, kind = "fish", first = at(5, 12), last = at(8, 9), day = OFF + 5,
             zones = { [shore] = 4 } },
-        [6309] = { name = "17 Pound Catfish", n = 1, q = 1, kind = "other", first = at(6, 13), last = at(6, 13), day = 6,
+        [6309] = { name = "17 Pound Catfish", n = 1, q = 1, kind = "other", first = at(6, 13), last = at(6, 13), day = OFF + 6,
             zones = { [shore] = 1 } },
-        [6362] = { name = "Raw Rockscale Cod", n = 3, q = 1, kind = "fish", first = at(7, 16), last = at(8, 17), day = 7,
+        [6362] = { name = "Raw Rockscale Cod", n = 3, q = 1, kind = "fish", first = at(7, 16), last = at(8, 17), day = OFF + 7,
             zones = { [shore] = 3 } },
-        [6352] = { name = "Waterlogged Crate", n = 1, q = 1, kind = "other", first = at(2, 12), last = at(2, 12), day = 2,
+        [6352] = { name = "Waterlogged Crate", n = 1, q = 1, kind = "other", first = at(2, 12), last = at(2, 12), day = OFF + 2,
             zones = { [lake] = 1 } },
-        [6458] = { name = "Oil Covered Fish", n = 2, q = 0, kind = "junk", first = at(4, 13), last = at(5, 13), day = 4,
+        [6458] = { name = "Oil Covered Fish", n = 2, q = 0, kind = "junk", first = at(4, 13), last = at(5, 13), day = OFF + 4,
             zones = { [lake] = 2 } },
-        [21228] = { name = "Mithril Bound Trunk", n = 1, q = 3, kind = "treasure", first = at(8, 18), last = at(8, 18), day = 8,
+        [21228] = { name = "Mithril Bound Trunk", n = 1, q = 3, kind = "treasure", first = at(8, 18), last = at(8, 18), day = OFF + 8,
             zones = { [shore] = 1 } },
     }
     C.catchTotal, C.catchCasts, C.catchLured = 34, 52, 11

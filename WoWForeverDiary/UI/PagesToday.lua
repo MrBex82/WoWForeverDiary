@@ -4,7 +4,7 @@ local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
 local c = UI.c
-local min, format = math.min, string.format
+local min, max, format = math.min, math.max, string.format
 
 local LOCKED = { 0.46, 0.39, 0.30, 1 }
 
@@ -49,6 +49,41 @@ UI:RegisterSection({
         book:Add({ kind = "nextgoals", numbered = true })
     end,
 })
+
+-- returns where the next block starts
+local function memoryBlock(pool, canvas, tx, tw, y)
+    local jubilees = WFD.Jubilees and WFD:Jubilees() or {}
+    local mem = WFD.OnThisDay and WFD:OnThisDay()
+    if #jubilees == 0 and not mem then return y end
+    UI.SectionHead(pool, canvas, tx, tw, y + 18, 32, L["A memory"], mem and WFD:DateStr(mem.idx) or nil)
+    y = y - 22
+    -- one anniversary and three lines of memory at most: the page still has to show what is new
+    for i = 1, min(1, #jubilees) do
+        local ic = pool:Icon(UI.Icon("honour"), 18)
+        ic:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 1, y)
+        local t = pool:Text(13, c.redInk, UI.FONT)
+        t:SetWidth(tw - 26)
+        t:SetText(jubilees[i].text)
+        t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 26, y - 2)
+        y = y - max(22, t:GetStringHeight() + 8)
+    end
+    if mem then
+        local t = pool:Text(13, c.ink, UI.FONT)
+        t:SetSpacing(3)
+        t:SetWidth(tw)
+        if t.SetMaxLines then t:SetMaxLines(3) end
+        t:SetText(mem.text)
+        t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+        y = y - min(t:GetStringHeight(), 3 * 16 + 4) - 8
+        local dp = UI.book and UI.book.dayPage[mem.idx]
+        if dp then
+            local link = pool:Link(format(L["Read that day (day %d)"], mem.idx) .. "  >", function() UI:GoToPage(dp) end, 13)
+            link:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+            y = y - 20
+        end
+    end
+    return y - 12
+end
 
 UI:RegisterRenderer("today", function(pool, page, side, canvas)
     local C = WFD.C
@@ -97,7 +132,12 @@ UI:RegisterRenderer("today", function(pool, page, side, canvas)
     end
     y = y - 30
 
+    -- this day in an earlier year, and the anniversaries that are due
+    if WFD.S.memoryPage ~= false then y = memoryBlock(pool, canvas, tx, tw, y) end
+
     -- what came into the book since it was last put away
+    -- (below a long memory there may be no room left for it)
+    if y < -(UI.PH - UI.BOTTOM - 40) then return end
     UI.SectionHead(pool, canvas, tx, tw, y + 18, 32, L["New since you last read"])
     y = y - 22
     local counts = UI.NewCounts and UI.NewCounts() or {}
