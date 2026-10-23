@@ -198,6 +198,15 @@ local function drawCard(pool, canvas, x, y, a)
     num:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 7, y - 6)
     local tag = pool:Text(8, kind.col, UI.HEAD, "RIGHT")
     tag:SetText(L[kind.label]:upper())
+    tag:SetWordWrap(false)
+    -- a long kind in a long language: first in small letters, then without the number
+    local room = CARD_W - 14 - num:GetStringWidth() - 6
+    if tag:GetStringWidth() > room then tag:SetText(L[kind.label]) end
+    if tag:GetStringWidth() > room then
+        num:SetText("")
+        room = CARD_W - 14
+    end
+    tag:SetWidth(room)
     tag:SetPoint("TOPRIGHT", canvas, "TOPLEFT", x + CARD_W - 7, y - 6)
     -- the picture
     local pl = pool:Plaque(x + CARD_W / 2, y - 48, 46, iconOf(e, a.id), qc, true, UI.ShortCount(e.n or 0))
@@ -392,14 +401,15 @@ UI:RegisterRenderer("fishwaters", function(pool, page, side, canvas)
         local fallback = TACKLE_ICONS[r.kind or "rod"] or TACKLE_ICONS.rod
         local ic = pool:Icon(instantIcon(rods[i].id) or (r.link and WFD:ItemIcon(r.link)) or UI.IconPath(fallback, "loot"), 18)
         ic:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 1, y)
-        local nm = pool:Text(12, c.ink, UI.FONT)
-        nm:SetText(r.name or "?")
-        nm:SetWordWrap(false)
-        nm:SetWidth(tw * 0.55)
-        nm:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 26, y - 2)
         local cnt = pool:Text(10, c.inkSoft, UI.FONT, "RIGHT")
         cnt:SetText(L[TACKLE_LABEL[r.kind or "rod"] or "Fishing pole"] .. "  -  " .. format(L["%d casts"], r.n or 0))
         cnt:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 3)
+        -- the name takes what the kind and the casts leave free
+        local nm = pool:Text(12, c.ink, UI.FONT)
+        nm:SetText(r.name or "?")
+        nm:SetWordWrap(false)
+        nm:SetWidth(max(60, tw - 26 - cnt:GetStringWidth() - 10))
+        nm:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 26, y - 2)
         local hot = pool:Hot(nil, nil, r.link)
         hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 1)
         hot:SetSize(tw, 22)

@@ -1283,6 +1283,8 @@ L["A small window beside the game shows today's figures, the tasks and the honou
 L["Show it"] = "Mostrar"
 L["Names from the game (places, creatures, items) stay in the language of the game client."] = "Os nomes do jogo (lugares, criaturas, itens) ficam no idioma do cliente."
 
+L["%d days  -  %d kills  -  %d quests"] = "%d dias  -  %d abates  -  %d missões"
+
 -- memories and anniversaries
 L["A memory"] = "Lembrança"
 L["Read that day (day %d)"] = "Ler aquele dia (dia %d)"

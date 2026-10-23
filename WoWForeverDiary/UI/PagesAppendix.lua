@@ -112,14 +112,9 @@ UI:RegisterRenderer("timeline", function(pool, page, side, canvas)
             ln:SetPoint("LEFT", d, "RIGHT", 8, 0)
         else
             local ev = r.ev
-            local def = UI.SEAL[ev.k]
             local lvl = ev.k == "level" and ev.s and ev.s:match("(%d+)")
-            -- the moment's icon in a frame of its colour (an honour shows its own icon and metal)
-            local icon, col = UI.Icon(def.icon), def.col
-            if ev.k == "honour" and ev.honour and WFD.HonourDef then
-                local h = WFD:HonourDef(ev.honour)
-                if h then icon, col = UI.IconPath(h.icon, "honour"), WFD:MetalOf(ev.tier or 1, #h.tiers).col end
-            end
+            -- the moment's icon in a frame of its colour (an honour its own icon and metal, a find the item)
+            local icon, col = UI.MomentIcon(ev)
             pool:Plaque(SX, y - 20, 28, icon, col, true, lvl)
             local tm = pool:Text(10, c.inkFaint, UI.FONT)
             tm:SetText(date("%H:%M", ev.t))
@@ -293,11 +288,12 @@ UI:RegisterRenderer("map", function(pool, page, side, canvas)
         local t = pool:Text(12, grave and c.bad or c.ink, UI.FONT)
         t:SetWordWrap(false)
         t:SetWidth(colW - 30)
-        t:SetText(grave and L["Grave"] or (it.name or "?"))
+        -- a grave: the day beside the word, the killer below (both together are too long for the narrow column)
+        t:SetText(grave and (L["Grave"] .. "  -  " .. format(L["Day %d"], it.day or 0)) or (it.name or "?"))
         t:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 27, ly - 2)
         local subText
         if grave then
-            subText = (it.by and (format(L["Killed by %s"], it.by) .. "  -  ") or "") .. format(L["Day %d"], it.day or 0)
+            subText = it.by and format(L["Killed by %s"], it.by) or L["You died here"]
         else
             local npc = C.npcs[it.key]
             local roles = {}
@@ -316,7 +312,8 @@ UI:RegisterRenderer("map", function(pool, page, side, canvas)
             hot = pool:Hot({ it.name, subText, L["Click for the portrait."] }, function() UI:ShowCard("person", it.key) end)
         else
             local p = UI.book.dayPage[it.day]
-            hot = pool:Hot({ L["You died here"], format(L["Day %d"], it.day) }, p and function() UI:GoToPage(p) end)
+            hot = pool:Hot({ L["You died here"], format(L["Day %d"], it.day), it.by and format(L["Killed by %s"], it.by) or nil },
+                p and function() UI:GoToPage(p) end)
         end
         hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, ly + 2)
         hot:SetSize(colW, ROW_H - 3)
@@ -961,8 +958,17 @@ local function kindsText(n) return n == 1 and L["1 kind"] or format(L["%d kinds"
 -- the head of an album page: the area (a click leads to its hunting grounds), how many kinds, a thin bar
 function UI.AlbumHead(pool, canvas, tx, tw, page)
     local top = -UI.TOP
+    local cnt = pool:Text(10, c.inkFaint, UI.FONT, "RIGHT")
+    cnt:SetText(kindsText(page.count)
+        .. ((page.hidden or 0) > 0 and ("  -  " .. format(L["%d to discover"], page.hidden)) or ""))
+    cnt:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, top)
+    -- the area takes what the count leaves free, a long name in smaller letters
     local h = pool:Text(17, c.redInk, UI.HEAD)
     h:SetText(page.zone .. (page.part and ("  (" .. page.part .. ")") or ""))
+    local room = tw - cnt:GetStringWidth() - 12
+    UI.FitText(h, room, 17, 12, UI.HEAD)
+    h:SetWordWrap(false)
+    h:SetWidth(room)
     h:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, top + 4)
     local b = UI.book
     if b and b.huntPage and b.huntZones and b.huntZones[page.zone] then
@@ -973,10 +979,6 @@ function UI.AlbumHead(pool, canvas, tx, tw, page)
         hot:SetPoint("TOPLEFT", h, "TOPLEFT", -3, 3)
         hot:SetPoint("BOTTOMRIGHT", h, "BOTTOMRIGHT", 3, -3)
     end
-    local cnt = pool:Text(10, c.inkFaint, UI.FONT, "RIGHT")
-    cnt:SetText(kindsText(page.count)
-        .. ((page.hidden or 0) > 0 and ("  -  " .. format(L["%d to discover"], page.hidden)) or ""))
-    cnt:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, top)
     local rule = pool:Grad("HORIZONTAL", { 0.91, 0.76, 0.42, 0.6 }, { 0.91, 0.76, 0.42, 0 })
     rule:SetSize(tw, 1)
     rule:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, top - 16)
@@ -1897,6 +1899,11 @@ UI:RegisterRenderer("settings", function(pool, page, side, canvas)
         for _, it in ipairs(items) do
             local fs = pool:Link(it.text, it.fn, size or 14, it.active and c.redInk or c.inkSoft)
             local w = fs:GetStringWidth()
+            if w > tw then          -- wider than the page alone: one line, smaller letters (see Pool:End)
+                fs:SetWordWrap(false)
+                fs:SetWidth(tw)
+                w = tw
+            end
             if x > tx and x + w > tx + tw then
                 x = tx
                 y = y - 20
@@ -1953,17 +1960,19 @@ UI:RegisterRenderer("settings", function(pool, page, side, canvas)
     note:SetText(L["The diary will reload the interface to switch the language."] .. " "
         .. L["Names from the game (places, creatures, items) stay in the language of the game client."] .. " "
         .. L["Korean and Chinese text needs a game client with those fonts."])
+    -- with large writing only the first sentence, so the links below still fit on the page
+    if y + 4 - note:GetStringHeight() - 10 - 84 < -(UI.PH - UI.BOTTOM) then
+        note:SetText(L["The diary will reload the interface to switch the language."])
+    end
     note:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 4)
     y = y - note:GetStringHeight() - 10
 
     -- transcript and demo
     caption(L["Transcript"] .. "  &  " .. L["Demo"])
-    local t1 = pool:Link(L["Copy the diary as text"] .. "  >", function() UI:ShowTranscript("text") end, 14)
-    t1:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-    local t2 = pool:Link(L["Copy the diary as JSON"] .. "  >", function() UI:ShowTranscript("json") end, 14)
-    t2:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 18)
-    local t3 = pool:Link(L["Copy for forum or Discord (Markdown)"] .. "  >", function() UI:ShowTranscript("markdown") end, 14)
-    t3:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 36)
-    local dl = pool:Link((WFD.demo and L["Leave demo mode"] or L["Start demo mode"]) .. "  >", function() WFD:ToggleDemo() end, 14)
-    dl:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 54)
+    linkRow({
+        { text = L["Copy the diary as text"] .. "  >", fn = function() UI:ShowTranscript("text") end },
+        { text = L["Copy the diary as JSON"] .. "  >", fn = function() UI:ShowTranscript("json") end },
+        { text = L["Copy for forum or Discord (Markdown)"] .. "  >", fn = function() UI:ShowTranscript("markdown") end },
+        { text = (WFD.demo and L["Leave demo mode"] or L["Start demo mode"]) .. "  >", fn = function() WFD:ToggleDemo() end },
+    })
 end)

@@ -726,6 +726,11 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
         local t = pool:Text(12, c.inkSoft, UI.FONT)
         t:SetWidth(tw)
         t:SetText(text)
+        -- with large writing the last hints may not fit: they are left out rather than cut
+        if y - t:GetStringHeight() < -(UI.PH - UI.BOTTOM) then
+            t:SetText("")
+            return
+        end
         t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
         y = y - t:GetStringHeight() - 10
     end

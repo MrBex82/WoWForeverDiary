@@ -253,10 +253,10 @@ end
 
 -- what to show for a milestone: icon, frame colour, kicker, name, metal line, pips, hint, points
 local function describe(ev)
-    local def = UI.SEAL[ev.k] or UI.SEAL.quest
     local subject = (ev.k ~= "level" and ev.s and ev.s:match(":%s*(.+)$")) or ev.s or ""
+    local icon, col = UI.MomentIcon(ev)
     local d = {
-        icon = UI.Icon(def.icon), col = def.col, kicker = L[UI.SEAL_LABEL[ev.k] or "Moment"], name = subject,
+        icon = icon, col = col, kicker = L[UI.SEAL_LABEL[ev.k] or "Moment"], name = subject,
     }
     if ev.k == "honour" and ev.honour and WFD.HonourDef then
         local h = WFD:HonourDef(ev.honour)

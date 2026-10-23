@@ -1281,6 +1281,8 @@ L["A small window beside the game shows today's figures, the tasks and the honou
 L["Show it"] = "顯示"
 L["Names from the game (places, creatures, items) stay in the language of the game client."] = "來自遊戲的名稱（地點、生物、物品）會維持遊戲用戶端的語言。"
 
+L["%d days  -  %d kills  -  %d quests"] = "%d天  -  擊殺%d  -  任務%d"
+
 -- memories and anniversaries
 L["A memory"] = "回憶"
 L["Read that day (day %d)"] = "閱讀那一天（第%d天）"

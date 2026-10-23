@@ -1278,6 +1278,8 @@ L["A small window beside the game shows today's figures, the tasks and the honou
 L["Show it"] = "보이기"
 L["Names from the game (places, creatures, items) stay in the language of the game client."] = "게임에서 오는 이름(장소, 몬스터, 아이템)은 게임 클라이언트의 언어로 남습니다."
 
+L["%d days  -  %d kills  -  %d quests"] = "%d일  -  %d마리 처치  -  퀘스트 %d개"
+
 -- memories and anniversaries
 L["A memory"] = "추억"
 L["Read that day (day %d)"] = "그날 읽기 (%d일째)"

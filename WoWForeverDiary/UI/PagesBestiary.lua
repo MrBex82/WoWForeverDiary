@@ -310,10 +310,15 @@ UI:RegisterRenderer("huntmap", function(pool, page, side, canvas, index)
     note:SetText(L["Each pin marks where the first of its kind fell."])
     note:SetWidth(tw)
     note:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-    -- on to the cards of this area
+    -- on to the cards of this area; with large writing there is room for the link only, the note goes
     if g.page then
+        local ly = y - note:GetStringHeight() - 8
+        if ly - UI.FS(13) - 2 < -(UI.PH - UI.BOTTOM) then
+            note:SetText("")
+            ly = y
+        end
         local link = pool:Link(L["To the album of this area"] .. "  >", function() UI:GoToPage(g.page) end, 13)
-        link:SetPoint("TOP", canvas, "TOPLEFT", tx + tw / 2, y - note:GetStringHeight() - 8)
+        link:SetPoint("TOP", canvas, "TOPLEFT", tx + tw / 2, ly)
     end
 end)
 

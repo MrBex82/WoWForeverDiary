@@ -129,13 +129,11 @@ UI:RegisterRenderer("collection", function(pool, page, side, canvas)
         local sub = pool:Text(9, c.inkSoft, UI.FONT)
         sub:SetText(UI.Upper(it[6]))
         sub:SetWordWrap(false)
-        sub:SetWidth(tw - 44 - 40)
+        sub:SetWidth(tw - 44)        -- the share in per cent is in the tooltip, the bar shows it anyway
         sub:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 44, ry - 21)
-        local pc = pool:Text(9, c.inkFaint, UI.FONT, "RIGHT")
-        pc:SetText(floor(frac * 100 + 0.5) .. "%")
-        pc:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, ry - 21)
         UI.ProgressBar(pool, canvas, tx + 44, ry - 35, tw - 44, 5, frac, it[5])
-        local hot = pool:Hot({ it[1], it[2] .. " / " .. it[3], L["Click to open this part of the book."] }, goTo(it[7]))
+        local hot = pool:Hot({ it[1], it[2] .. " / " .. it[3] .. "  (" .. floor(frac * 100 + 0.5) .. "%)",
+            L["Click to open this part of the book."] }, goTo(it[7]))
         hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, ry + 2)
         hot:SetSize(tw, ROW - 6)
     end
@@ -491,6 +489,7 @@ UI:RegisterRenderer("atlasmap", function(pool, page, side, canvas)
     end
     local hint = pool:Text(9, c.inkFaint, UI.FONT)
     hint:SetText(L["Mouse wheel: zoom  -  drag: move  -  right click: reset"])
+    hint:SetWidth(tw)          -- two lines rather than past the edge of the page
     hint:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 20)
 end)
 
@@ -518,6 +517,9 @@ UI:RegisterRenderer("atlaslist", function(pool, page, side, canvas)
                 n:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 30, y - 3)
                 local s = pool:Text(9, z.visited and c.redInk or c.inkFaint, UI.FONT)
                 s:SetText(z.visited and (format(L["Day %d"], z.day or 1) .. "  -  " .. WFD:DurationText(z.secs)) or L["Not yet explored"])
+                UI.FitText(s, colW - 32, 9, 8, UI.FONT)
+                s:SetWordWrap(false)
+                s:SetWidth(colW - 32)
                 s:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 30, y - 18)
                 local mp = z.visited and UI.book.mapPage and UI.book.mapPage[z.id]
                 local lines = zoneInfo(z)

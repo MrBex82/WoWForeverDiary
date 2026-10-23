@@ -91,9 +91,9 @@ WFD:On("CHAT_MSG_LOOT", function(_, msg)
             C.rares[id] = time()
             local name = WFD:ItemName(link)
             if quality >= 4 then
-                WFD:Milestone("epic", format(L["Epic find: %s"], name), true)
+                WFD:Milestone("epic", format(L["Epic find: %s"], name), true, { item = id })
             else
-                WFD:Milestone("rareitem", format(L["Rare find: %s"], name), true)
+                WFD:Milestone("rareitem", format(L["Rare find: %s"], name), true, { item = id })
             end
         end
     end
@@ -118,7 +118,7 @@ WFD:OnInit(function()
                 if q >= 3 then
                     local t = d.t0 or WFD:DayTime(idx)
                     if not found[id] or t < found[id].t then
-                        found[id] = { t = t, day = idx, q = q, name = WFD:ItemName(e.link) }
+                        found[id] = { t = t, day = idx, q = q, name = WFD:ItemName(e.link), item = tonumber(id) }
                     end
                 end
             end
@@ -134,7 +134,7 @@ WFD:OnInit(function()
         if not C.rares[id] then
             C.rares[id] = f.t
             local text = format(f.q >= 4 and L["Epic find: %s"] or L["Rare find: %s"], f.name)
-            C.events[#C.events + 1] = { t = f.t, day = f.day, k = f.q >= 4 and "epic" or "rareitem", s = text }
+            C.events[#C.events + 1] = { t = f.t, day = f.day, k = f.q >= 4 and "epic" or "rareitem", s = text, item = f.item }
             added = true
         end
     end

@@ -26,7 +26,33 @@ function Pool:Begin()
     end
 end
 
+-- Nothing on a page is cut off: a text too long for its line, or for the lines it may take, gets smaller
+-- letters step by step (to about three fifths of its size). Long words in long languages and the larger
+-- writing chosen in the settings then still fit.
+local function truncated(fs)
+    if fs.CanWordWrap and not fs:CanWordWrap() then
+        local w = fs:GetWidth() or 0
+        local full = fs.GetUnboundedStringWidth and fs:GetUnboundedStringWidth() or fs:GetStringWidth()
+        if w > 0 and (full or 0) > w + 0.5 then return true end
+    end
+    return fs.IsTruncated and fs:IsTruncated() and true or false
+end
+
+function UI.Unclip(fs)
+    if not fs:IsShown() or (fs:GetText() or "") == "" then return end
+    local font, size, flags = fs:GetFont()
+    if not (font and size) then return end
+    size = floor(size + 0.5)
+    local smallest = max(8, floor(size * 0.62))
+    while size > smallest and truncated(fs) do
+        size = size - 1
+        fs:SetFont(font, size, flags or "")
+    end
+end
+
 function Pool:End()
+    local texts = self.lists.text
+    for i = 1, (texts and self.used.text or 0) do UI.Unclip(texts[i]) end
     for kind, list in pairs(self.lists) do
         for i = (self.used[kind] or 0) + 1, #list do list[i]:Hide() end
     end
@@ -990,6 +1016,33 @@ UI.SEAL = {
     capsule  = { col = { 0.55, 0.12, 0.10, 1 }, size = 18, icon = "capsule" },
     catch    = { col = c.teal,   size = 16, icon = "fish" },
 }
+
+-- the item of a find: kept with newer moments, looked up by its name in that day's loot for older ones
+local function findItem(ev)
+    if ev.item then return ev.item end
+    local name = ev.s and ev.s:match(":%s*(.+)$")
+    local d = name and WFD.C and WFD.C.days[ev.day]
+    for id, e in pairs(d and d.loot or {}) do
+        if type(e) == "table" and WFD:ItemName(e.link) == name then
+            ev.item = tonumber(id)
+            return ev.item
+        end
+    end
+end
+
+-- the icon and frame colour of a moment: an honour shows its own icon and metal, a find the item itself
+function UI.MomentIcon(ev)
+    local def = UI.SEAL[ev.k] or UI.SEAL.quest
+    local icon, col = UI.Icon(def.icon), def.col
+    if ev.k == "honour" and ev.honour and WFD.HonourDef then
+        local h = WFD:HonourDef(ev.honour)
+        if h then icon, col = UI.IconPath(h.icon, "honour"), WFD:MetalOf(ev.tier or 1, #h.tiers).col end
+    elseif ev.k == "epic" or ev.k == "rareitem" then
+        local id = findItem(ev)
+        icon = (id and WFD:ItemIcon(id)) or icon
+    end
+    return icon, col
+end
 
 -- trophy icons for the five metals (bronze, silver, gold, mithril, legend)
 UI.METAL_ICONS = {

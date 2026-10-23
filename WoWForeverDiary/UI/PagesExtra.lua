@@ -259,15 +259,20 @@ UI:RegisterRenderer("honour", function(pool, page, side, canvas)
                 d:SetPoint("CENTER", canvas, "TOPLEFT", px, y - 10)
                 px = px - 17
             end
-            local d = pool:Text(11, e.hidden and c.inkSoft or c.inkFaint, UI.FONT)
-            d:SetText(e.hidden and L[h.secret] or WFD:HonourText(h, e.next or h.tiers[e.n]))
-            d:SetWordWrap(false)
-            d:SetWidth(barW - 70)
-            d:SetPoint("TOPLEFT", canvas, "TOPLEFT", NX, y - 22)
+            -- the description takes what the progress figure beside it leaves free
+            local pvW = 0
             if not e.hidden then
                 local pv = pool:Text(10, e.next and c.inkSoft or GREEN, UI.FONT, "RIGHT")
                 pv:SetText(e.next and progressText(e) or L["Complete!"])
                 pv:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 23)
+                pvW = pv:GetStringWidth() + 10
+            end
+            local d = pool:Text(11, e.hidden and c.inkSoft or c.inkFaint, UI.FONT)
+            d:SetText(e.hidden and L[h.secret] or WFD:HonourText(h, e.next or h.tiers[e.n]))
+            d:SetWordWrap(false)
+            d:SetWidth(tx + tw - NX - pvW)
+            d:SetPoint("TOPLEFT", canvas, "TOPLEFT", NX, y - 22)
+            if not e.hidden then
                 local track = pool:Rect(c.inkFaint, 0.20)
                 track:SetSize(barW, 3)
                 track:SetPoint("TOPLEFT", canvas, "TOPLEFT", NX, y - 39)
@@ -601,12 +606,17 @@ UI:RegisterRenderer("treasures", function(pool, page, side, canvas)
             rule:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 64)
         elseif r.doll then
             -- the best find for every slot; empty slots show the game's own outline
-            local cap = pool:Text(10, c.redInk, UI.FONT)
-            cap:SetText(L["Best find for every slot"]:upper())
-            cap:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 2)
             local key = pool:Text(9, c.inkSoft, UI.FONT, "RIGHT")
             key:SetText(L["worn right now"])
             key:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 3)
+            -- the caption ends before the key and its tick
+            local cap = pool:Text(10, c.redInk, UI.FONT)
+            cap:SetText(L["Best find for every slot"]:upper())
+            local room = tw - key:GetStringWidth() - 22
+            if cap:GetStringWidth() > room then cap:SetText(L["Best find for every slot"]) end
+            cap:SetWordWrap(false)
+            cap:SetWidth(room)
+            cap:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 2)
             local tick = pool:Icon("Interface\\RAIDFRAME\\ReadyCheck-Ready", 12)
             tick:SetTexCoord(0, 1, 0, 1)
             tick:SetPoint("RIGHT", key, "LEFT", -3, 0)
@@ -763,12 +773,6 @@ UI:RegisterRenderer("companions", function(pool, page, side, canvas)
             n:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 42, y - 3)
             local days = 0
             for _ in pairs(e.days or {}) do days = days + 1 end
-            local sub = pool:Text(9, c.inkFaint, UI.FONT)
-            sub:SetText(((e.class or "") .. "  -  " .. format(L["first met %s"], date(WFD.loc.date, e.first))
-                .. (e.zone and ("  -  " .. e.zone) or "")):upper())
-            sub:SetWidth(tw - 42)
-            sub:SetWordWrap(false)
-            sub:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 42, y - 23)
             -- kills and days together, as two small figures on the right
             local stats = { { e.kills or 0, L["kills"] }, { days, L["days"] } }
             local x = tx + tw
@@ -781,8 +785,21 @@ UI:RegisterRenderer("companions", function(pool, page, side, canvas)
                 l:SetPoint("TOPRIGHT", canvas, "TOPLEFT", x, y - 16)
                 x = x - max(34, l:GetStringWidth() + 10)
             end
+            -- the line below the name ends where the figures begin
+            local sub = pool:Text(9, c.inkFaint, UI.FONT)
+            local met = format(L["first met %s"], date(WFD.loc.date, e.first))
+            local room = x - tx - 42
+            for _, s in ipairs({ (e.class or "") .. "  -  " .. met .. (e.zone and ("  -  " .. e.zone) or ""),
+                (e.class or "") .. "  -  " .. met, met }) do
+                sub:SetText(s:upper())
+                if sub:GetStringWidth() <= room then break end
+            end
+            sub:SetWidth(room)
+            sub:SetWordWrap(false)
+            sub:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 42, y - 23)
             local p = UI.book.dayPage[WFD:DayIndex(e.first)]
-            local hot = pool:Hot({ e.name or "?", format(L["%d times grouped"], e.groups),
+            local hot = pool:Hot({ e.name or "?", (e.class or "") .. (e.zone and ("  -  " .. e.zone) or ""),
+                format(L["%d times grouped"], e.groups),
                 format(L["%d kills together"], e.kills or 0) }, p and function() UI:GoToPage(p) end)
             hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 2)
             hot:SetSize(tw, r.h - 4)

@@ -363,15 +363,23 @@ UI:RegisterRenderer("owner", function(pool, page, side, canvas)
         fs:SetPoint("TOP", canvas, "TOPLEFT", cx, y)
         return fs
     end
+    -- one line each: in a long language or with larger writing the line gets smaller letters, it is never cut
+    local function fit(fs, size, minSize, font)
+        UI.FitText(fs, UI.TextW(), size, minSize, font or UI.FONT)
+        fs:SetWidth(UI.TextW())
+        fs:SetWordWrap(false)
+    end
     local t = pool:Text(15, c.inkSoft, UI.FONT, "CENTER")
     t:SetText(L["This book belongs to"])
     center(t, -64)
     local n = pool:Text(44, c.ink, UI.HEAD, "CENTER")
     n:SetText(C.name or UnitName("player"))
+    fit(n, 44, 24, UI.HEAD)
     center(n, -88)
     local lvl = UnitLevel("player")
     local w = pool:Text(10, c.redInk, UI.FONT, "CENTER")
     w:SetText(((C.race or "") .. "  -  " .. (C.class or "") .. "  -  " .. format(L["Level %d"], lvl)):upper())
+    fit(w, 10, 9)
     center(w, -142)
 
     -- portrait in a gold medallion
@@ -390,6 +398,7 @@ UI:RegisterRenderer("owner", function(pool, page, side, canvas)
 
     local begun = pool:Text(14, c.ink, UI.FONT, "CENTER")
     begun:SetText(format(L["Begun on %s"], WFD:LongDate(1)))
+    fit(begun, 14, 11)
     center(begun, -336)
     local where = pool:Text(14, c.ink, UI.FONT, "CENTER")
     if C.fresh then
@@ -397,9 +406,11 @@ UI:RegisterRenderer("owner", function(pool, page, side, canvas)
     else
         where:SetText(format(L["in %s, at level %d"], WFD:Place(C.startZone or "?", "in"), C.startLevel or 1))
     end
+    fit(where, 14, 11)
     center(where, -358)
     local realm = pool:Text(12, c.inkSoft, UI.FONT, "CENTER")
     realm:SetText(format(L["Realm: %s"], C.realm or "?"))
+    fit(realm, 12, 10)
     center(realm, -380)
 
     -- the saying of the day, under a small heading; a book that has just begun gets a welcome instead

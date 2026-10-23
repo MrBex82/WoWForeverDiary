@@ -188,8 +188,11 @@ UI:RegisterRenderer("family", function(pool, page, side, canvas)
             end
             line(pool, canvas, tx + 62, y - 28, tw - 62 - 8,
                 ((e.race or "") .. " " .. (e.class or "")) .. "  -  " .. (e.realm or ""), 10, c.inkSoft)
-            line(pool, canvas, tx + 62, y - 44, tw - 62 - 8,
+            local stats = line(pool, canvas, tx + 62, y - 44, tw - 62 - 8,
                 format(L["%d days of life  -  %d creatures slain  -  %d quests completed"], e.days or 0, e.kills or 0, e.quests or 0), 9, c.inkFaint)
+            if stats:GetStringWidth() > tw - 62 - 8 then
+                stats:SetText(format(L["%d days  -  %d kills  -  %d quests"], e.days or 0, e.kills or 0, e.quests or 0))
+            end
             rightText(pool, canvas, tx + tw - 8, y - 8, format(L["%d honour points"], e.points or 0), 10, c.redInk)
             -- a line of its own, so it never runs into the realm
             if e.dead then
@@ -228,7 +231,7 @@ local LETTER_LINE = 17
 
 local function letterHeight(letter)
     if letter.opened then
-        return 46 + UI.Measure(letter.text or "", 12, UI.TextW() - 24, LETTER_LINE - 12, UI.FONT) + 14
+        return 46 + UI.Measure(letter.text or "", UI.FS(12), UI.TextW() - 24, LETTER_LINE - 12, UI.FONT) + 14
     end
     return 50
 end

@@ -170,6 +170,23 @@ local function paintable(f)
     return best
 end
 
+-- a moment card: one line for its subject, or two when it is too long for one (the card grows with it)
+local function momentSubject(ev) return (ev.k ~= "level" and ev.s and ev.s:match(":%s*(.+)$")) or ev.s or "" end
+local function momentTwoLines(ev)
+    return UI.MeasureWidth(momentSubject(ev), UI.FS(13), UI.FONT) > textColW() - 38 - 44
+end
+local function momentH(ev) return momentTwoLines(ev) and (MOMENT_H + UI.FS(12) + 2) or MOMENT_H end
+
+-- the line of figures under the date: "Level 5!  ·  40 kills  ·  3 quests ..."
+local function factsText(list)
+    local parts = {}
+    for _, n in ipairs(list) do
+        local k = n[2]
+        parts[#parts + 1] = format("|cff%02x%02x%02x%s|r", floor(k[1] * 255), floor(k[2] * 255), floor(k[3] * 255), n[1])
+    end
+    return concat(parts, "   |cff8a7a5c·|r   ")
+end
+
 local function keepsakes(f)
     local items = {}
     for _, it in ipairs(f.items) do
@@ -181,7 +198,8 @@ local function keepsakes(f)
     end
     if #items == 0 and #moments == 0 then return nil end
     -- label, the taped item cards, then one line per moment
-    local h = 24 + (#items > 0 and 100 or 0) + #moments * MOMENT_H
+    local h = 24 + (#items > 0 and 100 or 0)
+    for _, ev in ipairs(moments) do h = h + momentH(ev) end
     return { items = items, moments = moments, h = h }
 end
 
@@ -189,7 +207,7 @@ end
 local function taskRowHeights(list, w)
     local rows, sum = {}, 0
     for i, task in ipairs(list) do
-        rows[i] = max(17, UI.Measure(WFD:ChallengeText(task), 11, w, 0, UI.FONT) + 5)
+        rows[i] = max(17, UI.Measure(WFD:ChallengeText(task), UI.FS(11), w, 0, UI.FONT) + 5)
         sum = sum + rows[i]
     end
     return rows, 22 + sum + 6
@@ -199,6 +217,11 @@ function UI.LayoutDiary(book, chapters)
     if WFD.TodayChallenges then WFD:TodayChallenges() end     -- pick today's tasks before laying out today
     local AREA = UI.AREA_H
     local TCW = textColW()
+    -- measured at the size the page will draw (the writing can be made larger in the settings)
+    local FS, CAP = UI.FS(FONT_SIZE), UI.FS(CAP_SIZE)
+    -- languages written without spaces (Chinese) are broken between any two characters
+    local SEP = (WFD.loc.sentenceSep == "") and "" or " "
+    local WORD = SEP == "" and "[%z\1-\127\194-\244][\128-\191]*" or "%S+"
     local page, y
 
     local function newPage(head)
@@ -230,7 +253,10 @@ function UI.LayoutDiary(book, chapters)
             put({ t = "day", day = day, place = f and f.mainZone or ch.zone, time = f and timeLine(f.d) }, H_DAY)
             -- the facts of the day in one line under the date (they stood small in the margin before)
             local facts = f and marginNotes(f)
-            if facts and #facts > 0 then put({ t = "facts", list = facts }, 22) end
+            -- a full day takes two lines of figures rather than losing the last ones
+            if facts and #facts > 0 then
+                put({ t = "facts", list = facts }, max(22, UI.Measure(factsText(facts), UI.FS(12), TCW, 0, UI.FONT) + 8))
+            end
             if day == WFD:NumDays() then
                 local fb = flashback(day)
                 if fb then put({ t = "flashback", fb = fb }, 62) end
@@ -261,38 +287,38 @@ function UI.LayoutDiary(book, chapters)
             for pi, text in ipairs(paras) do
                 local kind = kinds[pi] or "para"
                 local words = {}
-                for w in text:gmatch("%S+") do words[#words + 1] = w end
+                for w in text:gmatch(WORD) do words[#words + 1] = w end
                 local from = 1
                 local first = (pi == 1)
                 if first and kind == "para" and #words > 0 then
                     -- illuminated initial: a big red letter, the first lines indented beside it
                     local letter = words[1]:match("^[%z\1-\127\194-\244][\128-\191]*")
                     if letter and (#letter > 1 or letter:find("%w")) then
-                        if y + CAP_LINES * (FONT_SIZE + SPACING) + 4 > AREA then newPage(head) end
+                        if y + CAP_LINES * (FS + SPACING) + 4 > AREA then newPage(head) end
                         local rest = words[1]:sub(#letter + 1)
-                        local capW = UI.MeasureWidth(letter, CAP_SIZE, UI.HEAD) + (rest == "" and 8 or 3)
+                        local capW = UI.MeasureWidth(letter, CAP, UI.HEAD) + (rest == "" and 8 or 3)
                         local tw2 = TCW - 8 - capW
-                        local limit = CAP_LINES * FONT_SIZE + (CAP_LINES - 1) * SPACING + 4
+                        local limit = CAP_LINES * FS + (CAP_LINES - 1) * SPACING + 4
                         local w1 = { rest }
                         local n = 1
                         for k = 2, #words do
                             w1[#w1 + 1] = words[k]
-                            if UI.Measure(concat(w1, " "), FONT_SIZE, tw2, SPACING, UI.FONT) > limit then
+                            if UI.Measure(concat(w1, SEP), FS, tw2, SPACING, UI.FONT) > limit then
                                 w1[#w1] = nil
                                 break
                             end
                             n = k
                         end
-                        local text = concat(w1, " "):gsub("^ ", "")
-                        local h = CAP_LINES * (FONT_SIZE + SPACING)
+                        local text = concat(w1, SEP):gsub("^ ", "")
+                        local h = CAP_LINES * (FS + SPACING)
                         put({ t = "dropcap", letter = letter, text = text, capW = capW }, n >= #words and (h + GAP) or h)
                         from = n + 1
                         first = false
                     end
                 end
                 while from <= #words do
-                    local rest = concat(words, " ", from)
-                    local h = UI.Measure(rest, FONT_SIZE, TCW - 8, SPACING, UI.FONT)
+                    local rest = concat(words, SEP, from)
+                    local h = UI.Measure(rest, FS, TCW - 8, SPACING, UI.FONT)
                     if y + h <= AREA then
                         put({ t = kind, text = rest, first = first }, h + GAP)
                         break
@@ -301,7 +327,7 @@ function UI.LayoutDiary(book, chapters)
                     local lo, hi, best = from, #words, from - 1
                     while lo <= hi do
                         local mid = floor((lo + hi) / 2)
-                        if UI.Measure(concat(words, " ", from, mid), FONT_SIZE, TCW - 8, SPACING, UI.FONT) <= remaining then
+                        if UI.Measure(concat(words, SEP, from, mid), FS, TCW - 8, SPACING, UI.FONT) <= remaining then
                             best = mid
                             lo = mid + 1
                         else
@@ -309,8 +335,8 @@ function UI.LayoutDiary(book, chapters)
                         end
                     end
                     if best >= from then
-                        local part = concat(words, " ", from, best)
-                        put({ t = kind, text = part, first = first }, UI.Measure(part, FONT_SIZE, TCW - 8, SPACING, UI.FONT))
+                        local part = concat(words, SEP, from, best)
+                        put({ t = kind, text = part, first = first }, UI.Measure(part, FS, TCW - 8, SPACING, UI.FONT))
                         from = best + 1
                         first = false
                     end
@@ -383,19 +409,11 @@ local function drawKeep(pool, canvas, x, top, keep, w)
     end
     if #keep.items > 0 then top = top - 100 end      -- card and a name of up to two lines
     -- one small card per moment: accent stripe and icon in the colour of its kind, the kind, the text, the time
-    for i, ev in ipairs(keep.moments) do
-        local def = UI.SEAL[ev.k]
-        local my = top - (i - 1) * MOMENT_H
-        local ch = MOMENT_H - 4
-        local icon = UI.Icon(def.icon)
-        local col = def.col
-        if ev.k == "honour" and ev.honour and WFD.HonourDef then
-            local h = WFD:HonourDef(ev.honour)
-            if h then
-                icon = UI.IconPath(h.icon, "honour")
-                col = WFD:MetalOf(ev.tier or 1, #h.tiers).col
-            end
-        end
+    local my = top
+    for _, ev in ipairs(keep.moments) do
+        local two = momentTwoLines(ev)
+        local ch = momentH(ev) - 4
+        local icon, col = UI.MomentIcon(ev)
         -- the kind colour lifted toward cream, so it reads on dark leather
         local light = { col[1] * 0.45 + 0.55, col[2] * 0.45 + 0.55, col[3] * 0.45 + 0.55, 1 }
         local bg = pool:Rect(c.paperDk, 0.40)
@@ -411,11 +429,10 @@ local function drawKeep(pool, canvas, x, top, keep, w)
         kind:SetWordWrap(false)
         kind:SetWidth(w - 40 - 50)
         kind:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 38, my - 3)
-        local subject = (ev.k ~= "level" and ev.s and ev.s:match(":%s*(.+)$")) or ev.s or ""
-        local t = pool:Text(13, c.ink, UI.FONT)
-        t:SetText(subject)
-        t:SetWordWrap(false)
+        local t = pool:Text(two and 12 or 13, c.ink, UI.FONT)
+        t:SetText(momentSubject(ev))
         t:SetWidth(w - 38 - 44)
+        if t.SetMaxLines then t:SetMaxLines(2) end
         t:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 38, my - 14)
         local tm = pool:Text(10, c.inkSoft, UI.FONT, "RIGHT")
         tm:SetText(date("%H:%M", ev.t))
@@ -430,6 +447,7 @@ local function drawKeep(pool, canvas, x, top, keep, w)
         local hot = pool:Hot(lines, go)
         hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, my)
         hot:SetSize(w, ch)
+        my = my - ch - 4
     end
 end
 
@@ -508,15 +526,9 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
             hot:SetPoint("TOPLEFT", d, "TOPLEFT", -4, 4)
             hot:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", 2, -2)
         elseif it.t == "facts" then
-            local parts = {}
-            for _, n in ipairs(it.list) do
-                local k = n[2]
-                parts[#parts + 1] = format("|cff%02x%02x%02x%s|r", floor(k[1] * 255), floor(k[2] * 255), floor(k[3] * 255), n[1])
-            end
             local fs = pool:Text(12, c.inkSoft, UI.FONT)
             fs:SetWidth(TCW)
-            fs:SetWordWrap(false)
-            fs:SetText(concat(parts, "   |cff8a7a5c·|r   "))
+            fs:SetText(factsText(it.list))
             fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", textX, y - 2)
         elseif it.t == "para" then
             local fs = pool:Text(FONT_SIZE, c.ink, UI.FONT)
