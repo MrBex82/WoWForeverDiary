@@ -143,7 +143,7 @@ UI:RegisterSection({
 UI:RegisterRenderer("family", function(pool, page, side, canvas)
     local tx, tw = UI.TextX(side), UI.TextW()
     if page.first then
-        UI.PageTitle(pool, canvas, side, L["Family book"], format(L["%d characters on this account"], page.count), -56)
+        UI.PageTitle(pool, canvas, side, L["Family book"], WFD:Count("%d characters on this account", page.count), -56)
     end
     local top = -UI.TOP
     for _, r in ipairs(page.rows) do
@@ -166,9 +166,9 @@ UI:RegisterRenderer("family", function(pool, page, side, canvas)
             line(pool, canvas, tx + 62, y - 28, tw - 62 - 8,
                 ((e.race or "") .. " " .. (e.class or "")) .. "  -  " .. (e.realm or ""), 10, c.inkSoft)
             local stats = line(pool, canvas, tx + 62, y - 44, tw - 62 - 8,
-                format(L["%d days of life  -  %d creatures slain  -  %d quests completed"], e.days or 0, e.kills or 0, e.quests or 0), 9, c.inkFaint)
+                WFD:Count("%d days of life  -  %d creatures slain  -  %d quests completed", e.days or 0, e.kills or 0, e.quests or 0), 9, c.inkFaint)
             if stats:GetStringWidth() > tw - 62 - 8 then
-                stats:SetText(format(L["%d days  -  %d kills  -  %d quests"], e.days or 0, e.kills or 0, e.quests or 0))
+                stats:SetText(WFD:Count("%d days  -  %d kills  -  %d quests", e.days or 0, e.kills or 0, e.quests or 0))
             end
             rightText(pool, canvas, tx + tw - 8, y - 8, format(L["%d honour points"], e.points or 0), 10, c.redInk)
             -- a line of its own, so it never runs into the realm
@@ -179,7 +179,7 @@ UI:RegisterRenderer("family", function(pool, page, side, canvas)
             end
             local hot = pool:Hot({
                 e.name or "?", format(L["Level %d"], e.level or 0) .. "  -  " .. (e.class or ""),
-                format(L["%d days of life  -  %d creatures slain  -  %d quests completed"], e.days or 0, e.kills or 0, e.quests or 0),
+                WFD:Count("%d days of life  -  %d creatures slain  -  %d quests completed", e.days or 0, e.kills or 0, e.quests or 0),
                 L["Deaths"] .. ": " .. (e.deaths or 0) .. "   " .. L["On foot"] .. ": " .. WFD:Dec(e.km or 0) .. " km",
                 L["Time online"] .. ": " .. WFD:DurationText(e.online or 0),
             })
@@ -321,7 +321,7 @@ UI:RegisterRenderer("capsule", function(pool, page, side, canvas)
                 sub = format(L["Opened on %s"], date(WFD.loc.date, l.opened))
             elseif l.openDay then
                 local left = l.openDay - WFD:DayIndex()
-                sub = format(L["Sealed - opens on day %d"], l.openDay) .. (left > 0 and ("  (" .. format(L["in %d days"], left) .. ")") or "")
+                sub = format(L["Sealed - opens on day %d"], l.openDay) .. (left > 0 and ("  (" .. WFD:Count("in %d days", left) .. ")") or "")
             else
                 sub = format(L["Sealed - opens at level %d"], l.openLevel or 0)
             end
@@ -362,10 +362,35 @@ UI:RegisterSection({
         for _, k in ipairs(WFD.GATHER_KINDS or {}) do labels[#labels + 1] = kindName(k) end
         local list = { { h = (#labels > 0 and UI.TileHeight(tw, labels) or 42) + 28, summary = true, per = per } }
         if #maps == 0 then list[#list + 1] = { h = 50, empty = true } end
+        -- the regions as a small index under the figures, so the first page is not left half empty
+        if #maps > 0 then list[#list + 1] = { h = 30, indexHead = true } end
+        for i = 1, min(10, #maps) do list[#list + 1] = { h = 22, index = maps[i] } end
         for i = 1, min(10, #maps) do list[#list + 1] = { h = MAP_H + 66, map = maps[i] } end
         book:AddRows("gathering", list, { head = L["Gatherer's map"] })
     end,
 })
+
+-- what was gathered in a region: the icon of each kind with its count (or, for a tooltip, its name)
+local function kindCounts(m, words)
+    local parts = {}
+    for _, k in ipairs(WFD.GATHER_KINDS or {}) do
+        local n = m.kinds[k.key]
+        if n then
+            parts[#parts + 1] = words and (kindName(k) .. ": " .. n)
+                or ("|T" .. UI.IconPath(k.icon, "gather") .. ":12:12:0:0|t |cff" .. UI.Hex(k.col) .. n .. "|r")
+        end
+    end
+    return table.concat(parts, words and ", " or "   ")
+end
+
+-- the page that shows the map of a region
+local function mapPageOf(id)
+    for i, p in ipairs(UI.book and UI.book.pages or {}) do
+        if p.kind == "gathering" then
+            for _, r in ipairs(p.rows or {}) do if r.map and r.map.id == id then return i end end
+        end
+    end
+end
 
 UI:RegisterRenderer("gathering", function(pool, page, side, canvas)
     local C = WFD.C
@@ -382,17 +407,24 @@ UI:RegisterRenderer("gathering", function(pool, page, side, canvas)
             UI.Tiles(pool, canvas, tx, y, tw, tiles)
         elseif r.empty then
             emptyNote(pool, canvas, tx, tw, y - 6, L["Nothing gathered yet. Herbs, ore and hides show up here as soon as you gather them."])
+        elseif r.indexHead then
+            UI.SectionHead(pool, canvas, tx, tw, y, r.h, L["Regions"])
+        elseif r.index then
+            local m = r.index
+            local go = mapPageOf(m.id)
+            line(pool, canvas, tx + 4, y - 3, tw * 0.5, WFD:MapName(m.id), 12, c.ink)
+            rightText(pool, canvas, tx + tw - 48, y - 3, kindCounts(m), 11, c.inkSoft)
+            if go then rightText(pool, canvas, tx + tw, y - 3, format(L["p. %d"], UI.PageNumber(go)), 10, c.inkFaint) end
+            local hot = pool:Hot({ WFD:MapName(m.id), kindCounts(m, true) }, go and function() UI:GoToPage(go) end)
+            hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 1)
+            hot:SetSize(tw, r.h - 2)
         elseif r.map then
             local m = r.map
             -- heading: region name and what was gathered there
             local d = pool:Diamond(6, c.redInk)
             d:SetPoint("CENTER", canvas, "TOPLEFT", tx + 3, y - 7)
             line(pool, canvas, tx + 12, y - 1, tw * 0.6, WFD:MapName(m.id), 13, c.ink, UI.HEAD)
-            local parts = {}
-            for _, k in ipairs(WFD.GATHER_KINDS or {}) do
-                if m.kinds[k.key] then parts[#parts + 1] = "|cff" .. UI.Hex(k.col) .. m.kinds[k.key] .. "|r" end
-            end
-            rightText(pool, canvas, tx + tw, y - 2, table.concat(parts, "  "), 11, c.inkSoft)
+            rightText(pool, canvas, tx + tw, y - 2, kindCounts(m), 11, c.inkSoft)
             -- the map with a dot for every spot
             local MAT = 9
             local mw, mh = tw - MAT * 2, MAP_H - MAT * 2
@@ -423,7 +455,11 @@ UI:RegisterRenderer("gathering", function(pool, page, side, canvas)
             table.sort(top3, function(a, b) return a.n > b.n end)
             local finds = {}
             for i = 1, min(3, #top3) do finds[#finds + 1] = top3[i].name .. " x" .. top3[i].n end
-            line(pool, canvas, tx, y - 20 - MAP_H - 6, tw, #finds > 0 and (L["Most found here"] .. ": " .. table.concat(finds, ", ")) or "", 10, c.inkSoft)
+            local found = pool:Text(10, c.inkSoft, UI.FONT)
+            found:SetText(#finds > 0 and (L["Most found here"] .. ": " .. table.concat(finds, ", ")) or "")
+            found:SetWidth(tw)
+            if found.SetMaxLines then found:SetMaxLines(2) end
+            found:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 20 - MAP_H - 6)
         end
     end
 end)

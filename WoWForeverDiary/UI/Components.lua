@@ -26,9 +26,9 @@ function Pool:Begin()
     end
 end
 
--- Nothing on a page is cut off: a text too long for its line, or for the lines it may take, gets smaller
--- letters step by step (to about three fifths of its size). Long words in long languages and the larger
--- writing chosen in the settings then still fit.
+-- A text too long for its line, or for the lines it may take, first gets a little smaller (down to about
+-- five sixths of its size, so a list keeps one size), then it is shortened with "..." where the client would
+-- cut it anyway. Colour codes and icons inside the text stay whole; the full text is in the tooltips.
 local function truncated(fs)
     if fs.CanWordWrap and not fs:CanWordWrap() then
         local w = fs:GetWidth() or 0
@@ -43,11 +43,42 @@ function UI.Unclip(fs)
     local font, size, flags = fs:GetFont()
     if not (font and size) then return end
     size = floor(size + 0.5)
-    local smallest = max(8, floor(size * 0.62))
+    local smallest = max(8, floor(size * 0.85))
     while size > smallest and truncated(fs) do
         size = size - 1
         fs:SetFont(font, size, flags or "")
     end
+    if not truncated(fs) then return end
+    -- the pieces of the text: escape codes (|cff..., |r, |T...|t) are kept whole, letters are counted
+    local text = fs:GetText()
+    local pieces, letters = {}, {}
+    local pos = 1
+    while pos <= #text do
+        local a, b = text:find("^|c%x%x%x%x%x%x%x%x", pos)
+        if not a then a, b = text:find("^|r", pos) end
+        if not a then a, b = text:find("^|T.-|t", pos) end
+        if a then
+            pieces[#pieces + 1] = text:sub(a, b)
+        else
+            local ch = text:match("^[%z\1-\127\194-\244][\128-\191]*", pos)
+            pieces[#pieces + 1] = ch
+            letters[#letters + 1] = #pieces
+            b = pos + #ch - 1
+        end
+        pos = b + 1
+    end
+    local function upTo(n)
+        local last = n > 0 and letters[n] or 0
+        local s = table.concat(pieces, "", 1, last):gsub("%s+$", "")
+        return s .. "...|r"
+    end
+    local lo, hi, best = 0, #letters - 1, 0
+    while lo <= hi do
+        local mid = floor((lo + hi) / 2)
+        fs:SetText(upTo(mid))
+        if truncated(fs) then hi = mid - 1 else best, lo = mid, mid + 1 end
+    end
+    fs:SetText(upTo(best))
 end
 
 function Pool:End()
@@ -321,9 +352,10 @@ function Pool:Check(label, getter, setter)
     local b = self:Get("check", function(p)
         local cb = CreateFrame("Button", nil, p)
         cb:SetSize(300, 22)
-        local box = UI.Frame(cb, 18, 18)
-        UI.Backdrop(box, "tooltip", 10, 2, { 0.10, 0.07, 0.04, 0.9 }, c.goldDk)
-        box:SetPoint("LEFT", 0, 0)
+        -- a square with a thin gold line: empty it reads as a box to tick, not as a dark dot
+        local box = UI.Frame(cb, 15, 15)
+        UI.Backdrop(box, nil, 1, 0, { 0.10, 0.07, 0.04, 0.9 }, c.goldDk)
+        box:SetPoint("LEFT", 2, 0)
         cb.tick = box:CreateTexture(nil, "OVERLAY")
         cb.tick:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
         cb.tick:SetSize(24, 24)
@@ -956,7 +988,7 @@ function UI.MapSketch(parent, w, h)
         table.sort(people, function(a, b) return (a.n.talks or 0) > (b.n.talks or 0) end)
         for i = #people, 1, -1 do       -- small ones first, numbered ones on top
             local e = people[i]
-            addPin(e.n.x, e.n.y, { 0.80, 0.55, 0.12, 1 }, { e.n.name, format(L["Spoken to %d times"], e.n.talks or 0) },
+            addPin(e.n.x, e.n.y, { 0.80, 0.55, 0.12, 1 }, { e.n.name, WFD:Count("Spoken to %d times", e.n.talks or 0) },
                 (i <= 6) and { kind = "npc", key = e.key, name = e.n.name, num = i } or nil)
         end
         local graves = 0
@@ -1436,5 +1468,6 @@ end
 -- paintings are built for one size: every size gets its own pool kind
 function Pool:Painting(w, h)
     local p = self:Get("painting" .. floor(w) .. "x" .. floor(h), function(parent) return UI.Painting(parent, w, h) end)
+    p.plaque:Show()          -- a page that writes the name below the picture hides it again
     return p
 end

@@ -366,12 +366,12 @@ UI:RegisterRenderer("fishwaters", function(pool, page, side, canvas)
         nm:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 2, y - 2)
         local rate = min(1, (w.z.loot or 0) / max(1, w.z.casts))
         local cnt = pool:Text(10, c.inkSoft, UI.FONT, "RIGHT")
-        cnt:SetText(format(L["%d caught in %d casts"], w.z.loot or 0, w.z.casts))
+        cnt:SetText(WFD:Count("%d caught in %d casts", w.z.loot or 0, w.z.casts))
         cnt:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 2)
         local bx = tx + tw * 0.42 + 8
         local bw = tx + tw - max(90, cnt:GetStringWidth() + 8) - bx - 6
         if bw > 12 then UI.ProgressBar(pool, canvas, bx, y - 6, bw, 5, rate, c.redInk) end
-        local hot = pool:Hot({ WFD:MapName(w.map) or "?", format(L["%d caught in %d casts"], w.z.loot or 0, w.z.casts) })
+        local hot = pool:Hot({ WFD:MapName(w.map) or "?", WFD:Count("%d caught in %d casts", w.z.loot or 0, w.z.casts) })
         hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 1)
         hot:SetSize(tw, 20)
         y = y - 22
@@ -396,7 +396,7 @@ UI:RegisterRenderer("fishwaters", function(pool, page, side, canvas)
         local ic = pool:Icon(instantIcon(rods[i].id) or (r.link and WFD:ItemIcon(r.link)) or UI.IconPath(fallback, "loot"), 18)
         ic:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 1, y)
         local cnt = pool:Text(10, c.inkSoft, UI.FONT, "RIGHT")
-        cnt:SetText(L[TACKLE_LABEL[r.kind or "rod"] or "Fishing pole"] .. "  -  " .. format(L["%d casts"], r.n or 0))
+        cnt:SetText(L[TACKLE_LABEL[r.kind or "rod"] or "Fishing pole"] .. "  -  " .. WFD:Count("%d casts", r.n or 0))
         cnt:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 3)
         -- the name takes what the kind and the casts leave free
         local nm = pool:Text(12, c.ink, UI.FONT)

@@ -169,7 +169,7 @@ UI:RegisterRenderer("fatestats", function(pool, page, side, canvas)
     end
     local ROW = max(22, UI.FS(12) + 10)
     -- a small ranking: { label, count, onClick }
-    local function ranking(title, items, limit)
+    local function ranking(title, items, limit, empty)
         if y - 22 - ROW < bottom then return end
         table.sort(items, function(a, b)
             if a[2] ~= b[2] then return a[2] > b[2] end
@@ -177,6 +177,15 @@ UI:RegisterRenderer("fatestats", function(pool, page, side, canvas)
         end)
         UI.SectionHead(pool, canvas, tx, tw, y + 18, 32, title)
         y = y - 22
+        if #items == 0 then
+            -- a heading never stands alone: it says why the list is empty
+            local e = pool:Text(11, c.inkFaint, UI.FONT)
+            e:SetText(empty or "-")
+            e:SetWidth(tw - 8)
+            e:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 4, y - 2)
+            y = y - ROW - 12
+            return
+        end
         local most = items[1] and items[1][2] or 1
         for i = 1, min(limit, #items) do
             if y - ROW < bottom then break end
@@ -217,7 +226,7 @@ UI:RegisterRenderer("fatestats", function(pool, page, side, canvas)
         foes[#foes + 1] = { name, n, nemesisPage and function() UI:GoToPage(nemesisPage) end }
     end
     ranking(L["Where you fall most"], zones, 5)
-    ranking(L["Who defeated you most"], foes, 5)
+    ranking(L["Who defeated you most"], foes, 5, L["The diary could not tell who it was."])
     -- by level, in bands of ten, the lowest first
     for band, n in pairs(byLevel) do
         local a, b = max(1, band * 10), band * 10 + 9

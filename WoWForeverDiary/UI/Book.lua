@@ -41,7 +41,7 @@ local LAYOUT = {
     memoriam = { "front", 1 }, quests = { "front", 3, "Tasks taken and done" },
     tasks = { "goals", 4.8, "Day, week and month" },
     collection = { "goals", 5, "What is left to discover" }, honour = { "goals", 6, "Honour points" },
-    milestones = { "chronicle", 10, "The great moments of a life" }, firsts = { "chronicle", 11, "First times" },
+    milestones = { "chronicle", 10, "The great moments of a life" }, firsts = { "chronicle", 11, "Every first, with its day and place" },
     records = { "chronicle", 12, "The best and the worst of days" },
     levels = { "chronicle", 13, "How long each level took" }, gallery = { "chronicle", 14, "Moments, painted in the gear of their day" },
     atlas = { "world", 19, "Regions explored" }, maps = { "world", 20, "Map of my travels" },
@@ -144,19 +144,50 @@ UI.TITLE_H = 116        -- the room a section title takes on its first page
 -- Rows of different heights over as many pages of one kind as needed, the first page leaving room for the
 -- title. A row keeps r.keep more room free below it (a heading never stays alone at the foot of a page).
 -- extra goes onto every page (head, counts ...). Returns the last page.
-function Book:AddRows(kind, list, extra)
-    local page, y
+-- A last page with only a few rows on it (one entry alone on a spread of its own) is avoided: the rows then
+-- move a little closer together, by a tenth at most, if that brings them onto the pages before.
+-- carry(r), if given, may return a row to repeat at the top of a page that begins with r (a day heading).
+local function planRows(list, scale, carry)
+    local pages, cur, y = {}, nil, 0
     local function newPage(first)
-        page = self:Add({ kind = kind, rows = {}, first = first, numbered = true })
-        for k, v in pairs(extra or {}) do if page[k] == nil then page[k] = v end end
+        cur = {}
+        pages[#pages + 1] = cur
         y = first and UI.TITLE_H or 0
+    end
+    local function put(r)
+        local h = floor(r.h * scale + 0.5)
+        cur[#cur + 1] = { r = r, y = y, h = h }
+        y = y + h
     end
     newPage(true)
     for _, r in ipairs(list) do
-        if y + r.h + (r.keep or 0) > UI.AREA_H then newPage(false) end
-        r.y = y
-        page.rows[#page.rows + 1] = r
-        y = y + r.h
+        local h = floor(r.h * scale + 0.5)
+        if y + h + floor((r.keep or 0) * scale + 0.5) > UI.AREA_H then
+            newPage(false)
+            local head = carry and carry(r)
+            if head then put(head) end
+        end
+        put(r)
+    end
+    return pages, y
+end
+
+function Book:AddRows(kind, list, extra, carry)
+    local plan, lastY = planRows(list, 1, carry)
+    if #plan > 1 and lastY <= UI.AREA_H * 0.25 then
+        for _, scale in ipairs({ 0.95, 0.9 }) do
+            local tighter = planRows(list, scale, carry)
+            if #tighter < #plan then plan = tighter break end
+        end
+    end
+    local page
+    for i, rows in ipairs(plan) do
+        page = self:Add({ kind = kind, rows = {}, first = (i == 1), numbered = true })
+        for k, v in pairs(extra or {}) do if page[k] == nil then page[k] = v end end
+        for _, p in ipairs(rows) do
+            p.r.y, p.r.h = p.y, p.h
+            page.rows[#page.rows + 1] = p.r
+        end
     end
     return page
 end
@@ -1822,7 +1853,7 @@ WFD:OnInit(function()
             local d = C.days[WFD:DayIndex()]
             GameTooltip:AddLine(format(L["Day %d"], WFD:NumDays()), 1, 1, 1)
             if d then
-                GameTooltip:AddLine(format(L["%d kills today"], d.killTotal) .. ", " .. format(L["%d quests today"], #d.qd), 0.8, 0.8, 0.8)
+                GameTooltip:AddLine(WFD:Count("%d kills today", d.killTotal) .. ", " .. WFD:Count("%d quests today", #d.qd), 0.8, 0.8, 0.8)
             end
         end
         GameTooltip:AddLine(L["Click to open the diary."], 0.5, 0.8, 1)

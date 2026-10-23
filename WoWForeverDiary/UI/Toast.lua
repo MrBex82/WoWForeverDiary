@@ -570,7 +570,7 @@ function UI:ShowRecap(force)
     if #s.zones > 0 then lines[#lines + 1] = { L["New regions"], list3(s.zones) } end
     if #s.marks > 0 then lines[#lines + 1] = { L["Landmarks"], list3(s.marks) } end
     if #s.honours > 0 then lines[#lines + 1] = { L["Honours"], list3(s.honours) } end
-    if s.best then lines[#lines + 1] = { L["Best day"], format(L["Day %d"], s.best) .. "  -  " .. format(L["%d kills"], s.bestK) } end
+    if s.best then lines[#lines + 1] = { L["Best day"], format(L["Day %d"], s.best) .. "  -  " .. WFD:Count("%d kills", s.bestK) } end
     if #lines == 0 then lines[1] = { L["A quiet week"], L["The book waits for new stories."] } end
     local y = -204
     for i = 1, min(4, #lines) do

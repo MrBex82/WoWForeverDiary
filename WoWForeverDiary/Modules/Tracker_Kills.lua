@@ -5,6 +5,7 @@ local band, format, time = bit.band, string.format, time
 
 local mobCache = {}   -- npcId -> { level, classification, creatureType, name }
 local lastHitter      -- { name, t } : who damaged the player last
+local lastThreat      -- { name, t } : the last creature seen attacking the player (it had the player as its target)
 local lastKill        -- { name, t, id }
 local playerGUID
 
@@ -236,7 +237,13 @@ else
         if kind ~= "Creature" or not id or UnitIsPlayer(unit) then return end
         if not UnitIsDead(unit) then
             if AIMED[unit] then aliveAt[guid] = GetTime() end
-            if UnitThreatSituation and UnitThreatSituation("player", unit) then engaged[guid] = GetTime() end
+            local ok, st = false, nil
+            if UnitThreatSituation then ok, st = pcall(UnitThreatSituation, "player", unit) end
+            if ok and st and not (issecretvalue and issecretvalue(st)) then
+                engaged[guid] = GetTime()
+                -- 2 and 3: the creature is after you. Without a combat log that is the best guess at a killer
+                if st >= 2 then lastThreat = { name = UnitName(unit), t = time() } end
+            end
             return
         end
         if counted[guid] then return end
@@ -320,6 +327,7 @@ WFD:On("PLAYER_DEAD", function()
 
     local by
     if lastHitter and time() - lastHitter.t < 12 then by = lastHitter.name end
+    if not by and lastThreat and time() - lastThreat.t < 12 then by = lastThreat.name end
     if not by and UnitExists("target") and UnitCanAttack("player", "target") then
         by = UnitName("target")
     end
@@ -338,17 +346,36 @@ WFD:On("PLAYER_DEAD", function()
     if WFD.NoteFate then WFD:NoteFate(by, map, x, y) end
     WFD:Signal("death", by)
 
-    local zone = WFD.zoneName or "?"
-    local text
-    if by then
-        text = format(L["Died to %s in %s"], by, zone)
-    else
-        text = format(L["Died in %s"], zone)
-    end
-    WFD:Milestone("death", text, C.deathTotal == 1)
+    WFD:Milestone("death", WFD:DeathText(by, WFD.zoneName), C.deathTotal == 1, { zone = WFD.zoneName, by = by })
     if WFD.IsHardcore and WFD:IsHardcore() then WFD:WriteObituary(by) end
 end)
 
+-- the line of a death, with the place in the case its language needs ("Gestorben im Wald von Elwynn")
+function WFD:DeathText(by, zone)
+    local place = self:Place(zone or "?", "in")
+    if by then return format(L["Died to %s in %s"], by, place) end
+    return format(L["Died in %s"], place)
+end
+
 WFD:OnInit(function()
     playerGUID = UnitGUID("player")
+    -- deaths noted before they kept their place: the place and the foe are read back from the sentence once,
+    -- and German sentences get the place with its article ("in Wald von Elwynn" read wrong)
+    local C = WFD.C
+    if not C or C.deathPlaces or WFD.demo then return end
+    for _, ev in ipairs(C.events or {}) do
+        if ev.k == "death" and not ev.zone and type(ev.s) == "string" then
+            local by, zone = ev.s:match("^Getötet von (.-) in (.+)$")
+            if not zone then by, zone = ev.s:match("^Gefallen durch (.-) in (.+)$") end
+            if not zone then zone = ev.s:match("^Gestorben in (.+)$") end
+            local german = zone ~= nil
+            if not zone then by, zone = ev.s:match("^Died to (.-) in (.+)$") end
+            if not zone then zone = ev.s:match("^Died in (.+)$") end
+            if zone then
+                ev.zone, ev.by = zone, ev.by or by
+                if german == (WFD.locale == "deDE") then ev.s = WFD:DeathText(ev.by, zone) end
+            end
+        end
+    end
+    C.deathPlaces = true
 end)

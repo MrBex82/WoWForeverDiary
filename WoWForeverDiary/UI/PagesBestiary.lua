@@ -76,7 +76,7 @@ local function showKindList(g, side)
     local p = listPanel
     p.icon:SetTexture(UI.IconPath(TYPE_ICONS[g.key] or TYPE_ICONS.other, "bestiary"))
     p.title:SetText(g.name)
-    p.sub:SetText(format(L["%d kinds  -  %d slain"], g.kinds, g.kills))
+    p.sub:SetText(WFD:Count("%d kinds  -  %d slain", g.kinds, g.kills))
     for i, r in ipairs(p.rows) do
         local e = g.mobs[i]
         if e then
@@ -157,7 +157,7 @@ UI:RegisterRenderer("albumkinds", function(pool, page, side, canvas)
         n:SetWidth(tw * 0.5)
         n:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 40, y - 1)
         local cnt = pool:Text(10, c.inkSoft, UI.FONT, "RIGHT")
-        cnt:SetText(format(L["%d kinds  -  %d slain"], g.kinds, g.kills))
+        cnt:SetText(WFD:Count("%d kinds  -  %d slain", g.kinds, g.kills))
         cnt:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 4)
         -- the families, else the first names
         local parts = {}
@@ -179,7 +179,7 @@ UI:RegisterRenderer("albumkinds", function(pool, page, side, canvas)
         sub:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 40, y - 19)
         UI.ProgressBar(pool, canvas, tx + 40, y - 34, tw - 40, 3, g.kinds / most, c.redInk)
         -- the tooltip names them all (the most hunted first)
-        local tip = { g.name, format(L["%d kinds  -  %d slain"], g.kinds, g.kills) }
+        local tip = { g.name, WFD:Count("%d kinds  -  %d slain", g.kinds, g.kills) }
         for k = 1, min(8, #g.mobs) do
             tip[#tip + 1] = (g.mobs[k].m.name or "?") .. "  (" .. (g.mobs[k].m.kills or 0) .. ")"
         end
@@ -207,11 +207,19 @@ UI:RegisterRenderer("huntmap", function(pool, page, side, canvas, index)
     local C = WFD.C
     local tx, tw = UI.TextX(side), UI.TextW()
     local grounds = page.grounds
-    -- the area: the one chosen, else the one you are in, else the first
+    -- the area: the one chosen, else the one you are in if you hunted there, else the one hunted most
     local pick
     for i, g in ipairs(grounds) do if g.zone == UI.huntArea then pick = i end end
     if not pick then
-        for i, g in ipairs(grounds) do if g.zone == WFD.zoneName then pick = i end end
+        local kills = {}
+        for _, m in pairs(C.mobs or {}) do
+            if m.zone then kills[m.zone] = (kills[m.zone] or 0) + (m.kills or 0) end
+        end
+        local most = 0
+        for i, g in ipairs(grounds) do
+            if g.zone == WFD.zoneName and (kills[g.zone] or 0) > 0 then pick = i break end
+            if (kills[g.zone] or 0) > most then pick, most = i, kills[g.zone] end
+        end
     end
     pick = pick or 1
     local g = grounds[pick]
@@ -255,7 +263,7 @@ UI:RegisterRenderer("huntmap", function(pool, page, side, canvas, index)
         if mob.map == g.map and mob.x then
             slain = slain + 1
             points[#points + 1] = { mob.x, mob.y, PIN_COL[UI.RarityOf(mob)] or PIN_COL.normal,
-                { mob.name or "?", format(L["Slain %d times"], mob.kills or 0), WFD:Quote(WFD:MarginNote(id, mob)),
+                { mob.name or "?", WFD:Count("Slain %d times", mob.kills or 0), WFD:Quote(WFD:MarginNote(id, mob)),
                   L["Click for the wanted poster."] },
                 false, function() UI:ShowCard("creature", id) end }
         end
@@ -444,61 +452,109 @@ local function hintEdge(h)
         or ((h.cls == "elite" or h.cls == "rareelite") and { 0.90, 0.70, 0.25, 1 }) or { 0.62, 0.48, 0.24, 1 }
 end
 
+-- a medallion for a hint: a question mark, or the number of kinds a line bundles
+local function hintMedal(pool, canvas, x, y, h, label)
+    local rim = pool:Circle(26, hintEdge(h))
+    rim:SetPoint("CENTER", canvas, "TOPLEFT", x + 13, y - 13)
+    local inner = pool:Circle(22, { 0.10, 0.07, 0.04, 1 })
+    inner:SetPoint("CENTER", canvas, "TOPLEFT", x + 13, y - 13)
+    local q = pool:Text(label and 11 or 14, { 0.88, 0.76, 0.54, 1 }, label and UI.FONT or UI.HEAD, "CENTER")
+    q:SetText(label or "?")
+    q:SetPoint("CENTER", canvas, "TOPLEFT", x + 13, y - 13)
+end
+
+-- what another character knows, several kinds on one line: how many, the levels, and where they are
+local function bundleRow(pool, canvas, tx, tw, y, e)
+    local lo, hi = nil, nil
+    local tip = { WFD:Count("%d kinds %s already knows", #e.list, e.who), e.zone }
+    for _, x in ipairs(e.list) do
+        local lv = x.h.lv
+        if lv and lv > 0 then lo, hi = math.min(lo or lv, lv), math.max(hi or lv, lv) end
+        local dir = WFD:Direction(x.h.x, x.h.y)
+        tip[#tip + 1] = (dir and L[dir] or "?") .. (lv and ("  -  " .. format(L["Lv %s"], lv == -1 and "??" or tostring(lv))) or "")
+    end
+    hintMedal(pool, canvas, tx, y, e.h, tostring(#e.list))
+    local name = pool:Text(13, c.inkSoft, UI.FONT)
+    name:SetText(WFD:Count("%d kinds %s already knows", #e.list, e.who))
+    name:SetWordWrap(false)
+    name:SetWidth(tw - 36)
+    name:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 34, y - 1)
+    local sub = pool:Text(10, c.inkSoft, UI.FONT)
+    sub:SetText(lo and format(L["Lv %s"], lo == hi and tostring(lo) or (lo .. "-" .. hi)) or "")
+    sub:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 34, y - 17)
+    local m = e.h.m
+    if m then tip[#tip + 1] = L["Click for the map of this region."] end
+    local hot = pool:Hot(tip, m and function() UI:ShowMapOf(m) end)
+    hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx - 2, y + 2)
+    hot:SetSize(tw + 4, HINT_ROW - 4)
+end
+
 UI:RegisterRenderer("albumhints", function(pool, page, side, canvas)
     local tx, tw = UI.TextX(side), UI.TextW()
-    UI.AlbumHead(pool, canvas, tx, tw, page)
-    local y = -UI.TOP - 28
-    local cap = pool:Text(10, c.redInk, UI.FONT)
-    cap:SetText(L["Not yet discovered"]:upper())
-    cap:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-    y = y - 20
-    for _, e in ipairs(page.hints) do
-        local h = e.h
-        -- a small medallion with a question mark, its rim in the colour of the rank
-        local rim = pool:Circle(26, hintEdge(h))
-        rim:SetPoint("CENTER", canvas, "TOPLEFT", tx + 13, y - 13)
-        local inner = pool:Circle(22, { 0.10, 0.07, 0.04, 1 })
-        inner:SetPoint("CENTER", canvas, "TOPLEFT", tx + 13, y - 13)
-        local q = pool:Text(14, { 0.88, 0.76, 0.54, 1 }, UI.HEAD, "CENTER")
-        q:SetText("?")
-        q:SetPoint("CENTER", canvas, "TOPLEFT", tx + 13, y - 13)
-
-        local name = pool:Text(13, e.sighted and c.ink or c.inkSoft, UI.FONT)
-        name:SetText(e.sighted and (h.n or "?") or L["Not yet discovered"])
-        name:SetWordWrap(false)
-        name:SetWidth(tw - 36)
-        name:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 34, y - 1)
-        local parts = {}
-        local dir = WFD:Direction(h.x, h.y)
-        if dir then parts[#parts + 1] = L[dir] end
-        if h.lv then parts[#parts + 1] = format(L["Lv %s"], h.lv == -1 and "??" or tostring(h.lv)) end
-        local kind = (h.boss and L["Boss"]) or (h.rare and L["Rare"]) or ((h.cls == "elite" or h.cls == "rareelite") and L["Elite"])
-        if kind then parts[#parts + 1] = kind end
-        if h.who then parts[#parts + 1] = format(L["Known to %s"], h.who) end
-        local sub = pool:Text(10, c.inkSoft, UI.FONT)
-        sub:SetText(table.concat(parts, "  -  "))
-        sub:SetWordWrap(false)
-        sub:SetWidth(tw - 36)
-        sub:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 34, y - 17)
-
-        local tip = { e.sighted and L["Sighted, not yet slain"] or L["Not yet discovered"] }
-        if e.sighted and h.n then tip[#tip + 1] = h.n end
-        tip[#tip + 1] = e.zone .. (dir and ("  -  " .. L[dir]) or "")
-        local go, right
-        if h.m and h.x then
-            tip[#tip + 1] = L["Click to set a marker on the map."]
-            tip[#tip + 1] = L["Right-click for the map of this region."]
-            -- only a creature you saw yourself is named; the others stay a secret
-            go = function() WFD:SetMapMarker(h.m, h.x, h.y, (e.sighted and h.n) or e.zone) end
-            right = function() UI:ShowMapOf(h.m) end
-        elseif h.m then
-            tip[#tip + 1] = L["Click for the map of this region."]
-            go = function() UI:ShowMapOf(h.m) end
+    local y = -UI.TOP
+    for gi, g in ipairs(page.groups) do
+        -- the area's heading; one below another keeps a little room above it
+        if gi > 1 then y = y - 14 end
+        UI.AlbumHead(pool, canvas, tx, tw, g, y)
+        y = y - 28
+        if gi == 1 then
+            local cap = pool:Text(10, c.redInk, UI.FONT)
+            cap:SetText(L["Not yet discovered"]:upper())
+            cap:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+            y = y - 20
+        else
+            y = y - 6
         end
-        local hot = pool:Hot(tip, go)
-        hot.onRight = right
-        hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx - 2, y + 2)
-        hot:SetSize(tw + 4, HINT_ROW - 4)
-        y = y - HINT_ROW
+        for _, e in ipairs(g.rows) do
+            if e.bundle then
+                bundleRow(pool, canvas, tx, tw, y, e)
+            else
+                UI.HintRow(pool, canvas, tx, tw, y, e)
+            end
+            y = y - HINT_ROW
+        end
     end
 end)
+
+function UI.HintRow(pool, canvas, tx, tw, y, e)
+    local h = e.h
+    -- a small medallion with a question mark, its rim in the colour of the rank
+    hintMedal(pool, canvas, tx, y, h)
+
+    local name = pool:Text(13, e.sighted and c.ink or c.inkSoft, UI.FONT)
+    name:SetText(e.sighted and (h.n or "?") or L["Not yet discovered"])
+    name:SetWordWrap(false)
+    name:SetWidth(tw - 36)
+    name:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 34, y - 1)
+    local parts = {}
+    local dir = WFD:Direction(h.x, h.y)
+    if dir then parts[#parts + 1] = L[dir] end
+    if h.lv then parts[#parts + 1] = format(L["Lv %s"], h.lv == -1 and "??" or tostring(h.lv)) end
+    local kind = (h.boss and L["Boss"]) or (h.rare and L["Rare"]) or ((h.cls == "elite" or h.cls == "rareelite") and L["Elite"])
+    if kind then parts[#parts + 1] = kind end
+    if h.who then parts[#parts + 1] = format(L["Known to %s"], h.who) end
+    local sub = pool:Text(10, c.inkSoft, UI.FONT)
+    sub:SetText(table.concat(parts, "  -  "))
+    sub:SetWordWrap(false)
+    sub:SetWidth(tw - 36)
+    sub:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 34, y - 17)
+
+    local tip = { e.sighted and L["Sighted, not yet slain"] or L["Not yet discovered"] }
+    if e.sighted and h.n then tip[#tip + 1] = h.n end
+    tip[#tip + 1] = e.zone .. (dir and ("  -  " .. L[dir]) or "")
+    local go, right
+    if h.m and h.x then
+        tip[#tip + 1] = L["Click to set a marker on the map."]
+        tip[#tip + 1] = L["Right-click for the map of this region."]
+        -- only a creature you saw yourself is named; the others stay a secret
+        go = function() WFD:SetMapMarker(h.m, h.x, h.y, (e.sighted and h.n) or e.zone) end
+        right = function() UI:ShowMapOf(h.m) end
+    elseif h.m then
+        tip[#tip + 1] = L["Click for the map of this region."]
+        go = function() UI:ShowMapOf(h.m) end
+    end
+    local hot = pool:Hot(tip, go)
+    hot.onRight = right
+    hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx - 2, y + 2)
+    hot:SetSize(tw + 4, HINT_ROW - 4)
+end

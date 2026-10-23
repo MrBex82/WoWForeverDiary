@@ -449,6 +449,72 @@ function WFD:CoinWords(c)
     return table.concat(parts, " ")
 end
 
+-- Counted texts: a translation may write "{Kill|Kills}" (Russian "{one|few|many}"), and each braced group takes
+-- the form for the number before it (or after it, when none comes before). The English wordings live here,
+-- since English keys are their own text.
+local COUNTED_EN = {
+    ["%d kills"] = "%d {kill|kills}",
+    ["%d quests"] = "%d {quest|quests}",
+    ["%d days"] = "%d {day|days}",
+    ["%d casts"] = "%d {cast|casts}",
+    ["%d caught in %d casts"] = "%d caught in %d {cast|casts}",
+    ["%d kills today"] = "%d {kill|kills} today",
+    ["%d quests today"] = "%d {quest|quests} today",
+    ["%d kinds  -  %d slain"] = "%d {kind|kinds}  -  %d slain",
+    ["%d days  -  %d kills  -  %d quests"] = "%d {day|days}  -  %d {kill|kills}  -  %d {quest|quests}",
+    ["%d days of life  -  %d creatures slain  -  %d quests completed"] =
+        "%d {day|days} of life  -  %d {creature|creatures} slain  -  %d {quest|quests} completed",
+    ["%d enemies fell that day."] = "%d {enemy|enemies} fell that day.",
+    ["%d kills together"] = "%d {kill|kills} together",
+    ["%d treasures collected"] = "%d {treasure|treasures} collected",
+    ["%d tiers earned"] = "%d {tier|tiers} earned",
+    ["in %d days"] = "in %d {day|days}",
+    ["%d characters on this account"] = "%d {character|characters} on this account",
+    ["Spoken to %d times"] = "Spoken to %d {time|times}",
+    ["Slain %d times"] = "Slain %d {time|times}",
+    ["Killed you %d times"] = "Killed you %d {time|times}",
+    ["You slew them %d times."] = "You slew them %d {time|times}.",
+    ["Got you %d times."] = "Got you %d {time|times}.",
+    ["%d times grouped"] = "%d {time|times} grouped",
+}
+
+function WFD:Count(key, ...)
+    local text = rawget(L, key) or COUNTED_EN[key] or key
+    local args, out, pos, argi, lastN = { ... }, {}, 1, 0, nil
+    while true do
+        local a, b, tok = text:find("(%%[%-%d%.]*[dsf%%])", pos)
+        local c, d = text:find("%b{}", pos)
+        if not a and not c then break end
+        if a and (not c or a < c) then
+            out[#out + 1] = text:sub(pos, b)
+            if tok ~= "%%" then
+                argi = argi + 1
+                if tok:sub(-1) == "d" then lastN = args[argi] end
+            end
+            pos = b + 1
+        else
+            out[#out + 1] = text:sub(pos, c - 1)
+            local n = tonumber(lastN or args[argi + 1]) or 0
+            local forms = {}
+            for f in (text:sub(c + 1, d - 1) .. "|"):gmatch("([^|]*)|") do forms[#forms + 1] = f end
+            local i = (#forms >= 3 and self.loc.plural) and self.loc.plural(n) or (n == 1 and 1 or #forms)
+            out[#out + 1] = forms[i] or forms[#forms]
+            pos = d + 1
+        end
+    end
+    out[#out + 1] = text:sub(pos)
+    return format(table.concat(out), ...)
+end
+
+-- a whole number with the thousands mark of the diary language (28,223 / 28.223 / 28 223)
+function WFD:Int(v)
+    local s = format("%.0f", math.abs(v or 0))
+    local sep = (self.loc and self.loc.thousands) or ","
+    s = s:reverse():gsub("(%d%d%d)", "%1" .. sep:reverse()):reverse()
+    if s:sub(1, #sep) == sep then s = s:sub(#sep + 1) end
+    return ((v or 0) < 0 and "-" or "") .. s
+end
+
 -- a number with one decimal, written the way the diary language writes it (3.2 or 3,2)
 function WFD:Dec(v)
     local s = format("%.1f", v or 0):gsub("%.0$", "")   -- 7 km rather than 7.0 km

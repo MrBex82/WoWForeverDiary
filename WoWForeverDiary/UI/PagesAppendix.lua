@@ -37,16 +37,33 @@ UI:RegisterSection({
             if UI.SEAL[ev.k] and (ev.k ~= "challenge" or ev.all) then evs[#evs + 1] = ev end
         end
         table.sort(evs, function(a, b) return a.t < b.t end)
+        -- the honours of a day are many small steps: two or more of them make one line, so the great moments
+        -- (a level, a death, a find) are not lost among them
+        local honoursOf = {}
+        for _, ev in ipairs(evs) do
+            if ev.k == "honour" and ev.day then
+                honoursOf[ev.day] = honoursOf[ev.day] or {}
+                table.insert(honoursOf[ev.day], ev)
+            end
+        end
         local lastDay
         for _, ev in ipairs(evs) do
             if ev.day and ev.day ~= lastDay then
                 lastDay = ev.day
                 rows[#rows + 1] = { h = 34, dayHead = ev.day, t = ev.t, keep = 50 }
             end
-            rows[#rows + 1] = { h = 50, ev = ev }
+            local group = ev.k == "honour" and ev.day and honoursOf[ev.day]
+            if group and #group > 1 then
+                if group[1] == ev then rows[#rows + 1] = { h = 50, ev = ev, honours = group } end
+            else
+                rows[#rows + 1] = { h = 50, ev = ev }
+            end
         end
         if #rows == 0 then rows[1] = { h = 40, empty = true } end
-        book:AddRows("timeline", rows, { head = L["Milestones"] })
+        -- a page that begins in the middle of a day repeats that day's heading
+        book:AddRows("timeline", rows, { head = L["Milestones"] }, function(r)
+            if r.ev and r.ev.day then return { h = 34, dayHead = r.ev.day, cont = true } end
+        end)
     end,
 })
 
@@ -85,7 +102,7 @@ UI:RegisterRenderer("timeline", function(pool, page, side, canvas)
             chip:SetPoint("LEFT", canvas, "TOPLEFT", SX - 22, y - 18)
             n:SetPoint("CENTER", chip, "CENTER", 0, 0)
             local d = pool:Text(13, c.redInk, UI.HEAD)
-            d:SetText(WFD:LongDate(r.dayHead))
+            d:SetText(WFD:LongDate(r.dayHead) .. (r.cont and ("  |cff" .. UI.Hex(c.inkFaint) .. "(" .. L["continued"] .. ")|r") or ""))
             d:SetWordWrap(false)
             d:SetPoint("LEFT", chip, "RIGHT", 8, 0)
             local ln = pool:Grad("HORIZONTAL", { 0.91, 0.76, 0.42, 0.45 }, { 0.91, 0.76, 0.42, 0 })
@@ -100,8 +117,31 @@ UI:RegisterRenderer("timeline", function(pool, page, side, canvas)
             local tm = pool:Text(10, c.inkFaint, UI.FONT)
             tm:SetText(date("%H:%M", ev.t))
             tm:SetPoint("TOPLEFT", canvas, "TOPLEFT", SX + 28, y - 6)
+            local text, lines = ev.s, { ev.s, date(WFD.loc.date .. " %H:%M", ev.t) }
+            if r.honours then
+                -- the honours of the day in one line: their names, each with its metal; the tooltip has them all
+                local names = {}
+                lines = { WFD:Count("%d honours earned: %s", #r.honours, "") }
+                for _, h in ipairs(r.honours) do
+                    local def = h.honour and WFD:HonourDef(h.honour)
+                    local name = def and L[def.name] or (h.s and h.s:match(":%s*(.+)$")) or "?"
+                    if def and #def.tiers > 1 then name = name .. " (" .. L[WFD:MetalOf(h.tier or 1, #def.tiers).name] .. ")" end
+                    names[#names + 1] = name
+                    lines[#lines + 1] = date("%H:%M", h.t) .. "  " .. name
+                end
+                -- as many names as two lines hold, the rest counted
+                local W = tw - (SX - tx) - 28 - 44
+                local function fits(t) return UI.Measure(t, UI.FS(13), W, 0, UI.FONT) <= UI.FS(13) * 2.6 end
+                local shown = #names
+                text = WFD:Count("%d honours earned: %s", #r.honours, table.concat(names, ", "))
+                while shown > 1 and not fits(text) do
+                    shown = shown - 1
+                    text = WFD:Count("%d honours earned: %s", #r.honours,
+                        table.concat(names, ", ", 1, shown) .. "  +" .. (#names - shown))
+                end
+            end
             local t = pool:Text(13, c.ink, UI.FONT)
-            t:SetText(ev.s)
+            t:SetText(text)
             t:SetWidth(tw - (SX - tx) - 28 - 44)
             if t.SetMaxLines then t:SetMaxLines(2) end
             t:SetPoint("TOPLEFT", canvas, "TOPLEFT", SX + 28, y - 19)
@@ -109,8 +149,7 @@ UI:RegisterRenderer("timeline", function(pool, page, side, canvas)
             local pr = pool:Text(11, c.inkFaint, UI.FONT, "RIGHT")
             pr:SetText(ref)
             pr:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 6)
-            local lines = { ev.s, date(WFD.loc.date .. " %H:%M", ev.t) }
-            if ev.shot then lines[#lines + 1] = L["Screenshot:"] .. " " .. ev.shot end
+            if ev.shot and not r.honours then lines[#lines + 1] = L["Screenshot:"] .. " " .. ev.shot end
             hotRow(pool, canvas, tx + 40, y, tw - 40, r.h, lines, p and function() UI:GoToPage(p) end)
         end
     end
@@ -139,7 +178,11 @@ UI:RegisterSection({
             end
         end
         local list = {}
-        for _, e in pairs(t) do list[#list + 1] = e end
+        for _, e in pairs(t) do
+            -- a whole continent (seen from a flight, its map open) is no area with a chronicle of its own
+            local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(e.id)
+            if not (info and info.mapType and info.mapType <= 2) then list[#list + 1] = e end
+        end
         table.sort(list, function(a, b) return a.first < b.first or (a.first == b.first and a.sec > b.sec) end)
         if #list == 0 then
             book:Add({ kind = "map", numbered = true, empty = true, head = L["Maps"] })
@@ -274,7 +317,7 @@ UI:RegisterRenderer("map", function(pool, page, side, canvas)
             local roles = {}
             for role in pairs(npc and npc.roles or {}) do roles[#roles + 1] = WFD:RoleName(role) end
             table.sort(roles)
-            subText = roles[1] or format(L["Spoken to %d times"], npc and npc.talks or 0)
+            subText = roles[1] or WFD:Count("Spoken to %d times", npc and npc.talks or 0)
         end
         local sub = pool:Text(9, c.inkFaint, UI.FONT)
         sub:SetWordWrap(false)
@@ -335,7 +378,7 @@ UI:RegisterRenderer("mapinfo", function(pool, page, side, canvas)
     y = y - 20
     if #mobs == 0 then
         local n = pool:Text(12, c.inkFaint, UI.FONT)
-        n:SetText("-")
+        n:SetText(L["Nothing slain here yet."])
         n:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
         y = y - 18
     end
@@ -354,7 +397,7 @@ UI:RegisterRenderer("mapinfo", function(pool, page, side, canvas)
         local k = pool:Text(11, c.inkSoft, UI.FONT, "RIGHT")
         k:SetText(mob.m.kills .. "x")
         k:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 2)
-        local hot = pool:Hot({ mob.m.name or "?", format(L["Slain %d times"], mob.m.kills), L["Click for the wanted poster."] },
+        local hot = pool:Hot({ mob.m.name or "?", WFD:Count("Slain %d times", mob.m.kills), L["Click for the wanted poster."] },
             function() UI:ShowCard("creature", mob.id) end)
         hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 1)
         -- the row is as tall as its writing (the writing grows with the size chosen in the settings)
@@ -374,7 +417,7 @@ UI:RegisterRenderer("mapinfo", function(pool, page, side, canvas)
     y = y - 22
     if #subs == 0 then
         local n = pool:Text(12, c.inkFaint, UI.FONT)
-        n:SetText("-")
+        n:SetText(L["No places discovered here yet."])
         n:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
         return
     end
@@ -514,9 +557,61 @@ local function mapOfZone(z, list)
     end
 end
 
+-- Hints that only another character knows say little each ("not yet discovered - Lv 12 - Bex knows it"):
+-- three or more from the same character in an area become one line.
+local function bundleHints(hints)
+    local byWho = {}
+    for _, e in ipairs(hints) do
+        local who = not e.sighted and e.h.who
+        if who then
+            byWho[who] = byWho[who] or {}
+            table.insert(byWho[who], e)
+        end
+    end
+    local out = {}
+    for _, e in ipairs(hints) do
+        local list = not e.sighted and e.h.who and byWho[e.h.who]
+        if list and #list >= 3 then
+            if not list.taken then
+                list.taken = true
+                out[#out + 1] = { bundle = true, who = e.h.who, list = list, zone = e.zone, h = e.h }
+            end
+        else
+            out[#out + 1] = e
+        end
+    end
+    return out
+end
+
+-- The lists of what is still to discover, area after area on shared pages; an area that begins below another
+-- costs its heading. Returns the page the area begins on.
+local HINT_HEAD = 2                 -- rows an area heading takes below another area
+local hintPage, hintUsed
+local function addHints(book, g)
+    local first, i, pieces = nil, 1, {}
+    while i <= #g.rows do
+        local cost = (hintPage and #hintPage.groups > 0) and HINT_HEAD or 0
+        if not hintPage or hintUsed + cost + 1 > UI.HINT_ROWS then
+            hintPage = book:Add({ kind = "albumhints", numbered = true, head = L["Bestiary"], groups = {} })
+            hintUsed, cost = 0, 0
+        end
+        local grp = { zone = g.zone, count = g.count, hidden = g.hidden, rows = {} }
+        for k = i, math.min(#g.rows, i + UI.HINT_ROWS - hintUsed - cost - 1) do grp.rows[#grp.rows + 1] = g.rows[k] end
+        hintPage.groups[#hintPage.groups + 1] = grp
+        pieces[#pieces + 1] = grp
+        hintUsed = hintUsed + cost + #grp.rows
+        first = first or hintPage.index
+        i = i + #grp.rows
+    end
+    -- an area going on over the next page says so: "Westfall (continued)"
+    for n, grp in ipairs(pieces) do grp.cont = n > 1 or nil end
+    return first
+end
+
 UI:RegisterSection({
     key = "bestiary", label = "Bestiary", icon = "beast", order = 30,
     build = function(book)
+        hintPage, hintUsed = nil, 0
         local arr = collection()
         -- group by area, areas in order of their first creature
         local zones, byZone = {}, {}
@@ -590,13 +685,12 @@ UI:RegisterSection({
                 if #cards < PER_PAGE and hidden == 0 then pg.fill = quietCorners(mapOfZone(z, list)) end
                 first = first or pg.index
             end
-            local hpages = math.ceil(#hints / UI.HINT_ROWS)
-            for p = 1, hpages do
-                local rows = {}
-                for i = (p - 1) * UI.HINT_ROWS + 1, math.min(#hints, p * UI.HINT_ROWS) do rows[#rows + 1] = hints[i] end
-                local pg = book:Add({ kind = "albumhints", numbered = true, head = L["Bestiary"], zone = z, hints = rows,
-                    part = (hpages > 1) and p or nil, count = own[z], hidden = hidden })
-                first = first or pg.index
+            if #hints > 0 then
+                -- an area with cards of its own keeps its list to itself; areas known only from hints share pages
+                if #mine > 0 then hintPage = nil end
+                local at = addHints(book, { zone = z, rows = bundleHints(hints), count = own[z], hidden = hidden })
+                first = first or at
+                if #mine > 0 then hintPage = nil end
             end
             if first then
                 intro.zoneIndex[#intro.zoneIndex + 1] = { zone = z, page = first, count = own[z], hidden = hidden }
@@ -607,8 +701,48 @@ UI:RegisterSection({
     end,
 })
 
+-- Where a long word may be broken: between syllables, as Latin writing does it - before a single consonant
+-- between vowels, and before the letters a syllable can start with ("Wald-schreiter", "Mondpirscher-patriarch").
+-- Returns the byte positions a break may come before, or an empty list for other scripts.
+local VOWEL = {}
+for _, v in ipairs({ "a", "e", "i", "o", "u", "y", "ä", "ö", "ü", "é", "è", "ê", "à", "á", "â", "ã", "í", "ó", "ô", "õ", "ú" }) do
+    VOWEL[v] = true
+end
+local ONSET = {}
+for _, o in ipairs({ "schr", "schl", "schw", "schm", "schn", "sch", "spr", "str", "chr", "ch", "ck", "ph", "th",
+    "pf", "qu", "st", "sp", "br", "bl", "cr", "cl", "dr", "fr", "fl", "gr", "gl", "kr", "kl", "pr", "pl", "tr", "zw" }) do
+    ONSET[o] = true
+end
+local function syllableBreaks(word)
+    local chars, at = {}, {}
+    for pos, ch in word:gmatch("()([%z\1-\127\194-\244][\128-\191]*)") do
+        chars[#chars + 1] = ch:lower()
+        at[#at + 1] = pos
+    end
+    local out, i = {}, 2
+    while i < #chars do
+        if not VOWEL[chars[i]] and VOWEL[chars[i - 1]] then
+            local e = i
+            while e < #chars and not VOWEL[chars[e + 1]] do e = e + 1 end
+            if e < #chars and e - i <= 5 then
+                local cut = e                      -- before the last consonant ...
+                for len = math.min(4, e - i + 1), 2, -1 do
+                    if ONSET[table.concat(chars, "", e - len + 1, e)] then cut = e - len + 1 break end
+                end
+                if cut > 2 and #chars - cut >= 2 then out[#out + 1] = at[cut] end
+            end
+            i = e + 1
+        else
+            i = i + 1
+        end
+    end
+    -- the scripts this does not know (Cyrillic, Hangul ...): no breaks offered
+    for _, ch in ipairs(chars) do if #ch > 1 and not VOWEL[ch] and not ch:find("^[\195]") then return {} end end
+    return out
+end
+
 -- the name on the plate of a card: two lines at most, a smaller size before anything is cut, and a word
--- too long for one line broken at its hyphen (else in the middle, never inside a letter)
+-- too long for one line broken at its hyphen, else between two syllables near its middle
 local NAME_W = CARD_W - 20
 local function fitName(fs, text)
     local function px(s) return UI.FS and UI.FS(s) or s end
@@ -632,6 +766,19 @@ local function fitName(fs, text)
     end
     if not long then return set(8, text) end
     local a, b = long:match("^(.+%-)(.+)$")
+    if not a then
+        -- the syllable break after which both halves fit their line, the nearest the middle; failing that,
+        -- the one that leaves the longer half shortest
+        local best, bestD
+        for _, pos in ipairs(syllableBreaks(long)) do
+            local wa = UI.MeasureWidth(long:sub(1, pos - 1) .. "-", px(8), UI.FONT)
+            local wb = UI.MeasureWidth(long:sub(pos), px(8), UI.FONT)
+            local both = wa <= NAME_W and wb <= NAME_W
+            local d = both and math.abs(pos - #long / 2) or (1000 + max(wa, wb))
+            if not bestD or d < bestD then best, bestD = pos, d end
+        end
+        if best then a, b = long:sub(1, best - 1) .. "-", long:sub(best) end
+    end
     if not a then
         local mid = math.floor(#long / 2)
         while mid > 1 and long:byte(mid + 1) and long:byte(mid + 1) >= 128 and long:byte(mid + 1) < 192 do mid = mid - 1 end
@@ -781,7 +928,7 @@ local function newCard(parent)
         if kind then GameTooltip:AddLine(kind, 0.75, 0.75, 0.75) end
         GameTooltip:AddLine(WFD:Quote(WFD:MarginNote(self.entry.id, m)), 0.95, 0.85, 0.65, true)
         GameTooltip:AddLine(" ")
-        GameTooltip:AddLine(format(L["Slain %d times"], m.kills), 0.9, 0.9, 0.9)
+        GameTooltip:AddLine(WFD:Count("Slain %d times", m.kills), 0.9, 0.9, 0.9)
         local stage = WFD:MobStage(m)
         if stage == 1 then
             GameTooltip:AddLine(format(L["A sketch - %d more and it is in colour."], WFD.STAGE_COLOUR - m.kills), 0.75, 0.65, 0.45, true)
@@ -801,7 +948,7 @@ local function newCard(parent)
         if m.best then GameTooltip:AddLine(L["Best loot"] .. ": " .. m.best, 0.7, 0.7, 0.7) end
         local nem = WFD.C.nemesis[m.name or ""]
         if nem and nem.n > 0 then
-            GameTooltip:AddLine(nem.n == 1 and L["Got you once."] or format(L["Got you %d times."], nem.n), 1, 0.35, 0.25)
+            GameTooltip:AddLine(nem.n == 1 and L["Got you once."] or WFD:Count("Got you %d times.", nem.n), 1, 0.35, 0.25)
         end
         GameTooltip:AddLine(L["Click for the wanted poster."], 0.5, 0.8, 1)
         GameTooltip:Show()
@@ -932,15 +1079,15 @@ end
 local function kindsText(n) return n == 1 and L["1 kind"] or format(L["%d kinds"], n) end
 
 -- the head of an album page: the area (a click leads to its hunting grounds), how many kinds, a thin bar
-function UI.AlbumHead(pool, canvas, tx, tw, page)
-    local top = -UI.TOP
+function UI.AlbumHead(pool, canvas, tx, tw, page, top)
+    top = top or -UI.TOP
     local cnt = pool:Text(10, c.inkFaint, UI.FONT, "RIGHT")
     cnt:SetText(kindsText(page.count)
         .. ((page.hidden or 0) > 0 and ("  -  " .. format(L["%d to discover"], page.hidden)) or ""))
     cnt:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, top)
     -- the area takes what the count leaves free, a long name in smaller letters
     local h = pool:Text(17, c.redInk, UI.HEAD)
-    h:SetText(page.zone .. (page.part and ("  (" .. page.part .. ")") or ""))
+    h:SetText(page.zone .. (page.part and ("  (" .. page.part .. ")") or (page.cont and ("  (" .. L["continued"] .. ")")) or ""))
     local room = tw - cnt:GetStringWidth() - 12
     UI.FitText(h, room, 17, 12, UI.HEAD)
     h:SetWordWrap(false)
@@ -1310,7 +1457,7 @@ UI:RegisterRenderer("people", function(pool, page, side, canvas)
             local all = {}
             for rr in pairs(n.roles or {}) do all[#all + 1] = WFD:RoleName(rr) end
             table.sort(all)
-            local hot = pool:Hot({ n.name or "?", table.concat(all, ", "), format(L["Spoken to %d times"], n.talks or 0),
+            local hot = pool:Hot({ n.name or "?", table.concat(all, ", "), WFD:Count("Spoken to %d times", n.talks or 0),
                 L["Click for the portrait."] }, function() UI:ShowCard("person", key) end)
             hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 1)
             hot:SetSize(tw, r.h - 2)
@@ -1805,9 +1952,14 @@ UI:RegisterRenderer("quests", function(pool, page, side, canvas)
             local giver = q.giver and C.npcs[q.giver]
             local t = pool:Text(12, q.abandoned and c.inkFaint or c.ink, UI.FONT)
             -- a given-up quest names its area (the list is no longer sorted by area), the others their giver
-            local note = r.gone or (giver and giver.name)
-            t:SetText((q.title or ("#" .. r.id)) .. (note and ("  |cff" .. UI.Hex(c.inkFaint) .. note .. "|r") or ""))
-            t:SetWidth(tw - 26 - 44)
+            -- a wanted poster is no giver worth naming ("GESUCHT: ..." beside "GESUCHT: ..."), and the giver
+            -- gives way when the title needs the room (the tooltip still names it)
+            local note = r.gone or (giver and not giver.obj and giver.name)
+            local titleText = q.title or ("#" .. r.id)
+            local room = tw - 26 - 44
+            if note and UI.MeasureWidth(titleText .. "  " .. note, UI.FS(12), UI.FONT) > room then note = nil end
+            t:SetText(titleText .. (note and ("  |cff" .. UI.Hex(c.inkFaint) .. note .. "|r") or ""))
+            t:SetWidth(room)
             t:SetWordWrap(false)
             t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 26, y - 5)
             local day = (q.done or q.acc) and WFD:DayIndex(q.done or q.acc)
@@ -1817,7 +1969,7 @@ UI:RegisterRenderer("quests", function(pool, page, side, canvas)
             pr:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 6)
             local lines = { q.title or "?" }
             if giver then lines[#lines + 1] = L["Received from"] .. ": " .. giver.name end
-            if q.xp and q.xp > 0 then lines[#lines + 1] = "+" .. q.xp .. " XP" end
+            if q.xp and q.xp > 0 then lines[#lines + 1] = "+" .. WFD:Int(q.xp) .. " XP" end
             if q.done and q.acc and q.done >= q.acc then lines[#lines + 1] = L["Took"] .. ": " .. WFD:DurationText(q.done - q.acc) end
             hotRow(pool, canvas, tx, y, tw, r.h, lines, p and function() UI:GoToPage(p) end, q.reward)
         end
@@ -1915,15 +2067,16 @@ UI:RegisterRenderer("settings", function(pool, page, side, canvas)
     local game = gameLanguage()
     local items = { {
         text = format(L["Game language (%s)"], L[LANG_NAMES[game] or game]),
-        active = chosen == nil,
+        active = chosen == nil or chosen == game,
         fn = function() if chosen ~= nil then setLanguage(nil) end end,
     } }
+    -- the game's own language is the first link already: it is not offered twice
     for _, code in ipairs(WFD.languages or DEFAULT_LANGS) do
-        items[#items + 1] = {
+        if code ~= game then items[#items + 1] = {
             text = L[LANG_NAMES[code] or code],
             active = chosen == code,
             fn = function() if chosen ~= code then setLanguage(code) end end,
-        }
+        } end
     end
     linkRow(items, 13)
     local note = pool:Text(12, c.inkSoft, UI.FONT)

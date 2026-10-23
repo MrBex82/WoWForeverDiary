@@ -73,23 +73,16 @@ local function story(day)
     return s
 end
 
--- money for the narrow margin: only the largest coin (the full sum is in the text)
-local function shortCoin(v)
-    local g, s = floor(v / 10000), floor((v % 10000) / 100)
-    if g > 0 then return g .. (GOLD_AMOUNT_SYMBOL or "g") end
-    if s > 0 then return s .. (SILVER_AMOUNT_SYMBOL or "s") end
-    return v .. (COPPER_AMOUNT_SYMBOL or "c")
-end
 local SKULL = "|TInterface\\TargetingFrame\\UI-TargetingFrame-Skull:11:11:0:-1|t "
 
 local function marginNotes(f)
     local d = f.d
     local notes = {}
     for _, lv in ipairs(d.levels) do notes[#notes + 1] = { format(L["Level %d!"], lv), { 0.93, 0.75, 0.35, 1 } } end
-    if d.killTotal > 0 then notes[#notes + 1] = { format(L["%d kills"], d.killTotal), c.inkSoft } end
-    if #d.qd > 0 then notes[#notes + 1] = { format(L["%d quests"], #d.qd), { 0.60, 0.76, 1.00, 1 } } end
+    if d.killTotal > 0 then notes[#notes + 1] = { WFD:Count("%d kills", d.killTotal), c.inkSoft } end
+    if #d.qd > 0 then notes[#notes + 1] = { WFD:Count("%d quests", #d.qd), { 0.60, 0.76, 1.00, 1 } } end
     if f.net ~= 0 then
-        notes[#notes + 1] = { (f.net > 0 and "+" or "-") .. shortCoin(math.abs(f.net)), f.net > 0 and c.good or c.bad }
+        notes[#notes + 1] = { (f.net > 0 and "+" or "-") .. UI.CoinIcons(f.net, 11), f.net > 0 and c.good or c.bad }
     end
     if d.deaths > 0 then notes[#notes + 1] = { SKULL .. d.deaths .. "x", c.bad } end
     if f.km >= 0.5 then notes[#notes + 1] = { WFD:Dec(f.km) .. " km", c.inkFaint } end
@@ -134,7 +127,7 @@ local function flashback(day)
             if evText then
                 txt = txt .. " " .. evText
             elseif d.killTotal > 0 then
-                txt = txt .. " " .. format(L["%d enemies fell that day."], d.killTotal)
+                txt = txt .. " " .. WFD:Count("%d enemies fell that day.", d.killTotal)
             end
             return { n = n, day = old, text = txt }
         end
@@ -164,13 +157,27 @@ local function momentH(ev)
 end
 
 -- the line of figures under the date: "Level 5!  ·  40 kills  ·  3 quests ..."
-local function factsText(list)
-    local parts = {}
+-- the figures in a row, broken into lines by hand: a line never starts with a separator dot
+local FACT_SEP = "   |cff8a7a5c·|r   "
+local function factsText(list, width)
+    local size = UI.FS(12)
+    local sepW = UI.MeasureWidth("   ·   ", size, UI.FONT)
+    local lines, line, lineW = {}, nil, 0
     for _, n in ipairs(list) do
         local k = n[2]
-        parts[#parts + 1] = format("|cff%02x%02x%02x%s|r", floor(k[1] * 255), floor(k[2] * 255), floor(k[3] * 255), n[1])
+        local part = format("|cff%02x%02x%02x%s|r", floor(k[1] * 255), floor(k[2] * 255), floor(k[3] * 255), n[1])
+        local w = UI.MeasureWidth(n[1], size, UI.FONT)
+        if not line then
+            line, lineW = part, w
+        elseif lineW + sepW + w > width - 4 then
+            lines[#lines + 1] = line
+            line, lineW = part, w
+        else
+            line, lineW = line .. FACT_SEP .. part, lineW + sepW + w
+        end
     end
-    return concat(parts, "   |cff8a7a5c·|r   ")
+    lines[#lines + 1] = line
+    return concat(lines, "\n")
 end
 
 local function keepsakes(f)
@@ -241,7 +248,7 @@ function UI.LayoutDiary(book, chapters)
             local facts = f and marginNotes(f)
             -- a full day takes two lines of figures rather than losing the last ones
             if facts and #facts > 0 then
-                put({ t = "facts", list = facts }, max(22, UI.Measure(factsText(facts), UI.FS(12), TCW, 0, UI.FONT) + 8))
+                put({ t = "facts", list = facts }, max(22, UI.Measure(factsText(facts, TCW), UI.FS(12), TCW, 0, UI.FONT) + 8))
             end
             if day == WFD:NumDays() then
                 local fb = flashback(day)
@@ -514,7 +521,7 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
         elseif it.t == "facts" then
             local fs = pool:Text(12, c.inkSoft, UI.FONT)
             fs:SetWidth(TCW)
-            fs:SetText(factsText(it.list))
+            fs:SetText(factsText(it.list, TCW))
             fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", textX, y - 2)
         elseif it.t == "para" then
             local fs = pool:Text(FONT_SIZE, c.ink, UI.FONT)
@@ -567,8 +574,9 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
                 t:SetText(WFD:ChallengeText(task))
                 t:SetWidth(TCW - 26 - 52)
                 t:SetPoint("TOPLEFT", canvas, "TOPLEFT", textX + 26, ry)
-                if today and not done then
-                    local v, g = WFD:ChallengeProgress(it.day, task)
+                local v, g
+                if today and not done then v, g = WFD:ChallengeProgress(it.day, task) end
+                if g and g > 1 then
                     local pv = pool:Text(10, c.inkFaint, UI.FONT, "RIGHT")
                     pv:SetText(WFD:TaskValueText(task, v) .. " / " .. g)
                     pv:SetPoint("TOPRIGHT", canvas, "TOPLEFT", textX + TCW - 6, ry)

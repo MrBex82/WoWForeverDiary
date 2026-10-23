@@ -73,7 +73,7 @@ UI:RegisterRenderer("obituary", function(pool, page, side, canvas)
     local tt = WFD:Totals()
     local life = pool:Text(12, c.inkSoft, UI.FONT, "CENTER")
     life:SetWidth(tw)
-    life:SetText(format(L["%d days of life  -  %d creatures slain  -  %d quests completed"], tt.days, tt.kills, tt.quests))
+    life:SetText(WFD:Count("%d days of life  -  %d creatures slain  -  %d quests completed", tt.days, tt.kills, tt.quests))
     life:SetPoint("TOP", canvas, "TOPLEFT", cx, -378)
     local ep = pool:Text(14, c.inkFaint, UI.HEAD, "CENTER")
     ep:SetWidth(tw)
@@ -154,7 +154,7 @@ local function drawSummary(pool, canvas, tx, tw, y, s)
         local n = pool:Text(11, has and c.ink or c.inkFaint, UI.HEAD, "CENTER")
         n:SetText(tostring(s.metals[i]))
         n:SetPoint("TOP", pl, "BOTTOM", 0, -3)
-        local hot = pool:Hot({ L[m.name], format(L["%d tiers earned"], s.metals[i]) })
+        local hot = pool:Hot({ L[m.name], WFD:Count("%d tiers earned", s.metals[i]) })
         hot:SetPoint("CENTER", pl, "CENTER", 0, -8)
         hot:SetSize(28, 40)
         x = x - 34
@@ -546,7 +546,7 @@ UI:RegisterSection({
 UI:RegisterRenderer("treasures", function(pool, page, side, canvas)
     local tx, tw = UI.TextX(side), UI.TextW()
     if page.first then
-        UI.PageTitle(pool, canvas, side, L["Treasures"], format(L["%d treasures collected"], UI.book.treasureCount or 0), -56)
+        UI.PageTitle(pool, canvas, side, L["Treasures"], WFD:Count("%d treasures collected", UI.book.treasureCount or 0), -56)
     end
     local top = -UI.TOP
     local GAP_X = 12
@@ -756,7 +756,7 @@ UI:RegisterRenderer("companions", function(pool, page, side, canvas)
             local days = 0
             for _ in pairs(e.days or {}) do days = days + 1 end
             -- kills and days together, as two small figures on the right
-            local stats = { { e.kills or 0, L["kills"] }, { days, L["days"] } }
+            local stats = { { e.kills or 0, (e.kills == 1) and L["kill"] or L["kills"] }, { days, (days == 1) and L["day"] or L["days"] } }
             local x = tx + tw
             for i = #stats, 1, -1 do
                 local v = pool:Text(14, c.ink, UI.HEAD, "RIGHT")
@@ -781,8 +781,8 @@ UI:RegisterRenderer("companions", function(pool, page, side, canvas)
             sub:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 42, y - 23)
             local p = UI.book.dayPage[WFD:DayIndex(e.first)]
             local hot = pool:Hot({ e.name or "?", (e.class or "") .. (e.zone and ("  -  " .. e.zone) or ""),
-                format(L["%d times grouped"], e.groups),
-                format(L["%d kills together"], e.kills or 0) }, p and function() UI:GoToPage(p) end)
+                WFD:Count("%d times grouped", e.groups),
+                WFD:Count("%d kills together", e.kills or 0) }, p and function() UI:GoToPage(p) end)
             hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 2)
             hot:SetSize(tw, r.h - 4)
         elseif r.trade then

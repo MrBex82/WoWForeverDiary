@@ -211,7 +211,7 @@ local function build()
             n.zone = zone
             n.last = base + 70000
             C.nemesis[by] = n
-            C.events[#C.events + 1] = { t = base + 70000 + _ * 60, day = day, k = "death", s = format(L["Died to %s in %s"], by, zone) }
+            C.events[#C.events + 1] = { t = base + 70000 + _ * 60, day = day, k = "death", s = WFD:DeathText(by, zone), zone = zone, by = by }
         end
         if r % 3 == 1 and r > 1 then
             C.events[#C.events + 1] = { t = base + 20000, day = day, k = "zone", s = format(L["Discovered a new land: %s"], zone) }

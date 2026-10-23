@@ -144,6 +144,8 @@ local function retellEvent(ev, codes)
             if n == 1 then return format(L["Honour earned: %s"], L[h.name]) end
             return format(L["Honour earned: %s (%s)"], L[h.name], L[WFD:MetalOf(ev.tier or 1, n).name])
         end
+    elseif ev.k == "death" and ev.zone and WFD.DeathText then
+        return WFD:DeathText(ev.by, ev.zone)
     elseif ev.k == "first" and ev.first then
         for _, def in ipairs(WFD.FIRSTS or {}) do
             if def.key == ev.first then

@@ -69,7 +69,7 @@ UI:RegisterSection({
     build = function(book)
         book.collection = book.collection or gather()      -- "Today" may have counted it already
         book:Add({ kind = "collection", numbered = true, head = L["Collection"] })
-        book:Add({ kind = "nextgoals", numbered = true, head = L["Collection"] })
+        -- the next goals stand on the Today spread; here they would only be the same page once more
     end,
 })
 
@@ -236,7 +236,7 @@ UI:RegisterRenderer("nextgoals", function(pool, page, side, canvas)
                 local ok = pool:Text(10, GREEN, UI.FONT, "RIGHT")
                 ok:SetText(L["done"])
                 ok:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 3)
-            else
+            elseif gl > 1 then         -- a task done in one go ("travel to ...") needs no "0 / 1"
                 local pv = pool:Text(10, c.inkSoft, UI.FONT, "RIGHT")
                 pv:SetText(WFD:TaskValueText(task, v) .. " / " .. gl)
                 pv:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 1)
@@ -265,7 +265,7 @@ UI:RegisterRenderer("nextgoals", function(pool, page, side, canvas)
             local ok = pool:Text(10, GREEN, UI.FONT, "RIGHT")
             ok:SetText(L["done"])
             ok:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 4)
-        else
+        elseif gl > 1 then
             local pv = pool:Text(10, c.inkSoft, UI.FONT, "RIGHT")
             pv:SetText(WFD:TaskValueText(wk.task, v) .. " / " .. gl)
             pv:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 2)
@@ -537,7 +537,7 @@ local function taskRow(pool, canvas, tx, tw, y, text, done, value, goal, frac, c
         local ok = pool:Text(11, GREEN, UI.FONT, "RIGHT")
         ok:SetText(L["done"])
         ok:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, by)
-    else
+    elseif (tonumber(goal) or 2) > 1 then
         local pv = pool:Text(11, c.inkSoft, UI.FONT, "RIGHT")
         pv:SetText(value .. " / " .. goal)
         pv:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, by)

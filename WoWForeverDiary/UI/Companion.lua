@@ -292,7 +292,7 @@ function UI:UpdateCompanion(relayout)
         for i, t in ipairs(tasks.list) do
             local v, g = WFD:ChallengeProgress(today, t)
             local done = tasks.done[i] and true or false
-            row(WFD:ChallengeText(t), done and L["done"] or (WFD:TaskValueText(t, v) .. "/" .. g), done and 1 or v / max(1, g), done,
+            row(WFD:ChallengeText(t), done and L["done"] or (g > 1 and (WFD:TaskValueText(t, v) .. "/" .. g) or ""), done and 1 or v / max(1, g), done,
                 { L["Tasks of the day"], WFD:ChallengeText(t) }, goals)
         end
         y = y - 4

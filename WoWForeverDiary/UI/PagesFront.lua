@@ -48,7 +48,8 @@ function UI.PageTitle(pool, canvas, side, text, sub, y, tabs)
         s:SetText(UI.Upper(sub))
         s:SetWidth(tw)
         s:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, ny)
-        ny = ny - 18
+        -- a long sub line takes a second line, and the ornament moves down below it
+        ny = ny - max(18, (s:GetStringHeight() or 0) + 6)
     elseif tabs then
         tabs(pool, canvas, tx, tw, ny)
         ny = ny - 18
@@ -121,11 +122,12 @@ function UI.SectionHead(pool, canvas, tx, tw, y, h, text, count)
     ln:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, base - 14)
 end
 
--- The caption of a tile: one line in capitals if it fits, else two smaller lines as written.
--- Returns the font size and whether it takes two lines.
+-- The caption of a tile: one line in capitals if it fits (a point smaller if need be), else two smaller lines
+-- as written. Returns the font size and whether it takes two lines.
 local function tileCaption(label, tw)
     local size = UI.FS(9)
     if UI.MeasureWidth(label:upper(), size, UI.FONT) <= tw - 6 then return size, false end
+    if UI.MeasureWidth(label:upper(), UI.FS(8), UI.FONT) <= tw - 6 then return UI.FS(8), false end
     -- a long single word ("Bekanntschaften") shrinks until it fits the box, down to 9 points
     local widest = 0
     for word in label:gmatch("%S+") do widest = max(widest, UI.MeasureWidth(word, size, UI.FONT)) end
@@ -158,6 +160,12 @@ function UI.Tiles(pool, canvas, x0, y, w, list, h)
     local n = #list
     local tw = (w - (n - 1) * 8) / n
     local boxes, need = {}, h
+    -- one row writes all its captions alike: when one needs two lines, none is in capitals
+    local anyTwo = false
+    for _, t in ipairs(list) do
+        local _, two = tileCaption(t[2], tw)
+        anyTwo = anyTwo or two
+    end
     for i, t in ipairs(list) do
         local x = x0 + (i - 1) * (tw + 8)
         local bg = pool:Rect(c.paperDk, 0.45)
@@ -174,7 +182,7 @@ function UI.Tiles(pool, canvas, x0, y, w, list, h)
         local l = pool:Text(9, c.inkSoft, UI.FONT, "CENTER")
         l:SetWidth(tw - 6)
         local size, two = tileCaption(t[2], tw)
-        if two then
+        if anyTwo then
             -- capitals are wide: a caption on two lines is written as it is
             l:SetText(t[2])
             l:SetFont(UI.FONT, size, "")
@@ -183,6 +191,7 @@ function UI.Tiles(pool, canvas, x0, y, w, list, h)
             l:SetPoint("TOP", bg, "TOP", 0, -24)
         else
             l:SetText(t[2]:upper())
+            l:SetFont(UI.FONT, size, "")
             l:SetWordWrap(false)
             l:SetPoint("TOP", bg, "TOP", 0, -28)
         end

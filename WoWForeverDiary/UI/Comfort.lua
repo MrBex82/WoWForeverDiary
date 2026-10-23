@@ -854,7 +854,7 @@ UI:RegisterRenderer("appearance", function(pool, page, side, canvas)
             fn = function() if cur ~= key then setAndReload("theme", key ~= "codex" and key or nil) end end }
     end
     links(items)
-    small(L["Leather and gold is the old book. Modern is flat and calm, strong contrast makes all writing brighter."])
+    small(L["Leather and gold is the classic book. Modern is flat and calm, strong contrast makes all writing brighter."])
     small(L["Parchment is bright, like old quest paper."])
 
     caption(L["Size of the writing"])

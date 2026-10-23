@@ -125,7 +125,7 @@ local function records()
         { "kills", "INV_Sword_04", L["Most creatures slain in a day"], function(b) return tostring(b.v) end },
         { "quests", "INV_Scroll_03", L["Most quests in a day"], function(b) return tostring(b.v) end },
         { "income", "INV_Misc_Coin_01", L["Richest day"], function(b) return UI.CoinIcons(b.v, 14) end },
-        { "xp", "Spell_Holy_SurgeOfLight", L["Most experience in a day"], function(b) return b.v .. " XP" end },
+        { "xp", "Spell_Holy_SurgeOfLight", L["Most experience in a day"], function(b) return WFD:Int(b.v) .. " XP" end },
         { "online", "INV_Misc_PocketWatch_01", L["Longest day in the world"], function(b) return WFD:DurationText(b.v) end },
         { "km", "Ability_Tracking", L["Longest walk in a day"], function(b) return WFD:Dec(b.v) .. " km" end },
         { "places", "INV_Misc_Spyglass_02", L["Most places discovered in a day"], function(b) return tostring(b.v) end },
@@ -135,7 +135,7 @@ local function records()
         { "slow", "Spell_Nature_TimeStop", L["Slowest level"], function(b)
             return format(L["Level %d"], b.level) .. "  -  " .. WFD:DurationText(b.v) end },
         { "streak", "Spell_Holy_DivineIntervention", L["Longest run without dying"], function(b)
-            return format(L["%d days"], b.v) end },
+            return WFD:Count("%d days", b.v) end },
         { "deaths", "INV_Misc_Bone_HumanSkull_01", L["Darkest day"], function(b) return format(L["died %dx"], b.v) end, true },
     }
     local list = {}
@@ -217,7 +217,15 @@ UI:RegisterRenderer("levels", function(pool, page, side, canvas)
     if page.first then UI.PageTitle(pool, canvas, side, L["Level timeline"], L["How long each level took"], -56) end
     local top = -UI.TOP
     local BX = tx + 62
-    local BW = tw - 62 - 66
+    -- the bars end where the longest time written beside them begins ("9 Std. 33 Min." is wide)
+    local valueW = 56
+    for _, r in ipairs(page.rows) do
+        if r.step then
+            local txt = WFD:DurationText(r.step.secs) .. (r.step.running and "  ..." or "")
+            valueW = max(valueW, UI.MeasureWidth(txt, UI.FS(10), UI.FONT))
+        end
+    end
+    local BW = tw - 62 - valueW - 10
     for _, r in ipairs(page.rows) do
         local y = top - r.y
         if r.summary then
@@ -261,11 +269,26 @@ local PIC_H = 140
 UI:RegisterSection({
     key = "gallery", label = "Gallery", icon = "gallery", order = 16, thumb = false,
     build = function(book)
-        local evs = {}
+        local all = {}
         for _, ev in ipairs(WFD.C.events) do
-            if GALLERY_KINDS[ev.k] and ev.gear and next(ev.gear) then evs[#evs + 1] = ev end
+            if GALLERY_KINDS[ev.k] and ev.gear and next(ev.gear) then all[#all + 1] = ev end
         end
-        table.sort(evs, function(a, b) return a.t < b.t end)
+        table.sort(all, function(a, b) return a.t < b.t end)
+        -- a picture in the same gear as the one before shows the same figure again: the small moments of a day
+        -- (a place, a task) only get one when the gear has changed; levels, bosses and dungeons always do
+        local function sameGear(a, b)
+            for slot, id in pairs(a) do if b[slot] ~= id then return false end end
+            for slot in pairs(b) do if a[slot] == nil then return false end end
+            return true
+        end
+        local evs, last = {}, nil
+        for _, ev in ipairs(all) do
+            local great = ev.k == "level" or ev.k == "boss" or ev.k == "dungeon"
+            if great or not last or not sameGear(ev.gear, last.gear) then
+                evs[#evs + 1] = ev
+                last = ev
+            end
+        end
         local list = {}
         if #evs == 0 then list[1] = { h = 40, empty = true } end
         for i = 1, #evs, 2 do list[#list + 1] = { h = PIC_H + 40, pair = { evs[i], evs[i + 1] } } end
@@ -293,6 +316,7 @@ UI:RegisterRenderer("gallery", function(pool, page, side, canvas)
                     pic:SetFrameLevel(canvas:GetFrameLevel() + 2)
                     pic:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, y)
                     pic:Paint(ev)
+                    pic.plaque:Hide()       -- the name stands below the picture, in full
                     local title = ev.k == "level" and ev.s or (ev.s and ev.s:match(":%s*(.+)$")) or ev.s or "?"
                     local t = pool:Text(12, c.ink, UI.HEAD, "CENTER")
                     t:SetText(title)
@@ -384,7 +408,7 @@ UI:RegisterRenderer("nemesis", function(pool, page, side, canvas)
             n:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 40, y - 2)
             local lastDay = e.n.last and WFD:DayIndex(e.n.last)
             local sub = pool:Text(9, c.inkSoft, UI.FONT)
-            sub:SetText((format(L["Killed you %d times"], e.n.n or 0) .. (e.n.zone and ("  -  " .. e.n.zone) or "")
+            sub:SetText((WFD:Count("Killed you %d times", e.n.n or 0) .. (e.n.zone and ("  -  " .. e.n.zone) or "")
                 .. (lastDay and ("  -  " .. format(L["Day %d"], lastDay)) or "")):upper())
             sub:SetWordWrap(false)
             sub:SetWidth(tw - 40)
@@ -394,8 +418,8 @@ UI:RegisterRenderer("nemesis", function(pool, page, side, canvas)
             else
                 stamp(pool, canvas, tx + tw, y - 2, L["Score unsettled"], RED)
             end
-            local lines = { e.name, format(L["Killed you %d times"], e.n.n or 0) }
-            if mob then lines[#lines + 1] = format(L["You slew them %d times."], mob.kills) end
+            local lines = { e.name, WFD:Count("Killed you %d times", e.n.n or 0) }
+            if mob then lines[#lines + 1] = WFD:Count("You slew them %d times.", mob.kills) end
             if id then lines[#lines + 1] = L["Click for the wanted poster."] end
             local hot = pool:Hot(lines, id and function() UI:ShowCard("creature", id) end)
             hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 1)

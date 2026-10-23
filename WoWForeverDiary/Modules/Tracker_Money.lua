@@ -83,6 +83,22 @@ WFD:OnInit(function()
             if last >= step then C.wealth = step end
         end
     end
+    -- moments written with the short coin ("50G") get the words of the game ("50 Gold"), once
+    if C and not C.wealthWords and not WFD.demo then
+        for _, ev in ipairs(C.events or {}) do
+            if ev.k == "wealth" and type(ev.s) == "string" then
+                for i = #WEALTH_STEPS, 1, -1 do
+                    local short = WFD:CoinText(WEALTH_STEPS[i])
+                    local a, b = ev.s:find(short, 1, true)
+                    if a then
+                        ev.s = ev.s:sub(1, a - 1) .. WFD:CoinWords(WEALTH_STEPS[i]) .. ev.s:sub(b + 1)
+                        break
+                    end
+                end
+            end
+        end
+        C.wealthWords = true
+    end
 end)
 
 WFD:On("PLAYER_MONEY", function()
@@ -107,7 +123,7 @@ WFD:On("PLAYER_MONEY", function()
     for _, step in ipairs(WEALTH_STEPS) do
         if now >= step and C.wealth < step then
             C.wealth = step
-            WFD:Milestone("wealth", format(L["Wealth reached: %s"], WFD:CoinText(step)), false)
+            WFD:Milestone("wealth", format(L["Wealth reached: %s"], WFD:CoinWords(step)), false)
         end
     end
     WFD.dirty = true

@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import check_locales as cl  # noqa: E402
 
 ROOT = cl.LOCALES.parent
-USED = re.compile(r'\bL\[\s*"((?:[^"\\]|\\.)*)"\s*\]')
+USED = re.compile(r'\bL\[\s*"((?:[^"\\]|\\.)*)"\s*\]|\bWFD:Count\(\s*"((?:[^"\\]|\\.)*)"')
 
 
 def main():
@@ -21,7 +21,7 @@ def main():
     files = list(ROOT.glob("UI/*.lua")) + list(ROOT.glob("Modules/*.lua")) + [ROOT / "Core.lua"]
     for f in files:
         for m in USED.finditer(f.read_text(encoding="utf-8")):
-            used.setdefault(cl.unescape(m.group(1)), f.name)
+            used.setdefault(cl.unescape(m.group(1) if m.group(1) is not None else m.group(2)), f.name)
     data = {lang: dict(cl.entries(lang)) for lang in cl.LANGS}
     problems = 0
     for key, src in sorted(used.items()):

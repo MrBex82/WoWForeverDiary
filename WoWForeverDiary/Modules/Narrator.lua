@@ -477,7 +477,7 @@ function WFD:NarrateMemory(m)
         m.title = m.ev.s
         detail = format(T.special, moment(m.ev.s or ""))
     elseif m.kind == "kills" then
-        m.title = format(L["%d kills"], d.killTotal)
+        m.title = WFD:Count("%d kills", d.killTotal)
         detail = counted(pick(T.kills, seed + 2), d.killTotal)
     elseif m.kind == "quests" then
         local quotes = self.loc.quotes
