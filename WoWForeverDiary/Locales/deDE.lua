@@ -1399,3 +1399,12 @@ L["Cause unknown"] = "Ursache unbekannt"
 L["Group: %d"] = "Gruppe: %d"
 L["Stubborn"] = "Hartnäckig"
 L["Defeat a foe that has defeated you three times."] = "Besiege einen Gegner, der dich dreimal besiegt hat."
+
+-- the journey replayed on the atlas
+L["Watch the journey grow"] = "Die Reise wachsen sehen"
+L["Day by day, from the first step to today."] = "Tag für Tag, vom ersten Schritt bis heute."
+L["Pause"] = "Pause"
+L["Keep the picture"] = "Bild festhalten"
+L["Drag to go to a day."] = "Ziehen, um zu einem Tag zu springen."
+L["Esc ends the replay."] = "Esc beendet die Wiedergabe."
+L["This game client does not allow addons to take screenshots."] = "Dieser Spielclient erlaubt Addons keine Screenshots."

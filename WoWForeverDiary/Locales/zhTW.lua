@@ -1324,3 +1324,12 @@ L["Cause unknown"] = "原因不明"
 L["Group: %d"] = "隊伍：%d人"
 L["Stubborn"] = "不屈"
 L["Defeat a foe that has defeated you three times."] = "擊敗一個曾三次擊敗你的敵人。"
+
+-- the journey replayed on the atlas
+L["Watch the journey grow"] = "看旅程一天天延伸"
+L["Day by day, from the first step to today."] = "一天又一天，從第一步到今天。"
+L["Pause"] = "暫停"
+L["Keep the picture"] = "留下這張圖"
+L["Drag to go to a day."] = "拖曳以跳到某一天。"
+L["Esc ends the replay."] = "按Esc結束播放。"
+L["This game client does not allow addons to take screenshots."] = "此遊戲用戶端不允許插件擷取螢幕畫面。"

@@ -1321,3 +1321,12 @@ L["Cause unknown"] = "원인 불명"
 L["Group: %d"] = "파티: %d명"
 L["Stubborn"] = "끈기"
 L["Defeat a foe that has defeated you three times."] = "나를 세 번 쓰러뜨린 적을 처치하세요."
+
+-- the journey replayed on the atlas
+L["Watch the journey grow"] = "여정이 자라는 모습 보기"
+L["Day by day, from the first step to today."] = "첫걸음부터 오늘까지, 하루하루."
+L["Pause"] = "일시정지"
+L["Keep the picture"] = "그림 남기기"
+L["Drag to go to a day."] = "끌어서 원하는 날로 이동합니다."
+L["Esc ends the replay."] = "Esc를 누르면 재생이 끝납니다."
+L["This game client does not allow addons to take screenshots."] = "이 게임 클라이언트는 애드온의 스크린샷을 허용하지 않습니다."

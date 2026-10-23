@@ -540,6 +540,28 @@ function UI.MapSketch(parent, w, h)
     end)
     help:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
+    -- under it, on a continent with footsteps: play the journey day by day
+    local play = CreateFrame("Button", nil, canvas)
+    play:SetSize(20, 20)
+    play:SetPoint("TOP", help, "BOTTOM", 0, -6)
+    play:SetFrameLevel(mf:GetFrameLevel() + 10)
+    local pring = UI.Circle(play, 18, { 0.25, 0.14, 0.05, 0.75 }, "ARTWORK", 0)
+    pring:SetPoint("CENTER")
+    local parrow = play:CreateTexture(nil, "ARTWORK", nil, 1)
+    parrow:SetTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
+    parrow:SetSize(22, 22)
+    parrow:SetPoint("CENTER", 1, 0)
+    play:SetScript("OnEnter", function(s)
+        GameTooltip:SetOwner(s, "ANCHOR_LEFT")
+        GameTooltip:SetText(L["Watch the journey grow"], 1, 0.86, 0.5)
+        GameTooltip:AddLine(L["Day by day, from the first step to today."], 0.85, 0.85, 0.85, true)
+        GameTooltip:Show()
+    end)
+    play:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    play:SetScript("OnClick", function() GameTooltip:Hide() box:StartReplay() end)
+    play:Hide()
+    box.playButton = play
+
     -- zoom with the mouse wheel, drag to pan, right click to reset
     box.zoom, box.panX, box.panY = 1, 0, 0
     function box:ApplyZoom()
@@ -667,6 +689,8 @@ function UI.MapSketch(parent, w, h)
 
     -- the sepia map art of mapID, filling the box; sets mw / mh (size of the drawn map)
     local function drawArt(self, mapID)
+        if rawget(self, "rp") then self:StopReplay(true) end
+        self.playButton:Hide()
         for _, t in ipairs(self.tiles) do t:Hide() end
         for _, t in ipairs(self.cells) do t:Hide() end
         for _, p in ipairs(self.pins) do
@@ -726,6 +750,7 @@ function UI.MapSketch(parent, w, h)
     -- zones = { { id, name, visited, info = { tooltip lines } } }
     function box:DrawContinent(contID, zones)
         local mw, mh = drawArt(self, contID)
+        self.contID, self.contZones = contID, zones
         local C = WFD.C
         local used = 0
         local getRect = C_Map and C_Map.GetMapRectOnMap
@@ -776,6 +801,7 @@ function UI.MapSketch(parent, w, h)
             end
         end
         self:LayoutLabels()
+        self.playButton:SetShown(used > 0)
     end
 
     -- the map with small coloured dots: points = { { x, y, col, { tooltip lines }, ring, onClick } }
@@ -974,6 +1000,284 @@ function UI.MapSketch(parent, w, h)
         self.ping:ClearAllPoints()
         self.ping:SetPoint("CENTER", mf, "TOPLEFT", x * mf:GetWidth(), -y * mf:GetHeight())
         self.ping:Show()
+    end
+
+    ------------------------------------------------------------------------
+    -- The journey replayed: one day per step, the newest day bright, the days before it faded.
+    -- Footsteps carry no order within a day, so a day appears at once (no dot runs along the roads);
+    -- flights keep no start and end and are left out. Cells are taken from the pool and only the
+    -- cells of the day before and of the new day are touched per step, so long diaries stay smooth.
+    ------------------------------------------------------------------------
+    local BRIGHT, FADED = { 0.86, 0.16, 0.08, 1 }, { 0.55, 0.08, 0.05, 0.45 }
+    local SPEEDS = { 1, 4, 16 }
+    local STEP = 0.6                  -- seconds per day at 1x
+    local MAX_CELLS = 5000
+
+    -- the strongest moment of a day, for the head line
+    local ORDER = { level = 1, boss = 2, dungeon = 3, landmark = 4, rare = 5, honour = 6, zone = 7, epic = 8, first = 9 }
+    local function moment(idx)
+        local best
+        for _, ev in ipairs(WFD.C.events or {}) do
+            if ev.day == idx and ORDER[ev.k] and not WFD:IsDeathEvent(ev) and (not best or ORDER[ev.k] < ORDER[best.k]) then best = ev end
+        end
+        return best and best.s
+    end
+
+    local bar
+    local function controls(self)
+        if bar then return bar end
+        bar = CreateFrame("Frame", nil, canvas)
+        bar:SetFrameLevel(mf:GetFrameLevel() + 12)
+        bar:SetPoint("BOTTOMLEFT", 0, 0)
+        bar:SetPoint("BOTTOMRIGHT", 0, 0)
+        bar:SetHeight(30)
+        bar:EnableMouse(true)
+        local bg = UI.Fill(bar, { 0.06, 0.04, 0.02 }, "BACKGROUND", 0, 0.82)
+        bg:SetAllPoints()
+        -- the head: day, date and level, and what happened that day
+        local head = CreateFrame("Frame", nil, canvas)
+        head:SetFrameLevel(mf:GetFrameLevel() + 12)
+        head:SetPoint("TOPLEFT", 0, 0)
+        head:SetPoint("TOPRIGHT", 0, 0)
+        head:SetHeight(40)
+        local hbg = UI.GradRect(head, "VERTICAL", { 0.06, 0.04, 0.02, 0 }, { 0.06, 0.04, 0.02, 0.85 }, "BACKGROUND", 0)
+        hbg:SetAllPoints()
+        head.day = UI.Text(head, 13, { 1, 0.86, 0.5, 1 }, "LEFT", UI.HEAD, true)
+        head.day:SetPoint("TOPLEFT", 8, -5)
+        head.day:SetPoint("RIGHT", head, "RIGHT", -64, 0)
+        head.day:SetWordWrap(false)
+        head.what = UI.Text(head, 11, { 0.95, 0.89, 0.76, 1 }, "LEFT", UI.FONT, true)
+        head.what:SetPoint("TOPLEFT", head.day, "BOTTOMLEFT", 0, -2)
+        head.what:SetPoint("RIGHT", head, "RIGHT", -64, 0)
+        head.what:SetWordWrap(false)
+        bar.head = head
+
+        local function button(text, onClick)
+            local b = CreateFrame("Button", nil, bar)
+            b:SetHeight(24)
+            b.text = UI.Text(b, 12, { 1, 0.86, 0.5, 1 }, "CENTER", UI.HEAD, true)
+            b.text:SetPoint("CENTER")
+            function b:SetLabel(t)
+                self.text:SetText(t)
+                UI.FitText(self.text, 110, 12, 9, UI.HEAD)
+                self:SetWidth(self.text:GetStringWidth() + 14)
+            end
+            b:SetLabel(text)
+            b:SetScript("OnClick", onClick)
+            b:SetScript("OnEnter", function(s) s.text:SetTextColor(1, 1, 1, 1) end)
+            b:SetScript("OnLeave", function(s) s.text:SetTextColor(1, 0.86, 0.5, 1) end)
+            return b
+        end
+        bar.play = button(L["Pause"], function() box:TogglePlay() end)
+        bar.play:SetPoint("LEFT", 4, 0)
+        bar.speed = button("1x", function() box:NextSpeed() end)
+        bar.speed:SetPoint("LEFT", bar.play, "RIGHT", 2, 0)
+        bar.close = button("X", function() box:StopReplay() end)
+        bar.close:SetPoint("RIGHT", -4, 0)
+        bar.shot = button(L["Keep the picture"], function() box:KeepPicture() end)
+        bar.shot:SetPoint("RIGHT", bar.close, "LEFT", -2, 0)
+        -- the slider: a track and a thumb; a click or a drag on it goes to that day
+        local track = CreateFrame("Button", nil, bar)
+        track:SetHeight(20)
+        track:SetPoint("LEFT", bar.speed, "RIGHT", 8, 0)
+        track:SetPoint("RIGHT", bar.shot, "LEFT", -8, 0)
+        local line = UI.Fill(track, { 0.85, 0.66, 0.30 }, "ARTWORK", 0, 0.5)
+        line:SetPoint("LEFT")
+        line:SetPoint("RIGHT")
+        line:SetHeight(2)
+        local done = UI.Fill(track, { 0.86, 0.16, 0.08 }, "ARTWORK", 1, 0.9)
+        done:SetPoint("LEFT")
+        done:SetHeight(2)
+        local thumb = UI.Diamond(track, 10, c.gold, "ARTWORK", 2)
+        bar.track, bar.done, bar.thumb = track, done, thumb
+        local function seekToCursor()
+            local x = GetCursorPosition() / track:GetEffectiveScale()
+            local left, w = track:GetLeft() or 0, track:GetWidth() or 1
+            local f = max(0, min(1, (x - left) / max(1, w)))
+            local rp = rawget(box, "rp")
+            if rp then box:SeekReplay(max(1, floor(f * (#rp.days - 1) + 0.5) + 1)) end
+        end
+        track:RegisterForClicks("LeftButtonDown")
+        track:SetScript("OnMouseDown", function(s) s.dragging = true seekToCursor() end)
+        track:SetScript("OnMouseUp", function(s) s.dragging = nil end)
+        track:SetScript("OnUpdate", function(s) if s.dragging then seekToCursor() end end)
+        track:SetScript("OnEnter", function(s)
+            GameTooltip:SetOwner(s, "ANCHOR_TOP")
+            GameTooltip:SetText(L["Drag to go to a day."], 1, 0.86, 0.5)
+            GameTooltip:AddLine(L["Esc ends the replay."], 0.85, 0.85, 0.85)
+            GameTooltip:Show()
+        end)
+        track:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        -- the clock: a fixed step per day, a few steps at most per frame
+        bar:SetScript("OnUpdate", function(_, dt)
+            local rp = rawget(box, "rp")
+            if not (rp and rp.playing) then return end
+            rp.acc = rp.acc + dt
+            local step = STEP / SPEEDS[rp.speed]
+            local n = 0
+            while rp.acc >= step and n < 4 do
+                rp.acc = rp.acc - step
+                n = n + 1
+                if rp.i >= #rp.days then
+                    rp.playing = false
+                    bar.play:SetLabel(L["Play"])
+                    break
+                end
+                box:StepReplay()
+            end
+            if n >= 4 then rp.acc = 0 end
+        end)
+        return bar
+    end
+
+    local function showDay(self)
+        local rp = self.rp
+        local idx = rp.days[rp.i]
+        local b = bar
+        if idx then
+            b.head.day:SetText(format(L["Day %d"], idx) .. "  -  " .. WFD:DateStr(idx) .. "  -  "
+                .. format(L["Level %d"], WFD:LevelAt(WFD:DayTime(idx) + 43000)))
+            b.head.what:SetText(moment(idx) or "")
+            -- long dates and moments get smaller letters rather than being cut (the compass rose sits right)
+            UI.FitText(b.head.day, w - 8 - 72, 13, 9, UI.HEAD)
+            UI.FitText(b.head.what, w - 8 - 72, 11, 8, UI.FONT)
+        end
+        local w = b.track:GetWidth() or 1
+        local f = (#rp.days > 1) and ((rp.i - 1) / (#rp.days - 1)) or 1
+        b.done:SetWidth(max(1, w * f))
+        b.thumb:ClearAllPoints()
+        b.thumb:SetPoint("CENTER", b.track, "LEFT", w * f, 0)
+    end
+
+    -- the cells of one day onto the continent; the day before fades
+    local function addDay(self, k, bright)
+        local rp = self.rp
+        local idx = rp.days[k]
+        local now = {}
+        for _, z in ipairs(rp.zones) do
+            local cells = WFD:PathCells(WFD.C.days[idx].path[z.id])
+            for key in pairs(cells or {}) do
+                local id = z.id * 10000 + key
+                local i = rp.tex[id]
+                if not i and rp.used < MAX_CELLS then
+                    rp.used = rp.used + 1
+                    i = rp.used
+                    rp.tex[id] = i
+                    local t = cell(i)
+                    local cx, cy = floor(key / 100), key % 100
+                    t:ClearAllPoints()
+                    t:SetPoint("CENTER", mf, "TOPLEFT", z.x + (cx + 0.5) * z.w / 100, -(z.y + (cy + 0.5) * z.h / 100))
+                    t:SetSize(z.cs, z.cs)
+                    t:SetRotation(pi / 4)
+                end
+                if i then
+                    local t = cell(i)
+                    t:SetVertexColor(col4(bright and BRIGHT or FADED))
+                    t:Show()
+                    now[#now + 1] = i
+                end
+            end
+        end
+        return now
+    end
+
+    function box:StepReplay()
+        local rp = self.rp
+        for _, i in ipairs(rp.last) do cell(i):SetVertexColor(col4(FADED)) end
+        rp.i = rp.i + 1
+        rp.last = addDay(self, rp.i, true)
+        showDay(self)
+    end
+
+    -- straight to day k: everything before it faded, day k bright
+    function box:SeekReplay(k)
+        local rp = self.rp
+        if not rp or k == rp.i then return end
+        for i = 1, rp.used do cell(i):Hide() end
+        rp.tex, rp.used, rp.last = {}, 0, {}
+        for j = 1, k - 1 do addDay(self, j, false) end
+        rp.i = k - 1
+        self:StepReplay()
+    end
+
+    function box:IsReplaying() return rawget(self, "rp") ~= nil end
+
+    function box:StartReplay()
+        local contID, zones = rawget(self, "contID"), rawget(self, "contZones")
+        if not contID then return end
+        local mw, mh = self.mw or (w - 8), self.mh or (h - 8)
+        local getRect = C_Map and C_Map.GetMapRectOnMap
+        local rz = {}
+        for _, z in ipairs(zones) do
+            local ok, x1, x2, y1, y2 = false
+            if getRect then ok, x1, x2, y1, y2 = pcall(getRect, z.id, contID) end
+            if ok and x1 and x2 and x2 > x1 then
+                local zw = (x2 - x1) * mw
+                rz[#rz + 1] = { id = z.id, x = x1 * mw, y = y1 * mh, w = zw, h = (y2 - y1) * mh, cs = max(2, zw / 100 * 1.4) }
+            end
+        end
+        -- the days with footsteps on this continent, in order
+        local days = {}
+        for idx, d in pairs(WFD.C.days) do
+            for _, z in ipairs(rz) do
+                if d.path and d.path[z.id] then days[#days + 1] = idx break end
+            end
+        end
+        table.sort(days)
+        if #days == 0 then return end
+        for _, t in ipairs(self.cells) do t:Hide() end
+        self.rp = { days = days, zones = rz, i = 0, tex = {}, used = 0, last = {}, playing = true, speed = 1, acc = 0 }
+        UI.replayBox = self
+        local b = controls(self)
+        b:Show()
+        b.head:Show()
+        b.play:SetLabel(L["Pause"])
+        b.speed:SetLabel("1x")
+        self.playButton:Hide()
+        self:StepReplay()
+    end
+
+    function box:TogglePlay()
+        local rp = rawget(self, "rp")
+        if not rp then return end
+        if not rp.playing and rp.i >= #rp.days then self:SeekReplay(1) end
+        rp.playing = not rp.playing
+        rp.acc = 0
+        bar.play:SetLabel(rp.playing and L["Pause"] or L["Play"])
+    end
+
+    function box:NextSpeed()
+        local rp = rawget(self, "rp")
+        if not rp then return end
+        rp.speed = rp.speed % #SPEEDS + 1
+        bar.speed:SetLabel(SPEEDS[rp.speed] .. "x")
+    end
+
+    -- a screenshot of the picture as it stands, without the controls in it
+    function box:KeepPicture()
+        if WFD.S and WFD.S.shotBlocked then
+            print("|cffffd100WoW Forever Diary:|r " .. L["This game client does not allow addons to take screenshots."])
+            return
+        end
+        local rp = rawget(self, "rp")
+        if rp then rp.playing = false bar.play:SetLabel(L["Play"]) end
+        bar:Hide()
+        C_Timer.After(0.1, function()
+            pcall(Screenshot)
+            C_Timer.After(0.4, function() if rawget(box, "rp") then bar:Show() end end)
+        end)
+    end
+
+    -- quiet: something else is drawn on the map now (nothing to put back)
+    function box:StopReplay(quiet)
+        if not rawget(self, "rp") then return end
+        self.rp = nil
+        if UI.replayBox == self then UI.replayBox = nil end
+        if bar then
+            bar:Hide()
+            bar.head:Hide()
+        end
+        if not quiet and self.contID then self:DrawContinent(self.contID, self.contZones) end
     end
 
     return box

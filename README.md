@@ -31,7 +31,7 @@ Im Buch, in Gruppen; jede Gruppe hat einen Reiter, der eine Übersicht ihrer Tei
 - **Vorne:** Inhalt, Heute (der Tag bis jetzt, eine Erinnerung an diesen Tag in einem früheren Jahr, Neues seit dem letzten Lesen, nächste Ziele), Tagebuch mit Kapiteln, Questbuch
 - **Ziele & Ruhm:** Aufgaben (Tag, Woche, Monat), Sammelalbum mit nächsten Zielen, Ehrenbuch
 - **Chronik:** Meilensteine, Erste Male, Rekorde, Stufen-Zeitstrahl, Galerie
-- **Die Welt:** Atlas, Karten mit Gebietschronik, Sehenswürdigkeiten, Fundorte, Dungeon-Berichte
+- **Die Welt:** Atlas (mit Zeitraffer: der Abspielknopf unter dem „?“ der Kontinentkarte lässt die Reise Tag für Tag wachsen), Karten mit Gebietschronik, Sehenswürdigkeiten, Fundorte, Dungeon-Berichte
 - **Jagd & Beute:** Bestiarium mit Steckbriefen, „Fast geschafft“ und Jagdkarte, Schicksal (jeder Tod auf der Karte, wo und gegen wen am häufigsten), Erzfeinde, Anglerbuch, Schätze mit Ausrüstungspuppe
 - **Leute & Geld:** Personen, Gefährten, Kassenbuch
 - **Andenken:** Familienbuch, Zeitkapsel

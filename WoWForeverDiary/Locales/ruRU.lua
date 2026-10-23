@@ -1334,3 +1334,12 @@ L["Cause unknown"] = "Причина неизвестна"
 L["Group: %d"] = "Группа: %d"
 L["Stubborn"] = "Упорство"
 L["Defeat a foe that has defeated you three times."] = "Победите противника, который трижды побеждал вас."
+
+-- the journey replayed on the atlas
+L["Watch the journey grow"] = "Смотреть, как растёт путь"
+L["Day by day, from the first step to today."] = "День за днём, от первого шага до сегодня."
+L["Pause"] = "Пауза"
+L["Keep the picture"] = "Сохранить картинку"
+L["Drag to go to a day."] = "Перетащите, чтобы перейти к дню."
+L["Esc ends the replay."] = "Esc завершает показ."
+L["This game client does not allow addons to take screenshots."] = "Этот игровой клиент не разрешает аддонам делать снимки экрана."

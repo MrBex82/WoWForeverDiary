@@ -22,7 +22,7 @@ I made it because I never remember later where I first met someone, which quest 
 
 - **Today:** the book opens on today: your figures so far, how the day began, what happened on this day a year ago (or two, or three), what's new since you last read, and your next goals
 - **Diary:** a double page per day, written as a short story
-- **World map:** where you've been, with a time slider
+- **World map:** where you've been, with a time slider. On the continent maps of the atlas, a play button lets your journey grow day by day, at 1x, 4x or 16x, and keeps the picture as a screenshot if you like
 - **Bestiary and people:** pinned cards for creatures (like a wanted poster) and for NPCs. Creatures you've only seen so far, or that your other characters know, are listed per area with a hint where to look. Click one and it puts a marker on your map
 - **Collector's album:** every creature card starts as a sketch, turns to colour after 10 kills and gets a gold frame once you're a connoisseur (50 kills). Cards show their rarity, the best loot it dropped, whether it ever killed you and a short note in your own words. There's a page sorted by creature type, an "Almost there" page with the creatures closest to their next stage, and a map of your hunting grounds that shows where you stand
 - **Fate:** every death on the way: the graves on the map area by area, where and to whom you fall most, deaths by level, and the full list with day, place, foe and level
@@ -93,7 +93,7 @@ Ich habe es gebaut, weil ich mir später nie merke, wo ich jemanden zum ersten M
 
 - **Heute:** Das Buch öffnet bei heute: deine Zahlen bis jetzt, wie der Tag angefangen hat, was heute vor einem Jahr (oder zwei, drei) passiert ist, was seit dem letzten Lesen neu ist und deine nächsten Ziele
 - **Tagebuch:** pro Tag eine Doppelseite, als kleine Geschichte geschrieben
-- **Weltkarte:** wo du schon warst, mit Zeitregler
+- **Weltkarte:** wo du schon warst, mit Zeitregler. Auf den Kontinentkarten des Atlas lässt ein Abspielknopf deine Reise Tag für Tag wachsen, in 1x, 4x oder 16x, und hält das Bild auf Wunsch als Screenshot fest
 - **Bestiarium und Personen:** angeheftete Karten für Kreaturen (wie ein Steckbrief) und für NPCs. Kreaturen, die du bisher nur gesehen hast oder die deine anderen Charaktere kennen, stehen pro Gebiet in einer Liste mit einem Hinweis, wo du suchen solltest. Ein Klick setzt eine Markierung auf deiner Karte
 - **Sammelalbum:** Jede Kreaturenkarte beginnt als Skizze, wird nach 10 Kills farbig und bekommt einen Goldrahmen, sobald du Kenner bist (50 Kills). Die Karten zeigen ihre Seltenheit, die beste Beute, ob dich das Tier schon einmal erwischt hat, und eine kurze Notiz in deinen eigenen Worten. Dazu gibt es eine Seite nach Kreaturentypen, eine Seite „Fast geschafft“ mit den Kreaturen, die ihrer nächsten Stufe am nächsten sind, und eine Karte deiner Jagdgründe, die auch zeigt, wo du stehst
 - **Schicksal:** jeder Tod unterwegs: die Gräber auf der Karte, Gebiet für Gebiet, wo und gegen wen du am häufigsten fällst, Tode nach Stufe und die ganze Liste mit Tag, Ort, Gegner und Stufe

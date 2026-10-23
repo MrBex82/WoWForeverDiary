@@ -326,6 +326,7 @@ local function propagate(frame, v)
 end
 -- Escape closes what lies on top of the book first (a card, the search); the book itself only after that
 local function closeLayer()
+    if UI.replayBox and UI.replayBox:IsReplaying() then UI.replayBox:StopReplay() return true end
     if UI.card and UI.card:IsShown() then UI.card:Hide() return true end
     if UI.kindPanel and UI.kindPanel:IsShown() then UI.kindPanel:Hide() return true end
     if UI.searchPanel and UI.searchPanel:IsShown() then UI.searchPanel:Hide() return true end
