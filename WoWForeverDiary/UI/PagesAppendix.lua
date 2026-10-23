@@ -941,6 +941,14 @@ local function newCard(parent)
         self.skull:SetShown(nem ~= nil and (nem.n or 0) > 0)
         self.num:SetText(format("#%03d", e.num))
         self.lvl:SetText(format(L["Lv %s"], levelText(m)))
+        -- number left, rarity in the middle, level right: with large writing the number gives way to the rarity
+        self.tag:SetFont(UI.HEAD, UI.FS(8), "")      -- a card is used again: back to the full size first
+        local half = self.tag:GetStringWidth() / 2
+        if half > 0 then
+            local mid = CARD_W / 2
+            if 7 + self.num:GetStringWidth() + 3 > mid - half then self.num:SetText("") end
+            if mid + half + 3 > CARD_W - 7 - self.lvl:GetStringWidth() then UI.FitText(self.tag, 2 * (CARD_W - 10 - self.lvl:GetStringWidth() - mid), 8, 6, UI.HEAD) end
+        end
         fitName(self.name, m.name or "?")
         self.badge:SetCount(UI.ShortCount(m.kills), UI.BADGE_COLOURS[rarityOf(m)] or UI.BADGE_COLOURS.normal)
         local isNew = m.first and WFD:DayIndex(m.first) == WFD:NumDays()

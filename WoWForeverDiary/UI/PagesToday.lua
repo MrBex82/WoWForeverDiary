@@ -75,7 +75,7 @@ local function memoryBlock(pool, canvas, tx, tw, y)
         if t.SetMaxLines then t:SetMaxLines(3) end
         t:SetText(mem.text)
         t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-        y = y - min(t:GetStringHeight(), 3 * 16 + 4) - 8
+        y = y - min(t:GetStringHeight(), 3 * (UI.FS(13) + 3) + 4) - 8     -- three lines at the size chosen
         local dp = UI.book and UI.book.dayPage[mem.idx]
         if dp then
             local link = pool:Link(format(L["Read that day (day %d)"], mem.idx) .. "  >", function() UI:GoToPage(dp) end, 13)
@@ -115,7 +115,7 @@ UI:RegisterRenderer("today", function(pool, page, side, canvas)
     if t.SetMaxLines then t:SetMaxLines(6) end
     t:SetText(table.concat(paras, " "))
     t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-    y = y - min(t:GetStringHeight(), 6 * 16 + 4) - 10
+    y = y - min(t:GetStringHeight(), 6 * (UI.FS(13) + 3) + 4) - 10     -- six lines at the size chosen
     local dp = UI.book and UI.book.dayPage[day]
     if dp then
         local link = pool:Link(L["To today's entry"] .. "  >", function() UI:GoToPage(dp) end, 13)

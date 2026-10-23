@@ -175,7 +175,11 @@ local function momentSubject(ev) return (ev.k ~= "level" and ev.s and ev.s:match
 local function momentTwoLines(ev)
     return UI.MeasureWidth(momentSubject(ev), UI.FS(13), UI.FONT) > textColW() - 38 - 44
 end
-local function momentH(ev) return momentTwoLines(ev) and (MOMENT_H + UI.FS(12) + 2) or MOMENT_H end
+-- the kind on top, the subject below it; both grow with the size of the writing
+local function momentH(ev)
+    local h = max(MOMENT_H, UI.FS(9) + UI.FS(13) + 10)
+    return momentTwoLines(ev) and (h + UI.FS(12) + 2) or h
+end
 
 -- the line of figures under the date: "Level 5!  ·  40 kills  ·  3 quests ..."
 local function factsText(list)
@@ -433,7 +437,7 @@ local function drawKeep(pool, canvas, x, top, keep, w)
         t:SetText(momentSubject(ev))
         t:SetWidth(w - 38 - 44)
         if t.SetMaxLines then t:SetMaxLines(2) end
-        t:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 38, my - 14)
+        t:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 38, my - 4 - UI.FS(9))
         local tm = pool:Text(10, c.inkSoft, UI.FONT, "RIGHT")
         tm:SetText(date("%H:%M", ev.t))
         tm:SetPoint("TOPRIGHT", canvas, "TOPLEFT", x + w - 6, my - 4)
