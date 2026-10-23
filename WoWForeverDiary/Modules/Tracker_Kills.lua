@@ -264,6 +264,10 @@ else
     -- a blow that kills at once never puts you on the threat list: a wound on your target or a name plate
     -- while you are fighting counts as engaged too
     WFD:On("UNIT_COMBAT", function(_, unit, action, _, amount)
+        -- this client hands some combat numbers out as secret values that throw when compared:
+        -- a wound of secret size is still a wound
+        if issecretvalue and issecretvalue(action) then return end
+        if issecretvalue and issecretvalue(amount) then amount = 1 end
         if type(unit) ~= "string" or action ~= "WOUND" or not (amount and amount > 0) then return end
         if not (AIMED[unit] or unit:find("^nameplate")) then return end
         if not (UnitAffectingCombat and UnitAffectingCombat("player")) and not UnitIsDead(unit) then return end

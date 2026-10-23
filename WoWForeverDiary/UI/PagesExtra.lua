@@ -3,27 +3,9 @@ local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
 local c = UI.c
-local col4 = UI.col4
 local floor, max, min, format = math.floor, math.max, math.min, string.format
 
-local TITLE_H = 116
 local GREEN = UI.c.good
-
-local function rows(book, kind, list, head)
-    local page, y
-    local function newPage(first)
-        page = book:Add({ kind = kind, rows = {}, first = first, numbered = true, head = head })
-        y = first and TITLE_H or 0
-    end
-    newPage(true)
-    for _, r in ipairs(list) do
-        -- r.keep: room the next row needs, so a heading never ends up alone at the bottom of a page
-        if y + r.h + (r.keep or 0) > UI.AREA_H then newPage(false) end
-        r.y = y
-        page.rows[#page.rows + 1] = r
-        y = y + r.h
-    end
-end
 
 local function emptyText(pool, canvas, tx, tw, y, text)
     local e = pool:Text(14, c.inkFaint, UI.FONT, "CENTER")
@@ -147,7 +129,7 @@ UI:RegisterSection({
                 for _, e in ipairs(items) do list[#list + 1] = { h = 52, entry = e } end
             end
         end
-        rows(book, "honour", list, L["Book of honour"])
+        book:AddRows("honour", list, { head = L["Book of honour"] })
     end,
 })
 
@@ -318,7 +300,7 @@ UI:RegisterSection({
             list[#list + 1] = { h = 36, header = L[g.def.label], count = g.found .. " / " .. g.total, keep = 38 }
             for i = 1, #g.items, 2 do list[#list + 1] = { h = 38, pair = { g.items[i], g.items[i + 1] } } end
         end
-        rows(book, "landmarks", list, L["Landmarks"])
+        book:AddRows("landmarks", list, { head = L["Landmarks"] })
     end,
 })
 
@@ -550,7 +532,7 @@ UI:RegisterSection({
             for i = 1, #items, 2 do list[#list + 1] = { h = 50, pair = { items[i], items[i + 1] } } end
         end
         local before = #book.pages
-        rows(book, "treasures", list, L["Treasures"])
+        book:AddRows("treasures", list, { head = L["Treasures"] })
         -- where each kind begins, for the slots of the doll
         book.treasureGroupPage = {}
         for i = before + 1, #book.pages do
@@ -744,7 +726,7 @@ UI:RegisterSection({
         list[#list + 1] = { h = 44, header = L["Trading partners"], count = tostring(#tr), keep = 28 }
         for i, x in ipairs(tr) do list[#list + 1] = { h = 28, trade = x, alt = (i % 2 == 0) } end
         if #tr == 0 then list[#list + 1] = { h = 30, empty = L["No trades yet."] } end
-        rows(book, "companions", list, L["Companions"])
+        book:AddRows("companions", list, { head = L["Companions"] })
     end,
 })
 

@@ -2,7 +2,6 @@
 local ADDON, WFD = ...
 local L, loc = WFD:NewLocale("enUS")
 
-L["Favourite prey"] = "Favorite prey"
 L["Distance travelled"] = "Distance traveled"
 L["The tabs on the right lead to the parts of the book, one colour for each group. Point at them to read their names. A red dot shows how much is new since you last read."] = "The tabs on the right lead to the parts of the book, one color for each group. Point at them to read their names. A red dot shows how much is new since you last read."
 L["%d more, then in colour"] = "%d more, then in color"
@@ -18,8 +17,6 @@ loc.narrator = {
 }
 L["Book of honour"] = "Book of honor"
 L["%d of %d honour tiers reached"] = "%d of %d honor tiers reached"
-L["Walk 50 kilometres."] = "Walk 50 kilometers."
-L["Walk 250 kilometres."] = "Walk 250 kilometers."
 L["Walk %d kilometres."] = "Walk %d kilometers."
 L["Honour points"] = "Honor points"
 L["A secret honour. Keep exploring!"] = "A secret honor. Keep exploring!"

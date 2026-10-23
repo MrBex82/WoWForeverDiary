@@ -10,11 +10,6 @@ local RED = { 0.75, 0.16, 0.10, 1 }
 local GRAVE = { 0.62, 0.06, 0.04, 1 }
 UI.fateMap = nil        -- the area shown on the map, by map ID (kept while the book is open)
 
-local function dayGo(day)
-    local p = day and UI.book and UI.book.dayPage[day]
-    return p and function() UI:GoToPage(p) end
-end
-
 local function note(pool, canvas, tx, tw, y, text)
     local e = pool:Text(13, c.inkFaint, UI.FONT, "CENTER")
     e:SetText(text)
@@ -114,7 +109,7 @@ UI:RegisterRenderer("fatemap", function(pool, page, side, canvas, index)
     local th = UI.Tiles(pool, canvas, tx, y, tw, {
         { #fates, L["Deaths"], #fates > 0 and c.bad or c.ink },
         { nz, L["Places of death"], c.ink },
-        { last and format(L["Day %d"], last.day or 1) or "-", L["Last death"], c.ink, last and dayGo(last.day) },
+        { last and format(L["Day %d"], last.day or 1) or "-", L["Last death"], c.ink, last and UI.DayGo(last.day) },
     })
     y = y - th - 12
 
@@ -141,7 +136,7 @@ UI:RegisterRenderer("fatemap", function(pool, page, side, canvas, index)
             local when = format(L["Day %d"], f.day or 1) .. (f.level and ("  -  " .. format(L["Level %d"], f.level)) or "")
             points[#points + 1] = { f.x, f.y, GRAVE,
                 { f.by and format(L["Killed by %s"], f.by) or L["You died here"], when, L["Click to read this day."] },
-                false, dayGo(f.day) }
+                false, UI.DayGo(f.day) }
         end
         m:DrawPoints(area.map, points)
         m:SetPlayer(nil)
@@ -292,7 +287,7 @@ UI:RegisterRenderer("fatelist", function(pool, page, side, canvas)
             s:SetWordWrap(false)
             s:SetWidth(tw - 32 - 4)
             s:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 32, y - UI.FS(13) - 6)
-            local go = dayGo(f.day)
+            local go = UI.DayGo(f.day)
             local hot = pool:Hot({ n:GetText(), table.concat(parts, "  -  "), go and L["Click to read this day."] or nil }, go)
             hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 2)
             hot:SetSize(tw, ROW - 3)

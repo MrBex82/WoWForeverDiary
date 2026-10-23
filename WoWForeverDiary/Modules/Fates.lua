@@ -4,24 +4,6 @@
 local ADDON, WFD = ...
 local MAX_FATES = 500
 
--- the level at a moment, from the times the levels were reached
-function WFD:LevelAt(t)
-    local C = self.C
-    local lvl = C.startLevel or 1
-    for l, tt in pairs(C.levelTimes or {}) do
-        if tt <= t and l > lvl then lvl = l end
-    end
-    return lvl
-end
-
-local function mainZone(d)
-    local best, bv
-    for z, v in pairs(d.zones or {}) do
-        if not bv or v > bv then best, bv = z, v end
-    end
-    return best
-end
-
 -- Diaries begun before the fates were kept: the deaths of each day become entries once, with the place of the
 -- grave and its killer where the day knows them (no exact time; the level is the one at the end of that day).
 local function fromDays(C)
@@ -39,7 +21,7 @@ local function fromDays(C)
             local by = p and p[4] or (byList and byList[i]) or nil
             list[#list + 1] = {
                 day = idx, map = p and p[1], x = p and p[2], y = p and p[3], by = by,
-                zone = (p and p[1] and WFD:MapName(p[1])) or mainZone(d),
+                zone = (p and p[1] and WFD:MapName(p[1])) or WFD:MainZone(d),
                 level = WFD:LevelAt(WFD:DayTime(idx) + 43000), old = true,
             }
         end

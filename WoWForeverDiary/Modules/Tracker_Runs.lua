@@ -53,8 +53,6 @@ local function endRun()
     end
 end
 
-function WFD:CurrentRun() return run end
-
 WFD:On("PLAYER_ENTERING_WORLD", function()
     if WFD.paused or not WFD.C then return end
     local inside, kind = IsInInstance()

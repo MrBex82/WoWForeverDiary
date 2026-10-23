@@ -139,7 +139,35 @@ function Book:Start(key)
     self.curSection = key
 end
 
+UI.TITLE_H = 116        -- the room a section title takes on its first page
+
+-- Rows of different heights over as many pages of one kind as needed, the first page leaving room for the
+-- title. A row keeps r.keep more room free below it (a heading never stays alone at the foot of a page).
+-- extra goes onto every page (head, counts ...). Returns the last page.
+function Book:AddRows(kind, list, extra)
+    local page, y
+    local function newPage(first)
+        page = self:Add({ kind = kind, rows = {}, first = first, numbered = true })
+        for k, v in pairs(extra or {}) do if page[k] == nil then page[k] = v end end
+        y = first and UI.TITLE_H or 0
+    end
+    newPage(true)
+    for _, r in ipairs(list) do
+        if y + r.h + (r.keep or 0) > UI.AREA_H then newPage(false) end
+        r.y = y
+        page.rows[#page.rows + 1] = r
+        y = y + r.h
+    end
+    return page
+end
+
 function UI.PageNumber(index) return index - 1 end
+
+-- a click that turns to the page of a diary day (nil when the day has no page)
+function UI.DayGo(day)
+    local p = day and UI.book and UI.book.dayPage[day]
+    return p and function() UI:GoToPage(p) end
+end
 
 function UI:Paginate()
     local book = setmetatable({ pages = {}, dayPage = {}, sectionStart = {}, toc = {} }, Book)

@@ -1,7 +1,6 @@
 -- Memories: what happened on this day in earlier years (or 30, 100, 365 days ago), and anniversaries:
 -- the first page of the diary, hours in the world, a year since a milestone level. Only reads what is kept.
 local ADDON, WFD = ...
-local floor, format = math.floor, string.format
 local time, date = time, date
 
 -- what makes a day worth remembering, strongest first
@@ -45,19 +44,11 @@ local function eventsByDay(C)
     return by
 end
 
-local function mainZone(d)
-    local best, bv
-    for z, v in pairs(d.zones or {}) do
-        if not bv or v > bv then best, bv = z, v end
-    end
-    return best
-end
-
 -- the strongest thing that happened on a diary day, or nil if nothing on it can be counted
 local function judge(C, idx, evs)
     local d = C.days[idx]
     if not d then return nil end
-    local m = { idx = idx, zone = mainZone(d), d = d }
+    local m = { idx = idx, zone = WFD:MainZone(d), d = d }
     local function take(kind, extra)
         if m.rank and RANK[kind] <= m.rank then return end
         m.rank, m.kind = RANK[kind], kind

@@ -369,11 +369,6 @@ function UI.Backdrop(f, edge, edgeSize, inset, bg, border)
     f:SetBackdropBorderColor(col4(border or { 1, 1, 1, 1 }))
 end
 
--- Kept for older call sites: flat colour with a 1px border.
-function UI.Skin(f, bg, border)
-    UI.Backdrop(f, nil, 1, 1, bg, border)
-end
-
 ------------------------------------------------------------------------
 -- Parchment
 ------------------------------------------------------------------------
@@ -534,28 +529,6 @@ end
 ------------------------------------------------------------------------
 -- Ornaments
 ------------------------------------------------------------------------
-function UI.Divider(parent, width, col)
-    col = col or c.inkSoft
-    local f = CreateFrame("Frame", nil, parent)
-    f:SetSize(width, 12)
-    local half = width / 2 - 14
-    local l = UI.GradRect(f, "HORIZONTAL", { col[1], col[2], col[3], 0 }, { col[1], col[2], col[3], 0.85 })
-    l:SetHeight(1)
-    l:SetWidth(half)
-    l:SetPoint("RIGHT", f, "CENTER", -10, 0)
-    local r = UI.GradRect(f, "HORIZONTAL", { col[1], col[2], col[3], 0.85 }, { col[1], col[2], col[3], 0 })
-    r:SetHeight(1)
-    r:SetWidth(half)
-    r:SetPoint("LEFT", f, "CENTER", 10, 0)
-    local d = UI.Diamond(f, 7, c.redInk)
-    d:SetPoint("CENTER")
-    local d1 = UI.Diamond(f, 3, col)
-    d1:SetPoint("CENTER", -8, 0)
-    local d2 = UI.Diamond(f, 3, col)
-    d2:SetPoint("CENTER", 8, 0)
-    return f
-end
-
 -- A small count badge: a capsule with a fine coloured ring, a dark inside and a light number.
 -- It grows sideways with the number ("2", "12", "1.2k"); without round masks it becomes a framed tag.
 function UI.CountBadge(parent, h)
@@ -679,29 +652,6 @@ function UI.Seal(parent, size, col, iconKey, emboss)
     return f
 end
 
--- Icon in a gold ring (stat tiles, list headers)
-function UI.RingIcon(parent, size, key)
-    local f = CreateFrame("Frame", nil, parent)
-    f:SetSize(size, size)
-    if UI.CanRound() then
-        local ring = UI.Circle(f, size, c.goldDk, "ARTWORK", 0)
-        ring:SetPoint("CENTER")
-        local inner = UI.Circle(f, size - 3, c.black, "ARTWORK", 1)
-        inner:SetPoint("CENTER")
-    else
-        UI.Backdrop(f, nil, 1, 0, c.black, c.goldDk)
-    end
-    f.icon = f:CreateTexture(nil, "ARTWORK", nil, 2)
-    f.icon:SetSize(size - 5, size - 5)
-    f.icon:SetPoint("CENTER")
-    f.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    UI.Round(f.icon, f)
-    local p = key and UI.Icon(key)
-    if p then f.icon:SetTexture(p) end
-    function f:SetIcon(path) if path then self.icon:SetTexture(path) end end
-    return f
-end
-
 ------------------------------------------------------------------------
 -- Buttons
 ------------------------------------------------------------------------
@@ -719,11 +669,7 @@ function UI.Button(parent, text, w, h, onClick, style)
     b.label:SetPoint("CENTER", 0, 0)
     b.label:SetText(text or "")
     local function paint(self, hover)
-        if self.isActive then
-            self:SetBackdropColor(col4(style.active or { 0.46, 0.16, 0.08, 1 }))
-            self:SetBackdropBorderColor(1, 0.86, 0.45, 1)
-            self.label:SetTextColor(1, 0.96, 0.82, 1)
-        elseif hover then
+        if hover then
             self:SetBackdropColor(col4(style.hover or { 0.34, 0.17, 0.09, 1 }))
             self:SetBackdropBorderColor(1, 0.86, 0.45, 1)
             self.label:SetTextColor(1, 0.95, 0.75, 1)
@@ -737,7 +683,6 @@ function UI.Button(parent, text, w, h, onClick, style)
     b:SetScript("OnLeave", function(self) paint(self, false) end)
     b:SetScript("OnClick", function(self, ...) if onClick then onClick(self, ...) end end)
     function b:SetLabel(t) self.label:SetText(t) end
-    function b:SetActive(a) self.isActive = a and true or false; paint(self, false) end
     paint(b, false)
     return b
 end
@@ -748,57 +693,19 @@ function UI.InkButton(parent, text, onClick, size, color)
     local base = color or c.inkSoft
     b.text = UI.Text(b, size or 14, base, "CENTER", UI.HEAD)
     b.text:SetPoint("CENTER", 0, 1)
-    b.under = UI.Fill(b, c.redInk, "ARTWORK")
-    b.under:SetHeight(1)
-    b.under:SetPoint("BOTTOMLEFT", b.text, "BOTTOMLEFT", 0, -3)
-    b.under:SetPoint("BOTTOMRIGHT", b.text, "BOTTOMRIGHT", 0, -3)
-    b.under:Hide()
     local function paint(self, hover)
-        if self.isActive then
-            self.text:SetTextColor(col4(c.redInk))
-            self.under:Show()
-        elseif hover then
-            self.text:SetTextColor(col4(c.redInk))
-            self.under:Hide()
-        else
-            self.text:SetTextColor(col4(base))
-            self.under:Hide()
-        end
+        self.text:SetTextColor(col4(hover and c.redInk or base))
     end
     function b:SetLabel(t)
         self.text:SetText(t)
         self:SetSize(self.text:GetStringWidth() + 8, (size or 14) + 10)
     end
-    function b:SetActive(a) self.isActive = a and true or false; paint(self, false) end
     b:SetScript("OnEnter", function(self) paint(self, true) end)
     b:SetScript("OnLeave", function(self) paint(self, false) end)
     b:SetScript("OnClick", function(self, ...) if onClick then onClick(self, ...) end end)
     b:SetLabel(text or "")
     paint(b, false)
     return b
-end
-
--- A row of ink toggles separated by small diamonds. items = { {key, label}, ... }
-function UI.InkToggles(parent, items, onPick, size)
-    local f = CreateFrame("Frame", nil, parent)
-    f.buttons = {}
-    local x = 0
-    for i, it in ipairs(items) do
-        if i > 1 then
-            local d = UI.Diamond(f, 4, c.inkFaint)
-            d:SetPoint("LEFT", f, "LEFT", x + 6, 0)
-            x = x + 14
-        end
-        local b = UI.InkButton(f, it[2], function() onPick(it[1]) end, size or 14)
-        b:SetPoint("LEFT", f, "LEFT", x, 0)
-        x = x + b:GetWidth()
-        f.buttons[it[1]] = b
-    end
-    f:SetSize(max(1, x), (size or 14) + 10)
-    function f:SetActive(key)
-        for k, b in pairs(self.buttons) do b:SetActive(k == key) end
-    end
-    return f
 end
 
 -- Spell-book page turn arrows
@@ -812,301 +719,6 @@ function UI.PageArrow(parent, kind, onClick)
     b:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
     b:SetScript("OnClick", onClick)
     return b
-end
-
-function UI.Checkbox(parent, label, getter, setter, textColor)
-    local b = CreateFrame("Button", nil, parent)
-    b:SetSize(300, 22)
-    local box = UI.Frame(b, 18, 18)
-    UI.Backdrop(box, "tooltip", 10, 2, { 0.10, 0.07, 0.04, 0.9 }, c.goldDk)
-    box:SetPoint("LEFT", 0, 0)
-    local tick = box:CreateTexture(nil, "OVERLAY")
-    tick:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
-    tick:SetSize(24, 24)
-    tick:SetPoint("CENTER", 2, 1)
-    tick:SetVertexColor(0.95, 0.80, 0.40, 1)
-    local txt = UI.Text(b, 14, textColor or c.ink, "LEFT", UI.HEAD)
-    txt:SetPoint("LEFT", box, "RIGHT", 8, 0)
-    txt:SetText(label)
-    b:SetWidth(txt:GetStringWidth() + 40)
-    function b:Refresh() tick:SetShown(getter() and true or false) end
-    b:SetScript("OnClick", function(self)
-        setter(not getter())
-        self:Refresh()
-    end)
-    b:Refresh()
-    return b
-end
-
-------------------------------------------------------------------------
--- Ink slider with a wax-seal knob
-------------------------------------------------------------------------
-function UI.InkSlider(parent, w, onChange)
-    local sl = CreateFrame("Slider", nil, parent)
-    sl:SetOrientation("HORIZONTAL")
-    sl:SetSize(w, 20)
-    sl:SetMinMaxValues(1, 1)
-    sl:SetValueStep(1)
-    if sl.SetObeyStepOnDrag then sl:SetObeyStepOnDrag(true) end
-    sl:SetValue(1)
-    local line = UI.Fill(sl, c.inkSoft, "BACKGROUND")
-    line:SetHeight(2)
-    line:SetPoint("LEFT", 0, 0)
-    line:SetPoint("RIGHT", 0, 0)
-    local capL = UI.Diamond(sl, 6, c.inkSoft, "BACKGROUND")
-    capL:SetPoint("CENTER", sl, "LEFT", 0, 0)
-    local capR = UI.Diamond(sl, 6, c.inkSoft, "BACKGROUND")
-    capR:SetPoint("CENTER", sl, "RIGHT", 0, 0)
-    sl:SetThumbTexture(WHITE)
-    local th = sl:GetThumbTexture()
-    th:SetSize(18, 18)
-    th:SetVertexColor(col4(c.redInk))
-    if not UI.Round(th, sl) then th:SetRotation(pi / 4); th:SetSize(13, 13) end
-    sl:SetScript("OnValueChanged", function(self, v)
-        if self.syncing then return end
-        onChange(floor(v + 0.5))
-    end)
-    function sl:SetRange(lo, hi, v)
-        self.syncing = true
-        self:SetMinMaxValues(lo, max(lo, hi))
-        self:SetValue(v)
-        self.syncing = false
-    end
-    return sl
-end
-
-------------------------------------------------------------------------
--- Virtual list (ink on paper by default)
-------------------------------------------------------------------------
--- row = { text, right, link, header, icon, color, rightColor, onClick, key, tip, badge }
-function UI.List(parent, w, h, rowH, opts)
-    opts = opts or {}
-    local textColor = opts.textColor or c.ink
-    local headColor = opts.headColor or c.redInk
-    local frame = CreateFrame("Frame", nil, parent)
-    frame:SetSize(w, h)
-    local list = { frame = frame, data = {}, rows = {}, offset = 0, rowH = rowH }
-    local n = floor(h / rowH)
-    list.n = n
-
-    local sb = CreateFrame("Slider", nil, frame)
-    sb:SetPoint("TOPRIGHT", 0, 0)
-    sb:SetPoint("BOTTOMRIGHT", 0, 0)
-    sb:SetWidth(6)
-    sb:SetOrientation("VERTICAL")
-    sb:SetMinMaxValues(0, 0)
-    sb:SetValueStep(1)
-    sb:SetValue(0)
-    local track = UI.Fill(sb, c.inkFaint, "BACKGROUND", 0, 0.35)
-    track:SetWidth(1)
-    track:SetPoint("TOP")
-    track:SetPoint("BOTTOM")
-    sb:SetThumbTexture(WHITE)
-    local thumb = sb:GetThumbTexture()
-    thumb:SetSize(5, 34)
-    thumb:SetVertexColor(col4(c.inkSoft, 0.85))
-    list.scrollbar = sb
-
-    local function fill(r, row)
-        r.row = row
-        r.text:ClearAllPoints()
-        if row.header then
-            r.text:SetFont(UI.HEAD, 15, "")
-            r.text:SetTextColor(col4(row.color or headColor))
-            r.rule:Show()
-            r.icon:Hide()
-            r.text:SetPoint("BOTTOMLEFT", 2, 3)
-            r.text:SetPoint("RIGHT", r.right, "LEFT", -4, 0)
-        else
-            r.text:SetFont(opts.font or UI.FONT, opts.size or 12, "")
-            r.text:SetTextColor(col4(row.color or textColor))
-            r.rule:Hide()
-            if row.icon then
-                r.icon:SetTexture(row.icon)
-                r.icon:Show()
-                r.text:SetPoint("LEFT", r.icon, "RIGHT", 6, 0)
-            else
-                r.icon:Hide()
-                r.text:SetPoint("LEFT", row.indent or 6, 0)
-            end
-            r.text:SetPoint("RIGHT", r.right, "LEFT", -6, 0)
-        end
-        r.text:SetText(row.text or "")
-        r.right:SetTextColor(col4(row.rightColor or row.color or c.inkSoft))
-        r.right:SetText(row.right or "")
-        local sel = row.key ~= nil and row.key == list.selected
-        r.sel:SetShown(sel)
-        r.selBar:SetShown(sel)
-        r:Show()
-    end
-
-    function list:Refresh()
-        local total = #self.data
-        local maxOff = max(0, total - n)
-        if self.offset > maxOff then self.offset = maxOff end
-        if self.offset < 0 then self.offset = 0 end
-        for i = 1, n do
-            local r = self.rows[i]
-            local row = self.data[self.offset + i]
-            if row then fill(r, row) else r:Hide(); r.row = nil end
-        end
-        self.syncing = true
-        sb:SetMinMaxValues(0, maxOff)
-        sb:SetValue(self.offset)
-        self.syncing = false
-        sb:SetShown(maxOff > 0)
-    end
-
-    function list:SetData(data, keepOffset)
-        self.data = data or {}
-        if not keepOffset then self.offset = 0 end
-        self:Refresh()
-    end
-
-    function list:SetSelected(key)
-        self.selected = key
-        self:Refresh()
-    end
-
-    sb:SetScript("OnValueChanged", function(_, v)
-        if list.syncing then return end
-        list.offset = floor(v + 0.5)
-        list:Refresh()
-    end)
-    frame:EnableMouseWheel(true)
-    frame:SetScript("OnMouseWheel", function(_, delta)
-        list.offset = list.offset - delta * 3
-        list:Refresh()
-    end)
-
-    for i = 1, n do
-        local r = CreateFrame("Button", nil, frame)
-        r:SetHeight(rowH)
-        r:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -(i - 1) * rowH)
-        r:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -12, -(i - 1) * rowH)
-        r.sel = UI.GradRect(r, "HORIZONTAL", { 0.91, 0.76, 0.42, 0.14 }, { 0.91, 0.76, 0.42, 0.0 }, "BACKGROUND")
-        r.sel:SetAllPoints()
-        r.selBar = UI.Fill(r, c.redInk, "ARTWORK")
-        r.selBar:SetWidth(3)
-        r.selBar:SetPoint("TOPLEFT", 0, -2)
-        r.selBar:SetPoint("BOTTOMLEFT", 0, 2)
-        r.hl = UI.GradRect(r, "HORIZONTAL", { 0.91, 0.76, 0.42, 0.08 }, { 0.91, 0.76, 0.42, 0.0 }, "BACKGROUND", 1)
-        r.hl:SetAllPoints()
-        r.hl:Hide()
-        r.rule = UI.GradRect(r, "HORIZONTAL", { 0.91, 0.76, 0.42, 0.6 }, { 0.91, 0.76, 0.42, 0.0 }, "ARTWORK")
-        r.rule:SetHeight(1)
-        r.rule:SetPoint("BOTTOMLEFT", 0, 1)
-        r.rule:SetPoint("BOTTOMRIGHT", 0, 1)
-        r.icon = r:CreateTexture(nil, "ARTWORK")
-        r.icon:SetSize(rowH - 4, rowH - 4)
-        r.icon:SetPoint("LEFT", 4, 0)
-        r.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-        r.right = UI.Text(r, 12, c.inkSoft, "RIGHT")
-        r.right:SetPoint("RIGHT", -4, 0)
-        r.text = UI.Text(r, 12, textColor, "LEFT")
-        r.text:SetWordWrap(false)
-        r:SetScript("OnEnter", function(self)
-            local row = self.row
-            if not row or row.header then return end
-            self.hl:Show()
-            if row.link then
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetHyperlink(row.link)
-                GameTooltip:Show()
-            elseif row.tip then
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(row.text or "", 1, 0.9, 0.6)
-                for _, line in ipairs(type(row.tip) == "table" and row.tip or { row.tip }) do
-                    GameTooltip:AddLine(line, 1, 1, 1, true)
-                end
-                GameTooltip:Show()
-            end
-        end)
-        r:SetScript("OnLeave", function(self)
-            self.hl:Hide()
-            GameTooltip:Hide()
-        end)
-        r:SetScript("OnClick", function(self)
-            local row = self.row
-            if row and row.onClick then row.onClick(row, list) end
-        end)
-        r:Hide()
-        list.rows[i] = r
-    end
-    return list
-end
-
-------------------------------------------------------------------------
--- Scrolling text block
-------------------------------------------------------------------------
-function UI.ScrollText(parent, w, h, size, color, font)
-    local sf = CreateFrame("ScrollFrame", nil, parent)
-    sf:SetSize(w, h)
-    local child = CreateFrame("Frame", nil, sf)
-    child:SetSize(w - 6, 10)
-    sf:SetScrollChild(child)
-    local fs = UI.Text(child, size or 13, color or c.ink, "LEFT", font)
-    fs:SetPoint("TOPLEFT", 0, 0)
-    fs:SetWidth(w - 6)
-    fs:SetJustifyV("TOP")
-    fs:SetSpacing(4)
-    sf:EnableMouseWheel(true)
-    sf:SetScript("OnMouseWheel", function(self, delta)
-        local range = self:GetVerticalScrollRange() or 0
-        local cur = self:GetVerticalScroll() or 0
-        self:SetVerticalScroll(max(0, min(range, cur - delta * 36)))
-    end)
-    function sf:SetContent(text)
-        fs:SetText(text or "")
-        child:SetHeight(fs:GetStringHeight() + 12)
-        self:SetVerticalScroll(0)
-    end
-    sf.fs = fs
-    return sf
-end
-
-------------------------------------------------------------------------
--- Composite pieces
-------------------------------------------------------------------------
--- Stat tile: ring icon, big number, small caps label
-function UI.StatTile(parent, w, iconKey, label)
-    local f = CreateFrame("Frame", nil, parent)
-    f:SetSize(w, 42)
-    f.ring = UI.RingIcon(f, 34, iconKey)
-    f.ring:SetPoint("LEFT", 0, 0)
-    f.value = UI.Text(f, 19, c.ink, "LEFT", UI.HEAD)
-    f.value:SetPoint("TOPLEFT", f.ring, "TOPRIGHT", 8, 1)
-    f.value:SetPoint("RIGHT", f, "RIGHT", 0, 0)
-    f.value:SetWordWrap(false)
-    f.label = UI.Caps(f, label, 9, c.inkFaint)
-    f.label:SetPoint("BOTTOMLEFT", f.ring, "BOTTOMRIGHT", 8, 1)
-    function f:Set(v, col)
-        self.value:SetText(v)
-        self.value:SetTextColor(col4(col or c.ink))
-    end
-    return f
-end
-
--- "Label ........ value" line with dot leaders, like an old ledger
-function UI.Leader(parent, w, size)
-    local f = CreateFrame("Frame", nil, parent)
-    f:SetSize(w, (size or 13) + 8)
-    f.label = UI.Text(f, size or 13, c.inkSoft, "LEFT", UI.HEAD)
-    f.label:SetPoint("LEFT", 0, 0)
-    f.value = UI.Text(f, size or 13, c.ink, "RIGHT", UI.HEAD)
-    f.value:SetPoint("RIGHT", 0, 0)
-    f.dots = UI.Text(f, size or 13, c.inkFaint, "LEFT", UI.HEAD)
-    f.dots:SetPoint("LEFT", f.label, "RIGHT", 4, 0)
-    f.dots:SetPoint("RIGHT", f.value, "LEFT", -4, 0)
-    f.dots:SetWordWrap(false)
-    f.dots:SetText(string.rep(" .", 80))
-    function f:Set(label, value, col)
-        self.label:SetText(label or "")
-        self.value:SetText(value or "")
-        self.value:SetTextColor(col4(col or c.ink))
-        self:SetShown(label ~= nil)
-    end
-    return f
 end
 
 function UI.ClassColor(classFile)

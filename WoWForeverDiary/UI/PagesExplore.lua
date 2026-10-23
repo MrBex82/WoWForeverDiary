@@ -5,29 +5,11 @@ local L = WFD.L
 local c = UI.c
 local floor, max, min, format = math.floor, math.max, math.min, string.format
 
-local TITLE_H = 116
 local LOCKED = { 0.46, 0.39, 0.30, 1 }
 local QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 local TEAL = { 0.30, 0.66, 0.62, 1 }
 local GREEN = UI.c.good
 local GOLD = { 0.86, 0.62, 0.18, 1 }
-
--- rows of different heights over as many pages as needed (the first page leaves room for a title)
-local function paginate(book, kind, list, extra)
-    local page, y
-    local function newPage(first)
-        page = book:Add({ kind = kind, rows = {}, first = first, numbered = true })
-        for k, v in pairs(extra or {}) do page[k] = v end
-        y = first and TITLE_H or 0
-    end
-    newPage(true)
-    for _, r in ipairs(list) do
-        if y + r.h + (r.keep or 0) > UI.AREA_H then newPage(false) end
-        r.y = y
-        page.rows[#page.rows + 1] = r
-        y = y + r.h
-    end
-end
 
 local function goTo(key)
     return function()
@@ -419,7 +401,7 @@ UI:RegisterSection({
             book:Add({ kind = "atlasmap", numbered = true, head = L["Atlas"], cont = e })
             local list = {}
             for j = 1, #e.zones, 2 do list[#list + 1] = { h = 34, pair = { e.zones[j], e.zones[j + 1] } } end
-            paginate(book, "atlaslist", list, { head = L["Atlas"], cont = e })
+            book:AddRows("atlaslist", list, { head = L["Atlas"], cont = e })
         end
     end,
 })

@@ -3,7 +3,6 @@ local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
 local c = UI.c
-local col4 = UI.col4
 local floor, max, min, format = math.floor, math.max, math.min, string.format
 
 ------------------------------------------------------------------------

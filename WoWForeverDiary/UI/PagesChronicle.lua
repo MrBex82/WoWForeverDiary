@@ -5,31 +5,9 @@ local L = WFD.L
 local c = UI.c
 local floor, max, min, format = math.floor, math.max, math.min, string.format
 
-local TITLE_H = 116
 local GOLD = { 0.86, 0.62, 0.18, 1 }
 local RED = { 0.75, 0.24, 0.16, 1 }
 local GREEN = UI.c.good
-
-local function paginate(book, kind, list, extra)
-    local page, y
-    local function newPage(first)
-        page = book:Add({ kind = kind, rows = {}, first = first, numbered = true })
-        for k, v in pairs(extra or {}) do page[k] = v end
-        y = first and TITLE_H or 0
-    end
-    newPage(true)
-    for _, r in ipairs(list) do
-        if y + r.h + (r.keep or 0) > UI.AREA_H then newPage(false) end
-        r.y = y
-        page.rows[#page.rows + 1] = r
-        y = y + r.h
-    end
-end
-
-local function dayGo(day)
-    local p = day and UI.book and UI.book.dayPage[day]
-    return p and function() UI:GoToPage(p) end
-end
 
 local function empty(pool, canvas, tx, tw, y, text)
     local e = pool:Text(13, c.inkFaint, UI.FONT, "CENTER")
@@ -170,7 +148,7 @@ end
 
 UI:RegisterSection({
     key = "records", label = "Records", icon = "records", order = 14, thumb = false, leftStart = true,
-    build = function(book) paginate(book, "records", records(), { head = L["Records"] }) end,
+    build = function(book) book:AddRows("records", records(), { head = L["Records"] }) end,
 })
 
 UI:RegisterRenderer("records", function(pool, page, side, canvas)
@@ -198,7 +176,7 @@ UI:RegisterRenderer("records", function(pool, page, side, canvas)
             local dt = pool:Text(9, c.inkFaint, UI.FONT, "RIGHT")
             dt:SetText(WFD:DateStr(r.day))
             dt:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 24)
-            local hot = pool:Hot({ r.label, r.value, L["Click to read this day."] }, dayGo(r.day))
+            local hot = pool:Hot({ r.label, r.value, L["Click to read this day."] }, UI.DayGo(r.day))
             hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 1)
             hot:SetSize(tw, r.h - 4)
         end
@@ -230,7 +208,7 @@ UI:RegisterSection({
         for _, s in ipairs(steps) do
             list[#list + 1] = { h = 20, step = s, longest = longest, fast = s == fast, slow = s == slow }
         end
-        paginate(book, "levels", list, { head = L["Level timeline"] })
+        book:AddRows("levels", list, { head = L["Level timeline"] })
     end,
 })
 
@@ -266,7 +244,7 @@ UI:RegisterRenderer("levels", function(pool, page, side, canvas)
             if r.fast then lines[#lines + 1] = L["Fastest level"] end
             if r.slow then lines[#lines + 1] = L["Slowest level"] end
             if s.day then lines[#lines + 1] = format(L["Reached the next level on day %d."], s.day) end
-            local hot = pool:Hot(lines, dayGo(s.day))
+            local hot = pool:Hot(lines, UI.DayGo(s.day))
             hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 1)
             hot:SetSize(tw, r.h - 2)
         end
@@ -291,7 +269,7 @@ UI:RegisterSection({
         local list = {}
         if #evs == 0 then list[1] = { h = 40, empty = true } end
         for i = 1, #evs, 2 do list[#list + 1] = { h = PIC_H + 40, pair = { evs[i], evs[i + 1] } } end
-        paginate(book, "gallery", list, { head = L["Gallery"] })
+        book:AddRows("gallery", list, { head = L["Gallery"] })
     end,
 })
 
@@ -324,7 +302,7 @@ UI:RegisterRenderer("gallery", function(pool, page, side, canvas)
                     local s = pool:Text(9, c.inkFaint, UI.FONT, "CENTER")
                     s:SetText((format(L["Day %d"], ev.day or 0) .. "  -  " .. date(WFD.loc.date, ev.t)):upper())
                     s:SetPoint("TOP", canvas, "TOPLEFT", x + pw / 2, y - PIC_H - 21)
-                    local hot = pool:Hot({ ev.s or "?", L["Click to read this day."] }, dayGo(ev.day))
+                    local hot = pool:Hot({ ev.s or "?", L["Click to read this day."] }, UI.DayGo(ev.day))
                     hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, y - PIC_H - 2)
                     hot:SetSize(pw, 32)
                 end
@@ -358,7 +336,7 @@ UI:RegisterSection({
         local list = { { h = tilesH + 18, summary = true, deaths = deaths, top = arr[1] } }
         if #arr == 0 then list[#list + 1] = { h = 40, empty = true, deaths = deaths } end
         for _, e in ipairs(arr) do list[#list + 1] = { h = 50, e = e } end
-        paginate(book, "nemesis", list, { head = L["Nemeses"] })
+        book:AddRows("nemesis", list, { head = L["Nemeses"] })
     end,
 })
 

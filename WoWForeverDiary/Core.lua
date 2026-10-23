@@ -61,7 +61,6 @@ function WFD:ApplyLanguage(code)
     if self.UI and self.UI.ApplyScriptFonts then self.UI.ApplyScriptFonts(code) end
 end
 
-function WFD:GetLanguage() return self.locale end
 function WFD:GetGameLanguage() return self.gameLocale end
 
 ------------------------------------------------------------------------
@@ -271,6 +270,25 @@ end
 
 function WFD:NumDays() return self:DayIndex() end
 
+-- the area a day spent the longest time in
+function WFD:MainZone(d)
+    local best, bestT
+    for z, t in pairs(d and d.zones or {}) do
+        if not bestT or t > bestT then best, bestT = z, t end
+    end
+    return best
+end
+
+-- the level at a moment, from the times the levels were reached
+function WFD:LevelAt(t)
+    local C = self.C
+    local lvl = C.startLevel or 1
+    for l, tt in pairs(C.levelTimes or {}) do
+        if tt <= t and l > lvl then lvl = l end
+    end
+    return lvl
+end
+
 ------------------------------------------------------------------------
 -- Logging
 ------------------------------------------------------------------------
@@ -397,14 +415,6 @@ end
 ------------------------------------------------------------------------
 -- Helpers
 ------------------------------------------------------------------------
-function WFD:Coin(c)
-    c = floor(c or 0)
-    local fn = GetCoinTextureString or (C_CurrencyInfo and C_CurrencyInfo.GetCoinTextureString)
-    if fn then return fn(c) end
-    local g, s, k = floor(c / 10000), floor((c % 10000) / 100), c % 100
-    return format("|cffffd700%dg|r |cffc7c7cf%ds|r |cffeda55f%dc|r", g, s, k)
-end
-
 function WFD:CoinText(c)
     c = floor(c or 0)
     local neg = c < 0

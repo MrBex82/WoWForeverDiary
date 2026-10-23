@@ -4,32 +4,13 @@ local UI = WFD.UI
 local L = WFD.L
 local c = UI.c
 local col4 = UI.col4
-local floor, max, min, ceil, format = math.floor, math.max, math.min, math.ceil, string.format
+local floor, max, min, format = math.floor, math.max, math.min, string.format
 
-local TITLE_H = 116      -- space the section title takes on its first page
 local GREEN = UI.c.good
 
 local function pageRef(book, day)
     local p = day and book.dayPage[day]
     return p, p and format(L["p. %d"], UI.PageNumber(p)) or ""
-end
-
--- Spread rows of different heights over as many pages as needed.
-local function paginateRows(book, kind, rows, extra)
-    local page, y
-    local function newPage(first)
-        page = book:Add({ kind = kind, rows = {}, first = first, numbered = true, head = extra and extra.head })
-        if extra then for k, v in pairs(extra) do if page[k] == nil then page[k] = v end end end
-        y = first and TITLE_H or 0
-    end
-    newPage(true)
-    for _, r in ipairs(rows) do
-        if y + r.h + (r.keep or 0) > UI.AREA_H then newPage(false) end   -- keep headings with their rows
-        r.y = y
-        page.rows[#page.rows + 1] = r
-        y = y + r.h
-    end
-    return page
 end
 
 local function title(pool, canvas, side, page, text, sub)
@@ -65,7 +46,7 @@ UI:RegisterSection({
             rows[#rows + 1] = { h = 50, ev = ev }
         end
         if #rows == 0 then rows[1] = { h = 40, empty = true } end
-        paginateRows(book, "timeline", rows, { head = L["Milestones"] })
+        book:AddRows("timeline", rows, { head = L["Milestones"] })
     end,
 })
 
@@ -451,7 +432,7 @@ local function rarityOf(m)
     if m.cls == "elite" then return "elite" end
     return "normal"
 end
-UI.BESTIARY_RARITY, UI.RarityOf = RARITY, rarityOf
+UI.BESTIARY_RARITY, UI.RarityOf, UI.LevelText = RARITY, rarityOf, levelText
 local RARITY_TAG = { elite = "Elite", rare = "Rare", boss = "Boss" }
 local SKULL = "Interface\\TargetingFrame\\UI-TargetingFrame-Skull"
 
@@ -461,13 +442,6 @@ local TIERS = {           -- collector ranks of the bestiary (also shown on the 
     { 200, "Legend", { 0.62, 0.22, 0.70, 1 } },
 }
 UI.BESTIARY_TIERS = TIERS
--- trophy icons for the ranks: metal bars, and a dragon's head for the legend
-local function tierIcon(i)
-    local list = {}
-    for _, n in ipairs(UI.METAL_ICONS[i] or {}) do list[#list + 1] = "Interface\\Icons\\" .. n end
-    return UI.Pick(list) or UI.Icon("bestiary")
-end
-
 local CARD_W, CARD_H, CARD_GAP, ROW_GAP = 108, 136, 12, 10
 local PER_PAGE = 9
 
@@ -1073,7 +1047,7 @@ UI:RegisterRenderer("albumintro", function(pool, page, side, canvas)
         local reached = kinds >= t[1]
         local x = mx(i)
         local size = (i == cur) and 38 or 32
-        local plaque = pool:Plaque(x, MY, size, tierIcon(i), t[3], reached, tostring(t[1]))
+        local plaque = pool:Plaque(x, MY, size, UI.IconPath(UI.METAL_ICONS[i], "bestiary"), t[3], reached, tostring(t[1]))
         local lab = pool:Text(9, i == cur and c.redInk or (reached and c.ink or c.inkFaint), UI.FONT, "CENTER")
         lab:SetText(L[t[2]]:upper())
         lab:SetPoint("TOP", canvas, "TOPLEFT", x, MY - 27)
@@ -1229,7 +1203,7 @@ UI:RegisterSection({
             rows[#rows + 1] = { h = 30, e = e }
         end
         if #arr == 0 then rows[#rows + 1] = { h = 40, empty = true } end
-        paginateRows(book, "people", rows, { head = L["People"] })
+        book:AddRows("people", rows, { head = L["People"] })
     end,
 })
 
@@ -1780,7 +1754,7 @@ UI:RegisterSection({
                 list[#list + 1] = { h = 24, id = e.id, q = e.q, gone = e.q.zone or L["Before the diary"] }
             end
         end
-        paginateRows(book, "quests", list, { head = L["Quest Book"] })
+        book:AddRows("quests", list, { head = L["Quest Book"] })
     end,
 })
 

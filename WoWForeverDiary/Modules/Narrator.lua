@@ -160,16 +160,32 @@ local function pick(list, seed)
     return list[(seed % #list) + 1]
 end
 
--- A template that counts something: "{one|many}" picks the singular or plural wording for n,
--- and the first %d is n (the singular may leave the number out: "{once|%d times}").
+-- A template that counts something: "{one|many}" picks the singular or plural wording for n.
+-- Where the wordings hold the number ("{once|%d times}"), n goes into the chosen one only (the singular may
+-- leave it out), so a later %d stays for the other values ("{a year|%d years} since level %d").
+-- Otherwise the first %d is n ("Took down %d {creature|creatures}").
 -- Languages with three forms (Russian: 1 год, 2 года, 5 лет) write "{one|few|many}" and give loc.plural(n) -> 1, 2 or 3.
 local function counted(tpl, n, ...)
+    local inForms = false
+    -- the chosen wording stays in braces until the number is placed
+    local function choose(chosen, ...)
+        for i = 1, select("#", ...) do
+            if select(i, ...):find("%%d") then inForms = true end
+        end
+        return "{" .. chosen .. "}"
+    end
     local s = tpl:gsub("{([^|{}]*)|([^|{}]*)|([^|{}]*)}", function(one, few, many)
-        local form = WFD.loc.plural and WFD.loc.plural(n) or (n == 1 and 1 or 3)
-        return form == 1 and one or form == 2 and few or many
+        local f = WFD.loc.plural and WFD.loc.plural(n) or (n == 1 and 1 or 3)
+        return choose(f == 1 and one or f == 2 and few or many, one, few, many)
     end)
-    s = s:gsub("{([^|{}]*)|([^|{}]*)}", n == 1 and "%1" or "%2")
-    s = s:gsub("%%d", tostring(n), 1)
+    s = s:gsub("{([^|{}]*)|([^|{}]*)}", function(one, many)
+        return choose(n == 1 and one or many, one, many)
+    end)
+    if inForms then
+        s = s:gsub("{([^{}]*)}", function(text) return (text:gsub("%%d", tostring(n), 1)) end)
+    else
+        s = s:gsub("{([^{}]*)}", "%1"):gsub("%%d", tostring(n), 1)
+    end
     return format(s, ...)
 end
 

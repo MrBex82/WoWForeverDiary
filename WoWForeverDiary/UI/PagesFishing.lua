@@ -67,12 +67,6 @@ local function iconOf(e, id)
 end
 UI.FishIcon = iconOf
 
-local function tierIcon(i)
-    local list = {}
-    for _, n in ipairs(UI.METAL_ICONS[i] or {}) do list[#list + 1] = "Interface\\Icons\\" .. n end
-    return UI.Pick(list) or UI.Icon("loot")
-end
-
 -- collection order: first catch first, numbered like an album; each catch lives on the water that gave most
 local function collection()
     local arr = {}
@@ -288,7 +282,7 @@ UI:RegisterRenderer("fishintro", function(pool, page, side, canvas)
     for i, t in ipairs(TIERS) do
         local reached = species >= t[1]
         local x = mx(i)
-        local plaque = pool:Plaque(x, MY, (i == cur) and 38 or 32, tierIcon(i), t[3], reached, tostring(t[1]))
+        local plaque = pool:Plaque(x, MY, (i == cur) and 38 or 32, UI.IconPath(UI.METAL_ICONS[i], "loot"), t[3], reached, tostring(t[1]))
         local lab = pool:Text(9, i == cur and c.redInk or (reached and c.ink or c.inkFaint), UI.FONT, "CENTER")
         lab:SetText(L[t[2]]:upper())
         lab:SetPoint("TOP", canvas, "TOPLEFT", x, MY - 27)

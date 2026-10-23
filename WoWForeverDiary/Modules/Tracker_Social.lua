@@ -8,8 +8,6 @@ local time, format = time, string.format
 ------------------------------------------------------------------------
 local current = {}      -- key -> true while grouped right now
 
-function WFD:CurrentCompanions() return current end
-
 local function roster()
     if WFD.paused or not WFD.C then return end
     local C = WFD.C

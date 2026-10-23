@@ -3,8 +3,7 @@ local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
 local c = UI.c
-local col4 = UI.col4
-local floor, max, min, format, concat = math.floor, math.max, math.min, string.format, table.concat
+local floor, max, format, concat = math.floor, math.max, string.format, table.concat
 
 local NOTE_W = 66                    -- margin column for notes
 local FONT_SIZE, SPACING = 13, 3
@@ -26,30 +25,13 @@ local TITLES = {
     { s = "Shadows over %s", case = "over" }, { s = "Days in %s", case = "in" },
 }
 
-local function mainZone(d)
-    local best, bestT
-    for z, t in pairs(d.zones or {}) do
-        if not bestT or t > bestT then best, bestT = z, t end
-    end
-    return best
-end
-
-local function levelAt(t)
-    local C = WFD.C
-    local lvl = C.startLevel or 1
-    for l, tt in pairs(C.levelTimes or {}) do
-        if tt <= t and l > lvl then lvl = l end
-    end
-    return lvl
-end
-
 function UI.Chapters()
     local C = WFD.C
     local list, cur = {}, nil
     for day = 1, WFD:NumDays() do
         local d = C.days[day]
         if d then
-            local zone = mainZone(d) or (cur and cur.zone) or C.startZone or "?"
+            local zone = WFD:MainZone(d) or (cur and cur.zone) or C.startZone or "?"
             if not cur or zone ~= cur.zone then
                 cur = { zone = zone, days = {} }
                 list[#list + 1] = cur
@@ -70,8 +52,8 @@ function UI.Chapters()
         end
         seen[ch.zone] = true
         local d1, d2 = ch.days[1], ch.days[#ch.days]
-        local l1 = levelAt(WFD:DayTime(d1) - 43200)
-        local l2 = levelAt(WFD:DayTime(d2) + 43200)
+        local l1 = WFD:LevelAt(WFD:DayTime(d1) - 43200)
+        local l2 = WFD:LevelAt(WFD:DayTime(d2) + 43200)
         local lv = (l1 == l2) and format(L["Level %d"], l1) or format(L["Level %d-%d"], l1, l2)
         local dy = (d1 == d2) and format(L["Day %d"], d1) or format(L["Days %d-%d"], d1, d2)
         ch.sub = lv .. "   |   " .. dy

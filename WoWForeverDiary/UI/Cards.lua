@@ -4,17 +4,13 @@ local UI = WFD.UI
 local L = WFD.L
 local c = UI.c
 local col4 = UI.col4
-local floor, max, min, format = math.floor, math.max, math.min, string.format
+local floor, min, format = math.floor, math.min, string.format
 
 local CW, CH = 384, 540
 local PAD = 40
 local W = CW - PAD * 2
 
-local function levelText(m)
-    if not m.level then return "?" end
-    if m.level == -1 then return "??" end
-    return tostring(m.level)
-end
+local levelText = UI.LevelText      -- "12", "??" for a skull, "?" when unknown (PagesAppendix.lua)
 
 local function buildCard(self)
     local card = UI.Frame(self.holder, CW, CH)

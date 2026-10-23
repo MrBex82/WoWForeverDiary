@@ -384,12 +384,6 @@ function Pool:NoteEdit(w, h, lineH, text, onSave, hint)
     return eb
 end
 
-function Pool:Model(w, h)
-    local m = self:Get("model", function(p) return UI.ModelBox(p, w, h) end)
-    m:SetSize(w, h)
-    return m
-end
-
 function Pool:Map(w, h)
     local m = self:Get("map", function(p) return UI.MapSketch(p, w, h) end)
     return m
@@ -990,16 +984,6 @@ function UI.MapSketch(parent, w, h)
         -- numbered entries sorted by their number for the legend
         table.sort(legend, function(a, b) return a.num < b.num end)
         return legend
-    end
-
-    function box:Ping(x, y)
-        -- small red ring around a spot
-        if not self.ping then
-            self.ping = UI.Circle(mf, 22, { 0.65, 0.08, 0.05, 0.9 }, "OVERLAY")
-        end
-        self.ping:ClearAllPoints()
-        self.ping:SetPoint("CENTER", mf, "TOPLEFT", x * mf:GetWidth(), -y * mf:GetHeight())
-        self.ping:Show()
     end
 
     ------------------------------------------------------------------------

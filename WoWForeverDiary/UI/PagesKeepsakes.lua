@@ -3,35 +3,12 @@ local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
 local c = UI.c
-local col4 = UI.col4
 local floor, max, min, format = math.floor, math.max, math.min, string.format
 
-local TITLE_H = 116
 local GOLD = { 0.86, 0.62, 0.18, 1 }
 local LOCKED = { 0.46, 0.39, 0.30, 1 }
 local WAX = { 0.55, 0.12, 0.10, 1 }
 local QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
-
-local function paginate(book, kind, list, extra)
-    local page, y
-    local function newPage(first)
-        page = book:Add({ kind = kind, rows = {}, first = first, numbered = true })
-        for k, v in pairs(extra or {}) do page[k] = v end
-        y = first and TITLE_H or 0
-    end
-    newPage(true)
-    for _, r in ipairs(list) do
-        if y + r.h + (r.keep or 0) > UI.AREA_H then newPage(false) end
-        r.y = y
-        page.rows[#page.rows + 1] = r
-        y = y + r.h
-    end
-end
-
-local function dayGo(day)
-    local p = day and UI.book and UI.book.dayPage[day]
-    return p and function() UI:GoToPage(p) end
-end
 
 local function line(pool, canvas, x, y, w, text, size, col, font, justify)
     local t = pool:Text(size, col, font or UI.FONT, justify)
@@ -75,7 +52,7 @@ UI:RegisterSection({
             if a.f then return a.f.t < b.f.t end
             return a.i < b.i
         end)
-        paginate(book, "firsts", list, { head = L["First times"], got = got, total = #list })
+        book:AddRows("firsts", list, { head = L["First times"], got = got, total = #list })
     end,
 })
 
@@ -107,7 +84,7 @@ UI:RegisterRenderer("firsts", function(pool, page, side, canvas)
             if detail ~= "" then tip[#tip + 1] = detail end
             tip[#tip + 1] = format(L["Day %d"], f.day) .. "  -  " .. date(WFD.loc.date .. " %H:%M", f.t)
             tip[#tip + 1] = L["Click to read this day."]
-            local hot = pool:Hot(tip, dayGo(f.day))
+            local hot = pool:Hot(tip, UI.DayGo(f.day))
             hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 1)
             hot:SetSize(tw, r.h - 4)
         end
@@ -159,7 +136,7 @@ UI:RegisterSection({
                 end
             end
         end
-        paginate(book, "family", list, { head = L["Family book"], count = #fam })
+        book:AddRows("family", list, { head = L["Family book"], count = #fam })
     end,
 })
 
@@ -252,7 +229,7 @@ UI:RegisterSection({
         end)
         if #letters == 0 then list[#list + 1] = { h = 40, empty = true } end
         for _, e in ipairs(letters) do list[#list + 1] = { h = letterHeight(e.l), letter = e.l } end
-        paginate(book, "capsule", list, { head = L["Time capsule"] })
+        book:AddRows("capsule", list, { head = L["Time capsule"] })
     end,
 })
 
@@ -386,7 +363,7 @@ UI:RegisterSection({
         local list = { { h = (#labels > 0 and UI.TileHeight(tw, labels) or 42) + 28, summary = true, per = per } }
         if #maps == 0 then list[#list + 1] = { h = 50, empty = true } end
         for i = 1, min(10, #maps) do list[#list + 1] = { h = MAP_H + 66, map = maps[i] } end
-        paginate(book, "gathering", list, { head = L["Gatherer's map"] })
+        book:AddRows("gathering", list, { head = L["Gatherer's map"] })
     end,
 })
 

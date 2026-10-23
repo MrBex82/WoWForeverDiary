@@ -109,7 +109,6 @@ local function retell(text, codes, inner)
         end
     end
 end
-WFD.Retell = function(_, text, codes, inner) return retell(text, codes, inner) end
 
 -- the word for key in language code (English keys are their own word)
 local function wordIn(code, key)
