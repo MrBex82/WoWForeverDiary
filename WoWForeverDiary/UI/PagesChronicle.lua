@@ -224,7 +224,8 @@ UI:RegisterSection({
                 if not slow or s.secs > slow.secs then slow = s end
             end
         end
-        local list = { { h = 58, summary = true, total = total, n = n } }
+        local tilesH = UI.TileHeight(UI.TextW(), { L["Played for these levels"], L["Levels"], L["Per level"] })
+        local list = { { h = tilesH + 16, summary = true, total = total, n = n } }
         if #steps == 0 then list[#list + 1] = { h = 40, empty = true } end
         for _, s in ipairs(steps) do
             list[#list + 1] = { h = 20, step = s, longest = longest, fast = s == fast, slow = s == slow }
@@ -353,7 +354,8 @@ UI:RegisterSection({
         table.sort(arr, function(a, b) return (a.n.n or 0) > (b.n.n or 0) end)
         local deaths = 0
         for _, d in pairs(C.days) do deaths = deaths + d.deaths end
-        local list = { { h = 60, summary = true, deaths = deaths, top = arr[1] } }
+        local tilesH = UI.TileHeight(UI.TextW(), { L["Deaths"], L["Nemesis number one"] })
+        local list = { { h = tilesH + 18, summary = true, deaths = deaths, top = arr[1] } }
         if #arr == 0 then list[#list + 1] = { h = 40, empty = true, deaths = deaths } end
         for _, e in ipairs(arr) do list[#list + 1] = { h = 50, e = e } end
         paginate(book, "nemesis", list, { head = L["Nemeses"] })
@@ -455,13 +457,13 @@ UI:RegisterRenderer("run", function(pool, page, side, canvas)
         format(L["Day %d"], r.day or 1) .. "  -  " .. date(WFD.loc.date, r.t0) .. "  -  " .. WFD:DurationText(dur), -56)
     local myDeaths = 0
     for _, d in ipairs(r.deaths) do if d.me then myDeaths = myDeaths + 1 end end
-    tiles(pool, canvas, tx, y, tw, {
+    local th = tiles(pool, canvas, tx, y, tw, {
         { WFD:DurationText(dur), L["Duration"], c.ink },
         { r.kills, L["Kills"], c.ink },
         { #r.bosses, L["Bosses"], #r.bosses > 0 and GOLD or c.ink },
         { #r.deaths, L["Fallen"], #r.deaths > 0 and c.bad or c.ink },
     })
-    y = y - 52
+    y = y - th - 10
 
     -- the final boss, painted
     if r.last and r.last.gear and next(r.last.gear) then

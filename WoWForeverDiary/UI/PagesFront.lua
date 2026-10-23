@@ -122,15 +122,46 @@ function UI.SectionHead(pool, canvas, tx, tw, y, h, text, count)
     ln:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, base - 14)
 end
 
+-- The caption of a tile: one line in capitals if it fits, else two smaller lines as written.
+-- Returns the font size and whether it takes two lines.
+local function tileCaption(label, tw)
+    local size = UI.FS(9)
+    if UI.MeasureWidth(label:upper(), size, UI.FONT) <= tw - 6 then return size, false end
+    -- a long single word ("Bekanntschaften") shrinks until it fits the box, down to 9 points
+    local widest = 0
+    for word in label:gmatch("%S+") do widest = max(widest, UI.MeasureWidth(word, size, UI.FONT)) end
+    while size > 9 and widest > tw - 6 do
+        size = size - 1
+        widest = widest * size / (size + 1)
+    end
+    return size, true
+end
+
+local function tileNeed(label, tw, h)
+    local size, two = tileCaption(label, tw)
+    if two then return max(h, 24 + 2 * size + 8) end
+    return max(h, 28 + size + 3)
+end
+
+-- the height a row of tiles will take, for pages whose rows are laid out before they are drawn
+function UI.TileHeight(w, labels, h)
+    h = h or 42
+    local tw = (w - (#labels - 1) * 8) / #labels
+    local need = h
+    for _, label in ipairs(labels) do need = max(need, tileNeed(label, tw, h)) end
+    return need
+end
+
 -- a row of figures in light boxes: list = { { value, label, colour, onClick } }
+-- A caption on two lines makes the whole row taller instead of running out of its box; returns the height.
 function UI.Tiles(pool, canvas, x0, y, w, list, h)
     h = h or 42
     local n = #list
     local tw = (w - (n - 1) * 8) / n
+    local boxes, need = {}, h
     for i, t in ipairs(list) do
         local x = x0 + (i - 1) * (tw + 8)
         local bg = pool:Rect(c.paperDk, 0.45)
-        bg:SetSize(tw, h)
         bg:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, y)
         local bar = pool:Rect(t[3] or c.inkSoft, 0.9)
         bar:SetSize(tw, 2)
@@ -141,35 +172,31 @@ function UI.Tiles(pool, canvas, x0, y, w, list, h)
         v:SetWidth(tw)
         v:SetWordWrap(false)
         v:SetPoint("TOP", bg, "TOP", 0, -5)
-        -- the caption: one line if it fits, else two smaller lines
         local l = pool:Text(9, c.inkSoft, UI.FONT, "CENTER")
-        l:SetText(t[2]:upper())
         l:SetWidth(tw - 6)
-        if l:GetStringWidth() > tw - 6 then
+        local size, two = tileCaption(t[2], tw)
+        if two then
             -- capitals are wide: a caption on two lines is written as it is
             l:SetText(t[2])
-            -- a long single word ("Bekanntschaften") shrinks until it fits the box, down to 9 points
-            local size = UI.FS(9)
-            local widest = 0
-            for word in t[2]:gmatch("%S+") do widest = max(widest, UI.MeasureWidth(word, size, UI.FONT)) end
-            while size > 9 and widest > tw - 6 do
-                size = size - 1
-                widest = widest * size / (size + 1)
-            end
             l:SetFont(UI.FONT, size, "")
             l:SetWordWrap(true)
             if l.SetMaxLines then l:SetMaxLines(2) end
             l:SetPoint("TOP", bg, "TOP", 0, -24)
         else
+            l:SetText(t[2]:upper())
             l:SetWordWrap(false)
             l:SetPoint("TOP", bg, "TOP", 0, -28)
         end
+        need = max(need, tileNeed(t[2], tw, h))
+        boxes[#boxes + 1] = bg
         if t[4] then
             local hot = pool:Hot({ t[2], tostring(t[1]) }, t[4])
             hot:SetPoint("TOPLEFT", bg, "TOPLEFT")
-            hot:SetSize(tw, h)
+            boxes[#boxes + 1] = hot
         end
     end
+    for _, b in ipairs(boxes) do b:SetSize(tw, need) end
+    return need
 end
 
 -- a thin progress bar: faint track, filled part as a gradient of col; returns the track

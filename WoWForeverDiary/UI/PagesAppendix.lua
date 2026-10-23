@@ -340,20 +340,20 @@ UI:RegisterRenderer("mapinfo", function(pool, page, side, canvas)
     for _, n in pairs(C.npcs) do if n.map == e.id then people = people + 1 end end
     local p = pageRef(UI.book, e.first)
     local function go(pg) return pg and function() UI:GoToPage(pg) end end
-    -- the area in eight figures
-    UI.Tiles(pool, canvas, tx, y, tw, {
+    -- the area in eight figures (two rows; a row grows when a caption needs two lines)
+    local h1 = UI.Tiles(pool, canvas, tx, y, tw, {
         { WFD:DurationText(e.sec), L["Time spent"], c.ink },
         { z and z.visits or 1, L["Visits"], c.ink },
         { e.kills, L["Kills"], c.ink },
         { quests, L["Quests"], c.ink },
     })
-    UI.Tiles(pool, canvas, tx, y - 50, tw, {
+    local h2 = UI.Tiles(pool, canvas, tx, y - h1 - 8, tw, {
         { format(L["Day %d"], e.first), L["First visit"], c.redInk, go(p) },
         { people, L["Acquaintances here"], c.ink },
         { rests, L["Times rested here"], c.ink },
         { deaths, L["Deaths here"], deaths > 0 and c.bad or c.ink },
     })
-    y = y - 104
+    y = y - h1 - h2 - 28
 
     -- the most hunted creatures of this area, as a small ranking
     local mobs = {}
@@ -385,12 +385,14 @@ UI:RegisterRenderer("mapinfo", function(pool, page, side, canvas)
         local hot = pool:Hot({ mob.m.name or "?", format(L["Slain %d times"], mob.m.kills), L["Click for the wanted poster."] },
             function() UI:ShowCard("creature", mob.id) end)
         hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 1)
-        hot:SetSize(tw, 20)
-        y = y - 22
+        -- the row is as tall as its writing (the writing grows with the size chosen in the settings)
+        local rowH = max(22, n:GetStringHeight() + 9)
+        hot:SetSize(tw, rowH - 2)
+        y = y - rowH
     end
 
     -- places discovered
-    y = y - 4
+    y = y - 10
     local subs = {}
     if z and z.sub then
         for name, t in pairs(z.sub) do subs[#subs + 1] = { name = name, t = t } end
@@ -1093,6 +1095,7 @@ UI:RegisterRenderer("albumintro", function(pool, page, side, canvas)
         end
     end
     local nextPage = UI.book and UI.book.nextPage
+    local th = 42
     if nearest and nextPage then
         local lead = pool:Text(10, c.redInk, UI.FONT)
         lead:SetText(L["Almost there"]:upper())
@@ -1103,14 +1106,14 @@ UI:RegisterRenderer("albumintro", function(pool, page, side, canvas)
         line:SetWidth(tw)
         line:SetWordWrap(false)
     else
-        UI.Tiles(pool, canvas, tx, y, tw, {
+        th = UI.Tiles(pool, canvas, tx, y, tw, {
             { bosses, L["Bosses"], bosses > 0 and RARITY.boss.border or c.ink },
             { rares, L["Rare creatures"], rares > 0 and { 0.22, 0.38, 0.66, 1 } or c.ink },
             { elites, L["Elite"], elites > 0 and { 0.74, 0.54, 0.14, 1 } or c.ink },
             { masters, L["Connoisseur"], masters > 0 and c.goldDk or c.ink },
         })
     end
-    y = y - 54
+    y = y - th - 12
 
     -- the album pages, one row per area with how many kinds live there
     UI.SectionHead(pool, canvas, tx, tw, y + 18, 32, L["Album pages"], tostring(#page.zoneIndex))
@@ -1377,7 +1380,12 @@ UI:RegisterSection({
             facts = { best = best, worst = worst, avg = net / #days }
         end
         local page, y = nil, 0
+        -- the figures above the list grow with their captions (see the renderer)
         local HEAD_H, FACTS_H = 34, 60
+        if facts then
+            FACTS_H = UI.TileHeight(UI.TextW(), { format(L["Best day: day %d"], facts.best.day),
+                format(L["Worst day: day %d"], facts.worst.day), L["Per day"] }) + 18
+        end
         for i, r in ipairs(days) do
             if not page or y + 26 > UI.AREA_H then
                 local first = page == nil
@@ -1637,14 +1645,14 @@ UI:RegisterRenderer("ledger", function(pool, page, side, canvas)
     local f = page.facts
     if f then
         local function signed(v) return (v < 0 and "-" or "+") .. UI.CoinIcons(v, 12) end
-        UI.Tiles(pool, canvas, tx, top, tw, {
+        local th = UI.Tiles(pool, canvas, tx, top, tw, {
             { signed(f.best.n), format(L["Best day: day %d"], f.best.day), f.best.n >= 0 and c.good or c.bad,
               UI.book.dayPage[f.best.day] and function() UI:GoToPage(UI.book.dayPage[f.best.day]) end },
             { signed(f.worst.n), format(L["Worst day: day %d"], f.worst.day), f.worst.n >= 0 and c.good or c.bad,
               UI.book.dayPage[f.worst.day] and function() UI:GoToPage(UI.book.dayPage[f.worst.day]) end },
             { signed(f.avg), L["Per day"], f.avg >= 0 and c.good or c.bad },
         })
-        top = top - 60
+        top = top - th - 18
     end
     local heads = { L["Day"], L["Income"], L["Expenses"], L["Balance"] }
     for i, h in ipairs(heads) do

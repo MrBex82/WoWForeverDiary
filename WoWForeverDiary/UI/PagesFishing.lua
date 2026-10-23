@@ -290,13 +290,13 @@ UI:RegisterRenderer("fishintro", function(pool, page, side, canvas)
     end
     y = y - 86
 
-    UI.Tiles(pool, canvas, tx, y, tw, {
+    local th = UI.Tiles(pool, canvas, tx, y, tw, {
         { sum.casts, L["Casts"], c.ink },
         { sum.kinds.fish or 0, L["Fish"], KINDS.fish.col },
         { sum.kinds.treasure or 0, L["Treasure"], KINDS.treasure.col },
         { sum.kinds.junk or 0, L["Junk"], c.ink },
     })
-    y = y - 54
+    y = y - th - 12
 
     UI.SectionHead(pool, canvas, tx, tw, y + 18, 32, L["Album pages"], tostring(#page.zoneIndex))
     y = y - 22

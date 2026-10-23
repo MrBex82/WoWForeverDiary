@@ -300,12 +300,12 @@ UI:RegisterRenderer("huntmap", function(pool, page, side, canvas, index)
     end
     y = y - 26
 
-    UI.Tiles(pool, canvas, tx, y, tw, {
+    local th = UI.Tiles(pool, canvas, tx, y, tw, {
         { slain, L["Kinds slain here"], c.ink },
         { seen, L["Sighted, not yet slain"], seen > 0 and c.redInk or c.ink },
         { format("%d / %d", pick, #grounds), L["Hunting grounds"], c.inkSoft },
     })
-    y = y - 52
+    y = y - th - 10
     local note = pool:Text(10, c.inkSoft, UI.FONT, "CENTER")
     note:SetText(L["Each pin marks where the first of its kind fell."])
     note:SetWidth(tw)

@@ -94,13 +94,13 @@ UI:RegisterRenderer("today", function(pool, page, side, canvas)
     -- the day in four figures
     local d = C.days[day] or {}
     local net = WFD:Sum(d.income or {}) - WFD:Sum(d.spend or {})
-    UI.Tiles(pool, canvas, tx, y, tw, {
+    local th = UI.Tiles(pool, canvas, tx, y, tw, {
         { d.killTotal or 0, L["Kills"], c.ink },
         { #(d.qd or {}), L["Quests"], c.ink },
         { WFD:Dec((d.steps or 0) * 0.9144 / 1000), L["Kilometres"], c.ink },
         { (net < 0 and "-" or "") .. UI.CoinIcons(net, 12), L["Gold"], net < 0 and c.bad or c.ink },
     })
-    y = y - 56
+    y = y - th - 14
 
     -- the beginning of today's entry, and the way to all of it
     local story = WFD:Narrate(day) or ""

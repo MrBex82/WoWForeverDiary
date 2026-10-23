@@ -378,7 +378,9 @@ UI:RegisterSection({
         local per, maps = WFD:GatherSummary()
         local tw = UI.TextW()
         MAP_H = floor((tw - 18) / 1.5) + 18
-        local list = { { h = 70, summary = true, per = per } }
+        local labels = {}
+        for _, k in ipairs(WFD.GATHER_KINDS or {}) do labels[#labels + 1] = kindName(k) end
+        local list = { { h = (#labels > 0 and UI.TileHeight(tw, labels) or 42) + 28, summary = true, per = per } }
         if #maps == 0 then list[#list + 1] = { h = 50, empty = true } end
         for i = 1, min(10, #maps) do list[#list + 1] = { h = MAP_H + 66, map = maps[i] } end
         paginate(book, "gathering", list, { head = L["Gatherer's map"] })
