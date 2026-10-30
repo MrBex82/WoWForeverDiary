@@ -136,7 +136,7 @@ local function records()
             return format(L["Level %d"], b.level) .. "  -  " .. WFD:DurationText(b.v) end },
         { "streak", "Spell_Holy_DivineIntervention", L["Longest run without dying"], function(b)
             return WFD:Count("%d days", b.v) end },
-        { "deaths", "INV_Misc_Bone_HumanSkull_01", L["Darkest day"], function(b) return format(L["died %dx"], b.v) end, true },
+        { "deaths", "INV_Misc_Bone_HumanSkull_01", L["Darkest day"], function(b) return WFD:Count("died %dx", b.v) end, true },
     }
     local list = {}
     for _, d in ipairs(defs) do

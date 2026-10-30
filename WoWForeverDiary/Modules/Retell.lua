@@ -52,6 +52,24 @@ local LEGACY = {
         ["Earn %d honour tiers this week."] = "Erringe diese Woche %d Ehrenstufen.",
         ["Set foot in %s."] = "Betritt %s.",
     },
+    frFR = {
+        ["Slay %d creatures this week."] = "Abattez %d créatures cette semaine.",
+        ["Slay %d creatures this month."] = "Abattez %d créatures ce mois-ci.",
+        ["Walk %d kilometres this week."] = "Marchez %d kilomètres cette semaine.",
+        ["Walk %d kilometres this month."] = "Marchez %d kilomètres ce mois-ci.",
+    },
+    esES = {
+        ["Walk %d kilometres this week."] = "Camina %d kilómetros esta semana.",
+        ["Walk %d kilometres this month."] = "Camina %d kilómetros este mes.",
+    },
+    ptBR = {
+        ["Walk %d kilometres this week."] = "Caminhe %d quilômetros nesta semana.",
+        ["Walk %d kilometres this month."] = "Caminhe %d quilômetros neste mês.",
+    },
+    ruRU = {
+        ["Walk %d kilometres this week."] = "Пройдите за эту неделю (км): %d.",
+        ["Walk %d kilometres this month."] = "Пройдите за этот месяц (км): %d.",
+    },
 }
 
 local function placeholders(key)
