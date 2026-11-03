@@ -307,11 +307,12 @@ local function renderCreature(card, id)
 
     placeModel(card, -92, 168, r.col)
     card.model:Show3D(id)
-    -- how many were slain: a badge on the corner of the portrait
+    -- how many were slain: a badge inside the lower corner of the portrait
     local seal = card.overPool:Get("countbadge", function(p) return UI.CountBadge(p, 30) end)
     local key = (r == RARITY.boss and "boss") or (r == RARITY.rare and "rare") or (r == RARITY.elite and "elite") or "normal"
     seal:SetCount(UI.ShortCount(m.kills), UI.BADGE_COLOURS[key])
-    seal:SetPoint("RIGHT", canvas, "TOPRIGHT", -PAD + 10, -92 - 168 + 2)
+    seal:ClearAllPoints()
+    seal:SetPoint("BOTTOMRIGHT", canvas, "TOPRIGHT", -PAD - 8, -92 - 168 + 8)
 
     local n = pool:Text(24, c.ink, UI.HEAD, "CENTER")
     n:SetText(m.name or "?")

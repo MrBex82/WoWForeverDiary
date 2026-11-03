@@ -824,9 +824,10 @@ local function newCard(parent)
     f.name:SetPoint("BOTTOMRIGHT", f.plate, "BOTTOMRIGHT", -3, 2)
     f.name:SetJustifyV("MIDDLE")
     if f.name.SetMaxLines then f.name:SetMaxLines(2) end
-    -- how many were slain: a small badge stuck on the lower corner of the picture
+    -- how many were slain: a small badge inside the lower corner of the picture (across its edge it would
+    -- cover the name plate and the word of a connoisseur's card)
     f.badge = UI.CountBadge(f, 20)
-    f.badge:SetPoint("RIGHT", f.window, "BOTTOMRIGHT", 4, 0)
+    f.badge:SetPoint("BOTTOMRIGHT", f.window, "BOTTOMRIGHT", -3, 3)
     f.badge:SetFrameLevel(f:GetFrameLevel() + 4)
     f.new = UI.Text(f, 10, { 1, 0.95, 0.6, 1 }, "CENTER", UI.HEAD, true)
     f.new:SetPoint("TOPRIGHT", f.window, "TOPRIGHT", -2, -2)
@@ -854,7 +855,7 @@ local function newCard(parent)
     f.rim:SetPoint("BOTTOMRIGHT", 2, -2)
     UI.Backdrop(f.rim, "tooltip", 8, 2, { 0, 0, 0, 0 }, { 1, 0.82, 0.30, 1 })
     f.master = UI.Text(f.over, 8, { 1, 0.86, 0.36, 1 }, "LEFT", UI.HEAD, true)
-    f.master:SetPoint("BOTTOMLEFT", 4, 3)
+    f.master:SetPoint("TOP", 0, -4)         -- not at the foot: the count badge needs that corner
     -- this one has killed you
     f.skull = f.over:CreateTexture(nil, "OVERLAY")
     f.skull:SetTexture(SKULL)
