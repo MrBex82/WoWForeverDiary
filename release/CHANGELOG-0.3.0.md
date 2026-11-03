@@ -1,4 +1,4 @@
-# 0.3.0 (draft)
+# 0.3.0
 
 A library on a bookshelf, honours that give you something back, calmer pages and a quieter chat.
 
