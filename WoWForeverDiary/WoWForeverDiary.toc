@@ -56,6 +56,7 @@ Modules\Family.lua
 Modules\Capsules.lua
 Modules\Gathering.lua
 Modules\Library.lua
+Modules\ItemTip.lua
 Modules\Fishing.lua
 Modules\Narrator.lua
 Modules\Anniversary.lua

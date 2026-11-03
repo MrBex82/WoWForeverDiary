@@ -165,6 +165,7 @@ WFD:On("ADDON_LOADED", function(_, name)
     if S.cover == nil then S.cover = true end
     if S.memoryPage == nil then S.memoryPage = true end
     if S.memoryToast == nil then S.memoryToast = true end
+    if S.itemTip == nil then S.itemTip = true end
     S.angle = S.angle or 215
     S.scale = S.scale or 0.9
     WFD.S = S

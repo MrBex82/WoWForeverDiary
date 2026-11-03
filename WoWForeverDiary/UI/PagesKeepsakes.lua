@@ -144,6 +144,28 @@ UI:RegisterSection({
                 end
             end
         end
+        -- the quickest to every tenth level, by time in the world (not by calendar day)
+        if #fam >= 2 then
+            local rows = {}
+            for _, r in ipairs(RACES) do
+                if r.level then
+                    local best, mine, n
+                    for _, f in ipairs(fam) do
+                        local secs = f.e.pace and f.e.pace[r.level]
+                        if secs then
+                            n = (n or 0) + 1
+                            if f.me then mine = secs end
+                            if not best or secs < best.secs then best = { name = f.e.name, secs = secs, classFile = f.e.classFile } end
+                        end
+                    end
+                    if best and n >= 2 then rows[#rows + 1] = { h = 22, pace = r, best = best, mine = mine } end
+                end
+            end
+            if #rows > 0 then
+                list[#list + 1] = { h = 34, header = L["Quickest to the level"], keep = 22 }
+                for _, row in ipairs(rows) do list[#list + 1] = row end
+            end
+        end
         -- the hall of fame: the highest tiers earned anywhere in the family, the best five
         if #fam >= 1 then
             local best = {}
@@ -227,6 +249,19 @@ UI:RegisterRenderer("family", function(pool, page, side, canvas)
             line(pool, canvas, tx + 34, y - 15, tw - 34, L[metal.name] .. "  -  " .. (r.hall.who or "?"), 10, c.inkSoft)
         elseif r.header then
             UI.SectionHead(pool, canvas, tx, tw, y + 4, 32, L["Who got there first?"])
+        elseif r.pace then
+            line(pool, canvas, tx + 12, y - 3, tw * 0.4, raceLabel(r.pace), 12, c.ink)
+            local who = pool:Text(12, UI.Deep(UI.ClassColor(r.best.classFile), 0.3), UI.FONT, "RIGHT")
+            who:SetText(r.best.name .. "  |cff" .. UI.Hex(c.inkFaint) .. WFD:DurationText(r.best.secs) .. "|r")
+            who:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 3)
+            local dot = pool:Diamond(5, c.redInk)
+            dot:SetPoint("CENTER", canvas, "TOPLEFT", tx + 4, y - 9)
+            -- how you stand, when someone else was quicker
+            if r.mine and r.mine > r.best.secs then
+                local me = pool:Text(10, c.inkFaint, UI.FONT, "RIGHT")
+                me:SetText(L["you"] .. ": " .. WFD:DurationText(r.mine))
+                me:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw - who:GetStringWidth() - 14, y - 5)
+            end
         elseif r.race then
             line(pool, canvas, tx + 12, y - 3, tw * 0.5, raceLabel(r.race), 12, c.ink)
             local who = pool:Text(12, UI.Deep(UI.ClassColor(r.best.classFile), 0.3), UI.FONT, "RIGHT")

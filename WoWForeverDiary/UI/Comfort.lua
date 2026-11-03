@@ -1013,6 +1013,7 @@ local function buildOptions()
         { L["Weekly look back at login"], "recap" },
         { L["A memory on the Today page"], "memoryPage" },
         { L["A memory as a note at login"], "memoryToast" },
+        { L["Show when an item was first found in its tooltip"], "itemTip" },
         { L["Show the cover when the book is first opened"], "cover" },
     }
     local boxes = {}

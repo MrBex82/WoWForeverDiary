@@ -29,7 +29,19 @@ local function update()
     for lvl, t in pairs(C.levelTimes or {}) do
         if lvl % 10 == 0 then levels[lvl] = WFD:DayIndex(t) end
     end
+    -- time in the world when every tenth level was reached; only for characters followed from level 1,
+    -- otherwise the figure would only count from the day of the installation
+    local pace = {}
+    if C.fresh then
+        for lvl, t in pairs(C.levelTimes or {}) do
+            if lvl % 10 == 0 then
+                local secs = (C.levelPlayed and C.levelPlayed[lvl]) or (WFD.PlayedAt and WFD:PlayedAt(t))
+                if secs and secs > 0 then pace[lvl] = math.floor(secs) end
+            end
+        end
+    end
     S.family[WFD:FamilyKey()] = {
+        pace = pace,
         name = C.name, realm = C.realm, class = C.class, classFile = C.classFile, race = C.race,
         faction = UnitFactionGroup and UnitFactionGroup("player"), level = UnitLevel("player"),
         born = C.born, days = WFD:NumDays(), kills = kills, deaths = deaths, quests = C.questTotal or 0,

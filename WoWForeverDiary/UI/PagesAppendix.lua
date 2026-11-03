@@ -2105,6 +2105,7 @@ UI:RegisterRenderer("settings", function(pool, page, side, canvas)
         { L["Weekly look back at login"], "recap" },
         { L["A memory on the Today page"], "memoryPage" },
         { L["A memory as a note at login"], "memoryToast" },
+        { L["Show when an item was first found in its tooltip"], "itemTip" },
     })
     local hint = pool:Text(12, c.inkSoft, UI.FONT)
     hint:SetWidth(tw)
