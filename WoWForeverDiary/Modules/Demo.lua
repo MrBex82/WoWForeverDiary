@@ -40,10 +40,13 @@ local function build()
     -- so the Today page has a memory and an anniversary to show
     local t = date("*t", now)
     local born = time({ year = t.year - 2, month = t.month, day = (t.month == 2 and t.day == 29) and 28 or t.day, hour = 10 })
+    -- an invented character, so that nothing of the real one (name, realm) is on show in the demo
+    local classNames = _G.LOCALIZED_CLASS_NAMES_MALE
+    local okRace, raceInfo = pcall(function() return C_CreatureInfo.GetRaceInfo(1) end)
     local C = {
-        born = born, name = UnitName("player") or "Demo", realm = GetRealmName(),
-        class = UnitClass("player") or "Warrior", race = UnitRace("player") or "Human",
-        classFile = select(2, UnitClass("player")), startLevel = 1, fresh = true,
+        born = born, name = "Aldric", realm = "Sunnyvale",
+        class = classNames and classNames.PALADIN or "Paladin", race = okRace and raceInfo and raceInfo.raceName or "Human",
+        classFile = "PALADIN", startLevel = 1, fresh = true,
         days = {}, mobs = {}, npcs = {}, quests = {}, events = {}, zones = {}, skills = {}, nemesis = {},
         wealth = 0, levelTimes = {}, killTotal = 0, questTotal = 0, npcCount = 0, itemTotal = 0,
         startZone = nil, xpTotal = 0,
@@ -217,6 +220,17 @@ local function build()
             C.events[#C.events + 1] = { t = base + 20000, day = day, k = "zone", s = format(L["Discovered a new land: %s"], zone) }
         end
     end
+    -- a few honours earned on the recent days, so that the diary shows its seals
+    local function honourEvent(key, tier, day, hour)
+        local h = WFD:HonourDef(key)
+        if not h then return end
+        C.events[#C.events + 1] = { t = WFD:DayTime(day) - 43200 + hour * 3600, day = day, k = "honour", honour = key, tier = tier,
+            s = format(L["Honour earned: %s (%s)"], L[h.name], L[WFD:MetalOf(tier, #h.tiers).name]) }
+    end
+    honourEvent("slayer", 1, OFF + 7, 15)
+    honourEvent("sociable", 1, OFF + 7, 17)
+    honourEvent("explorer", 1, OFF + 7, 19)
+    honourEvent("naturalist", 1, OFF + 8, 16)
     -- companions, trading partners and resting places
     C.companions = {
         Brannok = { name = "Brannok", class = "Paladin", classFile = "PALADIN", level = 7, first = WFD:DayTime(OFF + 2), last = now,
@@ -358,7 +372,7 @@ local function build()
             "I hope this finds you well. The harbour is as busy as ever and the ships come and go without a care. "
                 .. "Come and visit when your road leads this way. There is always a place at the table." }),
     }
-    C.title, C.showcase = "slayer", { "slayer", "wanderer", "bookworm" }
+    C.title, C.showcase = "slayer", { "slayer", "bookworm", "scholar" }
     C.booksRead = {}
     for id in pairs(C.demoLibrary) do C.booksRead[id] = true end
     -- an invented family for the family book

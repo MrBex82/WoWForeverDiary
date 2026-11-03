@@ -24,20 +24,21 @@ I made it because I never remember later where I first met someone, which quest 
 - **Diary:** a double page per day, written as a short story
 - **World map:** where you've been, with a time slider. On the continent maps of the atlas, a play button lets your journey grow day by day, at 1x, 4x or 16x, and keeps the picture as a screenshot if you like
 - **Bestiary and people:** pinned cards for creatures (like a wanted poster) and for NPCs. Creatures you've only seen so far, or that your other characters know, are listed per area with a hint where to look. Click one and it puts a marker on your map
-- **Collector's album:** every creature card starts as a sketch, turns to colour after 10 kills and gets a gold frame once you're a connoisseur (50 kills). Cards show their rarity, the best loot it dropped, whether it ever killed you and a short note in your own words. There's a page sorted by creature type, an "Almost there" page with the creatures closest to their next stage, and a map of your hunting grounds that shows where you stand
+- **Collector's album:** every creature card starts as a sketch, turns to colour after 10 kills and gets a gold frame once you're a connoisseur (50 kills). Rare creatures and bosses are in colour from the start and shimmer: a band of light sweeps over the picture now and then, and small stars twinkle. Cards show their rarity, the best loot it dropped, whether it ever killed you and a short note in your own words. There's a page sorted by creature type, an "Almost there" page with the creatures closest to their next stage, and a map of your hunting grounds that shows where you stand
 - **Fate:** every death on the way: the graves on the map area by area, where and to whom you fall most, deaths by level, and the full list with day, place, foe and level
 - **Angler's log:** everything the line brings up, collected on cards by water, with a page for your waters and tackle
 - **Treasures:** every notable find, sorted by kind (head, chest, legs, weapons, recipes ...), with a doll showing your best find for every slot and a tick on what you're wearing
 - **Quest book and statistics:** including the gold flow
-- **Honours:** a collection with bronze to legend tiers, some of them secret, including fishing, first aid and cooking. There are small daily tasks, a bigger weekly one and a task of the month, all on one page
+- **Honours:** a collection with bronze to legend tiers, some of them secret, including fishing, first aid, cooking and reading. A click makes one of your honours your title, which then stands on the cover and in the family book. A right-click puts it in your showcase (up to three), and the day on which you earned an honour carries its seal in the diary. When you earn one, the note says something fitting too. There are small daily tasks, a bigger weekly one and a task of the month, all on one page
+- **First times:** every first, with its day and place. What has not happened yet waits in a short list
 - **Time capsules:** write a letter to yourself that stays sealed until a certain day or level
-- **Library:** every book, note and plaque you read in the world is kept on a bookshelf that fills slowly, to read again later (quest texts and conversations are not kept)
+- **Library:** every book, note and plaque you read in the world stands on a bookshelf that fills slowly. Click a spine to read the text again, and keep what you want to read later. Pages you did not see are marked as missing until you have read the rest. Quest texts and conversations are not kept, and the shelf belongs to the whole account
 - **Family book:** an overview of all your characters on the account and who got where first
 - **Search** across everything in the book (Ctrl + F)
 - **Export** as text or JSON if you want your diary somewhere else
 - **Moving to a new PC:** a moving code takes the whole diary of a character to another computer ("/wfd export" and "/wfd import")
 
-The parts of the book are grouped by theme. Each group has one tab in its own colour, which opens an overview of its parts. Point at a tab and a list of its parts opens beside it, so you can jump straight to one.
+The parts of the book are grouped by theme. Each group has one tab in its own colour, which opens a double page: the list of its parts on the left, and "At a glance" on the right with one figure for each part, a place for your own notes on the group and, for goals and honour, your showcase. Point at a tab and a list of its parts opens beside it, so you can jump straight to one.
 
 Small notes slide in when something worth remembering happens (a right-click puts them away), and you get a look back at the week. When you log in, a quiet note may remind you of this day in an earlier year, or of an anniversary: the diary's birthday, 100, 500 or 1000 hours in the world, a year since level 10, 20 ... 60. If you like, a small companion window beside the game (the introduction offers it) shows today's figures, your tasks and the honours and creatures closest to their next step.
 
@@ -53,7 +54,7 @@ The book comes in four styles (leather and gold, parchment, modern, strong contr
 - A line at the top of each page shows where you are; the steps before are links. "Continue reading" on the Today page leads back to where you stopped
 - Ctrl + F searches the book; arrow keys and Enter pick a result
 - The tabs show a red dot with what's new since you last read, and their names when you point at them
-- Notifications can be set to all, important only, or quiet. All settings are also under Options > AddOns
+- Notifications can be set to all, important only, or quiet. The settings come on four pages (General, Appearance, Handling, Data) and are also under Options > AddOns. The diary never writes into your chat on its own
 
 - "/wfd bestiary", "/wfd honour", "/wfd ledger", "/wfd settings" and so on open the book at that part, "/wfd 12" at day 12
 - "/wfd demo" fills the book with sample data, only in memory, so you can look around before you have a real diary
@@ -96,20 +97,21 @@ Ich habe es gebaut, weil ich mir später nie merke, wo ich jemanden zum ersten M
 - **Tagebuch:** pro Tag eine Doppelseite, als kleine Geschichte geschrieben
 - **Weltkarte:** wo du schon warst, mit Zeitregler. Auf den Kontinentkarten des Atlas lässt ein Abspielknopf deine Reise Tag für Tag wachsen, in 1x, 4x oder 16x, und hält das Bild auf Wunsch als Screenshot fest
 - **Bestiarium und Personen:** angeheftete Karten für Kreaturen (wie ein Steckbrief) und für NPCs. Kreaturen, die du bisher nur gesehen hast oder die deine anderen Charaktere kennen, stehen pro Gebiet in einer Liste mit einem Hinweis, wo du suchen solltest. Ein Klick setzt eine Markierung auf deiner Karte
-- **Sammelalbum:** Jede Kreaturenkarte beginnt als Skizze, wird nach 10 Kills farbig und bekommt einen Goldrahmen, sobald du Kenner bist (50 Kills). Die Karten zeigen ihre Seltenheit, die beste Beute, ob dich das Tier schon einmal erwischt hat, und eine kurze Notiz in deinen eigenen Worten. Dazu gibt es eine Seite nach Kreaturentypen, eine Seite „Fast geschafft“ mit den Kreaturen, die ihrer nächsten Stufe am nächsten sind, und eine Karte deiner Jagdgründe, die auch zeigt, wo du stehst
+- **Sammelalbum:** Jede Kreaturenkarte beginnt als Skizze, wird nach 10 Kills farbig und bekommt einen Goldrahmen, sobald du Kenner bist (50 Kills). Seltene Gegner und Bosse sind von Anfang an farbig und schimmern: ab und zu läuft ein Lichtstreifen über das Bild, und kleine Sterne funkeln. Die Karten zeigen ihre Seltenheit, die beste Beute, ob dich das Tier schon einmal erwischt hat, und eine kurze Notiz in deinen eigenen Worten. Dazu gibt es eine Seite nach Kreaturentypen, eine Seite „Fast geschafft“ mit den Kreaturen, die ihrer nächsten Stufe am nächsten sind, und eine Karte deiner Jagdgründe, die auch zeigt, wo du stehst
 - **Schicksal:** jeder Tod unterwegs: die Gräber auf der Karte, Gebiet für Gebiet, wo und gegen wen du am häufigsten fällst, Tode nach Stufe und die ganze Liste mit Tag, Ort, Gegner und Stufe
 - **Anglerbuch:** alles, was die Angel heraufholt, auf Karten gesammelt und nach Gewässern sortiert, mit einer Seite für Gewässer und Angelzeug
 - **Schätze:** jeder bemerkenswerte Fund, nach Art sortiert (Kopf, Brust, Beine, Waffen, Rezepte ...), mit einer Ausrüstungspuppe, die deinen besten Fund für jeden Platz zeigt, und einem Häkchen an dem, was du gerade trägst
 - **Questbuch und Statistik:** inklusive Gold-Fluss
-- **Ehrungen:** eine Sammlung mit Stufen von Bronze bis Legende, einige davon geheim, auch für Angeln, Erste Hilfe und Kochen. Dazu kleine Tagesaufgaben, eine größere Wochenaufgabe und eine Monatsaufgabe, alle auf einer Seite
+- **Ehrungen:** eine Sammlung mit Stufen von Bronze bis Legende, einige davon geheim, auch für Angeln, Erste Hilfe, Kochen und Lesen. Ein Klick macht eine deiner Ehrungen zu deinem Titel, der dann auf dem Einband und im Familienbuch steht. Ein Rechtsklick stellt sie in deine Vitrine (bis zu drei), und an dem Tag, an dem du eine Ehrung verdient hast, klebt ihr Siegel im Tagebuch. Wenn du eine verdienst, sagt die Meldung auch etwas Passendes dazu. Dazu kleine Tagesaufgaben, eine größere Wochenaufgabe und eine Monatsaufgabe, alle auf einer Seite
+- **Premieren:** jedes erste Mal, mit Tag und Ort. Was noch nicht passiert ist, wartet in einer kurzen Liste
 - **Zeitkapseln:** schreib dir selbst einen Brief, der bis zu einem bestimmten Tag oder Level versiegelt bleibt
-- **Bibliothek:** jedes Buch, jede Notiz und jede Tafel, die du in der Welt liest, steht in einem Bücherregal, das sich langsam füllt, zum späteren Lesen (Questtexte und Gespräche kommen nicht hinein)
+- **Bibliothek:** jedes Buch, jede Notiz und jede Tafel, die du in der Welt liest, steht in einem Bücherregal, das sich langsam füllt. Ein Klick auf einen Rücken liest den Text noch einmal, und was du später lesen willst, kannst du vormerken. Seiten, die du nicht gesehen hast, gelten als fehlend, bis du den Rest gelesen hast. Questtexte und Gespräche kommen nicht hinein, und das Regal gehört dem ganzen Account
 - **Familienbuch:** alle Charaktere deines Accounts im Überblick, und wer was zuerst geschafft hat
 - **Suche** durch alles, was im Buch steht (Strg + F)
 - **Export** als Text oder JSON, falls du dein Tagebuch woanders haben willst
 - **Umzug auf einen neuen PC:** ein Umzugs-Code nimmt das ganze Tagebuch eines Charakters auf einen anderen Rechner mit („/wfd export“ und „/wfd import“)
 
-Die Teile des Buches sind nach Themen gruppiert. Jede Gruppe hat einen Reiter in ihrer eigenen Farbe, der eine Übersicht ihrer Teile öffnet. Zeigst du auf einen Reiter, klappt daneben eine Liste seiner Teile auf, und ein Klick führt dich direkt hin.
+Die Teile des Buches sind nach Themen gruppiert. Jede Gruppe hat einen Reiter in ihrer eigenen Farbe, der eine Doppelseite öffnet: links die Liste ihrer Teile, rechts "Auf einen Blick" mit einer Zahl für jeden Teil, Platz für deine eigenen Notizen zur Gruppe und, bei Ziele & Ruhm, deine Vitrine. Zeigst du auf einen Reiter, klappt daneben eine Liste seiner Teile auf, und ein Klick führt dich direkt hin.
 
 Wenn etwas Erinnerungswürdiges passiert, rutscht eine kleine Notiz ins Bild (ein Rechtsklick legt sie weg), und einmal pro Woche gibt es einen Rückblick. Beim Einloggen erinnert dich eine stille Notiz an diesen Tag in einem früheren Jahr oder an ein Jubiläum: den Geburtstag des Tagebuchs, 100, 500 oder 1000 Stunden in der Welt, ein Jahr seit Stufe 10, 20 ... 60. Wenn du magst, zeigt ein kleines Begleitfenster neben dem Spiel (die Einführung bietet es an) die Zahlen von heute, deine Aufgaben und die Ehrungen und Kreaturen, die ihrem nächsten Schritt am nächsten sind.
 
@@ -125,7 +127,7 @@ Das Buch gibt es in vier Stilen (Leder und Gold, Pergament, Modern, starker Kont
 - Eine Zeile oben auf jeder Seite zeigt, wo du bist, die Schritte davor sind Links. „Weiterlesen“ auf der Heute-Seite führt dahin zurück, wo du aufgehört hast
 - Strg + F durchsucht das Buch; Pfeiltasten und Enter wählen einen Treffer
 - Die Reiter zeigen mit einem roten Punkt, was seit dem letzten Lesen neu ist, und ihre Namen, wenn du auf sie zeigst
-- Meldungen lassen sich auf alle, nur Wichtiges oder still stellen. Alle Einstellungen gibt es auch unter Optionen > AddOns
+- Meldungen lassen sich auf alle, nur Wichtiges oder still stellen. Die Einstellungen stehen auf vier Seiten (Allgemein, Aussehen, Bedienung, Daten) und gibt es auch unter Optionen > AddOns. Das Tagebuch schreibt von sich aus nichts in deinen Chat
 
 - „/wfd bestiarium“, „/wfd ehrenbuch“, „/wfd kassenbuch“, „/wfd einstellungen“ und so weiter öffnen das Buch gleich an dem Teil, „/wfd 12“ am Tag 12
 - „/wfd demo“ füllt das Buch mit Beispieldaten, nur im Speicher, damit du dich umsehen kannst, bevor du ein echtes Tagebuch hast
@@ -144,14 +146,14 @@ Das Buch gibt es in vier Stilen (Leder und Gold, Pergament, Modern, starker Kont
 
 # TEASER (EN)
 
-**WoW Forever Diary** writes a diary for your character while you play. Every NPC, quest, kill, coin and footstep is recorded, and each day ends up as a short entry in plain sentences. Flip through it in a book with a world map you can replay day by day, a bestiary, honours to collect, and time capsules for your future self. Made for WoW Forever. Everything stays on your computer. Type "/wfd" to open it.
+**WoW Forever Diary** writes a diary for your character while you play. Every NPC, quest, kill, coin and footstep is recorded, and each day ends up as a short entry in plain sentences. Flip through it in a book with a world map you can replay day by day, a bestiary, honours to collect (with titles, a showcase and seals in the margin of the day), a library that fills as you read, and time capsules for your future self. Made for WoW Forever. Everything stays on your computer. Type "/wfd" to open it.
 
 # TEASER (DE)
 
-**WoW Forever Diary** schreibt ein Tagebuch für deinen Charakter, während du spielst. Jeder NPC, jede Quest, jeder Kill, jede Münze und jeder Schritt wird festgehalten, und aus jedem Tag wird ein kurzer Eintrag in normalen Sätzen. Du blätterst in einem Buch mit Weltkarte, die du Tag für Tag abspielen kannst, mit Bestiarium, Ehrungen zum Sammeln und Zeitkapseln für dein späteres Ich. Gemacht für WoW Forever. Alles bleibt auf deinem Rechner. Mit „/wfd“ öffnest du es.
+**WoW Forever Diary** schreibt ein Tagebuch für deinen Charakter, während du spielst. Jeder NPC, jede Quest, jeder Kill, jede Münze und jeder Schritt wird festgehalten, und aus jedem Tag wird ein kurzer Eintrag in normalen Sätzen. Du blätterst in einem Buch mit Weltkarte, die du Tag für Tag abspielen kannst, mit Bestiarium, Ehrungen zum Sammeln (mit Titeln, einer Vitrine und Siegeln am Rand des Tages), einer Bibliothek, die sich beim Lesen füllt, und Zeitkapseln für dein späteres Ich. Gemacht für WoW Forever. Alles bleibt auf deinem Rechner. Mit „/wfd“ öffnest du es.
 
 ---
 
 # DISCLAIMER
 
-WoW Forever Diary is an unofficial fan-made addon. It is not affiliated with or endorsed by Blizzard Entertainment. World of Warcraft is a trademark of Blizzard Entertainment, Inc. Names of group members and trade partners are saved, but only in your own saved variables and in the moving code you create yourself.
+WoW Forever Diary is an unofficial fan-made addon. It is not affiliated with or endorsed by Blizzard Entertainment. World of Warcraft is a trademark of Blizzard Entertainment, Inc. Names of group members and trade partners, and the texts of books, notes and plaques you read, are saved, but only in your own saved variables and, for the diary, in the moving code you create yourself.
