@@ -200,8 +200,19 @@ function UI.DayGo(day)
     return p and function() UI:GoToPage(p) end
 end
 
+-- What the pages show of the live diary, in one string. Many trackers set WFD.dirty for things no page
+-- shows (a roster that did not change, a ticker); only a change here is worth the note "New in the diary".
+function UI.Fingerprint()
+    local C = WFD.C
+    if not C then return "" end
+    local d = WFD:Day()
+    return table.concat({ #(C.events or {}), d.killTotal or 0, #(d.qd or {}), d.xp or 0, C.wealth or 0,
+        C.itemTotal or 0, C.npcCount or 0, C.deathTotal or 0, C.questTotal or 0 }, ":")
+end
+
 function UI:Paginate()
-    local book = setmetatable({ pages = {}, dayPage = {}, sectionStart = {}, toc = {} }, Book)
+    UI.shownPrint = UI.Fingerprint()
+    local book =setmetatable({ pages = {}, dayPage = {}, sectionStart = {}, toc = {} }, Book)
     book:Add({ kind = "endpaper" })
     book:Add({ kind = "owner" })
 
@@ -1670,7 +1681,7 @@ function UI:Build()
         -- the mouse leaves (or a page is turned, see ShowSpread).
         if UI.bookFrame:IsShown() and UI.bookFrame:IsMouseOver() then
             -- something new is waiting: say so, and let the reader decide when the page may change
-            if WFD.dirty and UI.ShowFreshNote then UI:ShowFreshNote() end
+            if WFD.dirty and UI.ShowFreshNote and UI.Fingerprint() ~= UI.shownPrint then UI:ShowFreshNote() end
             return
         end
         if UI.bookFrame:IsShown() and (WFD.dirty or (WFD.ticked and sinceTick >= 60)) then
@@ -1693,7 +1704,7 @@ function UI:ShowFreshNote()
         note.text:SetPoint("CENTER")
         note.text:SetText(L["New in the diary. Click to refresh."])
         note:SetSize(note.text:GetStringWidth() + 28, 24)
-        note:SetPoint("BOTTOM", self.bookFrame, "BOTTOM", 0, 26)
+        note:SetPoint("BOTTOM", self.bookFrame, "TOP", 0, 2)     -- above the book: the page numbers stay free
         note:SetScript("OnClick", function() UI:Reflow() end)
         self.bookFrame:HookScript("OnHide", function() note:Hide() end)
         self.freshNote = note
@@ -1726,6 +1737,7 @@ function UI:OpenBook(page)
     self.openedOnce = true
     self.holder:Show()
     self.cover:Hide()
+    GameTooltip:Hide()          -- the tooltip of the binding belongs to the cover that has just closed
     self.bookFrame:Show()
     self.spreadShownOnce = false
     sound("IG_SPELLBOOK_OPEN", 829)

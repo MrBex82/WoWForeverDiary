@@ -20,6 +20,9 @@ end
 -- Begin a redraw. Widgets stay visible while they are re-used, so 3D models do not reload and flicker;
 -- End() hides whatever this redraw did not use again.
 function Pool:Begin()
+    -- a tooltip of a hot spot that is about to be re-used would stay with the old text over the new page
+    local owner = GameTooltip:IsShown() and GameTooltip:GetOwner()
+    if owner and owner.isHot and owner:GetParent() == self.parent then GameTooltip:Hide() end
     for kind, list in pairs(self.lists) do
         for i = 1, #list do list[i]:ClearAllPoints() end
         self.used[kind] = 0
@@ -291,6 +294,7 @@ UI.IsClickHint = isHint
 function Pool:Hot(lines, onClick, link)
     local b = self:Get("hot", function(p)
         local h = CreateFrame("Button", nil, p)
+        h.isHot = true
         h:RegisterForClicks("LeftButtonUp", "RightButtonUp")
         h.hl = h:CreateTexture(nil, "BACKGROUND")
         h.hl:SetAllPoints()
@@ -299,12 +303,13 @@ function Pool:Hot(lines, onClick, link)
         h.hl:Hide()
         h:SetScript("OnEnter", function(s)
             if s.onClick then s.hl:Show() end
+            -- beside the mouse, not at the edge of a wide spot: from there it would lie across the next page
             if s.link then
-                GameTooltip:SetOwner(s, "ANCHOR_RIGHT")
+                GameTooltip:SetOwner(s, "ANCHOR_CURSOR_RIGHT", 8, -4)
                 GameTooltip:SetHyperlink(s.link)
                 GameTooltip:Show()
             elseif s.lines then
-                GameTooltip:SetOwner(s, "ANCHOR_RIGHT")
+                GameTooltip:SetOwner(s, "ANCHOR_CURSOR_RIGHT", 8, -4)
                 GameTooltip:SetText(s.lines[1], 1, 0.86, 0.5, 1, true)
                 local hinted = false
                 for i = 2, #s.lines do
