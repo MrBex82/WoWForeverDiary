@@ -395,7 +395,7 @@ UI:RegisterRenderer("nemesis", function(pool, page, side, canvas)
         elseif r.empty then
             empty(pool, canvas, tx, tw, y - 6, (r.deaths or 0) > 0
                 and L["You have died, but who did it slipped past the diary."]
-                or L["Nobody has defeated you yet. Long may it last!"])
+                or L["No nemesis yet: nobody has defeated you so far."])
         else
             local e = r.e
             local id, mob = mobByName(e.name)

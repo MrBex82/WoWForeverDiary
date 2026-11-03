@@ -298,7 +298,11 @@ UI:RegisterSection({
         if total == 0 then list[1] = { h = 40, empty = L["This game client knows none of the landmarks."] } end
         for _, g in ipairs(groups) do
             list[#list + 1] = { h = 36, header = L[g.def.label], count = g.found .. " / " .. g.total, keep = 38 }
-            for i = 1, #g.items, 2 do list[#list + 1] = { h = 38, pair = { g.items[i], g.items[i + 1] } } end
+            -- only what has been found is named: the places still waiting stay a secret, they are counted
+            local seen = {}
+            for _, it in ipairs(g.items) do if it.found then seen[#seen + 1] = it end end
+            for i = 1, #seen, 2 do list[#list + 1] = { h = 38, pair = { seen[i], seen[i + 1] } } end
+            if g.found < g.total then list[#list + 1] = { h = 26, pending = g.total - g.found } end
         end
         book:AddRows("landmarks", list, { head = L["Landmarks"] })
     end,
@@ -328,6 +332,12 @@ UI:RegisterRenderer("landmarks", function(pool, page, side, canvas)
             emptyText(pool, canvas, tx, tw, y - 6, r.empty)
         elseif r.header then
             sectionHead(pool, canvas, tx, tw, y, r.h, r.header, r.count)
+        elseif r.pending then
+            local t = pool:Text(11, c.inkFaint, UI.FONT)
+            t:SetText(format(L["%d still to find"], r.pending))
+            t:SetWordWrap(false)
+            t:SetWidth(tw - 8)
+            t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 4, y - 4)
         elseif r.pair then
             for k = 1, 2 do
                 local it = r.pair[k]

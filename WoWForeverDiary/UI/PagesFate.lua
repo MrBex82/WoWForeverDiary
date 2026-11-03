@@ -48,9 +48,10 @@ UI:RegisterSection({
     key = "fates", label = "Fate", icon = "skull", order = 31, leftStart = true,
     build = function(book)
         book:Add({ kind = "fatemap", numbered = true, head = L["Fate"] })
-        book:Add({ kind = "fatestats", numbered = true, head = L["Fate"] })
         local fates = WFD:Fates()
+        -- without a death there is nothing to count: the one page says so, no second page repeats it
         if #fates == 0 then return end
+        book:Add({ kind = "fatestats", numbered = true, head = L["Fate"] })
         local ROW = rowHeight()
         local page, y
         local function newPage()

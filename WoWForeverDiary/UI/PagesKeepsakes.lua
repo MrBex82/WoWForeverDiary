@@ -44,7 +44,8 @@ UI:RegisterSection({
         for i, def in ipairs(WFD.FIRSTS or {}) do
             local f = C.firsts and C.firsts[def.key]
             if f then got = got + 1 end
-            list[#list + 1] = { h = 40, def = def, f = f, i = i }
+            -- what has not happened yet is one short line each: they all would say the same
+            list[#list + 1] = { h = f and 40 or 24, def = def, f = f, i = i }
         end
         -- what happened already in the order it happened, the rest in the order of a typical life
         table.sort(list, function(a, b)
@@ -52,7 +53,14 @@ UI:RegisterSection({
             if a.f then return a.f.t < b.f.t end
             return a.i < b.i
         end)
-        book:AddRows("firsts", list, { head = L["First times"], got = got, total = #list })
+        -- a heading before the first of the open ones, once there is anything to separate
+        for i, r in ipairs(list) do
+            if not r.f then
+                if got > 0 then table.insert(list, i, { h = 34, header = L["Still to come"], count = tostring(#list - got), keep = 24 }) end
+                break
+            end
+        end
+        book:AddRows("firsts", list, { head = L["First times"], got = got, total = #WFD.FIRSTS })
     end,
 })
 
@@ -65,19 +73,19 @@ UI:RegisterRenderer("firsts", function(pool, page, side, canvas)
     for _, r in ipairs(page.rows) do
         local y = top - r.y
         local f, def = r.f, r.def
-        pool:Plaque(tx + 16, y - 18, 28, f and UI.IconPath(def.icon, "first") or QUESTION, f and GOLD or LOCKED, f and true or false)
-        line(pool, canvas, tx + 40, y - 3, tw - 40 - 86, L[def.label], 14, f and c.ink or c.inkFaint, UI.HEAD)
-        local detail
-        if f then
+        if r.header then
+            UI.SectionHead(pool, canvas, tx, tw, y, r.h, r.header, r.count)
+        elseif not f then
+            pool:Plaque(tx + 14, y - 12, 20, QUESTION, LOCKED, false)
+            line(pool, canvas, tx + 34, y - 4, tw - 34, L[def.label], 13, c.inkFaint, UI.HEAD)
+        else
+            pool:Plaque(tx + 16, y - 18, 28, UI.IconPath(def.icon, "first"), GOLD, true)
+            line(pool, canvas, tx + 40, y - 3, tw - 40 - 86, L[def.label], 14, c.ink, UI.HEAD)
             local parts = {}
             if f.s and f.s ~= "" then parts[#parts + 1] = f.s end
             if f.zone and f.zone ~= f.s then parts[#parts + 1] = f.zone end
-            detail = table.concat(parts, "  -  ")
-        else
-            detail = L["Not yet experienced."]
-        end
-        line(pool, canvas, tx + 40, y - 21, tw - 40 - 86, detail, 10, f and c.inkSoft or c.inkFaint)
-        if f then
+            local detail = table.concat(parts, "  -  ")
+            line(pool, canvas, tx + 40, y - 21, tw - 40 - 86, detail, 10, c.inkSoft)
             rightText(pool, canvas, tx + tw, y - 4, format(L["Day %d"], f.day), 13, c.redInk, UI.HEAD)
             rightText(pool, canvas, tx + tw, y - 22, date(WFD.loc.date, f.t), 9, c.inkFaint)
             local tip = { L[def.label] }

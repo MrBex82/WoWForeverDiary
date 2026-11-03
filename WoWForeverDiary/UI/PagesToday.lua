@@ -205,7 +205,7 @@ UI:RegisterRenderer("groupindex", function(pool, page, side, canvas)
             name:SetWidth(tw - 46 - 70)
             name:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 46, y - 4)
             local sub = pool:Text(12, c.inkSoft, UI.FONT)
-            sub:SetText(empty and L["Nothing in here yet."] or (sec.sub and L[sec.sub] or ""))
+            sub:SetText(empty and L["Fills as soon as there is something to tell."] or (sec.sub and L[sec.sub] or ""))
             sub:SetWidth(tw - 46)
             if sub.SetMaxLines then sub:SetMaxLines(2) end      -- a long line takes a second one
             sub:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 46, y - 26)
