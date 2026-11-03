@@ -451,6 +451,8 @@ end
 -- since English keys are their own text.
 local COUNTED_EN = {
     ["%d kills"] = "%d {kill|kills}",
+    ["%d levels gained"] = "%d {level|levels} gained",
+    ["%d days with entries"] = "%d {day|days} with entries",
     ["%d quests"] = "%d {quest|quests}",
     ["%d days"] = "%d {day|days}",
     ["%d casts"] = "%d {cast|casts}",

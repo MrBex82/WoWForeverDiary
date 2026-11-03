@@ -43,7 +43,7 @@ local LAYOUT = {
     collection = { "goals", 5, "What is left to discover" }, honour = { "goals", 6, "Honour points" },
     milestones = { "chronicle", 10, "The great moments of a life" }, firsts = { "chronicle", 11, "Every first, with its day and place" },
     records = { "chronicle", 12, "The best and the worst of days" },
-    levels = { "chronicle", 13, "How long each level took" }, gallery = { "chronicle", 14, "Moments, painted in the gear of their day" },
+    levels = { "chronicle", 13, "How long each level took" }, yearbook = { "chronicle", 14.5, "A year of travel in figures" }, gallery = { "chronicle", 14, "Moments, painted in the gear of their day" },
     atlas = { "world", 19, "Regions explored" }, maps = { "world", 20, "Map of my travels" },
     landmarks = { "world", 21, "Famous places of Azeroth" }, gathering = { "world", 22, "Where the good things grow" },
     runs = { "world", 25, "Dark places, rich rewards" },
