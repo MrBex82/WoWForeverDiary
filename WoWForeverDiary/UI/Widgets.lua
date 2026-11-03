@@ -589,6 +589,71 @@ function UI.CountBadge(parent, h)
     return f
 end
 
+-- "Shiny", as with a rare Pokemon: now and then a band of light sweeps over the picture, and a few small
+-- stars twinkle. f:SetShiny(on, colour) turns it on; the animation runs only while it is shown.
+local STARS = { { 0.18, 0.28, 0 }, { 0.82, 0.22, 1.7 }, { 0.70, 0.76, 3.1 }, { 0.30, 0.72, 4.4 } }
+function UI.Shiny(parent)
+    local f = CreateFrame("Frame", nil, parent)
+    f:SetAllPoints()
+    f:SetFrameLevel(parent:GetFrameLevel() + 5)
+    if f.SetClipsChildren then f:SetClipsChildren(true) end
+    f.band = {
+        UI.GradRect(f, "HORIZONTAL", { 1, 1, 1, 0 }, { 1, 1, 1, 0.40 }, "OVERLAY", 1),
+        UI.GradRect(f, "HORIZONTAL", { 1, 1, 1, 0.40 }, { 1, 1, 1, 0 }, "OVERLAY", 1),
+    }
+    for _, b in ipairs(f.band) do b:SetWidth(16) end
+    f.stars = {}
+    for i, s in ipairs(STARS) do
+        local h = UI.Fill(f, { 1, 1, 1 }, "OVERLAY", 2)
+        h:SetSize(11, 1)
+        local v = UI.Fill(f, { 1, 1, 1 }, "OVERLAY", 2)
+        v:SetSize(1, 11)
+        local d = UI.Diamond(f, 4, { 1, 1, 1 }, "OVERLAY", 3)
+        f.stars[i] = { h = h, v = v, d = d, fx = s[1], fy = s[2], ph = s[3] }
+    end
+    f.t = 0
+    f:SetScript("OnUpdate", function(self, dt)
+        self.t = self.t + dt
+        local w, h = self:GetWidth(), self:GetHeight()
+        local p = (self.t % 3.6) / 1.1                  -- the sweep takes a little over a second, then it rests
+        local b1, b2 = self.band[1], self.band[2]
+        if p < 1 then
+            local x = -34 + (w + 34) * p
+            b1:ClearAllPoints()
+            b1:SetPoint("TOPLEFT", self, "TOPLEFT", x, 0)
+            b1:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", x, 0)
+            b2:ClearAllPoints()
+            b2:SetPoint("TOPLEFT", b1, "TOPRIGHT", 0, 0)
+            b2:SetPoint("BOTTOMLEFT", b1, "BOTTOMRIGHT", 0, 0)
+            b1:Show()
+            b2:Show()
+        else
+            b1:Hide()
+            b2:Hide()
+        end
+        for _, s in ipairs(self.stars) do
+            local a = math.sin(self.t * 2.2 + s.ph)
+            a = a > 0 and a * a * a or 0
+            for _, k in ipairs({ "h", "v", "d" }) do
+                s[k]:ClearAllPoints()
+                s[k]:SetPoint("CENTER", self, "TOPLEFT", s.fx * w, -s.fy * h)
+                s[k]:SetAlpha(a)
+            end
+        end
+    end)
+    function f:SetShiny(on, col)
+        if on and col then
+            local r, g, b = math.min(1, col[1] * 0.5 + 0.5), math.min(1, col[2] * 0.5 + 0.5), math.min(1, col[3] * 0.5 + 0.5)
+            for _, s in ipairs(self.stars) do
+                for _, k in ipairs({ "h", "v", "d" }) do s[k]:SetVertexColor(r, g, b, 1) end
+            end
+        end
+        self:SetShown(on and true or false)
+    end
+    f:Hide()
+    return f
+end
+
 UI.BADGE_COLOURS = {
     normal = { 0.86, 0.66, 0.28, 1 }, elite = { 1.00, 0.82, 0.36, 1 },
     rare = { 0.45, 0.64, 1.00, 1 }, boss = { 0.92, 0.36, 0.24, 1 },

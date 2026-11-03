@@ -861,6 +861,8 @@ local function newCard(parent)
     f.skull:SetTexture(SKULL)
     f.skull:SetSize(14, 14)
     f.skull:SetPoint("TOPLEFT", 3, -3)
+    -- rare creatures and bosses are "shiny": light sweeps over the picture and stars twinkle
+    f.shiny = UI.Shiny(f.window)
     -- the "new" mark and the count stay above the wash
     f.new:SetParent(f.over)
     f.badge:SetFrameLevel(f.over:GetFrameLevel() + 2)
@@ -1051,6 +1053,7 @@ local function newCard(parent)
         end
         local stage = WFD:MobStage(m)
         self.wash:SetShown(stage == 1)
+        self.shiny:SetShiny(rk == "rare" or rk == "boss", r.border)
         self.rim:SetShown(stage == 3)
         self.master:SetText(stage == 3 and L["CONNOISSEUR"] or "")
         local nem = WFD.C.nemesis[m.name or ""]

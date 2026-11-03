@@ -311,6 +311,9 @@ local function renderCreature(card, id)
     local seal = card.overPool:Get("countbadge", function(p) return UI.CountBadge(p, 30) end)
     local key = (r == RARITY.boss and "boss") or (r == RARITY.rare and "rare") or (r == RARITY.elite and "elite") or "normal"
     seal:SetCount(UI.ShortCount(m.kills), UI.BADGE_COLOURS[key])
+    -- rare creatures and bosses are shiny here as on their card in the album
+    card.shiny = card.shiny or UI.Shiny(card.model)
+    card.shiny:SetShiny(key == "rare" or key == "boss", r.col)
     seal:ClearAllPoints()
     seal:SetPoint("BOTTOMRIGHT", canvas, "TOPRIGHT", -PAD - 8, -92 - 168 + 8)
 

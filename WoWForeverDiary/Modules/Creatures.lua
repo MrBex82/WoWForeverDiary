@@ -128,7 +128,8 @@ WFD.STAGE_COLOUR, WFD.STAGE_MASTER = 10, 50
 function WFD:MobStage(m)
     local k = m and m.kills or 0
     if k >= self.STAGE_MASTER then return 3 end
-    if k >= self.STAGE_COLOUR then return 2 end
+    -- rare creatures and bosses are never a sketch: they are in colour from the first sighting
+    if k >= self.STAGE_COLOUR or (m and (m.boss or m.rare or m.cls == "rare" or m.cls == "rareelite")) then return 2 end
     return 1
 end
 
