@@ -1327,7 +1327,8 @@ function UI:RefreshCover()
     local C = WFD.C
     self:RefreshCoverGrowth()
     cv.name:SetText(C.name or UnitName("player"))
-    cv.who:SetText(((C.race or "") .. "  -  " .. (C.class or "")):upper())
+    local title = WFD.Title and WFD:Title()
+    cv.who:SetText(((title and (title .. "  -  ") or "") .. (C.race or "") .. "  -  " .. (C.class or "")):upper())
     if C.obituary then
         cv.since:SetText(date(WFD.loc.date, C.born) .. "  -  " .. date(WFD.loc.date, C.obituary.t))
         cv.of:SetText(L["In memoriam"])

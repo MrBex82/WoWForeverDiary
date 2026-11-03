@@ -280,6 +280,8 @@ local CLICK_HINTS = {
     "Click to show only these.", "Click to show all again.", "Ctrl-click to set or remove a bookmark here.",
     "Click to open, right-click to remove.", "Click to go to a page.", "Right-click for the contents.",
     "Click to set a bookmark here.", "Click to remove the bookmark.",
+    "Click to make this your title.", "Click to give up this title.",
+    "Right-click to put it in the showcase.", "Right-click to take it out of the showcase.",
 }
 local clickSet
 local function isHint(s)

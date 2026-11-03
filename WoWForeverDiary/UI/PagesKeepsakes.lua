@@ -172,7 +172,8 @@ UI:RegisterRenderer("family", function(pool, page, side, canvas)
                 you:SetPoint("BOTTOMLEFT", n, "BOTTOMLEFT", min(n:GetStringWidth(), tw - 62 - 92) + 6, 2)
             end
             line(pool, canvas, tx + 62, y - 28, tw - 62 - 8,
-                ((e.race or "") .. " " .. (e.class or "")) .. "  -  " .. (e.realm or ""), 10, c.inkSoft)
+                ((e.race or "") .. " " .. (e.class or "")) .. "  -  " .. (e.realm or "")
+                    .. ((e.titleKey and WFD:HonourDef(e.titleKey)) and ("  -  " .. L[WFD:HonourDef(e.titleKey).name]) or ""), 10, c.inkSoft)
             local stats = line(pool, canvas, tx + 62, y - 44, tw - 62 - 8,
                 WFD:Count("%d days of life  -  %d creatures slain  -  %d quests completed", e.days or 0, e.kills or 0, e.quests or 0), 9, c.inkFaint)
             if stats:GetStringWidth() > tw - 62 - 8 then

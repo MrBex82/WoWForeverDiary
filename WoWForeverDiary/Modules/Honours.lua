@@ -28,6 +28,58 @@ function WFD:HonourDef(key)
     for _, h in ipairs(self.HONOURS) do if h.key == key then return h end end
 end
 
+-- The title of a character: the name of an honour it has earned, chosen in the book of honour (a click on the
+-- honour). Returns the name and the key, or nil if none is chosen or it is not (yet) earned.
+function WFD:Title()
+    local C = self.C
+    local key = C and C.title
+    local h = key and self:HonourDef(key)
+    if not h then return nil end
+    for _, e in ipairs(self:HonourState()) do
+        if e.def.key == key then
+            if e.tier > 0 then return L[h.name], key end
+            return nil
+        end
+    end
+end
+
+local function refreshAll()
+    local UI = WFD.UI
+    WFD.dirty = true
+    if UI then
+        if UI.RefreshCover then UI:RefreshCover() end
+        if UI.bookFrame and UI.bookFrame:IsShown() and UI.spread then UI:ShowSpread(UI.spread) end
+    end
+    if WFD.UpdateFamily then WFD.UpdateFamily() end
+end
+
+function WFD:ToggleTitle(key)
+    local C = self.C
+    if not C then return end
+    C.title = (C.title ~= key) and key or nil
+    refreshAll()
+end
+
+-- up to three honours on show: the showcase of the goals page
+WFD.SHOWCASE_MAX = 3
+function WFD:ToggleShowcase(key)
+    local C = self.C
+    if not C then return end
+    C.showcase = C.showcase or {}
+    for i, k in ipairs(C.showcase) do
+        if k == key then table.remove(C.showcase, i) refreshAll() return true end
+    end
+    if #C.showcase >= self.SHOWCASE_MAX then table.remove(C.showcase, 1) end
+    C.showcase[#C.showcase + 1] = key
+    refreshAll()
+    return true
+end
+
+function WFD:InShowcase(key)
+    for _, k in ipairs(self.C and self.C.showcase or {}) do if k == key then return true end end
+    return false
+end
+
 -- metal of tier i of an honour with n tiers (a single-tier honour is gold)
 function WFD:MetalOf(i, n)
     if n == 1 then return self.METALS[3] end

@@ -252,6 +252,12 @@ local function build()
     return f
 end
 
+local HONOUR_FLAVOUR = {
+    combat = "Steel sharpened, name written down.", explore = "The road is longer, and so is the map.",
+    people = "Strangers become faces in the book.", adventure = "Another line in the story of this life.",
+    fortune = "Not every treasure shines at first.", secret = "Some pages only open for the curious.",
+}
+
 -- what to show for a milestone: icon, frame colour, kicker, name, metal line, pips, hint, points
 local function describe(ev)
     local subject = (ev.k ~= "level" and ev.s and ev.s:match(":%s*(.+)$")) or ev.s or ""
@@ -273,7 +279,10 @@ local function describe(ev)
             d.pips, d.pipsOf, d.n = tier, n, n
             d.points = WFD:TierPoints(tier, n)
             local nextGoal = h.tiers[tier + 1]
-            d.hint = nextGoal and (L["Next tier:"] .. " " .. WFD:HonourText(h, nextGoal)) or L["Every tier earned - complete!"]
+            local nextText = nextGoal and (L["Next tier:"] .. " " .. WFD:HonourText(h, nextGoal)) or L["Every tier earned - complete!"]
+            -- a line of its own for the kind of honour, then what comes next
+            local flavour = HONOUR_FLAVOUR[h.cat]
+            d.hint = flavour and (L[flavour] .. "\n" .. nextText) or nextText
         end
     elseif ev.k == "landmark" then
         d.kicker = L["Landmark discovered"]

@@ -292,6 +292,49 @@ UI:RegisterRenderer("groupglance", function(pool, page, side, canvas)
         local th = UI.Tiles(pool, canvas, tx, y, tw, row)
         y = y - th - 12
     end
+    -- the showcase: up to three favourite honours, chosen in the book of honour
+    if g.key == "goals" then
+        local list = WFD:HonourState()
+        local byKey = {}
+        for _, e in ipairs(list) do byKey[e.def.key] = e end
+        local items = {}
+        for _, k in ipairs(C.showcase or {}) do
+            local e = byKey[k]
+            if e and e.tier > 0 then items[#items + 1] = e end
+        end
+        UI.SectionHead(pool, canvas, tx, tw, y + 6, 32, L["Showcase"])
+        y = y - 20
+        if #items == 0 then
+            local hint = pool:Text(12, c.inkFaint, UI.FONT, "CENTER")
+            hint:SetText(L["Right-click an earned honour in the book of honour to show it here."])
+            hint:SetWidth(tw - 20)
+            hint:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 10, y - 4)
+            y = y - hint:GetStringHeight() - 18
+        else
+            local cell = tw / 3
+            for i, e in ipairs(items) do
+                local cx = tx + (i - 0.5) * cell
+                local metal = WFD:MetalOf(e.tier, e.n)
+                pool:Plaque(cx, y - 26, 40, UI.IconPath(e.def.icon, "honour"), metal.col, true)
+                local nm = pool:Text(12, c.ink, UI.HEAD, "CENTER")
+                nm:SetText(L[e.def.name])
+                nm:SetWidth(cell - 6)
+                nm:SetWordWrap(false)
+                nm:SetPoint("TOPLEFT", canvas, "TOPLEFT", cx - (cell - 6) / 2, y - 52)
+                local mt = pool:Text(10, c.inkSoft, UI.FONT, "CENTER")
+                mt:SetText(L[metal.name])
+                mt:SetWidth(cell - 6)
+                mt:SetPoint("TOPLEFT", canvas, "TOPLEFT", cx - (cell - 6) / 2, y - 67)
+                local hot = pool:Hot({ L[e.def.name], L[metal.name] }, function()
+                    local p = UI.book and UI.book.sectionStart.honour
+                    if p then UI:GoToPage(p) end
+                end)
+                hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", cx - cell / 2, y - 4)
+                hot:SetSize(cell, 84)
+            end
+            y = y - 94
+        end
+    end
     -- the rest of the page is for your own notes on this group (the page kept the notes of the old filler page)
     local top = -y + 30
     if top < UI.PH - 66 - 4 * 26 then

@@ -31,6 +31,7 @@ local function update()
         born = C.born, days = WFD:NumDays(), kills = kills, deaths = deaths, quests = C.questTotal or 0,
         km = steps * 0.9144 / 1000, online = online, points = sum and sum.points or 0,
         firsts = firsts, levels = levels, dead = C.obituary and true or nil, last = time(),
+        titleKey = select(2, WFD:Title()),
     }
 end
 WFD.UpdateFamily = function() pcall(update) end

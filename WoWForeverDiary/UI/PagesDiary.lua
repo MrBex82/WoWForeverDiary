@@ -486,11 +486,28 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
             tab:SetSize(tabW, 15)
             tab:SetPoint("TOPRIGHT", canvas, "TOPLEFT", textX + TCW, y - 4)
             n:SetPoint("CENTER", tab, "CENTER", 0, 0)
+            -- seals for the honours earned on this day, left of the day number
+            local seals = {}
+            for _, ev in ipairs(WFD.C.events or {}) do
+                if ev.k == "honour" and ev.day == it.day and ev.honour and #seals < 4 then
+                    local h = WFD:HonourDef(ev.honour)
+                    if h then seals[#seals + 1] = { h = h, tier = ev.tier or 1 } end
+                end
+            end
+            local sealsW = #seals * 20
+            for i, sl in ipairs(seals) do
+                local metal = WFD:MetalOf(sl.tier, #sl.h.tiers)
+                local cx = textX + TCW - tabW - 12 - (i - 1) * 20
+                pool:Plaque(cx, y - 12, 17, UI.IconPath(sl.h.icon, "honour"), metal.col, true)
+                local hot = pool:Hot({ L[sl.h.name], L[metal.name], L["Honour earned"] })
+                hot:SetPoint("CENTER", canvas, "TOPLEFT", cx, y - 12)
+                hot:SetSize(19, 19)
+            end
             local d = pool:Text(17, c.redInk, UI.HEAD)
             d:SetText(WFD:LongDate(it.day))
-            UI.FitText(d, TCW - tabW - 6, 17, 13, UI.HEAD)   -- a long date shrinks instead of being cut
+            UI.FitText(d, TCW - tabW - 6 - sealsW, 17, 13, UI.HEAD)   -- a long date shrinks instead of being cut
             d:SetWordWrap(false)
-            d:SetWidth(TCW - tabW - 6)
+            d:SetWidth(TCW - tabW - 6 - sealsW)
             d:SetPoint("TOPLEFT", canvas, "TOPLEFT", textX, y - 2)
             local has = WFD.C.dayNotes and WFD.C.dayNotes[it.day]
             -- a quill in front of the words makes it read as a button

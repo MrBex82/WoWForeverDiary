@@ -176,10 +176,16 @@ local function honourTip(e)
         return { "???", L[h.secret], L["A secret honour. Keep exploring!"] }
     end
     local lines = { L[h.name] }
+    if WFD.C and WFD.C.title == h.key then lines[#lines + 1] = "|cffffd100" .. L["Your title"] .. "|r" end
+    if WFD:InShowcase(h.key) then lines[#lines + 1] = "|cffffd100" .. L["In the showcase"] .. "|r" end
     for i, g in ipairs(h.tiers) do
         local m = WFD:MetalOf(i, e.n)
         local mark = (i <= e.tier) and ("|cff40c040" .. L["earned"] .. "|r") or ("|cffb0a080" .. progressText({ value = e.value, def = h, n = e.n, next = g }) .. "|r")
         lines[#lines + 1] = "|cff" .. UI.Hex(m.col) .. L[m.name] .. "|r  " .. WFD:HonourText(h, g) .. "  " .. mark
+    end
+    if e.tier > 0 then
+        lines[#lines + 1] = (WFD.C and WFD.C.title == h.key) and L["Click to give up this title."] or L["Click to make this your title."]
+        lines[#lines + 1] = WFD:InShowcase(h.key) and L["Right-click to take it out of the showcase."] or L["Right-click to put it in the showcase."]
     end
     return lines
 end
@@ -279,7 +285,17 @@ UI:RegisterRenderer("honour", function(pool, page, side, canvas)
                     dot:SetPoint("TOPLEFT", canvas, "TOPLEFT", NX + i * 8, y - 40)
                 end
             end
-            local hot = pool:Hot(honourTip(e))
+            -- marks on the plaque: red for the title, gold for the showcase
+            if earned and WFD.C and WFD.C.title == h.key then
+                local mk = pool:Diamond(10, c.redInk, "OVERLAY", 6)
+                mk:SetPoint("CENTER", canvas, "TOPLEFT", tx + 33, y - 8)
+            end
+            if earned and WFD:InShowcase(h.key) then
+                local mk = pool:Diamond(10, { 0.95, 0.78, 0.30, 1 }, "OVERLAY", 6)
+                mk:SetPoint("CENTER", canvas, "TOPLEFT", tx + 5, y - 8)
+            end
+            local hot = pool:Hot(honourTip(e), earned and function() WFD:ToggleTitle(h.key) end or nil)
+            if earned then hot.onRight = function() WFD:ToggleShowcase(h.key) end end
             hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 1)
             hot:SetSize(tw, r.h - 4)
         end
