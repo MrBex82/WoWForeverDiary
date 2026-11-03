@@ -470,6 +470,7 @@ local COUNTED_EN = {
     ["%d tiers earned"] = "%d {tier|tiers} earned",
     ["in %d days"] = "in %d {day|days}",
     ["%d characters on this account"] = "%d {character|characters} on this account",
+    ["%d books on the shelf"] = "%d {book|books} on the shelf",
     ["Spoken to %d times"] = "Spoken to %d {time|times}",
     ["Slain %d times"] = "Slain %d {time|times}",
     ["Killed you %d times"] = "Killed you %d {time|times}",

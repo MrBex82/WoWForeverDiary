@@ -4,7 +4,7 @@ local UI = WFD.UI
 local L = WFD.L
 local c = UI.c
 local col4 = UI.col4
-local floor, min, format = math.floor, math.min, string.format
+local floor, min, max, format = math.floor, math.min, math.max, string.format
 
 local CW, CH = 384, 540
 local PAD = 40
@@ -107,6 +107,8 @@ function UI.CardOrder(kind)
         for id, m in pairs(C.mobs or {}) do arr[#arr + 1] = { k = id, t = m.first or 0, n = m.name or "" } end
     elseif kind == "catch" then
         for id, e in pairs(C.catch or {}) do arr[#arr + 1] = { k = id, t = e.first or 0, n = e.name or "" } end
+    elseif kind == "book" then
+        for _, e in ipairs(WFD:Library()) do arr[#arr + 1] = { k = e.id, t = e.b.t or 0, n = e.b.title or "" } end
     else
         for key, p in pairs(C.npcs or {}) do
             if not p.obj then arr[#arr + 1] = { k = key, t = 0, n = p.name or "" } end
@@ -586,6 +588,96 @@ local function renderCatch(card, id)
     end
 end
 
+-- the reader of a text of the library: title, where it was read, the text in a field that scrolls
+local function readerFrame(card)
+    local sf = CreateFrame("ScrollFrame", nil, card)
+    sf:SetFrameLevel(card:GetFrameLevel() + 8)
+    local child = CreateFrame("Frame", nil, sf)
+    child:SetSize(W, 10)
+    sf:SetScrollChild(child)
+    local fs = UI.Text(child, 13, c.ink, "LEFT", UI.FONT)
+    fs:SetPoint("TOPLEFT", 0, 0)
+    fs:SetWidth(W - 12)
+    fs:SetSpacing(4)
+    fs:SetJustifyV("TOP")
+    sf.fs, sf.child = fs, child
+    -- a thin track at the edge shows how far the text has been read
+    local track = UI.Fill(sf, c.inkFaint, "ARTWORK", 3, 0.25)
+    track:SetWidth(3)
+    local thumb = UI.Fill(sf, c.redInk, "ARTWORK", 4, 0.8)
+    thumb:SetWidth(3)
+    sf.track, sf.thumb = track, thumb
+    function sf:Sync()
+        local range = max(0, self.child:GetHeight() - self:GetHeight())
+        local shown = range > 0
+        self.track:SetShown(shown)
+        self.thumb:SetShown(shown)
+        if not shown then return end
+        self.track:ClearAllPoints()
+        self.track:SetPoint("TOPLEFT", self, "TOPRIGHT", 6, 0)
+        self.track:SetPoint("BOTTOMLEFT", self, "BOTTOMRIGHT", 6, 0)
+        local h = self:GetHeight()
+        local th = max(18, h * h / (h + range))
+        self.thumb:SetHeight(th)
+        self.thumb:ClearAllPoints()
+        self.thumb:SetPoint("TOPLEFT", self, "TOPRIGHT", 6, -((h - th) * (self:GetVerticalScroll() / range)))
+    end
+    sf:EnableMouseWheel(true)
+    sf:SetScript("OnMouseWheel", function(self, delta)
+        local range = max(0, self.child:GetHeight() - self:GetHeight())
+        self:SetVerticalScroll(max(0, min(range, self:GetVerticalScroll() - delta * 48)))
+        self:Sync()
+    end)
+    card.reader = sf
+    return sf
+end
+
+local function renderBook(card, id)
+    local b = WFD:Book(id)
+    local pool, canvas = card.pool, card.canvas
+    local sf = card.reader or readerFrame(card)
+    if not b then sf:Hide() return end
+    local y = -40
+    local t = pool:Text(24, c.ink, UI.HEAD, "CENTER")
+    t:SetText(b.title or "?")
+    t:SetWidth(W)
+    t:SetPoint("TOPLEFT", canvas, "TOPLEFT", PAD, y)
+    y = y - min(t:GetStringHeight(), 2 * (UI.FS(24) + 2)) - 6
+    local kind = b.kind == "plaque" and L["Plaque"] or (b.kind == "note" and L["Note"] or L["Book"])
+    local s = pool:Text(11, c.inkSoft, UI.FONT, "CENTER")
+    s:SetText(UI.Upper(kind .. (b.zone and ("  -  " .. b.zone) or "")))
+    s:SetWidth(W)
+    s:SetPoint("TOPLEFT", canvas, "TOPLEFT", PAD, y)
+    y = y - 24
+    UI.PageDivider(pool, canvas, CW / 2, y, 200)
+    y = y - 14
+    -- below the text: who read it, the note for later
+    local foot = 78
+    sf:ClearAllPoints()
+    sf:SetPoint("TOPLEFT", card, "TOPLEFT", PAD, y)
+    sf:SetSize(W, CH - 20 - foot - (-y))
+    sf.fs:SetText(WFD:BookText(b))
+    sf.child:SetHeight(sf.fs:GetStringHeight() + 16)
+    sf:SetVerticalScroll(0)
+    sf:Show()
+    sf:Sync()
+    local by = pool:Text(10, c.inkFaint, UI.FONT, "CENTER")
+    by:SetText(format(L["Read by %s on %s"], b.who or "?", b.t and date(WFD.loc.date, b.t) or "?"))
+    by:SetWidth(W)
+    by:SetPoint("BOTTOMLEFT", canvas, "BOTTOMLEFT", PAD, 52)
+    if not WFD:BookComplete(b) then
+        local m = pool:Text(10, c.redInk, UI.FONT, "CENTER")
+        m:SetText(L["Pages are missing: read the rest to complete this book."])
+        m:SetWidth(W)
+        m:SetPoint("BOTTOMLEFT", canvas, "BOTTOMLEFT", PAD, 38)
+    end
+    local later = pool:Check(L["Read later"], function() return b.later == true end, function(v)
+        b.later = v or nil
+        if UI.ShowSpread and UI.spread then UI:ShowSpread(UI.spread) end
+    end)
+    later:SetPoint("BOTTOMLEFT", canvas, "BOTTOMLEFT", PAD, 8)
+end
+
 function UI:ShowCard(kind, key)
     if not self.holder then return end
     local card = self.card or buildCard(self)
@@ -595,9 +687,11 @@ function UI:ShowCard(kind, key)
     card.next:SetShown(many)
     card.pool:Begin()
     card.overPool:Begin()
-    card.model:SetShown(kind ~= "catch")
+    card.model:SetShown(kind ~= "catch" and kind ~= "book")
+    if card.reader and kind ~= "book" then card.reader:Hide() card.reader.track:Hide() card.reader.thumb:Hide() end
     if kind == "creature" then renderCreature(card, key)
     elseif kind == "catch" then renderCatch(card, key)
+    elseif kind == "book" then renderBook(card, key)
     else renderPerson(card, key) end
     card.pool:End()
     card.overPool:End()

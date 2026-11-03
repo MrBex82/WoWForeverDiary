@@ -55,6 +55,7 @@ Modules\Firsts.lua
 Modules\Family.lua
 Modules\Capsules.lua
 Modules\Gathering.lua
+Modules\Library.lua
 Modules\Fishing.lua
 Modules\Narrator.lua
 Modules\Anniversary.lua
@@ -75,6 +76,7 @@ UI\PagesExtra.lua
 UI\PagesExplore.lua
 UI\PagesChronicle.lua
 UI\PagesKeepsakes.lua
+UI\PagesLibrary.lua
 UI\Cards.lua
 UI\Toast.lua
 UI\Export.lua

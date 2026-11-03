@@ -334,6 +334,30 @@ local function build()
         [6529] = { n = 11, kind = "lure", name = "Shiny Bauble", first = at(5, 12) },
         [19972] = { n = 20, kind = "gear", name = "Lucky Fishing Hat", first = at(6, 13) },
     }
+    -- a few invented texts for the library (the shelf of the account is not touched)
+    local Z1, Z2 = WFD:MapName(MAPS[1]), WFD:MapName(MAPS[2])
+    local function text(title, kind, zone, days, later, pages)
+        return { title = title, kind = kind, zone = zone, who = C.name, t = at(days, 15), later = later, pages = pages, last = at(days, 15) }
+    end
+    C.demoLibrary = {
+        ["Tales of the Mine#1"] = text("Tales of the Mine", "book", Z1, 2, true, {
+            "The miners say the deep tunnels sing at night. I have heard it myself, a low humming under the stone, "
+                .. "and I cannot say whether it is the wind or something that has been waiting there for a very long time.",
+            "On the third day the foreman closed the lower gallery. He would not say why, but he kept a candle burning "
+                .. "at the entrance, and nobody was allowed to blow it out." }),
+        ["A Warning to Travellers#2"] = text("A Warning to Travellers", "note", Z1, 3, false, {
+            "Keep to the road after dusk. The wolves have grown bold this season, and the guards cannot be everywhere. "
+                .. "If you must travel by night, carry a torch and do not sing." }),
+        ["The Fallen of the Pass#3"] = text("The Fallen of the Pass", "plaque", Z2, 5, false, {
+            "Here they stood, and here they held the road, so that others might reach the city. Remember their names." }),
+        ["On Fishing and Patience#4"] = text("On Fishing and Patience", "book", Z2, 6, false, {
+            "A good angler learns three things: where the water is quiet, when the line is still, and why a cold "
+                .. "evening is worth more than a full basket.",
+            "Bait matters less than people think. What matters is that you are there, and that you wait." }),
+        ["Letter from an Old Friend#5"] = text("Letter from an Old Friend", "note", Z2, 7, true, {
+            "I hope this finds you well. The harbour is as busy as ever and the ships come and go without a care. "
+                .. "Come and visit when your road leads this way. There is always a place at the table." }),
+    }
     -- an invented family for the family book
     local function sibling(name, race, class, classFile, level, days, kills, quests)
         return { name = name, realm = C.realm, race = race, class = class, classFile = classFile, level = level,

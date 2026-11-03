@@ -31,6 +31,7 @@ I made it because I never remember later where I first met someone, which quest 
 - **Quest book and statistics:** including the gold flow
 - **Honours:** a collection with bronze to legend tiers, some of them secret, including fishing, first aid and cooking. There are small daily tasks, a bigger weekly one and a task of the month, all on one page
 - **Time capsules:** write a letter to yourself that stays sealed until a certain day or level
+- **Library:** every book, note and plaque you read in the world is kept on a bookshelf that fills slowly, to read again later (quest texts and conversations are not kept)
 - **Family book:** an overview of all your characters on the account and who got where first
 - **Search** across everything in the book (Ctrl + F)
 - **Export** as text or JSON if you want your diary somewhere else
@@ -102,6 +103,7 @@ Ich habe es gebaut, weil ich mir später nie merke, wo ich jemanden zum ersten M
 - **Questbuch und Statistik:** inklusive Gold-Fluss
 - **Ehrungen:** eine Sammlung mit Stufen von Bronze bis Legende, einige davon geheim, auch für Angeln, Erste Hilfe und Kochen. Dazu kleine Tagesaufgaben, eine größere Wochenaufgabe und eine Monatsaufgabe, alle auf einer Seite
 - **Zeitkapseln:** schreib dir selbst einen Brief, der bis zu einem bestimmten Tag oder Level versiegelt bleibt
+- **Bibliothek:** jedes Buch, jede Notiz und jede Tafel, die du in der Welt liest, steht in einem Bücherregal, das sich langsam füllt, zum späteren Lesen (Questtexte und Gespräche kommen nicht hinein)
 - **Familienbuch:** alle Charaktere deines Accounts im Überblick, und wer was zuerst geschafft hat
 - **Suche** durch alles, was im Buch steht (Strg + F)
 - **Export** als Text oder JSON, falls du dein Tagebuch woanders haben willst

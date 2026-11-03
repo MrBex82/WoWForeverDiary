@@ -35,7 +35,8 @@ local PART_WORDS = {
     ["schätze"] = "treasures", people = "people", personen = "people", companions = "companions",
     gefaehrten = "companions", ["gefährten"] = "companions", ledger = "ledger", kassenbuch = "ledger",
     quests = "quests", questbuch = "quests", family = "family", familie = "family", capsule = "capsule",
-    zeitkapsel = "capsule", settings = "notes", einstellungen = "notes", options = "notes",
+    zeitkapsel = "capsule", library = "library", bibliothek = "library", books = "library", buecher = "library",
+    ["bücher"] = "library", settings = "notes", einstellungen = "notes", options = "notes",
 }
 
 -- opens the book at a part by one of its words, or at a diary day by its number; false if the word is unknown

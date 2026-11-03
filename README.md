@@ -34,7 +34,7 @@ Im Buch, in Gruppen; jede Gruppe hat einen Reiter, der eine Übersicht ihrer Tei
 - **Die Welt:** Atlas (mit Zeitraffer: der Abspielknopf unter dem „?“ der Kontinentkarte lässt die Reise Tag für Tag wachsen), Karten mit Gebietschronik, Sehenswürdigkeiten, Fundorte, Dungeon-Berichte
 - **Jagd & Beute:** Bestiarium mit Steckbriefen, „Fast geschafft“ und Jagdkarte, Schicksal (jeder Tod auf der Karte, wo und gegen wen am häufigsten), Erzfeinde, Anglerbuch, Schätze mit Ausrüstungspuppe
 - **Leute & Geld:** Personen, Gefährten, Kassenbuch
-- **Andenken:** Familienbuch, Zeitkapsel
+- **Andenken:** Bibliothek, Familienbuch, Zeitkapsel
 - **Einstellungen:** eigener Reiter ganz unten, in vier Seiten (Allgemein, Bedienung, Tasten, Aussehen) mit Stil, Schriftgröße und Sprache
 
 Die Lupe oben am Buchrücken (oder Strg + F) durchsucht alles, das „?“ darunter zeigt die Einführung. Ein Klick auf

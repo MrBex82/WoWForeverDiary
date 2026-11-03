@@ -26,6 +26,7 @@ local EMPTY = {
     fishbook = function(C) return next(C.catch or {}) == nil end,
     companions = function(C) return next(C.companions or {}) == nil and next(C.traders or {}) == nil end,
     capsule = function(C) return #(C.capsules or {}) == 0 end,
+    library = function() return #WFD:Library() == 0 end,
 }
 function UI.IsEmptyPart(key)
     local fn, C = EMPTY[key], WFD.C
@@ -262,6 +263,7 @@ local STAT = {
     ledger = function() local t = WFD:Totals() return WFD:CoinText(t.income - t.spend) end,
     family = function() return #WFD:Family() end,
     capsule = function(C) return #(C.capsules or {}) end,
+    library = function() return #WFD:Library() end,
 }
 
 UI:RegisterRenderer("groupglance", function(pool, page, side, canvas)

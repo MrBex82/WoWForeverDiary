@@ -52,7 +52,7 @@ local LAYOUT = {
     fishbook = { "hunt", 33, "A collector's album of everything the line brought up" }, treasures = { "hunt", 35, "Best find for every slot" },
     people = { "people", 40, "Everyone I met on my way" }, companions = { "people", 45, "Who walked beside me" },
     ledger = { "people", 50, "Every coin, in and out" },
-    family = { "back", 86, "Who got there first?" }, capsule = { "back", 88, "Letters to my future self" },
+    family = { "back", 86, "Who got there first?" }, library = { "back", 85.7, "Books I read along the way" }, capsule = { "back", 88, "Letters to my future self" },
     notes = { "back", 90, "How this book is kept" },
 }
 
