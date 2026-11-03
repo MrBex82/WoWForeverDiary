@@ -65,7 +65,7 @@ local TW, TH = 430, 112
 local TX = 92                -- where the words start
 local NAME_W = TW - TX - 80  -- room left of the points
 local IN, HOLD, OUT = 0.35, 6, 0.6
-local SCALE = 0.8            -- the note is drawn a little smaller than laid out
+local SCALE = 0.65           -- the note is drawn a little smaller than laid out
 local TOP_Y = -140 / SCALE   -- so it keeps its place below the top of the screen
 local queue = {}
 local toast
