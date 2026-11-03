@@ -29,13 +29,13 @@ Den Ordner `WoWForeverDiary` nach `World of Warcraft\_classic_era_\Interface\Add
 Im Buch, in Gruppen; jede Gruppe hat einen Reiter, der eine Übersicht ihrer Teile öffnet. Zeigst du auf den Reiter, klappt eine Liste seiner Teile auf:
 
 - **Vorne:** Inhalt, Heute (der Tag bis jetzt, eine Erinnerung an diesen Tag in einem früheren Jahr, Neues seit dem letzten Lesen, nächste Ziele), Tagebuch mit Kapiteln, Questbuch
-- **Ziele & Ruhm:** Aufgaben (Tag, Woche, Monat), Sammelalbum mit nächsten Zielen, Ehrenbuch
-- **Chronik:** Meilensteine, Premieren, Rekorde, Stufen-Zeitstrahl, Galerie
+- **Ziele & Ruhm:** Aufgaben (Tag, Woche, Monat, eigene Ziele), Sammelalbum mit nächsten Zielen, Ehrenbuch
+- **Chronik:** Meilensteine, Premieren, Rekorde, Stufen-Zeitstrahl, Galerie, Jahrbuch
 - **Die Welt:** Atlas (mit Zeitraffer: der Abspielknopf unter dem „?“ der Kontinentkarte lässt die Reise Tag für Tag wachsen), Karten mit Gebietschronik, Sehenswürdigkeiten, Fundorte, Dungeon-Berichte
 - **Jagd & Beute:** Bestiarium mit Steckbriefen, „Fast geschafft“ und Jagdkarte, Schicksal (jeder Tod auf der Karte, wo und gegen wen am häufigsten), Erzfeinde, Anglerbuch, Schätze mit Ausrüstungspuppe
-- **Leute & Geld:** Personen, Gefährten, Kassenbuch
+- **Leute & Geld:** Personen, Gefährten, Kassenbuch mit Sparziel
 - **Andenken:** Bibliothek, Familienbuch, Zeitkapsel
-- **Einstellungen:** eigener Reiter ganz unten, in vier Seiten (Allgemein, Bedienung, Tasten, Aussehen) mit Stil, Schriftgröße und Sprache
+- **Einstellungen:** eigener Reiter ganz unten, in vier Seiten (Allgemein, Aussehen, Bedienung mit den Tasten, Daten) mit Stil, Schriftgröße und Sprache
 
 Die Lupe oben am Buchrücken (oder Strg + F) durchsucht alles, das „?“ darunter zeigt die Einführung. Ein Klick auf
 die Seitenzahl springt zu einer Seite, ein Klick auf das Eselsohr setzt ein eigenes Lesezeichen (bis zu zwölf). Eine Zeile oben auf jeder Seite zeigt, wo du bist. Solange die Maus über dem Buch ist, blättern Pfeiltasten und Mausrad; Pos1 führt zum Inhalt, Ende zu heute,
