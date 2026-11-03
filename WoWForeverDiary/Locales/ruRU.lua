@@ -132,7 +132,6 @@ local T = {
     ["Select all"] = "Выделить все",
     ["Ctrl+C copies the selection."] = "Ctrl+C копирует выделенное.",
     ["Take a screenshot at milestones"] = "Делать снимок экрана на важных этапах",
-    ["Announce milestones in chat"] = "Сообщать о важных этапах в чат",
     ["Show minimap button"] = "Показывать кнопку у миникарты",
 
     -- redesigned interface

@@ -158,7 +158,7 @@ WFD:On("ADDON_LOADED", function(_, name)
     WFDiaryDB = WFDiaryDB or {}
     local S = WFDiaryDB
     if S.screenshots == nil then S.screenshots = true end
-    if S.chat == nil then S.chat = false end
+    S.chat = nil            -- the old switch for milestones in the chat is gone: the diary no longer writes there
     if S.minimap == nil then S.minimap = true end
     if S.toasts == nil then S.toasts = true end
     if S.recap == nil then S.recap = true end
@@ -396,9 +396,6 @@ function WFD:Milestone(kind, text, shot, extra)
     list[#list + 1] = ev
     self:Log("milestone", text)
     self:Signal("milestone", ev)
-    if self.S and self.S.chat and not self:IsDeathEvent(ev) and (not self.ShouldNotify or self:ShouldNotify(kind)) then
-        print("|cffffd100[" .. L["Diary"] .. "]|r " .. text)
-    end
     if shot and self.S and self.S.screenshots and not self.S.shotBlocked then
         C_Timer.After(0.8, function()
             -- the game names the file by the moment and the format chosen in its settings

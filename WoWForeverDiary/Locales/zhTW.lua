@@ -131,7 +131,6 @@ local T = {
     ["Select all"] = "全選",
     ["Ctrl+C copies the selection."] = "按Ctrl+C複製選取內容。",
     ["Take a screenshot at milestones"] = "在重要時刻自動截圖",
-    ["Announce milestones in chat"] = "在聊天視窗宣告重要時刻",
     ["Show minimap button"] = "顯示小地圖按鈕",
 
     -- redesigned interface

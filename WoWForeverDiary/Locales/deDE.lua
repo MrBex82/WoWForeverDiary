@@ -127,7 +127,6 @@ local T = {
     ["Select all"] = "Alles markieren",
     ["Ctrl+C copies the selection."] = "Strg+C kopiert die Auswahl.",
     ["Take a screenshot at milestones"] = "Bei Meilensteinen Screenshot aufnehmen",
-    ["Announce milestones in chat"] = "Meilensteine im Chat melden",
     ["Show minimap button"] = "Minimap-Button anzeigen",
 }
 

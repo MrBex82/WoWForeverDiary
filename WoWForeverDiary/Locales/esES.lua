@@ -131,7 +131,6 @@ local T = {
     ["Select all"] = "Seleccionar todo",
     ["Ctrl+C copies the selection."] = "Ctrl+C copia la selección.",
     ["Take a screenshot at milestones"] = "Hacer una captura en los hitos",
-    ["Announce milestones in chat"] = "Anunciar los hitos en el chat",
     ["Show minimap button"] = "Mostrar botón del minimapa",
 
     -- redesigned interface

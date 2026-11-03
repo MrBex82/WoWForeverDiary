@@ -2092,7 +2092,6 @@ UI:RegisterRenderer("settings", function(pool, page, side, canvas)
     caption(L["Milestones"])
     checkList({
         { L["Take a screenshot at milestones"], "screenshots" },
-        { L["Announce milestones in chat"], "chat" },
     })
 
     -- language

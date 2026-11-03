@@ -131,7 +131,6 @@ local T = {
     ["Select all"] = "모두 선택",
     ["Ctrl+C copies the selection."] = "Ctrl+C로 선택한 내용을 복사합니다.",
     ["Take a screenshot at milestones"] = "중요한 순간에 스크린샷 찍기",
-    ["Announce milestones in chat"] = "중요한 순간을 대화창에 알리기",
     ["Show minimap button"] = "미니맵 버튼 표시",
 
     -- redesigned interface

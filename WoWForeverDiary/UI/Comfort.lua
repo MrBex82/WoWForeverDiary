@@ -912,7 +912,6 @@ local function buildOptions()
 
     local checks = {
         { L["Take a screenshot at milestones"], "screenshots" },
-        { L["Announce milestones in chat"], "chat" },
         { L["Show minimap button"], "minimap", function() UI:UpdateMinimapButton() end },
         { L["Show a note for new discoveries"], "toasts" },
         { L["Weekly look back at login"], "recap" },
