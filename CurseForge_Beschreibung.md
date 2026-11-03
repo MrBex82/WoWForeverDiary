@@ -82,7 +82,7 @@ Ich habe es gebaut, weil ich mir später nie merke, wo ich jemanden zum ersten M
 - Jeder NPC, mit dem du sprichst, jede angenommene und abgegebene Quest, samt einer Zeile davon, was der Questgeber gesagt hat
 - Kills, seltene Gegner, Bosse und Tode (und der Gegner, der dich immer wieder erwischt)
 - Gold, aufgeteilt nach Herkunft und Verwendung
-- Beute, Stufenaufstiege, Zonen, Berufe, Flugrouten und deine ersten Male (erstes Reittier, erste Instanz, erstes Goldstück ...)
+- Beute, Stufenaufstiege, Zonen, Berufe, Flugrouten und deine Premieren (erstes Reittier, erste Instanz, erstes Goldstück ...)
 - Dungeon-Durchgänge: wer dabei war, welche Bosse gefallen sind, was gedroppt ist
 - Sammelstellen für Kräuter, Erze, Häute und Fische, auf einer Karte dargestellt (die „Fundorte“)
 - Deine Fußspuren auf der Weltkarte, die du Tag für Tag abspielen kannst
@@ -134,7 +134,7 @@ Das Buch gibt es in vier Stilen (Leder und Gold, Pergament, Modern, starker Kont
 ## Gut zu wissen
 
 - Gemacht für **WoW Forever**. Unter WoW Classic Era sollte es auch laufen, wurde dort aber deutlich weniger gespielt. Die Daten liegen pro Charakter in den SavedVariables, nichts verlässt deinen Rechner.
-- Bei Charakteren, die du schon spielst, beginnt das Tagebuch ab der Installation. Einige "Erste Male" werden aus dem nachgetragen, was das Addon noch herausfinden kann, die Vergangenheit kennt es aber nicht.
+- Bei Charakteren, die du schon spielst, beginnt das Tagebuch ab der Installation. Einige "Premieren" werden aus dem nachgetragen, was das Addon noch herausfinden kann, die Vergangenheit kennt es aber nicht.
 - Verfügbar auf Deutsch, Englisch, Französisch, Spanisch, Portugiesisch, Russisch, Koreanisch und Traditionell Chinesisch. Auch die Tagebucheinträge selbst erscheinen in deiner Spielsprache.
 - Es ist noch eine frühe Version. Wenn etwas komisch aussieht oder du eine Idee hast, schreib einen Kommentar oder ein Ticket. Korrekturen an den Übersetzungen sind ebenfalls willkommen, in den meisten dieser Sprachen bin ich kein Muttersprachler.
 

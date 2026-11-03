@@ -771,11 +771,11 @@ L["%dh %02dm"] = "%d Std. %02d Min."
 L["%dm"] = "%d Min."
 
 -- first times, family book, time capsule, gatherer's map, task of the week, search, the binding
-L["First times"] = "Erste Male"
-L["First time"] = "Erstes Mal"
+L["First times"] = "Premieren"
+L["First time"] = "Premiere"
 L["%d of %d experienced"] = "%d von %d erlebt"
 L["Not yet experienced."] = "Noch nicht erlebt."
-L["Click for all first times."] = "Klicken für alle ersten Male."
+L["Click for all first times."] = "Klicken für alle Premieren."
 L["First creature slain"] = "Erste erlegte Kreatur"
 L["First quest completed"] = "Erste erledigte Quest"
 L["First level up"] = "Erster Stufenaufstieg"
@@ -1215,7 +1215,7 @@ loc.narrator.memory = {
         "%s war ich <in>.",
         "%s war ich <in> unterwegs.",
     },
-    first = "Und ein erstes Mal: %s.",
+    first = "Und eine Premiere: %s.",
 }
 loc.narrator.jubilee = {
     born = "Es ist {ein Jahr|%d Jahre} her, dass ich die erste Seite dieses Tagebuchs geschrieben habe.",
@@ -1257,7 +1257,7 @@ L["Regions"] = "Regionen"
 L["Nothing slain here yet."] = "Hier noch nichts erlegt."
 L["No places discovered here yet."] = "Hier noch keine Orte entdeckt."
 L["The diary could not tell who it was."] = "Wer es war, konnte das Tagebuch nicht erkennen."
-L["Every first, with its day and place"] = "Jedes erste Mal, mit Tag und Ort"
+L["Every first, with its day and place"] = "Jede Premiere, mit Tag und Ort"
 L["Leather and gold is the classic book. Modern is flat and calm, strong contrast makes all writing brighter."] = "Leder und Gold ist das klassische Buch. Modern ist schlicht und ruhig, starker Kontrast macht alle Schrift heller."
 L["Still to come"] = "Noch offen"
 L["%d still to find"] = "noch %d zu entdecken"
