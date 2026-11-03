@@ -274,7 +274,7 @@ local CLICK_HINTS = {
     "Click for all first times.", "Click for all landmarks.", "Click for the map of this region.", "Click for the next goals.",
     "Click for the portrait.", "Click for the wanted poster.", "Click here to write your own notes ...",
     "Click to open the diary.", "Click to open this part of the book.", "Click to open today's entry.", "Click to open",
-    "Click to read the letter.", "Click to read this day aloud in chat.", "Click to read this day.",
+    "Click to read the letter.", "Click to read this day.",
     "Click to set a marker on the map.", "Right-click for the map of this region.", "Right-click to go to a page.",
     "Click to open.", "Right-click for the settings.", "Click for the hunting grounds of this area.",
     "Click to show only these.", "Click to show all again.", "Ctrl-click to set or remove a bookmark here.",
