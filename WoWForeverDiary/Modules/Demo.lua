@@ -358,6 +358,8 @@ local function build()
             "I hope this finds you well. The harbour is as busy as ever and the ships come and go without a care. "
                 .. "Come and visit when your road leads this way. There is always a place at the table." }),
     }
+    C.booksRead = {}
+    for id in pairs(C.demoLibrary) do C.booksRead[id] = true end
     -- an invented family for the family book
     local function sibling(name, race, class, classFile, level, days, kills, quests)
         return { name = name, realm = C.realm, race = race, class = class, classFile = classFile, level = level,

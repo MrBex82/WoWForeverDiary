@@ -236,6 +236,10 @@ WFD.HONOURS = {
       tiers = { 20, 30, 40, 50, 60 }, icon = { "Spell_Holy_SurgeOfLight" } },
     { key = "chronicler", cat = "adventure", name = "Faithful Chronicler", desc = "Keep this diary for %d days.", m = "days",
       tiers = { 7, 30, 100, 365 }, icon = { "INV_Misc_Book_09" } },
+    { key = "bookworm", cat = "adventure", name = "Bookworm", desc = "Read %d books, notes and plaques.", m = "books",
+      tiers = { 1, 5, 15, 40, 100 }, icon = { "INV_Misc_Book_09", "INV_Misc_Book_11" } },
+    { key = "scholar", cat = "adventure", name = "Scholar", desc = "Read %d books to the last page.", m = "booksComplete",
+      tiers = { 1, 5, 15, 40 }, icon = { "INV_Misc_Book_11", "INV_Misc_Book_09" } },
     { key = "devoted", cat = "adventure", name = "Devoted", desc = "Spend %d hours in the world.", m = "hours",
       tiers = { 24, 100, 250, 500 }, icon = { "INV_Misc_PocketWatch_01" } },
     { key = "phoenix", cat = "adventure", name = "Phoenix", desc = "Die %d times and rise again.", m = "deaths",
@@ -355,6 +359,15 @@ function WFD:HonourMetrics()
     end
     m.fishing, m.firstAid, m.cooking = skillOf(7620), skillOf(3273), skillOf(2550)
     m.fish = C.fishCaught or 0
+    -- the texts of the library this character has read, and how many of them to the last page
+    m.books, m.booksComplete = 0, 0
+    for id in pairs(C.booksRead or {}) do
+        local b = self.Book and self:Book(id)
+        if b then
+            m.books = m.books + 1
+            if self:BookComplete(b) then m.booksComplete = m.booksComplete + 1 end
+        end
+    end
     m.catchKinds = 0
     for _ in pairs(C.catch or {}) do m.catchKinds = m.catchKinds + 1 end
     local epicIds, run, steps = {}, 0, 0
@@ -454,6 +467,7 @@ local ONE = {
     helping = "Complete a quest.", phoenix = "Die once and rise again.", crawler = "Finish a dungeon run.",
     diligent = "Do all tasks of the day on one day.", weekly = "Complete a task of the week.",
     treasure = "Find a rare item.", epic = "Find an epic item.", connoisseur = "Slay 50 of one kind.",
+    bookworm = "Read a book, a note or a plaque.", scholar = "Read a book to the last page.",
 }
 
 function WFD:HonourText(h, goal)

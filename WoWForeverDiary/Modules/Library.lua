@@ -127,6 +127,12 @@ local function save()
     if t.lastPage and t.lastPage >= top then b.more = t.more or nil end
     b.kind = kindOf(t.material, count, chars)
     b.last = time()
+    -- this character has read it (for the honours)
+    local C = WFD.C
+    if C then
+        C.booksRead = C.booksRead or {}
+        C.booksRead[id] = true
+    end
     WFD.dirty = true
 end
 
@@ -156,4 +162,15 @@ end)
 WFD:On("ITEM_TEXT_CLOSED", function()
     local ok, err = pcall(save)
     if not ok then cur = nil WFD:Error("library", err) end
+end)
+
+-- texts that stood on the shelf before the honours kept count: the ones this character was first to read
+WFD:OnInit(function()
+    local C, list = WFD.C, shelf()
+    if not C or not list then return end
+    C.booksRead = C.booksRead or {}
+    local me = UnitName("player")
+    for id, b in pairs(list) do
+        if b.who == me and not C.booksRead[id] then C.booksRead[id] = true end
+    end
 end)
