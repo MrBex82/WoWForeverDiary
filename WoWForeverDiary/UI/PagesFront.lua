@@ -36,6 +36,7 @@ UI.LeaderLine = leader
 -- tabs: a function(pool, canvas, tx, tw, y) that draws a row of its own in the place of the subtitle
 function UI.PageTitle(pool, canvas, side, text, sub, y, tabs)
     UI.titled = true
+    UI.titleText = text
     local tx, tw = UI.TextX(side), UI.TextW()
     local t = pool:Text(32, c.redInk, UI.HEAD, "CENTER")
     t:SetText(text)
@@ -161,10 +162,11 @@ function UI.Tiles(pool, canvas, x0, y, w, list, h)
     local tw = (w - (n - 1) * 8) / n
     local boxes, need = {}, h
     -- one row writes all its captions alike: when one needs two lines, none is in capitals
-    local anyTwo = false
+    local anyTwo, rowSize = false, nil
     for _, t in ipairs(list) do
-        local _, two = tileCaption(t[2], tw)
+        local sz, two = tileCaption(t[2], tw)
         anyTwo = anyTwo or two
+        rowSize = min(rowSize or sz, sz)       -- one size for the whole row, the smallest that any caption needs
     end
     for i, t in ipairs(list) do
         local x = x0 + (i - 1) * (tw + 8)
@@ -181,7 +183,7 @@ function UI.Tiles(pool, canvas, x0, y, w, list, h)
         v:SetPoint("TOP", bg, "TOP", 0, -5)
         local l = pool:Text(9, c.inkSoft, UI.FONT, "CENTER")
         l:SetWidth(tw - 6)
-        local size, two = tileCaption(t[2], tw)
+        local size = rowSize
         if anyTwo then
             -- capitals are wide: a caption on two lines is written as it is
             l:SetText(t[2])

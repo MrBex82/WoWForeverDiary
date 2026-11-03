@@ -518,6 +518,17 @@ function UI:RenderPage(side, index)
     end
     -- where this page lies: "Hunt and loot > Bestiary", each step before the current one a link
     local items = self:CrumbItems(page, index)
+    -- the big title already says where the page is: a last step that repeats it is left out (the steps
+    -- before it stay links)
+    local trimmed = false
+    if items and UI.titled and UI.titleText then
+        local last = items[#items]
+        if last and last.text:lower() == UI.titleText:lower() then
+            table.remove(items)
+            trimmed = true
+            if #items == 0 then items = nil end
+        end
+    end
     if items then
         local size = UI.FS(11)
         local sep = " > "
@@ -543,7 +554,7 @@ function UI:RenderPage(side, index)
                 x = x + UI.MeasureWidth(sep, size, UI.FONT)
             end
             local fs
-            if it.page and i < #items then
+            if it.page and (i < #items or trimmed) then
                 fs = pool:Link(it.text, function() UI:GoToPage(it.page) end, 11, c.inkSoft)
             else
                 fs = pool:Text(11, i == #items and c.redInk or c.inkSoft, UI.FONT)

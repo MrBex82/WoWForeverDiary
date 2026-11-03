@@ -1062,11 +1062,20 @@ local function newCard(parent)
         self.lvl:SetText(format(L["Lv %s"], levelText(m)))
         -- number left, rarity in the middle, level right: with large writing the number gives way to the rarity
         self.tag:SetFont(UI.HEAD, UI.FS(8), "")      -- a card is used again: back to the full size first
+        self.tag:ClearAllPoints()
+        self.tag:SetPoint("TOP", 0, -5)
         local half = self.tag:GetStringWidth() / 2
         if half > 0 then
             local mid = CARD_W / 2
             if 7 + self.num:GetStringWidth() + 3 > mid - half then self.num:SetText("") end
-            if mid + half + 3 > CARD_W - 7 - self.lvl:GetStringWidth() then UI.FitText(self.tag, 2 * (CARD_W - 10 - self.lvl:GetStringWidth() - mid), 8, 6, UI.HEAD) end
+            if mid + half + 6 > CARD_W - 7 - self.lvl:GetStringWidth() then
+                -- centred, the word would touch the level: it moves into the left corner, where the number was
+                self.num:SetText("")
+                self.tag:ClearAllPoints()
+                self.tag:SetPoint("TOPLEFT", 7, -5)
+                local room = CARD_W - 14 - self.lvl:GetStringWidth() - 6
+                if half * 2 > room then UI.FitText(self.tag, room, 8, 6, UI.HEAD) end
+            end
         end
         fitName(self.name, m.name or "?")
         self.badge:SetCount(UI.ShortCount(m.kills), UI.BADGE_COLOURS[rarityOf(m)] or UI.BADGE_COLOURS.normal)
