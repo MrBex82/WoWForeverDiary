@@ -167,6 +167,54 @@ function UI:AskGold()
 end
 
 ------------------------------------------------------------------------
+-- One more goal of the reader's own, a line of text (up to ten, kept per character)
+------------------------------------------------------------------------
+local askGoal
+function UI:AskGoal()
+    local bf = self.bookFrame
+    if not bf then return end
+    if not askGoal then
+        askGoal = UI.Frame(bf, 340, 64)
+        askGoal:SetPoint("BOTTOM", bf, "BOTTOM", 0, 46)
+        askGoal:SetFrameLevel(bf:GetFrameLevel() + 40)
+        UI.Backdrop(askGoal, "tooltip", 12, 3, { 0.10, 0.07, 0.04, 0.96 }, c.goldDk)
+        askGoal:EnableMouse(true)
+        local t = UI.Text(askGoal, 12, c.gold, "CENTER", UI.HEAD, true)
+        t:SetPoint("TOP", 0, -10)
+        askGoal.label = t
+        local ok, e = pcall(CreateFrame, "EditBox", nil, askGoal, "InputBoxTemplate")
+        if not (ok and e) then
+            e = CreateFrame("EditBox", nil, askGoal, BackdropTemplateMixin and "BackdropTemplate" or nil)
+            UI.Backdrop(e, nil, 1, 0, { 0, 0, 0, 0.6 }, c.goldDk)
+            e:SetFontObject(ChatFontNormal)
+        end
+        e:SetSize(300, 22)
+        e:SetPoint("BOTTOM", 0, 10)
+        e:SetAutoFocus(false)
+        e:SetMaxLetters(48)
+        e:SetScript("OnEnterPressed", function(s)
+            local text = strtrim(s:GetText() or "")
+            s:ClearFocus()
+            askGoal:Hide()
+            local C = WFD.C
+            if text ~= "" then
+                C.myGoals = C.myGoals or {}
+                if #C.myGoals < 10 then C.myGoals[#C.myGoals + 1] = { text = text } end
+                UI:Reflow()
+            end
+        end)
+        e:SetScript("OnEscapePressed", function(s) s:ClearFocus() askGoal:Hide() end)
+        e:SetScript("OnEditFocusLost", function() askGoal:Hide() end)
+        askGoal.edit = e
+        askGoal:Hide()
+    end
+    askGoal.label:SetText(L["What do you want to do next?"])
+    askGoal:Show()
+    askGoal.edit:SetText("")
+    askGoal.edit:SetFocus()
+end
+
+------------------------------------------------------------------------
 -- Own bookmarks: Ctrl-click a page number to keep that page; a silk ribbon then sticks out of the top
 -- of the book. Kept like the place where reading stopped (a day, or a page within its part), so they
 -- follow their page while the book grows.

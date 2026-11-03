@@ -374,6 +374,7 @@ local function build()
     }
     C.title, C.showcase = "slayer", { "slayer", "bookworm", "scholar" }
     C.goldGoal = 500 * 10000
+    C.myGoals = { { text = "Visit the Deadmines", done = true }, { text = "Learn cooking up to 150" }, { text = "Find a rare mount" } }
     C.booksRead = {}
     for id in pairs(C.demoLibrary) do C.booksRead[id] = true end
     -- an invented family for the family book

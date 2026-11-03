@@ -522,6 +522,7 @@ UI:RegisterSection({
     build = function(book)
         book:Add({ kind = "tasks", numbered = true, head = L["Tasks"], part = 1 })
         book:Add({ kind = "tasks", numbered = true, head = L["Tasks"], part = 2 })
+        book:Add({ kind = "tasks", numbered = true, head = L["Tasks"], part = 3 })
     end,
 })
 
@@ -570,6 +571,39 @@ UI:RegisterRenderer("tasks", function(pool, page, side, canvas)
             { best, L["Longest run"], c.ink },
             { total, L["Tasks done"], c.ink },
         })
+    elseif page.part == 3 then
+        -- the reader's own goals: a short list to tick off, kept per character
+        local C = WFD.C
+        local list = C.myGoals or {}
+        local doneN = 0
+        for _, g in ipairs(list) do if g.done then doneN = doneN + 1 end end
+        UI.SectionHead(pool, canvas, tx, tw, y + 18, 32, L["My own goals"], #list > 0 and (doneN .. " / " .. #list) or nil)
+        y = y - 30
+        for i, g in ipairs(list) do
+            local cb = pool:Check(g.text, function() return g.done end, function(v)
+                g.done = v and true or nil
+                UI:Reflow()
+            end)
+            cb:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+            local x, hot = pool:Link("x", function()
+                table.remove(list, i)
+                UI:Reflow()
+            end, 12, c.inkFaint)
+            x:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw - 4, y - 3)
+            hot.lines = { L["Remove this goal"] }
+            y = y - 28
+        end
+        if #list == 0 then
+            local fs = pool:Text(12, c.inkFaint, UI.FONT)
+            fs:SetWidth(tw)
+            fs:SetText(L["Write down what you want to do next, and tick it off when it is done."])
+            fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+            y = y - fs:GetStringHeight() - 14
+        end
+        if #list < 10 then
+            local add = pool:Link(L["Add a goal"], function() UI:AskGoal() end, 12, c.redInk)
+            add:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 4)
+        end
     else
         local wk, w
         if WFD.ThisWeek then wk, w = WFD:ThisWeek() end
