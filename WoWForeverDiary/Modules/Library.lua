@@ -10,6 +10,7 @@ local time, format = time, string.format
 
 local MAX_BOOKS = 300           -- the shelf has room for this many
 local MAX_CHARS = 30000         -- of one book; a longer text is cut
+local MAX_TOTAL = 1500000       -- of the whole shelf: the saved file must not grow without limit
 local STONE = { Stone = true, Marble = true, Silver = true, Bronze = true }
 
 local cur                       -- the text that is open right now
@@ -103,9 +104,12 @@ local function save()
     local id = t.title .. "#" .. sum(first)
     local b = list[id]
     if not b then
-        local n = 0
-        for _ in pairs(list) do n = n + 1 end
-        if n >= MAX_BOOKS then return end
+        local n, total = 0, 0
+        for _, other in pairs(list) do
+            n = n + 1
+            for _, text in pairs(other.pages or {}) do total = total + #text end
+        end
+        if n >= MAX_BOOKS or total >= MAX_TOTAL then return end
         b = { t = t.t, who = UnitName("player"), zone = t.zone, sub = t.sub, creator = t.creator, pages = {}, title = t.title }
         list[id] = b
         WFD:Log("book", t.title)

@@ -1328,13 +1328,14 @@ function UI:RefreshCover()
     self:RefreshCoverGrowth()
     cv.name:SetText(C.name or UnitName("player"))
     local title = WFD.Title and WFD:Title()
-    cv.who:SetText(((title and (title .. "  -  ") or "") .. (C.race or "") .. "  -  " .. (C.class or "")):upper())
+    cv.who:SetText(((C.race or "") .. "  -  " .. (C.class or "")):upper())
     if C.obituary then
         cv.since:SetText(date(WFD.loc.date, C.born) .. "  -  " .. date(WFD.loc.date, C.obituary.t))
         cv.of:SetText(L["In memoriam"])
     else
         cv.since:SetText(format(L["Begun on %s"], date(WFD.loc.date, C.born)))
-        cv.of:SetText(L["of"])
+        -- the title stands above the name where "of" stood: a long one shrinks to fit the plate
+        cv.of:SetText(title or L["of"])
     end
     -- names and lines of any length and language fit their plate
     UI.FitText(cv.name, 230, 30, 16)

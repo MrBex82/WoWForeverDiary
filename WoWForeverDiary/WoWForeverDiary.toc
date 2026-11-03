@@ -12,7 +12,7 @@
 ## Title-ptBR: |cffffd100WoW Forever|r Diário de Viagem
 ## Notes-ptBR: Um diário de viagem vivo: cada NPC, missão, abate, moeda e passo do seu personagem, contado como uma história.
 ## Title-ruRU: |cffffd100WoW Forever|r Дневник путешествий
-## Notes-ruRU: Живой дневник путешествий: каждый NPC, задание, убийство, монета и шаг вашего персонажа — в виде истории.
+## Notes-ruRU: Живой дневник путешествий: каждый NPC, задание, убийство, монета и шаг вашего персонажа - в виде истории.
 ## Title-koKR: |cffffd100WoW Forever|r 여행 일기
 ## Notes-koKR: 살아 있는 여행 일기: 캐릭터가 만난 모든 NPC, 퀘스트, 처치, 동전, 발걸음을 이야기로 들려줍니다.
 ## Title-zhTW: |cffffd100WoW Forever|r 旅行日記

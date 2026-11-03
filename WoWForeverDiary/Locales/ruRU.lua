@@ -7,7 +7,7 @@ local T = {
     -- chat / log
     ["Diary"] = "Дневник",
     ["Travel diary active - today is |cffffd100day %d|r. |cffffd100/wfd|r opens the diary."] =
-        "Дневник путешествий активен — сегодня |cffffd100день %d|r. |cffffd100/wfd|r открывает дневник.",
+        "Дневник путешествий активен - сегодня |cffffd100день %d|r. |cffffd100/wfd|r открывает дневник.",
     ["%d creatures slain in total"] = "Всего убито существ: %d",
     ["First victory over the boss %s!"] = "Первая победа над боссом: %s!",
     ["Rare creature slain: %s"] = "Убито редкое существо: %s",
@@ -49,7 +49,7 @@ local T = {
     ["Click to open the diary."] = "Нажмите, чтобы открыть дневник.",
     ["%d kills today"] = "Убийств сегодня: %d",
     ["%d quests today"] = "Заданий сегодня: %d",
-    ["DEMO MODE - invented data"] = "ДЕМО-РЕЖИМ — вымышленные данные",
+    ["DEMO MODE - invented data"] = "ДЕМО-РЕЖИМ - вымышленные данные",
 
     -- tabs
     ["Bestiary"] = "Бестиарий",
@@ -183,16 +183,16 @@ loc.quotes = { "«", "»" }
 loc.narrator = {
     -- written without gendered past tense ("я пошёл / пошла"), since the diary does not know who writes it
     birth = {
-        "День 1. Я — %s, %s. Отправная точка — %s. Что дальше? Понятия не имею.",
-        "День 1. %s, %s, всё только начинается. Отправная точка — %s. Посмотрим, куда это заведёт.",
+        "День 1. Я - %s, %s. Отправная точка - %s. Что дальше? Понятия не имею.",
+        "День 1. %s, %s, всё только начинается. Отправная точка - %s. Посмотрим, куда это заведёт.",
     },
     begin = {
         "День 1. С сегодняшнего дня записываю всё, что случается в пути.",
     },
     open = {
         "День %d, %s.",
-        "День %d. Сегодня на очереди — %s.",
-        "День %d. Снова в пути. Главное место дня — %s.",
+        "День %d. Сегодня на очереди - %s.",
+        "День %d. Снова в пути. Главное место дня - %s.",
     },
     far = "неизвестные края",
     walk = {
@@ -201,7 +201,7 @@ loc.narrator = {
         "Около %s км на своих двоих%s, и ноги это чувствуют.",
     },
     via = " (%s)",
-    fly = " Остаток пути — по воздуху.",
+    fly = " Остаток пути - по воздуху.",
     kills = {
         "Повержено врагов за день: %d.",
         "Врагов на моём счету сегодня: %d.",
@@ -217,11 +217,11 @@ loc.narrator = {
     },
     deathBy = " Последний виновник: %s.",
     noDeath = {
-        "Сегодня — ни одной смерти.",
+        "Сегодня - ни одной смерти.",
         "Целый день без единой смерти. Неплохо.",
     },
     questDone = {
-        "Заданий выполнено: %d — %s.",
+        "Заданий выполнено: %d - %s.",
         "Вычеркнуто из списка: %s.",
     },
     questAcc = {
@@ -238,7 +238,7 @@ loc.narrator = {
     },
     quoteAnon = "Запомнилась фраза: %s",
     npcs = {
-        "{Собеседник за день — %s.|Собеседников за день: %d, среди них %s.}",
+        "{Собеседник за день - %s.|Собеседников за день: %d, среди них %s.}",
         "{Один разговор: %s.|Разговоров: %d, например: %s.}",
     },
     gain = {
@@ -281,7 +281,7 @@ loc.narrator = {
     },
     closeLong = {
         "%s в пути. На сегодня хватит.",
-        "Позади %s на ногах — сил почти не осталось.",
+        "Позади %s на ногах - сил почти не осталось.",
         "Всего %s в пути. Завтра продолжим.",
     },
     none = "Для этого дня записей нет.",
@@ -311,8 +311,8 @@ L["Under the skies of %s"] = "Под небесами: %s"
 L["Awakening in %s"] = "Пробуждение: %s"
 L["Return to %s"] = "Возвращение: %s"
 L["Chapter"] = "Глава"
-L["Level %d-%d"] = "Уровень %d–%d"
-L["Days %d-%d"] = "Дни %d–%d"
+L["Level %d-%d"] = "Уровень %d-%d"
+L["Days %d-%d"] = "Дни %d-%d"
 L["Level %d!"] = "Уровень %d!"
 L["%d kills"] = "убийств: %d"
 L["%d quests"] = "заданий: %d"
@@ -333,7 +333,7 @@ L["Time spent"] = "Проведено времени"
 L["Acquaintances here"] = "Знакомые здесь"
 L["Slain %d times"] = "Ваших побед: %d"
 L["Everyone I met on my way"] = "Все встречные на моем пути"
-L["Every coin, in and out"] = "Каждая монета — приход и расход"
+L["Every coin, in and out"] = "Каждая монета - приход и расход"
 L["Balance"] = "Итог"
 L["Day"] = "День"
 L["Tasks taken and done"] = "Взятые и выполненные поручения"
@@ -872,7 +872,7 @@ L["Dear me, if you are reading this, you made it through the first week. Did you
 L["Marker set on the map: %s (%d, %d)"] = "Метка на карте: %s (%d, %d)"
 L["No marker can be set on this map."] = "На этой карте нельзя поставить метку."
 L["Click to set a marker on the map."] = "Щёлкните, чтобы поставить метку на карте."
-L["Right-click for the map of this region."] = "Правый щелчок — карта этой области."
+L["Right-click for the map of this region."] = "Правый щелчок - карта этой области."
 L["1 kind"] = "Видов: 1"
 L["Discover a new place."] = "Откройте новое место."
 L["Walk one kilometre today."] = "Пройдите сегодня пешком один километр."
@@ -912,8 +912,8 @@ L["Click to open, right-click to remove."] = "Щелчок открывает, �
 L["You are here."] = "Вы здесь."
 L["Click for the hunting grounds of this area."] = "Щёлкните, чтобы открыть охотничьи угодья этой области."
 L["Who is closest to the next stage"] = "Кто ближе всех к следующей ступени"
-L["%d more, then in colour"] = "ещё %d — и в цвете"
-L["%d more, then a connoisseur"] = "ещё %d — и вы знаток"
+L["%d more, then in colour"] = "ещё %d - и в цвете"
+L["%d more, then a connoisseur"] = "ещё %d - и вы знаток"
 L["To the album of this area"] = "К альбому этой области"
 L["Every kind known here is collected."] = "Собраны все известные здесь виды."
 L["Kinds of creatures"] = "Типы существ"
@@ -1074,7 +1074,7 @@ L["Fishing gear"] = "Одежда рыболова"
 
 -- 0.1.11: the today page, group pages, dog-ears, search filters, the companion's offer
 L["Click to go to a page."] = "Щёлкните, чтобы перейти на страницу."
-L["Right-click for the contents."] = "Правый щелчок — к оглавлению."
+L["Right-click for the contents."] = "Правый щелчок - к оглавлению."
 L["Click to set a bookmark here."] = "Щёлкните, чтобы положить сюда закладку."
 L["Click to remove the bookmark."] = "Щёлкните, чтобы убрать закладку."
 L["Click the folded corner of a page to keep it. A ribbon then sticks out of the top of the book: a click opens the page, a right-click takes the ribbon away."] = "Щёлкните по загнутому уголку страницы, чтобы запомнить её. Сверху из книги появится ленточка: щелчок открывает страницу, правый щелчок убирает ленточку."
@@ -1146,7 +1146,7 @@ loc.narrator.memory = {
     years = "{Ровно год назад|Ровно %d года назад|Ровно %d лет назад}",
     days = "%d дней назад",
     intro = {
-        "%s. Главное место дня — %s.",
+        "%s. Главное место дня - %s.",
         "%s. Путь лежал по краю под названием %s.",
     },
     first = "И кое-что впервые: %s.",
@@ -1191,8 +1191,8 @@ L["Regions"] = "Регионы"
 L["Nothing slain here yet."] = "Здесь пока никого не убито."
 L["No places discovered here yet."] = "Здесь пока не открыто ни одного места."
 L["The diary could not tell who it was."] = "Дневник не смог узнать, кто это был."
-L["Every first, with its day and place"] = "Каждый первый раз — с днём и местом"
-L["Leather and gold is the classic book. Modern is flat and calm, strong contrast makes all writing brighter."] = "Кожа и золото — классическая книга. Современный — строгий и спокойный, высокий контраст делает весь текст ярче."
+L["Every first, with its day and place"] = "Каждый первый раз - с днём и местом"
+L["Leather and gold is the classic book. Modern is flat and calm, strong contrast makes all writing brighter."] = "Кожа и золото - классическая книга. Современный - строгий и спокойный, высокий контраст делает весь текст ярче."
 L["Still to come"] = "Ещё впереди"
 L["%d still to find"] = "Осталось найти: %d"
 L["No nemesis yet: nobody has defeated you so far."] = "Заклятого врага пока нет: до сих пор вас никто не победил."
