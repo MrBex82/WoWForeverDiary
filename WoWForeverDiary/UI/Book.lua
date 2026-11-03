@@ -409,17 +409,17 @@ local function drawWornParchment(pool, canvas, side, index)
     -- blood: a splash with spray and a drip
     if R(1, 31) < 0.38 then
         local x, y = spot(1)
-        stain(R(1, 33) < 0.5 and 0 or 1, 0, 100 + 40 * R(1, 34), x, y, 0.85, 1, 0.30)
+        stain(R(1, 33) < 0.5 and 0 or 1, 0, 100 + 40 * R(1, 34), x, y, 0.5, 1, 0.30)
     end
     -- sweat: salty tide marks
     if R(2, 41) < 0.42 then
         local x, y = spot(2)
-        stain(0, 1, 80 + 50 * R(2, 42), x, y, 0.9, 2, 0.30)
+        stain(0, 1, 80 + 50 * R(2, 42), x, y, 0.5, 2, 0.30)
     end
     -- tears: small rings with a paler middle
     if R(3, 51) < 0.42 then
         local x, y = spot(3)
-        stain(1, 1, 90 + 40 * R(3, 52), x, y, 0.9, 3, 0.38)
+        stain(1, 1, 90 + 40 * R(3, 52), x, y, 0.5, 3, 0.38)
     end
 end
 

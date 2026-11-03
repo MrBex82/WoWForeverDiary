@@ -78,9 +78,9 @@ local SKULL = "|TInterface\\TargetingFrame\\UI-TargetingFrame-Skull:11:11:0:-1|t
 local function marginNotes(f)
     local d = f.d
     local notes = {}
-    for _, lv in ipairs(d.levels) do notes[#notes + 1] = { format(L["Level %d!"], lv), { 0.93, 0.75, 0.35, 1 } } end
+    for _, lv in ipairs(d.levels) do notes[#notes + 1] = { format(L["Level %d!"], lv), UI.Deep({ 0.93, 0.75, 0.35, 1 }, 0.62) } end
     if d.killTotal > 0 then notes[#notes + 1] = { WFD:Count("%d kills", d.killTotal), c.inkSoft } end
-    if #d.qd > 0 then notes[#notes + 1] = { WFD:Count("%d quests", #d.qd), { 0.60, 0.76, 1.00, 1 } } end
+    if #d.qd > 0 then notes[#notes + 1] = { WFD:Count("%d quests", #d.qd), UI.Deep({ 0.60, 0.76, 1.00, 1 }, 0.45) } end
     if f.net ~= 0 then
         notes[#notes + 1] = { (f.net > 0 and "+" or "-") .. UI.CoinIcons(f.net, 11), f.net > 0 and c.good or c.bad }
     end
@@ -408,7 +408,8 @@ local function drawKeep(pool, canvas, x, top, keep, w)
         local ch = momentH(ev) - 4
         local icon, col = UI.MomentIcon(ev)
         -- the kind colour lifted toward cream, so it reads on dark leather
-        local light = { col[1] * 0.45 + 0.55, col[2] * 0.45 + 0.55, col[3] * 0.45 + 0.55, 1 }
+        local light = UI.THEME == "parchment" and { col[1] * 0.6, col[2] * 0.6, col[3] * 0.6, 1 }
+            or { col[1] * 0.45 + 0.55, col[2] * 0.45 + 0.55, col[3] * 0.45 + 0.55, 1 }
         local bg = pool:Rect(c.paperDk, 0.40)
         bg:SetSize(w, ch)
         bg:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, my)
@@ -561,13 +562,13 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
                 local box = pool:Rect(c.inkSoft, 0.9)
                 box:SetSize(11, 11)
                 box:SetPoint("TOPLEFT", canvas, "TOPLEFT", textX + 10, ry - 1)
-                local inner = pool:Rect({ 0.10, 0.07, 0.04 }, 1, "ARTWORK", 1)
+                local inner = pool:Rect(UI.THEME == "parchment" and { 0.95, 0.90, 0.76 } or { 0.10, 0.07, 0.04 }, 1, "ARTWORK", 1)
                 inner:SetSize(9, 9)
                 inner:SetPoint("CENTER", box, "CENTER")
                 if done then
                     local tick = pool:Icon("Interface\\Buttons\\UI-CheckBox-Check", 19, "ARTWORK", 2)
                     tick:SetTexCoord(0, 1, 0, 1)
-                    tick:SetVertexColor(0.58, 0.80, 0.45, 1)
+                    tick:SetVertexColor(unpack(UI.THEME == "parchment" and { 0.16, 0.40, 0.10, 1 } or { 0.58, 0.80, 0.45, 1 }))
                     tick:SetPoint("CENTER", box, "CENTER", 2, 2)
                 end
                 local t = pool:Text(11, done and c.inkSoft or c.ink, UI.FONT)
@@ -611,12 +612,12 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
             pic:SetPoint("TOPLEFT", canvas, "TOPLEFT", textX, y - 16)
             pic:Paint(it.ev)
         elseif it.t == "mynote" then
-            local fs = pool:Text(FONT_SIZE, { 0.74, 0.84, 0.98, 1 }, UI.FONT)
+            local fs = pool:Text(FONT_SIZE, UI.NoteInk(), UI.FONT)
             fs:SetSpacing(SPACING)
             fs:SetWidth(TCW - 8)
             fs:SetText(it.text)
             fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", textX, y)
-            local bar = pool:Rect({ 0.74, 0.84, 0.98 }, 0.35)
+            local bar = pool:Rect(UI.NoteInk(), 0.35)
             bar:SetSize(2, fs:GetStringHeight())
             bar:SetPoint("TOPRIGHT", fs, "TOPLEFT", -5, 0)
         elseif it.t == "keep" then
@@ -705,7 +706,7 @@ function UI:EditDayNote(day)
         eb:SetAutoFocus(false)
         eb:SetMaxLetters(2000)
         eb:SetFont(UI.FONT, 13, "")
-        eb:SetTextColor(0.74, 0.84, 0.98, 1)
+        eb:SetTextColor(unpack(UI.NoteInk()))
         eb:SetShadowOffset(0, 0)
         eb:SetWidth(372)
         sf:SetScrollChild(eb)

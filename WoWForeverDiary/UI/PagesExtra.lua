@@ -755,7 +755,7 @@ UI:RegisterRenderer("companions", function(pool, page, side, canvas)
         elseif r.comp then
             local e = r.comp.e
             local col = UI.ClassColor(e.classFile)
-            local dark = { col[1] * 0.6, col[2] * 0.6, col[3] * 0.6, 1 }
+            local dark = UI.THEME == "parchment" and UI.Deep(col, 0.3) or { col[1] * 0.6, col[2] * 0.6, col[3] * 0.6, 1 }
             local path, coords = classCrest(e.classFile)
             pool:Plaque(tx + 17, y - 20, 30, path, col, true, e.level and tostring(e.level) or nil, coords)
             local n = pool:Text(15, dark, UI.HEAD)
