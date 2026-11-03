@@ -1197,3 +1197,4 @@ L["Leather and gold is the classic book. Modern is flat and calm, strong contras
 L["Still to come"] = "Ещё впереди"
 L["%d still to find"] = "Осталось найти: %d"
 L["No nemesis yet: nobody has defeated you so far."] = "Заклятого врага пока нет: до сих пор вас никто не победил."
+L["At a glance"] = "Коротко"

@@ -523,14 +523,10 @@ end)
 ------------------------------------------------------------------------
 -- Note pages: ruled paper you can write on. Text is kept per character.
 local LINE = 26
-UI:RegisterRenderer("blank", function(pool, page, side, canvas)
+-- ruled paper to write on, from `top` (pixels below the page's top edge) down to the foot; the text is kept
+-- per character under `key`
+function UI.NoteArea(pool, canvas, side, top, key)
     local tx, tw = UI.TextX(side), UI.TextW()
-    local h = pool:Text(22, c.inkSoft, UI.HEAD, "CENTER")
-    h:SetText(L["Notes"])
-    h:SetWidth(tw)
-    h:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, -54)
-    UI.PageDivider(pool, canvas, tx + tw / 2, -84, 160)
-    local top = 96
     -- ruled lines: two pixels at low alpha look the same on every line, whatever the scale
     for y = top + LINE, PH - 66, LINE do
         local ln = pool:Rect({ 0.78, 0.60, 0.26 }, 0.16)
@@ -543,7 +539,6 @@ UI:RegisterRenderer("blank", function(pool, page, side, canvas)
     mg:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx - 6, -top)
     local C = WFD.C
     C.notes = C.notes or {}
-    local key = page.noteKey or ("page:" .. (page.index or 0))
     local eb = pool:NoteEdit(tw, PH - top - 70, LINE, C.notes[key] or "", function(text)
         C.notes[key] = (text ~= "") and text or nil
     end, L["Click here to write your own notes ..."])
@@ -553,4 +548,14 @@ UI:RegisterRenderer("blank", function(pool, page, side, canvas)
     hot:SetSize(tw, PH - top - 66)
     hot.hl:SetAlpha(0)
     eb:SetFrameLevel(hot:GetFrameLevel() + 1)
+end
+
+UI:RegisterRenderer("blank", function(pool, page, side, canvas)
+    local tx, tw = UI.TextX(side), UI.TextW()
+    local h = pool:Text(22, c.inkSoft, UI.HEAD, "CENTER")
+    h:SetText(L["Notes"])
+    h:SetWidth(tw)
+    h:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, -54)
+    UI.PageDivider(pool, canvas, tx + tw / 2, -84, 160)
+    UI.NoteArea(pool, canvas, side, 96, page.noteKey or ("page:" .. (page.index or 0)))
 end)

@@ -181,7 +181,11 @@ for _, g in ipairs(UI.GROUPS) do
         UI:RegisterSection({
             key = "grp_" .. g.key, label = g.label, icon = g.icon, group = g.key, order = GROUP_ORDER[g.key],
             index = true, leftStart = true,
-            build = function(book) book:Add({ kind = "groupindex", numbered = true, group = g.key }) end,
+            build = function(book)
+                book:Add({ kind = "groupindex", numbered = true, group = g.key })
+                -- the facing page is the group's own: no part is pushed to the next spread behind a note page
+                book:Add({ kind = "groupglance", numbered = true, group = g.key })
+            end,
         })
     end
 end
@@ -227,5 +231,69 @@ UI:RegisterRenderer("groupindex", function(pool, page, side, canvas)
             hot:SetSize(tw + 4, ROW - 6)
             y = y - ROW
         end
+    end
+end)
+
+------------------------------------------------------------------------
+-- The facing page of a group overview: one figure for each part, "at a glance"
+------------------------------------------------------------------------
+local function countOf(t)
+    local n = 0
+    for _ in pairs(t or {}) do n = n + 1 end
+    return n
+end
+-- the figure of a part, or nil when it has none (then it gets no box)
+local STAT = {
+    tasks = function() local _, n = WFD:ChallengeStats() return n end,
+    honour = function() local _, sum = WFD:HonourState() return sum.tiers .. "/" .. sum.totalTiers end,
+    milestones = function(C) return #(C.events or {}) end,
+    firsts = function(C) return countOf(C.firsts) .. "/" .. #(WFD.FIRSTS or {}) end,
+    levels = function() return WFD:LevelAt(time()) end,
+    atlas = function() local _, v, t = WFD:AtlasState() if (t or 0) > 0 then return v .. "/" .. t end end,
+    landmarks = function() local _, f, t = WFD:LandmarkState() if (t or 0) > 0 then return f .. "/" .. t end end,
+    gathering = function(C) local n = 0 for _, list in pairs(C.gather or {}) do n = n + #list end return n end,
+    runs = function(C) return #(C.runs or {}) end,
+    bestiary = function(C) local n = 0 for _, m in pairs(C.mobs or {}) do if (m.kills or 0) > 0 then n = n + 1 end end return n end,
+    fates = function() return #WFD:Fates() end,
+    nemesis = function(C) return countOf(C.nemesis) end,
+    fishbook = function() return WFD:CatchSummary().species end,
+    people = function(C) return countOf(C.npcs) end,
+    companions = function(C) return countOf(C.companions) end,
+    ledger = function() local t = WFD:Totals() return WFD:CoinText(t.income - t.spend) end,
+    family = function() return #WFD:Family() end,
+    capsule = function(C) return #(C.capsules or {}) end,
+}
+
+UI:RegisterRenderer("groupglance", function(pool, page, side, canvas)
+    local g = UI.GROUP[page.group]
+    if not g then return end
+    local tx, tw = UI.TextX(side), UI.TextW()
+    local y = UI.PageTitle(pool, canvas, side, L["At a glance"], L[g.label], -56)
+    local C = WFD.C
+    local counts = UI.NewCounts and UI.NewCounts() or {}
+    local boxes = {}
+    for _, sec in ipairs(UI.sections) do
+        local st = UI.book and UI.book.sectionStart[sec.key]
+        local fn = STAT[sec.key]
+        if sec.group == g.key and not sec.index and st and fn then
+            local ok, v = pcall(fn, C)
+            if ok and v ~= nil then
+                local fresh = (counts[sec.key] or 0) > 0
+                boxes[#boxes + 1] = { v, L[sec.label], fresh and c.redInk or c.ink, function() UI:GoToPage(st) end }
+            end
+        end
+    end
+    -- three boxes to a row
+    for i = 1, #boxes, 3 do
+        local row = {}
+        for k = i, math.min(i + 2, #boxes) do row[#row + 1] = boxes[k] end
+        local th = UI.Tiles(pool, canvas, tx, y, tw, row)
+        y = y - th - 12
+    end
+    -- the rest of the page is for your own notes on this group (the page kept the notes of the old filler page)
+    local top = -y + 30
+    if top < UI.PH - 66 - 4 * 26 then
+        UI.SectionHead(pool, canvas, tx, tw, y - 10, 32, L["Notes"])
+        UI.NoteArea(pool, canvas, side, top, "group:" .. g.key)
     end
 end)

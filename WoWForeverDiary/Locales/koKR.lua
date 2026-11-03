@@ -1183,3 +1183,4 @@ L["Leather and gold is the classic book. Modern is flat and calm, strong contras
 L["Still to come"] = "아직 남음"
 L["%d still to find"] = "%d곳 더 발견하기"
 L["No nemesis yet: nobody has defeated you so far."] = "아직 숙적이 없습니다. 지금까지 당신을 쓰러뜨린 자는 없습니다."
+L["At a glance"] = "한눈에 보기"

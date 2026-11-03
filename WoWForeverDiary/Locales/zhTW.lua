@@ -1186,3 +1186,4 @@ L["Leather and gold is the classic book. Modern is flat and calm, strong contras
 L["Still to come"] = "尚未達成"
 L["%d still to find"] = "尚有 %d 處待發現"
 L["No nemesis yet: nobody has defeated you so far."] = "還沒有死對頭：到目前為止沒有人擊敗過你。"
+L["At a glance"] = "一覽"

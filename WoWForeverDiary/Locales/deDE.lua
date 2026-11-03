@@ -1262,3 +1262,4 @@ L["Leather and gold is the classic book. Modern is flat and calm, strong contras
 L["Still to come"] = "Noch offen"
 L["%d still to find"] = "noch %d zu entdecken"
 L["No nemesis yet: nobody has defeated you so far."] = "Noch kein Erzfeind: bisher hat dich niemand besiegt."
+L["At a glance"] = "Auf einen Blick"
