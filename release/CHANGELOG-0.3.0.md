@@ -24,6 +24,7 @@ A library on a bookshelf, honours that give you something back, calmer pages and
 - Parchment is readable: dark ink where the colours were made for leather, real ticks in the boxes, fainter stains.
 - Empty parts say they fill as soon as there is something to tell. "First times" lists what is still to come in a short list, and landmarks you have not found are counted, not named.
 - Kill counts sit inside the picture of a card.
+- The ledger has a savings goal: set it in gold, watch the purse fill a bar towards it. Click to change, right-click to take it away.
 
 **Quieter**
 - The diary no longer writes into your chat on its own. The switch "Announce milestones in chat" is gone.
@@ -51,6 +52,7 @@ A library on a bookshelf, honours that give you something back, calmer pages and
 - Pergament ist lesbar: dunkle Tinte, wo die Farben für Leder gedacht waren, echte Haken in den Kästchen, blassere Flecken.
 - Leere Teile sagen, dass sie sich füllen, sobald es etwas zu erzählen gibt. Die Premieren zeigen, was noch offen ist, in einer kurzen Liste, und nicht gefundene Sehenswürdigkeiten werden gezählt statt genannt.
 - Die Kill-Zahl sitzt im Bild der Karte.
+- Das Kassenbuch hat ein Sparziel: Du legst es in Gold fest und siehst, wie sich der Beutel auf einem Balken füllt. Klick ändert es, Rechtsklick nimmt es weg.
 
 **Leiser**
 - Das Tagebuch schreibt von sich aus nichts mehr in deinen Chat. Der Schalter "Meilensteine im Chat melden" ist weg.

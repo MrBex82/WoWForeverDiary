@@ -119,6 +119,54 @@ function UI:AskPage()
 end
 
 ------------------------------------------------------------------------
+-- The savings goal of the ledger: a number of gold, kept per character; empty or 0 takes it away
+------------------------------------------------------------------------
+local askGold
+function UI:AskGold()
+    local bf = self.bookFrame
+    if not bf then return end
+    if not askGold then
+        askGold = UI.Frame(bf, 240, 64)
+        askGold:SetPoint("BOTTOM", bf, "BOTTOM", 0, 46)
+        askGold:SetFrameLevel(bf:GetFrameLevel() + 40)
+        UI.Backdrop(askGold, "tooltip", 12, 3, { 0.10, 0.07, 0.04, 0.96 }, c.goldDk)
+        askGold:EnableMouse(true)
+        local t = UI.Text(askGold, 12, c.gold, "CENTER", UI.HEAD, true)
+        t:SetPoint("TOP", 0, -10)
+        askGold.label = t
+        local ok, e = pcall(CreateFrame, "EditBox", nil, askGold, "InputBoxTemplate")
+        if not (ok and e) then
+            e = CreateFrame("EditBox", nil, askGold, BackdropTemplateMixin and "BackdropTemplate" or nil)
+            UI.Backdrop(e, nil, 1, 0, { 0, 0, 0, 0.6 }, c.goldDk)
+            e:SetFontObject(ChatFontNormal)
+        end
+        e:SetSize(90, 22)
+        e:SetPoint("BOTTOM", 0, 10)
+        e:SetAutoFocus(false)
+        e:SetNumeric(true)
+        e:SetMaxLetters(6)
+        e:SetJustifyH("CENTER")
+        e:SetScript("OnEnterPressed", function(s)
+            local n = tonumber(s:GetText()) or 0
+            s:ClearFocus()
+            askGold:Hide()
+            WFD.C.goldGoal = n > 0 and n * 10000 or nil
+            UI:Reflow()
+        end)
+        e:SetScript("OnEscapePressed", function(s) s:ClearFocus() askGold:Hide() end)
+        e:SetScript("OnEditFocusLost", function() askGold:Hide() end)
+        askGold.edit = e
+        askGold:Hide()
+    end
+    askGold.label:SetText(L["Savings goal in gold:"])
+    askGold:Show()
+    local have = WFD.C.goldGoal
+    askGold.edit:SetText(have and tostring(floor(have / 10000)) or "")
+    askGold.edit:SetFocus()
+    askGold.edit:HighlightText()
+end
+
+------------------------------------------------------------------------
 -- Own bookmarks: Ctrl-click a page number to keep that page; a silk ribbon then sticks out of the top
 -- of the book. Kept like the place where reading stopped (a day, or a page within its part), so they
 -- follow their page while the book grows.

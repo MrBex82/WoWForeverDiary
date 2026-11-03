@@ -1723,6 +1723,29 @@ UI:RegisterRenderer("ledgersum", function(pool, page, side, canvas)
     end
     y = y - 64
 
+    -- the savings goal: a bar of the purse towards it; click to change it, right-click to take it away
+    local goal = C.goldGoal
+    if goal and goal > 0 then
+        local purse = WFD.demo and max(0, bal) or (GetMoney and GetMoney() or 0)
+        local done = purse >= goal
+        local cap = pool:Text(9, done and GREEN or c.redInk, UI.FONT)
+        cap:SetText((done and L["Goal reached"] or L["Savings goal"]):upper())
+        cap:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+        local val = pool:Text(11, c.ink, UI.FONT, "RIGHT")
+        val:SetText(UI.CoinIcons(min(purse, goal), 11) .. "  /  " .. UI.CoinIcons(goal, 11))
+        val:SetWidth(tw - 80)
+        val:SetWordWrap(false)
+        val:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y + 2)
+        UI.ProgressBar(pool, canvas, tx, y - 16, tw, 6, purse / goal, done and GREEN or c.gold)
+        local hot = hotRow(pool, canvas, tx, y + 2, tw, 28, { L["Savings goal"], UI.CoinIcons(goal, 12),
+            L["Click to change the goal."], L["Right-click to take the goal away."] }, function() UI:AskGold() end)
+        hot.onRight = function() C.goldGoal = nil UI:Reflow() end
+    else
+        local fs = pool:Link(L["Set a savings goal"], function() UI:AskGold() end, 11, c.redInk)
+        fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 2)
+    end
+    y = y - 34
+
     -- where it came from, where it went
     local inc, spend = {}, {}
     for _, day in pairs(C.days) do

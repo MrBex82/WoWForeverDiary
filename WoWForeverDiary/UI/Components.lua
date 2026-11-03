@@ -282,6 +282,7 @@ local CLICK_HINTS = {
     "Click to set a bookmark here.", "Click to remove the bookmark.",
     "Click to make this your title.", "Click to give up this title.",
     "Right-click to put it in the showcase.", "Right-click to take it out of the showcase.",
+    "Click to change the goal.", "Right-click to take the goal away.",
 }
 local clickSet
 local function isHint(s)
