@@ -274,10 +274,16 @@ function UI:Paginate()
     for i, ch in ipairs(chapters) do
         all[#all + 1] = { text = ch.roman .. ".  " .. ch.title, sub = ch.sub, page = ch.page }
     end
+    -- the parts of the front (the quest book, in memoriam) belong with the diary, not under the appendix
+    for _, sec in ipairs(self.sections) do
+        if sec.group == "front" and book.sectionStart[sec.key] and not sec.index and sec.key ~= "today" then
+            all[#all + 1] = { text = L[sec.label], page = book.sectionStart[sec.key], icon = sec.icon }
+        end
+    end
     all[#all + 1] = { header = true, text = L["Appendix"] }
     local lastGroup
     for _, sec in ipairs(self.sections) do
-        if book.sectionStart[sec.key] and not sec.index and sec.key ~= "today" then
+        if book.sectionStart[sec.key] and not sec.index and sec.key ~= "today" and sec.group ~= "front" then
             local g = UI.GROUP[sec.group]
             if g and g.key ~= lastGroup and g.label then
                 -- the heading of a group leads to its overview page
