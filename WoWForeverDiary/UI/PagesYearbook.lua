@@ -118,7 +118,7 @@ UI:RegisterRenderer("yearbook", function(pool, page, side, canvas)
         for m = 1, 12 do most = max(most, y.months[m].kills) end
         for m = 1, 12 do
             local mo = y.months[m]
-            local ry = top - (m - 1) * 34
+            local ry = top - (m - 1) * 32
             local n = pool:Text(12, mo.days > 0 and c.ink or c.inkFaint, UI.FONT)
             n:SetText(WFD.loc.months[m])
             n:SetWordWrap(false)

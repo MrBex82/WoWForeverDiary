@@ -24,6 +24,8 @@ A library on a bookshelf, honours that give you something back, calmer pages and
 - Parchment is readable: dark ink where the colours were made for leather, real ticks in the boxes, fainter stains.
 - Empty parts say they fill as soon as there is something to tell. "First times" lists what is still to come in a short list, and landmarks you have not found are counted, not named.
 - Kill counts sit inside the picture of a card.
+- New year book in the chronicle: for each year a page of figures with highlights (busiest day, best month, levels gained, time online) and a page with the months side by side.
+- The tasks have a page for your own goals: write them down, tick them off, remove them.
 - The ledger has a savings goal: set it in gold, watch the purse fill a bar towards it. Click to change, right-click to take it away.
 
 **Quieter**
@@ -52,6 +54,8 @@ A library on a bookshelf, honours that give you something back, calmer pages and
 - Pergament ist lesbar: dunkle Tinte, wo die Farben für Leder gedacht waren, echte Haken in den Kästchen, blassere Flecken.
 - Leere Teile sagen, dass sie sich füllen, sobald es etwas zu erzählen gibt. Die Premieren zeigen, was noch offen ist, in einer kurzen Liste, und nicht gefundene Sehenswürdigkeiten werden gezählt statt genannt.
 - Die Kill-Zahl sitzt im Bild der Karte.
+- Neues Jahrbuch in der Chronik: für jedes Jahr eine Seite mit Zahlen und Höhepunkten (fleißigster Tag, bester Monat, gewonnene Stufen, Online-Zeit) und eine Seite mit den Monaten nebeneinander.
+- Die Aufgaben haben eine Seite für eigene Ziele: aufschreiben, abhaken, entfernen.
 - Das Kassenbuch hat ein Sparziel: Du legst es in Gold fest und siehst, wie sich der Beutel auf einem Balken füllt. Klick ändert es, Rechtsklick nimmt es weg.
 
 **Leiser**
