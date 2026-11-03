@@ -147,3 +147,9 @@ Das Buch gibt es in vier Stilen (Leder und Gold, Pergament, Modern, starker Kont
 # TEASER (DE)
 
 **WoW Forever Diary** schreibt ein Tagebuch für deinen Charakter, während du spielst. Jeder NPC, jede Quest, jeder Kill, jede Münze und jeder Schritt wird festgehalten, und aus jedem Tag wird ein kurzer Eintrag in normalen Sätzen. Du blätterst in einem Buch mit Weltkarte, die du Tag für Tag abspielen kannst, mit Bestiarium, Ehrungen zum Sammeln und Zeitkapseln für dein späteres Ich. Gemacht für WoW Forever. Alles bleibt auf deinem Rechner. Mit „/wfd“ öffnest du es.
+
+---
+
+# DISCLAIMER
+
+WoW Forever Diary is an unofficial fan-made addon. It is not affiliated with or endorsed by Blizzard Entertainment. World of Warcraft is a trademark of Blizzard Entertainment, Inc. Names of group members and trade partners are saved, but only in your own saved variables and in the moving code you create yourself.

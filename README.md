@@ -45,6 +45,12 @@ Stile: Leder und Gold, Pergament, Modern, Starker Kontrast. Sprachen: Deutsch, E
 
 ## Daten
 
+Gespeichert werden auch die Namen von Gruppenmitgliedern und Handelspartnern. Sie stehen nur in deinen eigenen Dateien und im Umzugs-Code, den du selbst erzeugst.
+
 Alles bleibt auf deinem Rechner, in den SavedVariables des Spiels:
 `WTF\Account\<Account>\<Server>\<Charakter>\SavedVariables\WoWForeverDiary.lua` (pro Charakter) und
 `WTF\Account\<Account>\SavedVariables\WoWForeverDiary.lua` (Einstellungen, Familienbuch).
+
+## Hinweis
+
+WoW Forever Diary ist ein inoffizielles Addon von Fans. Es steht in keiner Verbindung zu Blizzard Entertainment und wird von dort nicht unterstützt. World of Warcraft ist eine Marke von Blizzard Entertainment, Inc.

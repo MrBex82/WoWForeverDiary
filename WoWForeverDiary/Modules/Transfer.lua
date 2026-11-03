@@ -192,8 +192,37 @@ end
 local HEAD = "WFD1"
 -- A real diary packs to a tenth or so of its size. A code that claims far more would only freeze the game
 -- while it is unpacked (a damaged or made-up code), so it is refused before.
-local MAX_RAW = 64 * 1024 * 1024
+local MAX_RAW = 16 * 1024 * 1024
 local MAX_RATIO = 200
+
+-- A code from someone else must not bring display codes into the book: textures, atlas icons, protected
+-- strings and links of kinds the diary never stores are reduced to their text. Colours and the links
+-- the diary keeps itself (items, quests, spells ...) stay.
+local LINKS = { item = true, quest = true, spell = true, enchant = true, currency = true, achievement = true, talent = true }
+local function clean(s)
+    s = s:gsub("|T.-|t", ""):gsub("|A.-|a", ""):gsub("|K.-|k", "")
+    s = s:gsub("|H(.-)|h(.-)|h", function(link, text)
+        local kind = link:match("^(%a+):")
+        if kind and LINKS[kind] then return nil end
+        return text
+    end)
+    return s
+end
+local function cleanAll(v, depth)
+    if depth > 40 then return end
+    local fix
+    for k, x in pairs(v) do
+        if type(x) == "string" then
+            if x:find("|", 1, true) then
+                fix = fix or {}
+                fix[k] = clean(x)
+            end
+        elseif type(x) == "table" then
+            cleanAll(x, depth + 1)
+        end
+    end
+    for k, x in pairs(fix or {}) do v[k] = x end
+end
 
 -- the parts of a diary the pages count and add up must have the right kind, or every page would fail
 local function isT(v) return v == nil or type(v) == "table" end
@@ -257,6 +286,7 @@ function WFD:ReadMovingCode(code)
     if type(data) ~= "table" or not looksLikeDiary(data.char) then return nil, "damaged" end
     if not isT(data.family) or not isT(data.creatures) then return nil, "damaged" end
     data.char.previous = nil
+    cleanAll(data, 0)
     return data
 end
 
