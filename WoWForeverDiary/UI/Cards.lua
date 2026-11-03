@@ -652,7 +652,8 @@ local function renderBook(card, id)
     UI.PageDivider(pool, canvas, CW / 2, y, 200)
     y = y - 14
     -- below the text: who read it, the note for later
-    local foot = 78
+    local complete = WFD:BookComplete(b)
+    local foot = complete and 78 or 104          -- the note about missing pages takes two lines
     sf:ClearAllPoints()
     sf:SetPoint("TOPLEFT", card, "TOPLEFT", PAD, y)
     sf:SetSize(W, CH - 20 - foot - (-y))
@@ -665,11 +666,11 @@ local function renderBook(card, id)
     by:SetText(format(L["Read by %s on %s"], b.who or "?", b.t and date(WFD.loc.date, b.t) or "?"))
     by:SetWidth(W)
     by:SetPoint("BOTTOMLEFT", canvas, "BOTTOMLEFT", PAD, 52)
-    if not WFD:BookComplete(b) then
+    if not complete then
         local m = pool:Text(10, c.redInk, UI.FONT, "CENTER")
         m:SetText(L["Pages are missing: read the rest to complete this book."])
         m:SetWidth(W)
-        m:SetPoint("BOTTOMLEFT", canvas, "BOTTOMLEFT", PAD, 38)
+        m:SetPoint("BOTTOMLEFT", canvas, "BOTTOMLEFT", PAD, 68)
     end
     local later = pool:Check(L["Read later"], function() return b.later == true end, function(v)
         b.later = v or nil
