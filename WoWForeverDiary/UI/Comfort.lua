@@ -699,7 +699,7 @@ end
 ------------------------------------------------------------------------
 UI:RegisterRenderer("handling", function(pool, page, side, canvas)
     local tx, tw = UI.TextX(side), UI.TextW()
-    local y = UI.PageTitle(pool, canvas, side, L["Handling"], nil, -56, UI.SettingsTabs(2))
+    local y = UI.PageTitle(pool, canvas, side, L["Handling"], nil, -56, UI.SettingsTabs(3))
     local S = WFD.S
     local function caption(text)
         local t = pool:Text(10, c.redInk, UI.FONT)
@@ -714,11 +714,6 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
             local w = fs:GetStringWidth()
             if x > tx and x + w > tx + tw then x = tx; y = y - 20 end
             fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, y)
-            if it.active then
-                local u = pool:Rect(c.redInk, 1)
-                u:SetSize(w, 1)
-                u:SetPoint("TOPLEFT", fs, "BOTTOMLEFT", 0, -2)
-            end
             x = x + w + 16
         end
         y = y - 24
@@ -735,53 +730,27 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
         t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
         y = y - t:GetStringHeight() - 10
     end
-    local redraw = function() UI:ShowSpread(UI.spread) end
-
-    caption(L["Notifications"])
-    local level = S.notify or "all"
-    links({
-        { text = L["All"], active = level == "all", fn = function() S.notify = "all"; redraw() end },
-        { text = L["Important only"], active = level == "important", fn = function() S.notify = "important"; redraw() end },
-        { text = L["Quiet"], active = level == "quiet", fn = function() S.notify = "quiet"; redraw() end },
-    })
-    -- this day in an earlier year: on the Today page, and as a note at login
-    for _, ch in ipairs({ { L["A memory on the Today page"], "memoryPage" }, { L["A memory as a note at login"], "memoryToast" } }) do
-        local mc = pool:Check(ch[1], function() return S[ch[2]] end, function(v) S[ch[2]] = v end)
-        mc:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 2)
-        y = y - 22
-    end
-    small(L["Important: levels, bosses, rare creatures and finds, dungeons, honours and letters."])
-
-    caption(L["Companion"])
-    local cb = pool:Check(L["Show the companion beside the game"], function() return S.companion end, function(v) UI:ShowCompanion(v) end)
-    cb:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-    y = y - 26
-    small(L["A small window with today's figures, the tasks and the honours closest to their next tier. Drag it by its title, fold it with the minus."])
 
     caption(L["The book"])
+    for _, ch in ipairs({
+        { L["Show minimap button"], "minimap", function() UI:UpdateMinimapButton() end },
+        { L["Show the cover when the book is first opened"], "cover" },
+    }) do
+        local cb = pool:Check(ch[1], function() return S[ch[2]] end, function(v)
+            S[ch[2]] = v
+            if ch[3] then ch[3]() end
+        end)
+        cb:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+        y = y - 19
+    end
+    y = y - 4
     links({
         { text = L["Reset the position"], fn = function() UI:ResetPosition() end },
         { text = L["Show the introduction again"], fn = function() WFD.S.tourDone = nil; UI:StartTour() end },
     })
 
-    caption(L["Moving to another computer"])
-    links({
-        { text = L["Make a moving code"], fn = function() UI:ShowMovingExport() end },
-        { text = L["Read a moving code"], fn = function() UI:ShowMovingImport() end },
-    })
-    small(L["Or simply take the WTF folder of the game with you: it holds the diaries of all characters."])
-end)
-
-------------------------------------------------------------------------
--- The page of the keys: what the keyboard and the mouse do in the book
-------------------------------------------------------------------------
-UI:RegisterRenderer("keys", function(pool, page, side, canvas)
-    local tx, tw = UI.TextX(side), UI.TextW()
-    local y = UI.PageTitle(pool, canvas, side, L["Keys"], nil, -56, UI.SettingsTabs(3))
-    local t = pool:Text(10, c.redInk, UI.FONT)
-    t:SetText(L["Keys while the mouse is over the book"]:upper())
-    t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-    y = y - 22
+    -- what the keyboard and the mouse do in the book
+    caption(L["Keys while the mouse is over the book"])
     local rows = {
         { L["Arrow keys, Page up / down"], L["turn the page"] },
         { L["Home"], L["contents"] },
@@ -793,12 +762,13 @@ UI:RegisterRenderer("keys", function(pool, page, side, canvas)
         { L["Click the folded corner"], L["bookmark"] },
         { "/wfd", L["open or close the book"] },
     }
-    for _, r in ipairs(rows) do UI.LeaderLine(pool, canvas, tx, y, tw, r[1], r[2], 13, c.inkSoft); y = y - 22 end
-    y = y - 8
-    local n = pool:Text(12, c.inkSoft, UI.FONT)
-    n:SetWidth(tw)
-    n:SetText(L["A key to open the book can be set in the game's key bindings, under AddOns."])
-    n:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+    for _, r in ipairs(rows) do
+        if y - 22 < -(UI.PH - UI.BOTTOM) then break end
+        UI.LeaderLine(pool, canvas, tx, y, tw, r[1], r[2], 13, c.inkSoft)
+        y = y - 22
+    end
+    y = y - 4
+    small(L["A key to open the book can be set in the game's key bindings, under AddOns."])
 end)
 
 ------------------------------------------------------------------------
@@ -814,7 +784,7 @@ UI.SetAndReload = setAndReload
 
 UI:RegisterRenderer("appearance", function(pool, page, side, canvas)
     local tx, tw = UI.TextX(side), UI.TextW()
-    local y = UI.PageTitle(pool, canvas, side, L["Appearance"], nil, -56, UI.SettingsTabs(4))
+    local y = UI.PageTitle(pool, canvas, side, L["Appearance"], nil, -56, UI.SettingsTabs(2))
     local S = WFD.S
     local function caption(text)
         local t = pool:Text(10, c.redInk, UI.FONT)
@@ -842,6 +812,11 @@ UI:RegisterRenderer("appearance", function(pool, page, side, canvas)
         local t = pool:Text(12, c.inkSoft, UI.FONT)
         t:SetWidth(tw)
         t:SetText(text)
+        -- with large writing the last hint may not fit: it is left out rather than cut
+        if y - t:GetStringHeight() < -(UI.PH - UI.BOTTOM) then
+            t:SetText("")
+            return
+        end
         t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
         y = y - t:GetStringHeight() - 10
     end
@@ -889,6 +864,14 @@ UI:RegisterRenderer("appearance", function(pool, page, side, canvas)
     caption(L["Turning the pages"])
     local cb = pool:Check(L["Turn the leaves visibly"], function() return S.turnAnim ~= false end, function(v) if v then S.turnAnim = nil else S.turnAnim = false end end)
     cb:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+    y = y - 30
+
+    -- the small window beside the game is part of the look
+    caption(L["Companion"])
+    local cc = pool:Check(L["Show the companion beside the game"], function() return S.companion end, function(v) UI:ShowCompanion(v) end)
+    cc:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+    y = y - 26
+    small(L["A small window with today's figures, the tasks and the honours closest to their next tier. Drag it by its title, fold it with the minus."])
 end)
 
 ------------------------------------------------------------------------

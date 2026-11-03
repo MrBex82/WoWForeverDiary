@@ -58,11 +58,11 @@ function UI.PageTitle(pool, canvas, side, text, sub, y, tabs)
     return ny - 22
 end
 
--- the four pages of the settings (general, handling, keys, appearance) lie one after the other: a row of links
--- above each of them leads to the others
+-- the four pages of the settings (general, appearance, handling, data) lie one after the other, two to a spread:
+-- a row of links above each of them leads to the others
 function UI.SettingsTabs(current)
     return function(pool, canvas, tx, tw, y)
-        local names = { L["General"], L["Handling"], L["Keys"], L["Appearance"] }
+        local names = { L["General"], L["Appearance"], L["Handling"], L["Data"] }
         local items, total, gap = {}, 0, 18
         for i, name in ipairs(names) do
             local on = i == current

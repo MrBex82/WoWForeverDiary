@@ -1984,12 +1984,13 @@ end)
 -- The scribe's notes: settings and transcript
 ------------------------------------------------------------------------
 UI:RegisterSection({
-    key = "notes", label = "Settings", icon = "settings", order = 90,
+    key = "notes", label = "Settings", icon = "settings", order = 90, leftStart = true,
     build = function(book)
+        -- two spreads: general and appearance, then handling and data
         book:Add({ kind = "settings", numbered = true, head = L["Settings"] })
-        book:Add({ kind = "handling", numbered = true, head = L["Settings"] })
-        book:Add({ kind = "keys", numbered = true, head = L["Settings"] })
         book:Add({ kind = "appearance", numbered = true, head = L["Settings"] })
+        book:Add({ kind = "handling", numbered = true, head = L["Settings"] })
+        book:Add({ kind = "data", numbered = true, head = L["Settings"] })
     end,
 })
 
@@ -2011,7 +2012,7 @@ end
 
 UI:RegisterRenderer("settings", function(pool, page, side, canvas)
     local tx, tw = UI.TextX(side), UI.TextW()
-    local y = UI.PageTitle(pool, canvas, side, L["Settings"], nil, -56, UI.SettingsTabs(1))
+    local y = UI.PageTitle(pool, canvas, side, L["General"], nil, -56, UI.SettingsTabs(1))
     local S = WFD.S
 
     local function caption(text)
@@ -2046,24 +2047,44 @@ UI:RegisterRenderer("settings", function(pool, page, side, canvas)
         y = y - 22
     end
 
-    -- switches
-    local checks = {
-        { L["Take a screenshot at milestones"], "screenshots" },
-        { L["Announce milestones in chat"], "chat" },
-        { L["Show minimap button"], "minimap", function() UI:UpdateMinimapButton() end },
+    local function checkList(checks)
+        for _, ch in ipairs(checks) do
+            local cb = pool:Check(ch[1], function() return S[ch[2]] end, function(v)
+                S[ch[2]] = v
+                if ch[3] then ch[3]() end
+            end)
+            cb:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+            y = y - 19
+        end
+        y = y - 4
+    end
+
+    -- notifications: how much, and which of them
+    caption(L["Notifications"])
+    local level = S.notify or "all"
+    local redraw = function() UI:ShowSpread(UI.spread) end
+    linkRow({
+        { text = L["All"], active = level == "all", fn = function() S.notify = "all"; redraw() end },
+        { text = L["Important only"], active = level == "important", fn = function() S.notify = "important"; redraw() end },
+        { text = L["Quiet"], active = level == "quiet", fn = function() S.notify = "quiet"; redraw() end },
+    }, 13)
+    checkList({
         { L["Show a note for new discoveries"], "toasts" },
         { L["Weekly look back at login"], "recap" },
-        { L["Show the cover when the book is first opened"], "cover" },
-    }
-    for _, ch in ipairs(checks) do
-        local cb = pool:Check(ch[1], function() return S[ch[2]] end, function(v)
-            S[ch[2]] = v
-            if ch[3] then ch[3]() end
-        end)
-        cb:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-        y = y - 19
-    end
-    y = y - 4
+        { L["A memory on the Today page"], "memoryPage" },
+        { L["A memory as a note at login"], "memoryToast" },
+    })
+    local hint = pool:Text(12, c.inkSoft, UI.FONT)
+    hint:SetWidth(tw)
+    hint:SetText(L["Important: levels, bosses, rare creatures and finds, dungeons, honours and letters."])
+    hint:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 2)
+    y = y - hint:GetStringHeight() - 10
+
+    caption(L["Milestones"])
+    checkList({
+        { L["Take a screenshot at milestones"], "screenshots" },
+        { L["Announce milestones in chat"], "chat" },
+    })
 
     -- language
     caption(L["Language"])
@@ -2094,13 +2115,50 @@ UI:RegisterRenderer("settings", function(pool, page, side, canvas)
     end
     note:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 4)
     y = y - note:GetStringHeight() - 10
+end)
 
-    -- transcript and demo
-    caption(L["Transcript"] .. "  &  " .. L["Demo"])
-    linkRow({
+-- the last page of the settings: what leaves the book (transcript, moving code) and the demo
+UI:RegisterRenderer("data", function(pool, page, side, canvas)
+    local tx, tw = UI.TextX(side), UI.TextW()
+    local y = UI.PageTitle(pool, canvas, side, L["Data"], nil, -56, UI.SettingsTabs(4))
+    local function caption(text)
+        local t = pool:Text(10, c.redInk, UI.FONT)
+        t:SetText(text:upper())
+        t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+        y = y - 18
+    end
+    local function links(items)
+        for _, it in ipairs(items) do
+            local fs = pool:Link(it.text, it.fn, 14, c.inkSoft)
+            fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+            y = y - 24
+        end
+        y = y - 6
+    end
+    local function small(text)
+        local t = pool:Text(12, c.inkSoft, UI.FONT)
+        t:SetWidth(tw)
+        t:SetText(text)
+        t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+        y = y - t:GetStringHeight() - 14
+    end
+
+    caption(L["Transcript"])
+    links({
         { text = L["Copy the diary as text"] .. "  >", fn = function() UI:ShowTranscript("text") end },
         { text = L["Copy the diary as JSON"] .. "  >", fn = function() UI:ShowTranscript("json") end },
         { text = L["Copy for forum or Discord (Markdown)"] .. "  >", fn = function() UI:ShowTranscript("markdown") end },
+    })
+
+    caption(L["Moving to another computer"])
+    links({
+        { text = L["Make a moving code"] .. "  >", fn = function() UI:ShowMovingExport() end },
+        { text = L["Read a moving code"] .. "  >", fn = function() UI:ShowMovingImport() end },
+    })
+    small(L["Or simply take the WTF folder of the game with you: it holds the diaries of all characters."])
+
+    caption(L["Demo"])
+    links({
         { text = (WFD.demo and L["Leave demo mode"] or L["Start demo mode"]) .. "  >", fn = function() WFD:ToggleDemo() end },
     })
 end)
