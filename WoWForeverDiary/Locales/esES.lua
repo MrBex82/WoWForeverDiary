@@ -1237,3 +1237,4 @@ L["Strangers become faces in the book."] = "Los desconocidos se vuelven rostros 
 L["Another line in the story of this life."] = "Otra línea en la historia de esta vida."
 L["Not every treasure shines at first."] = "No todo tesoro brilla al principio."
 L["Some pages only open for the curious."] = "Algunas páginas solo se abren a los curiosos."
+L["Hall of fame"] = "Salón de la fama"

@@ -1232,3 +1232,4 @@ L["Strangers become faces in the book."] = "Незнакомцы становя�
 L["Another line in the story of this life."] = "Ещё одна строка в истории этой жизни."
 L["Not every treasure shines at first."] = "Не каждое сокровище сразу блестит."
 L["Some pages only open for the curious."] = "Иные страницы открываются только любопытным."
+L["Hall of fame"] = "Зал славы"

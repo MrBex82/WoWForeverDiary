@@ -144,6 +144,27 @@ UI:RegisterSection({
                 end
             end
         end
+        -- the hall of fame: the highest tiers earned anywhere in the family, the best five
+        if #fam >= 1 then
+            local best = {}
+            for _, f in ipairs(fam) do
+                for key, tier in pairs(f.e.honours or {}) do
+                    if WFD:HonourDef(key) and (not best[key] or tier > best[key].tier) then
+                        best[key] = { key = key, tier = tier, who = f.e.name }
+                    end
+                end
+            end
+            local top = {}
+            for _, b in pairs(best) do top[#top + 1] = b end
+            table.sort(top, function(a, b)
+                if a.tier ~= b.tier then return a.tier > b.tier end
+                return a.key < b.key
+            end)
+            if #top > 0 then
+                list[#list + 1] = { h = 34, header = L["Hall of fame"], keep = 22 }
+                for i = 1, math.min(5, #top) do list[#list + 1] = { h = 30, hall = top[i] } end
+            end
+        end
         book:AddRows("family", list, { head = L["Family book"], count = #fam })
     end,
 })
@@ -196,6 +217,14 @@ UI:RegisterRenderer("family", function(pool, page, side, canvas)
             hot:SetSize(tw, r.h - 8)
         elseif r.hint then
             emptyNote(pool, canvas, tx, tw, y - 8, L["Log in with your other characters once, and they will appear here."])
+        elseif r.header and type(r.header) == "string" then
+            UI.SectionHead(pool, canvas, tx, tw, y + 4, 32, r.header)
+        elseif r.hall then
+            local h = WFD:HonourDef(r.hall.key)
+            local metal = WFD:MetalOf(r.hall.tier, #h.tiers)
+            pool:Plaque(tx + 14, y - 13, 22, UI.IconPath(h.icon, "honour"), metal.col, true)
+            line(pool, canvas, tx + 34, y - 1, tw - 34, L[h.name], 13, c.ink, UI.HEAD)
+            line(pool, canvas, tx + 34, y - 15, tw - 34, L[metal.name] .. "  -  " .. (r.hall.who or "?"), 10, c.inkSoft)
         elseif r.header then
             UI.SectionHead(pool, canvas, tx, tw, y + 4, 32, L["Who got there first?"])
         elseif r.race then

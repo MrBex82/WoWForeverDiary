@@ -1218,3 +1218,4 @@ L["Strangers become faces in the book."] = "낯선 이들이 책 속의 얼굴�
 L["Another line in the story of this life."] = "이 삶의 이야기에 한 줄이 더해졌다."
 L["Not every treasure shines at first."] = "모든 보물이 처음부터 빛나는 것은 아니다."
 L["Some pages only open for the curious."] = "어떤 쪽은 호기심 많은 이에게만 열린다."
+L["Hall of fame"] = "명예의 전당"

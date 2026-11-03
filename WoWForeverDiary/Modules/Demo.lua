@@ -386,6 +386,9 @@ local function build()
         ["Mirelle"] = sibling("Mirelle", "Night Elf", "Hunter", "HUNTER", 23, 21, 1240, 64),
         ["Tobin"] = sibling("Tobin", "Dwarf", "Priest", "PRIEST", 11, 6, 233, 15),
     }
+    C.demoFamily[(C.realm or "?") .. "-" .. (C.name or "?")].honours = { slayer = 2, bookworm = 2, scholar = 2 }
+    C.demoFamily["Mirelle"].honours = { naturalist = 3, wanderer = 3, angler = 2 }
+    C.demoFamily["Tobin"].honours = { sociable = 2, thrifty = 1 }
     local function skill(id, en) return WFD:SpellName(id) or en end
     C.skills[skill(7620, "Fishing")], C.skills[skill(3273, "First Aid")], C.skills[skill(2550, "Cooking")] = 82, 40, 115
     WFD.C = real

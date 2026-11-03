@@ -18,7 +18,11 @@ local function update()
         steps = steps + (d.steps or 0)
         online = online + (d.online or 0)
     end
-    local _, sum = WFD:HonourState()
+    local honourList, sum = WFD:HonourState()
+    local honours = {}
+    for _, e in ipairs(honourList) do
+        if e.tier > 0 then honours[e.def.key] = e.tier end
+    end
     -- on which diary day each first time and every tenth level came
     local firsts, levels = {}, {}
     for k, f in pairs(C.firsts or {}) do firsts[k] = f.day end
@@ -31,7 +35,7 @@ local function update()
         born = C.born, days = WFD:NumDays(), kills = kills, deaths = deaths, quests = C.questTotal or 0,
         km = steps * 0.9144 / 1000, online = online, points = sum and sum.points or 0,
         firsts = firsts, levels = levels, dead = C.obituary and true or nil, last = time(),
-        titleKey = select(2, WFD:Title()),
+        titleKey = select(2, WFD:Title()), honours = honours,
     }
 end
 WFD.UpdateFamily = function() pcall(update) end

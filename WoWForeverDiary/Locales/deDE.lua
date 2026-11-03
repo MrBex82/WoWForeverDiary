@@ -1297,3 +1297,4 @@ L["Strangers become faces in the book."] = "Aus Fremden werden Gesichter im Buch
 L["Another line in the story of this life."] = "Eine weitere Zeile in der Geschichte dieses Lebens."
 L["Not every treasure shines at first."] = "Nicht jeder Schatz glänzt gleich."
 L["Some pages only open for the curious."] = "Manche Seiten öffnen sich nur den Neugierigen."
+L["Hall of fame"] = "Ruhmeshalle"
