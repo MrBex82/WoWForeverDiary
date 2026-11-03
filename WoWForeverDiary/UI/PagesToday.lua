@@ -336,7 +336,7 @@ UI:RegisterRenderer("groupglance", function(pool, page, side, canvas)
         end
     end
     -- the rest of the page is for your own notes on this group (the page kept the notes of the old filler page)
-    local top = -y + 30
+    local top = -y + 46
     if top < UI.PH - 66 - 4 * 26 then
         UI.SectionHead(pool, canvas, tx, tw, y - 10, 32, L["Notes"])
         UI.NoteArea(pool, canvas, side, top, "group:" .. g.key)
