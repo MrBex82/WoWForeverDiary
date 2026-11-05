@@ -218,9 +218,9 @@ UI:RegisterRenderer("family", function(pool, page, side, canvas)
                 ((e.race or "") .. " " .. (e.class or "")) .. "  -  " .. (e.realm or "")
                     .. ((e.titleKey and WFD:HonourDef(e.titleKey)) and ("  -  " .. L[WFD:HonourDef(e.titleKey).name]) or ""), 10, c.inkSoft)
             local stats = line(pool, canvas, tx + 62, y - 44, tw - 62 - 8,
-                WFD:Count("%d days of life  -  %d creatures slain  -  %d quests completed", e.days or 0, e.kills or 0, e.quests or 0), 9, c.inkFaint)
+                WFD:Count("%d days of life, %d creatures slain, %d quests completed", e.days or 0, e.kills or 0, e.quests or 0), 9, c.inkFaint)
             if stats:GetStringWidth() > tw - 62 - 8 then
-                stats:SetText(WFD:Count("%d days  -  %d kills  -  %d quests", e.days or 0, e.kills or 0, e.quests or 0))
+                stats:SetText(WFD:Count("%d days, %d kills, %d quests", e.days or 0, e.kills or 0, e.quests or 0))
             end
             rightText(pool, canvas, tx + tw - 8, y - 8, format(L["%d honour points"], e.points or 0), 10, c.redInk)
             -- a line of its own, so it never runs into the realm
@@ -231,7 +231,7 @@ UI:RegisterRenderer("family", function(pool, page, side, canvas)
             end
             local hot = pool:Hot({
                 e.name or "?", format(L["Level %d"], e.level or 0) .. "  -  " .. (e.class or ""),
-                WFD:Count("%d days of life  -  %d creatures slain  -  %d quests completed", e.days or 0, e.kills or 0, e.quests or 0),
+                WFD:Count("%d days of life, %d creatures slain, %d quests completed", e.days or 0, e.kills or 0, e.quests or 0),
                 L["Deaths"] .. ": " .. (e.deaths or 0) .. "   " .. L["On foot"] .. ": " .. WFD:Dec(e.km or 0) .. " km",
                 L["Time online"] .. ": " .. WFD:DurationText(e.online or 0),
             })
@@ -379,7 +379,7 @@ UI:RegisterRenderer("capsule", function(pool, page, side, canvas)
                 d:SetPoint("RIGHT", fs, "LEFT", -5, 0)
                 x = x + w + 34
             end
-            local note = line(pool, canvas, tx, oy - 24, tw, L["Until then the letter stays sealed - not even you can read it."], 10, c.inkSoft)
+            local note = line(pool, canvas, tx, oy - 24, tw, L["Until then the letter stays sealed. Not even you can read it."], 10, c.inkSoft)
             note:SetWordWrap(true)
         elseif r.empty then
             emptyNote(pool, canvas, tx, tw, y - 6, L["No letters yet."])
@@ -394,9 +394,9 @@ UI:RegisterRenderer("capsule", function(pool, page, side, canvas)
                 sub = format(L["Opened on %s"], date(WFD.loc.date, l.opened))
             elseif l.openDay then
                 local left = l.openDay - WFD:DayIndex()
-                sub = format(L["Sealed - opens on day %d"], l.openDay) .. (left > 0 and ("  (" .. WFD:Count("in %d days", left) .. ")") or "")
+                sub = format(L["Sealed, opens on day %d"], l.openDay) .. (left > 0 and ("  (" .. WFD:Count("in %d days", left) .. ")") or "")
             else
-                sub = format(L["Sealed - opens at level %d"], l.openLevel or 0)
+                sub = format(L["Sealed, opens at level %d"], l.openLevel or 0)
             end
             line(pool, canvas, tx + 36, y - 20, tw - 36, sub, 10, open and c.inkSoft or c.redInk)
             if open then

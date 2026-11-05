@@ -334,6 +334,29 @@ local function start()
     end)
 end
 
+-- A zone stored under a name the client's map gave in the wrong language ("Stormwind" for "Sturmwind"):
+-- renamed everywhere once, as soon as the right name is known. Does nothing when no such zone is stored.
+function WFD:FixZoneName(old, new)
+    local C = self.C
+    if not C or self.demo or type(old) ~= "string" or type(new) ~= "string" or old == new then return end
+    local stored = (C.zones and C.zones[old]) or C.startZone == old
+    if not stored then
+        for _, d in pairs(C.days or {}) do
+            if d.zones and d.zones[old] then stored = true break end
+        end
+    end
+    if not stored or not remember(old, new) then return end
+    local ok, err = pcall(applyAll, C)
+    if not ok then self:Error("rename", err) end
+    self.dirty = true
+    if self.UI and self.UI.ClearCaches then self.UI.ClearCaches() end
+end
+
 WFD:OnInit(function()
-    if C_Timer and C_Timer.After then C_Timer.After(8, function() pcall(start) end) end
+    if C_Timer and C_Timer.After then
+        C_Timer.After(8, function() pcall(start) end)
+        C_Timer.After(10, function()
+            for old, new in pairs(WFD.loc and WFD.loc.zoneFix or {}) do WFD:FixZoneName(old, new) end
+        end)
+    end
 end)

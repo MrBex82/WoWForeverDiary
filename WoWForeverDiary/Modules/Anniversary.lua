@@ -157,6 +157,14 @@ function WFD:Jubilees(now)
         local years = t and yearsSince(t, now)
         if years then add({ key = "level" .. lv .. ":" .. years, kind = "level", n = years, level = lv, idx = self:DayIndex(t) }) end
     end
+    -- the day of a death, a year on (one at most: the first fate whose anniversary is due)
+    for _, f in ipairs(self:Fates()) do
+        local years = f.day and f.day >= 1 and yearsSince(self:DayTime(f.day), now)
+        if years then
+            add({ key = "death:" .. f.day .. ":" .. years, kind = "death", n = years, idx = f.day, by = f.by, zone = f.zone })
+            break
+        end
+    end
     return list
 end
 

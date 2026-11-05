@@ -470,7 +470,7 @@ UI:RegisterRenderer("atlasmap", function(pool, page, side, canvas)
         x = x + 12 + t:GetStringWidth() + 16
     end
     local hint = pool:Text(9, c.inkFaint, UI.FONT)
-    hint:SetText(L["Mouse wheel: zoom  -  drag: move  -  right click: reset"])
+    hint:SetText(L["Mouse wheel: zoom, drag: move, right click: reset"])
     hint:SetWidth(tw)          -- two lines rather than past the edge of the page
     hint:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 20)
 end)

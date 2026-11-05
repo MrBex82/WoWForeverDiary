@@ -264,10 +264,10 @@ function WFD:MovingCode()
         if e.who == C.name then creatures[id] = e end
     end
     -- the diary put aside stays on this computer
-    local previous = C.previous
-    C.previous = nil
+    local previous, backup = C.previous, C.backup
+    C.previous, C.backup = nil, nil
     local ok, raw = pcall(self.Serialize, self, { v = 1, addon = self.version, char = C, family = fam, creatures = creatures })
-    C.previous = previous
+    C.previous, C.backup = previous, backup
     if not ok then error(raw, 0) end
     local packed = self:Pack(raw)
     return format("%s:%.0f:%.0f:%s", HEAD, #raw, sum(raw), packed), #raw
@@ -285,7 +285,7 @@ function WFD:ReadMovingCode(code)
     local data = self:Deserialize(raw)
     if type(data) ~= "table" or not looksLikeDiary(data.char) then return nil, "damaged" end
     if not isT(data.family) or not isT(data.creatures) then return nil, "damaged" end
-    data.char.previous = nil
+    data.char.previous, data.char.backup = nil, nil
     cleanAll(data, 0)
     return data
 end
@@ -297,7 +297,7 @@ function WFD:ApplyMovingCode(data)
     -- the character on this computer is the same one: keep its identity so the diary is not started over
     C.guid = UnitGUID and UnitGUID("player") or C.guid
     local cur = WFDiaryChar
-    if cur then cur.previous = nil end
+    if cur then cur.previous, cur.backup = nil, nil end
     C.previous = (cur and cur.born) and cur or nil
     WFDiaryChar = C
     self.paused = true          -- nothing more is written into the diary that was just put aside

@@ -112,7 +112,7 @@ function UI:AskPage()
         ask:Hide()
     end
     local last = self.book and UI.PageNumber(#self.book.pages) or 1
-    ask.label:SetText(format(L["Go to page (1 - %d):"], last))
+    ask.label:SetText(format(L["Go to page (1-%d):"], last))
     ask:Show()
     ask.edit:SetText("")
     ask.edit:SetFocus()
@@ -850,6 +850,19 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
         { text = L["Show the introduction again"], fn = function() WFD.S.tourDone = nil; UI:StartTour() end },
     })
 
+    -- the small notes that slide in: a sample to drag to where it suits, and the way back to the top
+    caption(L["Pop-up notes"])
+    links({
+        { text = L["Show a note to move it"], fn = function()
+            UI:Toast({ k = "memory", jubilee = true, when = L["Anniversary"], title = L["The diary's birthday"],
+                hint = L["Drag to move."], day = 1, t = time(), quiet = true }, true)
+        end },
+        { text = L["Put the notes back at the top"], fn = function()
+            UI:ResetToastPlace()
+            print("|cffffd100WoW Forever Diary:|r " .. L["The notes are back at the top of the screen."])
+        end },
+    })
+
     -- what the keyboard and the mouse do in the book
     caption(L["Keys while the mouse is over the book"])
     local rows = {
@@ -1104,6 +1117,31 @@ local function buildOptions()
     ctl:SetText(L["Show the companion beside the game"])
     comp:SetScript("OnClick", function(s) UI:ShowCompanion(s:GetChecked() and true or false) end)
     boxes[#boxes + 1] = { comp, "companion" }
+
+    -- a quiet line at the very bottom: a link to copy, nothing more
+    local KOFI = "https://ko-fi.com/mrbex"
+    local support = p:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
+    support:SetPoint("BOTTOMLEFT", 16, 40)
+    support:SetText(L["If you enjoy the diary, you can support its development:"])
+    local link = CreateFrame("EditBox", nil, p, BackdropTemplateMixin and "BackdropTemplate" or nil)
+    link:SetSize(260, 20)
+    link:SetPoint("BOTTOMLEFT", 16, 16)
+    link:SetAutoFocus(false)
+    link:SetFontObject("GameFontDisableSmall")
+    link:SetTextInsets(6, 6, 0, 0)
+    if link.SetBackdrop then
+        link:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+        link:SetBackdropColor(0, 0, 0, 0.35)
+        link:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8)
+    end
+    link:SetText(KOFI)
+    link:SetCursorPosition(0)
+    -- the text stays as it is, it can only be selected and copied
+    link:SetScript("OnTextChanged", function(s, user) if user then s:SetText(KOFI); s:HighlightText() end end)
+    link:SetScript("OnEditFocusGained", function(s) s:HighlightText() end)
+    link:SetScript("OnEditFocusLost", function(s) s:HighlightText(0, 0) end)
+    link:SetScript("OnEscapePressed", function(s) s:ClearFocus() end)
+    link:SetScript("OnEnterPressed", function(s) s:ClearFocus() end)
 
     p:SetScript("OnShow", function()
         for _, b in ipairs(boxes) do b[1]:SetChecked(WFD.S[b[2]] and true or false) end

@@ -934,7 +934,7 @@ local function newCard(parent)
         GameTooltip:AddLine(WFD:Count("Slain %d times", m.kills), 0.9, 0.9, 0.9)
         local stage = WFD:MobStage(m)
         if stage == 1 then
-            GameTooltip:AddLine(format(L["A sketch - %d more and it is in colour."], WFD.STAGE_COLOUR - m.kills), 0.75, 0.65, 0.45, true)
+            GameTooltip:AddLine(format(L["A sketch: %d more and it is in colour."], WFD.STAGE_COLOUR - m.kills), 0.75, 0.65, 0.45, true)
         elseif stage == 2 then
             GameTooltip:AddLine(format(L["%d more to become a connoisseur."], WFD.STAGE_MASTER - m.kills), 0.75, 0.65, 0.45, true)
         else
@@ -1175,7 +1175,7 @@ UI:RegisterRenderer("albumintro", function(pool, page, side, canvas)
     big:SetPoint("TOPLEFT", canvas, "TOPLEFT", bx, y + 2)
     goal:SetPoint("BOTTOMLEFT", big, "BOTTOMRIGHT", 0, 6)
     local bl = pool:Text(10, c.inkSoft, UI.FONT, "CENTER")
-    bl:SetText(UI.Upper(format(L["kinds collected  -  %d creatures slain"], kills)))
+    bl:SetText(UI.Upper(format(L["kinds collected, %d creatures slain"], kills)))
     bl:SetWidth(tw)
     bl:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 46)
     y = y - 78
@@ -2110,7 +2110,7 @@ UI:RegisterRenderer("settings", function(pool, page, side, canvas)
     local hint = pool:Text(12, c.inkSoft, UI.FONT)
     hint:SetWidth(tw)
     hint:SetText(L["Important: levels, bosses, rare creatures and finds, dungeons, honours and letters."])
-    hint:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 2)
+    hint:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 2)
     y = y - hint:GetStringHeight() - 10
 
     caption(L["Milestones"])
@@ -2193,4 +2193,11 @@ UI:RegisterRenderer("data", function(pool, page, side, canvas)
     links({
         { text = (WFD.demo and L["Leave demo mode"] or L["Start demo mode"]) .. "  >", fn = function() WFD:ToggleDemo() end },
     })
+
+    -- a quiet line for those who like the book: a link to copy, nothing more
+    caption(L["Support"])
+    small(L["If you enjoy the diary, you can support its development:"])
+    y = y + 6
+    local f = pool:CopyField(tw, "https://ko-fi.com/mrbex", c.inkSoft)
+    f:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
 end)

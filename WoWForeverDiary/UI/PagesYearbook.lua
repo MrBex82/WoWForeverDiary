@@ -18,7 +18,7 @@ local function collect()
         local y = years[dt.year]
         if not y then
             y = { year = dt.year, days = 0, kills = 0, quests = 0, steps = 0, income = 0, deaths = 0, online = 0, levels = 0,
-                  months = {} }
+                  months = {}, moods = {} }
             for m = 1, 12 do y.months[m] = { kills = 0, days = 0 } end
             years[dt.year] = y
         end
@@ -30,6 +30,8 @@ local function collect()
         y.income = y.income + WFD:Sum(d.income)
         y.deaths = y.deaths + (d.deaths or 0)
         y.online = y.online + (d.online or 0)
+        local mood = WFD:DayMood(d)
+        if mood then y.moods[mood] = (y.moods[mood] or 0) + 1 end
         local mo = y.months[dt.month]
         mo.kills = mo.kills + k
         mo.days = mo.days + 1
@@ -109,6 +111,13 @@ UI:RegisterRenderer("yearbook", function(pool, page, side, canvas)
         if y.bestMonth then
             line(format(L["Best month: %s with %d kills"], WFD.loc.months[y.bestMonth], y.months[y.bestMonth].kills))
         end
+        local topMood, topN
+        for k, n in pairs(y.moods) do
+            if not topN or n > topN or (n == topN and k < topMood) then topMood, topN = k, n end
+        end
+        if topMood then line(format(L["Most days were: %s (%d)"], L[topMood], topN)) end
+        local steps = WFD.RepSteps and WFD:RepSteps(y.year) or 0
+        if steps > 0 then line(format(L["Reputation steps up: %d"], steps)) end
         if y.levels > 0 then line(WFD:Count("%d levels gained", y.levels)) end
         if y.online > 0 then line(format(L["Time online: %s"], WFD:DurationText(y.online))) end
     else

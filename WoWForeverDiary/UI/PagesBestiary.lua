@@ -76,7 +76,7 @@ local function showKindList(g, side)
     local p = listPanel
     p.icon:SetTexture(UI.IconPath(TYPE_ICONS[g.key] or TYPE_ICONS.other, "bestiary"))
     p.title:SetText(g.name)
-    p.sub:SetText(WFD:Count("%d kinds  -  %d slain", g.kinds, g.kills))
+    p.sub:SetText(WFD:Count("%d kinds, %d slain", g.kinds, g.kills))
     for i, r in ipairs(p.rows) do
         local e = g.mobs[i]
         if e then
@@ -157,7 +157,7 @@ UI:RegisterRenderer("albumkinds", function(pool, page, side, canvas)
         n:SetWidth(tw * 0.5)
         n:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 40, y - 1)
         local cnt = pool:Text(10, c.inkSoft, UI.FONT, "RIGHT")
-        cnt:SetText(WFD:Count("%d kinds  -  %d slain", g.kinds, g.kills))
+        cnt:SetText(WFD:Count("%d kinds, %d slain", g.kinds, g.kills))
         cnt:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 4)
         -- the families, else the first names
         local parts = {}
@@ -179,7 +179,7 @@ UI:RegisterRenderer("albumkinds", function(pool, page, side, canvas)
         sub:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 40, y - 19)
         UI.ProgressBar(pool, canvas, tx + 40, y - 34, tw - 40, 3, g.kinds / most, c.redInk)
         -- the tooltip names them all (the most hunted first)
-        local tip = { g.name, WFD:Count("%d kinds  -  %d slain", g.kinds, g.kills) }
+        local tip = { g.name, WFD:Count("%d kinds, %d slain", g.kinds, g.kills) }
         for k = 1, min(8, #g.mobs) do
             tip[#tip + 1] = (g.mobs[k].m.name or "?") .. "  (" .. (g.mobs[k].m.kills or 0) .. ")"
         end

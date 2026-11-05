@@ -51,6 +51,7 @@ local LAYOUT = {
     fates = { "hunt", 31, "Every fall on the way" }, nemesis = { "hunt", 32, "They sent me to the spirit healer" },
     fishbook = { "hunt", 33, "A collector's album of everything the line brought up" }, treasures = { "hunt", 35, "Best find for every slot" },
     people = { "people", 40, "Everyone I met on my way" }, companions = { "people", 45, "Who walked beside me" },
+    stable = { "people", 46, "Every mount, and the day it was first ridden" }, standing = { "people", 47, "How the factions came to see me" },
     ledger = { "people", 50, "Every coin, in and out" },
     family = { "back", 86, "Who got there first?" }, library = { "back", 85.7, "Books I read along the way" }, capsule = { "back", 88, "Letters to my future self" },
     notes = { "back", 90, "How this book is kept" },
@@ -1576,7 +1577,7 @@ local function buildCover(holder)
     cv.hint:SetText(L["Click to open"])
     cv.demo = UI.Text(cv, 12, { 1, 0.45, 0.35, 1 }, "CENTER", UI.HEAD, true)
     cv.demo:SetPoint("BOTTOM", cv.hint, "TOP", 0, 6)
-    cv.demo:SetText(L["DEMO MODE - invented data"])
+    cv.demo:SetText(L["DEMO MODE: invented data"])
 
     -- what the binding gains over a life (see UI:RefreshCoverGrowth): metal studs in the corners,
     -- gems set into the lozenge, gold marks on the spine - and the wear of many days

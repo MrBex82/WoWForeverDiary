@@ -26,6 +26,8 @@ local EMPTY = {
     fishbook = function(C) return next(C.catch or {}) == nil end,
     companions = function(C) return next(C.companions or {}) == nil and next(C.traders or {}) == nil end,
     capsule = function(C) return #(C.capsules or {}) == 0 end,
+    stable = function(C) return next(C.mounts or {}) == nil end,
+    standing = function(C) return next(C.rep or {}) == nil end,
     library = function() return #WFD:Library() == 0 end,
 }
 function UI.IsEmptyPart(key)
@@ -102,7 +104,16 @@ UI:RegisterRenderer("today", function(pool, page, side, canvas)
         { WFD:Dec((d.steps or 0) * 0.9144 / 1000), L["Kilometres"], c.ink },
         { (net < 0 and "-" or "") .. UI.CoinIcons(net, 12), L["Gold"], net < 0 and c.bad or c.ink },
     })
-    y = y - th - 14
+    y = y - th - 6
+    local mood = WFD:DayMood(d)
+    if mood then
+        local m = pool:Text(12, c.inkSoft, UI.FONT)
+        m:SetText(L[mood])
+        m:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+        y = y - 20
+    else
+        y = y - 8
+    end
 
     -- the beginning of today's entry, and the way to all of it
     local story = WFD:Narrate(day) or ""
@@ -260,6 +271,8 @@ local STAT = {
     fishbook = function() return WFD:CatchSummary().species end,
     people = function(C) return countOf(C.npcs) end,
     companions = function(C) return countOf(C.companions) end,
+    stable = function(C) return countOf(C.mounts) end,
+    standing = function(C) return countOf(C.rep) end,
     ledger = function() local t = WFD:Totals() return WFD:CoinText(t.income - t.spend) end,
     family = function() return #WFD:Family() end,
     capsule = function(C) return #(C.capsules or {}) end,

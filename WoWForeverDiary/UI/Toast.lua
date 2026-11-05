@@ -67,7 +67,6 @@ local TX = 92                -- where the words start
 local NAME_W = TW - TX - 80  -- room left of the points
 local IN, HOLD, OUT = 0.35, 6, 0.6
 local SCALE = 0.65           -- the note is drawn a little smaller than laid out
-local TOP_Y = -140 / SCALE   -- so it keeps its place below the top of the screen
 local queue = {}
 local toast
 
@@ -111,11 +110,71 @@ local function makePlaque(parent, size)
     return p
 end
 
+-- Where the note stands: the place the player dragged it to, else the top of the screen.
+-- extra lifts it a little while it slides in.
+local function place(f, extra)
+    local p = WFD.S and WFD.S.toastPos
+    f:ClearAllPoints()
+    if p then
+        f:SetPoint(p[1], UIParent, p[2], p[3], p[4] + extra)
+    else
+        f:SetPoint("TOP", UIParent, "TOP", 0, -140 / f:GetScale() + extra)
+    end
+end
+
+-- The size the player chose (the mouse wheel over a note), as a factor of the usual size
+local MIN_SIZE, MAX_SIZE = 0.6, 2
+local function sizeFactor()
+    local v = WFD.S and tonumber(WFD.S.toastSize) or 1
+    return math.max(MIN_SIZE, math.min(MAX_SIZE, v))
+end
+
+-- sets the size and keeps the note where it is on the screen: its saved offset is in units of its own size
+local function setSize(f, factor)
+    local old = f:GetScale()
+    factor = math.max(MIN_SIZE, math.min(MAX_SIZE, factor))
+    if WFD.S then WFD.S.toastSize = factor end
+    f:SetScale(SCALE * factor)
+    local p = WFD.S and WFD.S.toastPos
+    if p then
+        local k = old / f:GetScale()
+        p[3], p[4] = p[3] * k, p[4] * k
+    end
+    place(f, 0)
+end
+
+-- back to the top of the screen, at the usual size
+function UI:ResetToastPlace()
+    if WFD.S then WFD.S.toastPos = nil end
+    if toast then
+        toast:SetScale(SCALE)
+        place(toast, 0)
+    end
+    if WFD.S then WFD.S.toastSize = nil end
+end
+
 local function build()
     local f = CreateFrame("Button", "WoWForeverDiaryToast", UIParent)
     f:SetSize(TW, TH)
-    f:SetPoint("TOP", UIParent, "TOP", 0, TOP_Y)
-    f:SetScale(SCALE)
+    f:SetScale(SCALE * sizeFactor())
+    place(f, 0)
+    f:SetMovable(true)
+    f:EnableMouseWheel(true)
+    f:SetScript("OnMouseWheel", function(self, delta)
+        setSize(self, sizeFactor() + (delta > 0 and 0.1 or -0.1))
+    end)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", function(self)
+        self.dragging = true
+        self:StartMoving()
+    end)
+    f:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        self.dragging = false
+        self.dragged = GetTime()
+        local a, _, b, x, y = self:GetPoint(1)
+        if WFD.S then WFD.S.toastPos = { a, b, x, y } end
+    end)
     f:SetFrameStrata("HIGH")
     f:SetClampedToScreen(true)
     local base = f:GetFrameLevel()
@@ -205,6 +264,7 @@ local function build()
     f:SetScript("OnClick", function(self, button)
         local ev = self.ev
         GameTooltip:Hide()
+        if self.dragged and GetTime() - self.dragged < 0.3 then return end     -- the end of a drag is no click
         if button == "RightButton" then
             self.phase, self.t = "out", 0
             return
@@ -215,6 +275,8 @@ local function build()
     f:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
         GameTooltip:SetText(L["Right-click to close."], 0.5, 0.8, 1)
+        GameTooltip:AddLine(L["Drag to move."], 0.5, 0.8, 1)
+        GameTooltip:AddLine(L["Mouse wheel changes the size."], 0.5, 0.8, 1)
         GameTooltip:Show()
     end)
     f:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -231,10 +293,16 @@ local function build()
             self.sheen:SetPoint("TOPLEFT", self, "TOPLEFT", sx, -4)
         end
         self.glow:SetAlpha(0.18 + 0.12 * math.sin(self.life * 3))
+        -- while it is being dragged it stays as it is
+        if self.dragging then
+            self.t = 0
+            self:SetAlpha(1)
+            return
+        end
         if self.phase == "in" then
             local a = min(1, self.t / IN)
             self:SetAlpha(a)
-            self:SetPoint("TOP", UIParent, "TOP", 0, TOP_Y + (1 - a) * 28)
+            place(self, (1 - a) * 28)
             if a >= 1 then self.phase, self.t = "hold", 0 end
         elseif self.phase == "hold" then
             if self:IsMouseOver() then self.t = 0 end
@@ -279,7 +347,7 @@ local function describe(ev)
             d.pips, d.pipsOf, d.n = tier, n, n
             d.points = WFD:TierPoints(tier, n)
             local nextGoal = h.tiers[tier + 1]
-            local nextText = nextGoal and (L["Next tier:"] .. " " .. WFD:HonourText(h, nextGoal)) or L["Every tier earned - complete!"]
+            local nextText = nextGoal and (L["Next tier:"] .. " " .. WFD:HonourText(h, nextGoal)) or L["Every tier earned!"]
             -- a line of its own for the kind of honour, then what comes next
             local flavour = HONOUR_FLAVOUR[h.cat]
             d.hint = flavour and (L[flavour] .. "\n" .. nextText) or nextText
@@ -406,7 +474,7 @@ end)
 ------------------------------------------------------------------------
 -- A memory at login, without a sound: an anniversary once, otherwise this day in an earlier year once a day
 ------------------------------------------------------------------------
-local JUBILEE_TITLE = { born = "The diary's birthday", hours = "%d hours in the world", level = "Level %d" }
+local JUBILEE_TITLE = { born = "The diary's birthday", hours = "%d hours in the world", level = "Level %d", death = "A day of mourning" }
 
 -- force: show it now, even if it was shown today or the notes are switched off
 function UI:ShowMemory(force)
@@ -417,7 +485,7 @@ function UI:ShowMemory(force)
         if force or not j.shown then
             WFD:JubileeShown(j)
             local title = L[JUBILEE_TITLE[j.kind]]
-            if j.kind ~= "born" then title = format(title, j.kind == "level" and j.level or j.n) end
+            if j.kind ~= "born" and j.kind ~= "death" then title = format(title, j.kind == "level" and j.level or j.n) end
             self:Toast({ k = "memory", jubilee = true, when = L["Anniversary"], title = title, hint = j.text,
                 day = j.idx, t = time(), quiet = true }, force)
             return
@@ -522,6 +590,14 @@ local function buildRecap()
     open:SetPoint("BOTTOMRIGHT", -34, 20)
     local close = UI.InkButton(canvas, L["Close"], function() f:Hide() end, 15, c.inkSoft)
     close:SetPoint("BOTTOMLEFT", 34, 20)
+    -- the week as one line in the chat's input field: it is only sent when you press Enter yourself
+    local share = UI.InkButton(canvas, L["Into the chat"], function()
+        local s = f.stats
+        if not s or not ChatFrame_OpenChat then return end
+        ChatFrame_OpenChat(format(L["My week: %d kills, %d quests, %s km, %d levels, %d new places."],
+            s.kills, s.quests, WFD:Dec(s.km), #s.levels, s.places))
+    end, 15, c.inkSoft)
+    share:SetPoint("BOTTOM", 0, 20)
     f:Hide()
     return f
 end
@@ -536,6 +612,7 @@ function UI:ShowRecap(force)
     local s = weekStats(from, to)
     if s.days == 0 and not force then return end
     recap = recap or buildRecap()
+    recap.stats = s
     local pool, canvas = recap.pool, recap.canvas
     pool:Begin()
     local W = RW - 64

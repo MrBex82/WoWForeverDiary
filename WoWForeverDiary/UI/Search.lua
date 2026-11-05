@@ -148,8 +148,10 @@ local function buildIndex()
         if p and C.days[d] then
             local story = UI.storyCache[d] or WFD:Narrate(d)
             local own = C.dayNotes and C.dayNotes[d] or ""
+            local zone = WFD:MainZone(C.days[d])
             out[#out + 1] = { kind = "day", day = d, text = format(L["Day %d"], d), full = story .. " " .. own,
-                hay = lower(story .. " " .. own), icon = UI.Icon("journal"), go = toPage(p), rank = 6 }
+                hay = lower(story .. " " .. own), icon = UI.Icon("journal"), go = toPage(p), rank = 6,
+                zone = zone, zoneLow = zone and lower(zone) or "", level = WFD:LevelAt(WFD:DayTime(d) + 43000) }
         end
     end
     index, indexBook = out, book
@@ -176,14 +178,42 @@ local function mark(text, q)
     return text:sub(1, s - 1) .. "|cffffb347" .. text:sub(s, e) .. "|r" .. text:sub(e + 1)
 end
 
+-- Filters for days, typed into the field: z:Elwynn (the region), lv:20-30 or lv:25 (the level), d:30 (the last
+-- 30 days); z:"Hillsbrad Foothills" for a name with spaces. Filters alone list the days that fit.
+local function parseFilters(q)
+    local f = {}
+    q = q:gsub('z:"([^"]*)"', function(v) f.zone = v return "" end)
+    q = q:gsub("z:(%S+)", function(v) f.zone = v return "" end)
+    q = q:gsub("lv:(%d+)%-(%d+)", function(a, b) f.lo, f.hi = tonumber(a), tonumber(b) return "" end)
+    q = q:gsub("lv:(%d+)", function(a) f.lo, f.hi = tonumber(a), tonumber(a) return "" end)
+    q = q:gsub("d:(%d+)", function(a) f.last = tonumber(a) return "" end)
+    if not (f.zone or f.lo or f.last) then return nil, q end
+    return f, q:gsub("^%s+", ""):gsub("%s+$", "")
+end
+
 local function find(q, kind)
     q = lower(q):gsub("^%s+", ""):gsub("%s+$", "")
-    if #q < 2 then return {} end
+    local filters
+    filters, q = parseFilters(q)
+    if not filters and #q < 2 then return {} end
+    if filters then kind = "day" end
     if not index or indexBook ~= UI.book then buildIndex() end
     local hits = {}
+    local today = WFD:NumDays()
     for _, e in ipairs(index) do
-        local pos = (not kind or e.kind == kind) and e.hay:find(q, 1, true)
-        if pos then hits[#hits + 1] = { e = e, starts = (pos == 1) } end
+        if not kind or e.kind == kind then
+            local ok, pos = true, 1
+            if filters then
+                if filters.zone and not (e.zoneLow or ""):find(filters.zone, 1, true) then ok = false end
+                if filters.lo and not (e.level and e.level >= filters.lo and e.level <= filters.hi) then ok = false end
+                if filters.last and not (e.day and e.day > today - filters.last) then ok = false end
+                if ok and #q > 0 then pos = e.hay:find(q, 1, true) ok = pos ~= nil end
+            else
+                pos = e.hay:find(q, 1, true)
+                ok = pos ~= nil
+            end
+            if ok then hits[#hits + 1] = { e = e, starts = (pos == 1) } end
+        end
     end
     table.sort(hits, function(a, b)
         if a.e.rank ~= b.e.rank then return a.e.rank < b.e.rank end
@@ -227,7 +257,10 @@ local function showResults()
         if h and i <= MAX_ROWS then
             local e = h.e
             row.icon:SetTexture(e.icon)
-            if e.kind == "day" then
+            if e.kind == "day" and q == "" then
+                -- filters only: the day, its region and level instead of a passage of text
+                row.text:SetText("|cffe8c26a" .. e.text .. "|r  " .. (e.zone or "") .. (e.level and ("  -  " .. format(L["Level %d"], e.level)) or ""))
+            elseif e.kind == "day" then
                 row.text:SetText("|cffe8c26a" .. e.text .. "|r  " .. mark(snippet(e.full, e.hay, q), q))
             else
                 row.text:SetText(mark(e.text, q))
@@ -240,10 +273,10 @@ local function showResults()
         end
     end
     local n = min(#hits, MAX_ROWS)
-    local typed = #(panel.edit:GetText() or "") >= 2
+    local typed = #(panel.edit:GetText() or "") >= 2 or #hits > 0
     panel.none:SetShown(typed and n == 0)
     panel.more:SetShown(#hits > MAX_ROWS)
-    panel.more:SetText(format(L["%d more results - type a little more"], #hits - MAX_ROWS))
+    panel.more:SetText(format(L["%d more results, type a little more"], #hits - MAX_ROWS))
     local h = 78 + max(n, (typed and n == 0) and 1 or 0) * ROW_H + (#hits > MAX_ROWS and 18 or 0)
     panel:SetHeight(h)
     choose(1)
@@ -278,7 +311,7 @@ local function build(bf)
     e:SetAutoFocus(false)
     e:SetFont(UI.FONT, 13, "")
     e:SetTextColor(col4(c.ink))
-    e:SetMaxLetters(60)
+    e:SetMaxLetters(80)
     local hint = UI.Text(box, 12, c.inkFaint, "LEFT", UI.FONT)
     hint:SetPoint("LEFT", 32, 0)
     hint:SetText(L["Search: a name, a quest, a place ..."])
@@ -428,6 +461,7 @@ local function addButton()
         GameTooltip:SetOwner(s, "ANCHOR_BOTTOM")
         GameTooltip:SetText(L["Search the diary"], 1, 0.86, 0.5)
         GameTooltip:AddLine(L["Days, people, creatures, quests, places, treasures and catches."], 0.9, 0.9, 0.9, true)
+        GameTooltip:AddLine(L["Narrow down the days: z:region  lv:20-30  d:30 (the last 30 days)"], 0.7, 0.85, 0.7, true)
         GameTooltip:AddLine(L["Ctrl + F"], 0.5, 0.8, 1)
         GameTooltip:Show()
     end)

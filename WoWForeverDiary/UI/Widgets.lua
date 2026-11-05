@@ -160,6 +160,8 @@ UI.ICONS = {
     party    = { I .. "Spell_Holy_PrayerOfFortitude", I .. "Ability_Warrior_RallyingCry" },
     kin      = { I .. "Spell_Holy_DivineSpirit", I .. "INV_Misc_Book_04" },
     settings = { I .. "INV_Misc_Gear_01", I .. "Trade_Engineering" },
+    mount    = { I .. "Ability_Mount_RidingHorse", I .. "Ability_Mount_WhiteTiger" },
+    banner   = { I .. "INV_Misc_Ribbon_01", I .. "Spell_Holy_SurgeOfLight" },
 }
 
 function UI.Icon(key)

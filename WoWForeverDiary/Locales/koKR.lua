@@ -5,8 +5,8 @@ local L, loc = WFD:NewLocale("koKR")
 local T = {
     -- chat / log
     ["Diary"] = "일기",
-    ["Travel diary active - today is |cffffd100day %d|r. |cffffd100/wfd|r opens the diary."] =
-        "여행 일기 활성화 - 오늘은 |cffffd100%d일째|r입니다. |cffffd100/wfd|r 명령어로 일기를 엽니다.",
+    ["Travel diary active. Today is |cffffd100day %d|r. |cffffd100/wfd|r opens the diary."] =
+        "여행 일기 활성화. 오늘은 |cffffd100%d일째|r입니다. |cffffd100/wfd|r 명령어로 일기를 엽니다.",
     ["%d creatures slain in total"] = "총 %d마리 처치",
     ["First victory over the boss %s!"] = "우두머리 %s 첫 처치!",
     ["Rare creature slain: %s"] = "희귀 몬스터 처치: %s",
@@ -48,7 +48,7 @@ local T = {
     ["Click to open the diary."] = "클릭하면 일기를 엽니다.",
     ["%d kills today"] = "오늘 %d마리 처치",
     ["%d quests today"] = "오늘 퀘스트 %d개",
-    ["DEMO MODE - invented data"] = "데모 모드 - 가상 데이터",
+    ["DEMO MODE: invented data"] = "데모 모드: 가상 데이터",
 
     -- tabs
     ["Bestiary"] = "몬스터 도감",
@@ -201,8 +201,8 @@ loc.narrator = {
         "세상에서 적이 %d마리 줄었다.",
     },
     top = {
-        "제일 많이 잡은 건 %s (%dx).",
-        "가장 자주 마주친 상대는 %s (%dx).",
+        "제일 많이 잡은 건 %s (%d마리).",
+        "가장 자주 마주친 상대는 %s (%d번).",
     },
     special = "기억해 둘 것: %s.",
     deaths = {
@@ -349,7 +349,7 @@ L["Click for the portrait."] = "클릭하면 초상화를 봅니다."
 
 -- collector's album
 L["A collector's album of every creature slain"] = "처치한 모든 몬스터의 수집 앨범"
-L["kinds collected  -  %d creatures slain"] = "종 수집  -  %d마리 처치"
+L["kinds collected, %d creatures slain"] = "종 수집, %d마리 처치"
 L["Bronze"] = "브론즈"
 L["Silver"] = "실버"
 L["Mithril"] = "미스릴"
@@ -390,7 +390,7 @@ L["Most hunted here"] = "이곳에서 가장 많이 사냥한 대상"
 L["Places discovered"] = "발견한 장소"
 
 -- companions, honours, treasures, memories, obituary
-L["%d days of life  -  %d creatures slain  -  %d quests completed"] = "생애 %d일  -  몬스터 %d마리 처치  -  퀘스트 %d개 완료"
+L["%d days of life, %d creatures slain, %d quests completed"] = "생애 %d일, 몬스터 %d마리 처치, 퀘스트 %d개 완료"
 L["%d days"] = "%d일"
 L["%d enemies fell that day."] = "그날 적 %d명이 쓰러졌다."
 L["%d kills together"] = "함께 %d마리 처치"
@@ -534,7 +534,7 @@ L["Loot %d items."] = "아이템 %d개를 획득하세요."
 L["Marathon"] = "마라톤"
 L["Master of a Craft"] = "기술의 달인"
 L["Meet %d people."] = "%d명을 만나세요."
-L["Mouse wheel: zoom  -  drag: move  -  right click: reset"] = "마우스 휠: 확대/축소  -  드래그: 이동  -  오른쪽 클릭: 초기화"
+L["Mouse wheel: zoom, drag: move, right click: reset"] = "마우스 휠: 확대/축소, 드래그: 이동, 오른쪽 클릭: 초기화"
 L["Next goals"] = "다음 목표"
 L["Next rank: %s"] = "다음 등급: %s"
 L["Night Owl"] = "올빼미"
@@ -686,7 +686,7 @@ L["Per day"] = "하루 평균"
 L["Honour earned"] = "명예 획득"
 L["Landmark discovered"] = "명소 발견"
 L["Next tier:"] = "다음 등급:"
-L["Every tier earned - complete!"] = "모든 등급 획득 - 완성!"
+L["Every tier earned!"] = "모든 등급 획득!"
 L["The game blocked the function %s. Please tell the author."] = "게임이 %s 기능을 차단했습니다. 제작자에게 알려 주세요."
 L["This game client does not allow addons to take screenshots. Screenshots at milestones are now switched off."] = "이 게임 클라이언트는 애드온의 스크린샷을 허용하지 않습니다. 중요한 순간의 스크린샷이 꺼졌습니다."
 L['"Here the journey ends, but not the story."'] = '"여정은 여기서 끝나지만, 이야기는 끝나지 않는다."'
@@ -732,12 +732,12 @@ L["Seal the letter and open it ..."] = "편지를 봉인하고 열 때는 …"
 L["in a week"] = "일주일 뒤"
 L["in a month"] = "한 달 뒤"
 L["at level %d"] = "%d 레벨에"
-L["Until then the letter stays sealed - not even you can read it."] = "그때까지 편지는 봉인됩니다. 나도 읽을 수 없습니다."
+L["Until then the letter stays sealed. Not even you can read it."] = "그때까지 편지는 봉인됩니다. 나도 읽을 수 없습니다."
 L["No letters yet."] = "아직 편지가 없습니다."
 L["Written on day %d, at level %d"] = "%d일째, %d 레벨에 씀"
 L["Opened on %s"] = "%s에 열림"
-L["Sealed - opens on day %d"] = "봉인됨 - %d일째에 열림"
-L["Sealed - opens at level %d"] = "봉인됨 - %d 레벨에 열림"
+L["Sealed, opens on day %d"] = "봉인됨, %d일째에 열림"
+L["Sealed, opens at level %d"] = "봉인됨, %d 레벨에 열림"
 L["in %d days"] = "%d일 남음"
 L["A letter for later was sealed."] = "나중을 위한 편지를 봉인했다."
 L["A letter from the past has opened."] = "과거에서 온 편지가 열렸습니다."
@@ -770,7 +770,7 @@ L["Search the diary"] = "일기 검색"
 L["Days, people, creatures, quests, places, treasures and catches."] = "날짜, 사람, 몬스터, 퀘스트, 장소, 보물, 어획물."
 L["Search: a name, a quest, a place ..."] = "검색: 이름, 퀘스트, 장소 …"
 L["Nothing found."] = "찾은 것이 없습니다."
-L["%d more results - type a little more"] = "결과 %d개 더 - 조금 더 입력하세요"
+L["%d more results, type a little more"] = "결과 %d개 더, 조금 더 입력하세요"
 
 L["The binding"] = "표지"
 L["Corner studs"] = "모서리 장식"
@@ -789,11 +789,11 @@ L["SAYING OF THE DAY"] = "오늘의 한마디"
 L["Whoever wanders, gathers stories."] = "떠도는 자는 이야기를 모은다."
 L["Every road starts at your own door."] = "모든 길은 내 집 문 앞에서 시작된다."
 L["A full pack is light when the heart is lighter."] = "마음이 가벼우면 가득 찬 배낭도 가볍다."
-L["Maps show the way - only feet know it."] = "지도는 길을 보여 주지만, 길을 아는 건 발뿐이다."
+L["Maps show the way, but only feet know it."] = "지도는 길을 보여 주지만, 길을 아는 건 발뿐이다."
 L["The longest journey is the one you never write down."] = "가장 긴 여행은 끝내 적지 않은 여행이다."
 L["Ink fades slower than memory."] = "잉크는 기억보다 천천히 바랜다."
 L["A good campfire turns strangers into companions."] = "좋은 모닥불은 낯선 이를 동료로 만든다."
-L["The mountain does not care how tired you are - just keep going."] = "산은 네가 얼마나 지쳤는지 신경 쓰지 않는다. 계속 걸으면 그만이다."
+L["The mountain does not care how tired you are. Just keep going."] = "산은 네가 얼마나 지쳤는지 신경 쓰지 않는다. 계속 걸으면 그만이다."
 L["Today's detour is tomorrow's best story."] = "오늘 돌아간 길이 내일의 가장 좋은 이야기가 된다."
 L["Gold comes and goes, the story stays."] = "금화는 오고 가지만 이야기는 남는다."
 L["Count the days by friends, not by miles."] = "날들은 거리로 세지 말고 친구로 세어라."
@@ -801,12 +801,12 @@ L["Even the smallest kobold guards a candle for someone."] = "가장 작은 코�
 L["Resting is part of the road."] = "쉬는 것도 여정의 일부다."
 L["Fear is a map with too many blank spots."] = "두려움은 빈칸이 너무 많은 지도다."
 L["Every scar has a page in this book."] = "모든 흉터는 이 책에 한 페이지씩 있다."
-L["Look back now and then - the view is part of the journey."] = "가끔은 뒤를 돌아보라. 그 풍경도 여행의 일부다."
+L["Look back now and then. The view is part of the journey."] = "가끔은 뒤를 돌아보라. 그 풍경도 여행의 일부다."
 L["The wise traveller asks the innkeeper first."] = "현명한 여행자는 여관 주인에게 먼저 묻는다."
 L["Rain on the road, sunshine in the story."] = "길 위엔 비, 이야기 속엔 햇살."
 L["Whoever never falls never learns to get up."] = "넘어져 보지 않은 자는 일어서는 법을 배우지 못한다."
 L["A quest half done is still a step forward."] = "절반만 끝낸 퀘스트도 한 걸음 나아간 것이다."
-L["The horizon travels with you - that is why it never gets dull."] = "지평선은 나와 함께 여행한다. 그래서 지루할 틈이 없다."
+L["The horizon travels with you, which is why it never gets dull."] = "지평선은 나와 함께 여행한다. 그래서 지루할 틈이 없다."
 L["Write it down, or it never happened."] = "적어 두지 않으면 일어나지 않은 일이다."
 L["Old boots know more than new maps."] = "낡은 장화가 새 지도보다 많이 안다."
 L["Courage is being afraid and saddling up anyway."] = "용기란 두려워하면서도 안장을 얹는 것이다."
@@ -834,7 +834,7 @@ L["To the contents"] = "목차로 가기"
 L["Screenshots at milestones: on"] = "중요한 순간 스크린샷: 켜짐"
 L["Screenshots at milestones: off"] = "중요한 순간 스크린샷: 꺼짐"
 L["Demo mode is off."] = "데모 모드가 꺼졌습니다."
-L["Demo mode is on. Nothing you do now is written into your diary - type /wfd demo again to leave."] = "데모 모드가 켜졌습니다. 지금 하는 일은 일기에 기록되지 않습니다. 나가려면 /wfd demo를 다시 입력하세요."
+L["Demo mode is on. Nothing you do now is written into your diary. Type /wfd demo again to leave."] = "데모 모드가 켜졌습니다. 지금 하는 일은 일기에 기록되지 않습니다. 나가려면 /wfd demo를 다시 입력하세요."
 L["You have died, but who did it slipped past the diary."] = "이미 쓰러진 적이 있지만, 누구의 짓인지는 일기가 놓쳤습니다."
 L["Already in the quest log"] = "일기 시작 전에 받은 퀘스트"
 L["Angler"] = "낚시꾼"
@@ -877,7 +877,7 @@ L["Just play, I'll write along. Every day you play becomes a page in this book."
 L["See a sample book"] = "예시 책 보기"
 L["To today's entry"] = "오늘 일기로"
 L["Discover %d flight paths."] = "비행 경로를 %d개 발견하세요."
-L["A sketch - %d more and it is in colour."] = "스케치 - %d마리 더 처치하면 색이 입혀집니다."
+L["A sketch: %d more and it is in colour."] = "스케치: %d마리 더 처치하면 색이 입혀집니다."
 L["%d more to become a connoisseur."] = "%d마리 더 처치하면 전문가가 됩니다."
 L["Connoisseur of this kind"] = "이 종의 전문가"
 L["First slain on day %d"] = "%d일째에 처음 처치"
@@ -915,7 +915,7 @@ L["Every kind known here is collected."] = "이곳에서 알려진 모든 종을
 L["Kinds of creatures"] = "생물 유형"
 L["What you have slain, by type"] = "처치한 대상, 유형별로"
 L["Unknown kind"] = "알 수 없는 유형"
-L["%d kinds  -  %d slain"] = "%d종  -  %d마리 처치"
+L["%d kinds, %d slain"] = "%d종, %d마리 처치"
 L["Hunting grounds"] = "사냥터"
 L["Sighted"] = "목격함"
 L["Kinds slain here"] = "이곳에서 처치한 종"
@@ -932,7 +932,7 @@ L["Smells worse than it fights."] = "싸움보다 냄새가 더 지독하다."
 L["Dead once already. Twice is a habit."] = "이미 한 번 죽었다. 두 번이면 습관이다."
 L["Burning eyes, burning temper."] = "불타는 눈, 불타는 성미."
 L["Whoever summoned this one owes me an apology."] = "이걸 소환한 자는 내게 사과해야 한다."
-L["Not alive, not dead - simply angry."] = "살아 있지도 죽지도 않았다 - 그냥 화가 나 있다."
+L["Not alive, not dead, simply angry."] = "살아 있지도 죽지도 않았다. 그냥 화가 나 있다."
 L["Left nothing behind but a puddle of fury."] = "분노의 웅덩이 말고는 아무것도 남기지 않았다."
 L["Scales like armour. Mind the tail."] = "갑옷 같은 비늘. 꼬리를 조심할 것."
 L["One day I will face its big brothers."] = "언젠가 그 큰형들과 맞서게 되겠지."
@@ -946,7 +946,7 @@ L["A strange creature. I made a note, just in case."] = "이상한 생물이다.
 L["Worth remembering, or at least worth writing down."] = "기억할 만하다. 적어도 적어 둘 만은 하다."
 L["Back"] = "뒤로"
 L["To the page you came from (Backspace)."] = "이전에 보던 페이지로 (백스페이스)"
-L["Go to page (1 - %d):"] = "페이지로 이동 (1 - %d):"
+L["Go to page (1-%d):"] = "페이지로 이동 (1-%d):"
 L["Size: %d%%"] = "크기: %d%%"
 L["Search"] = "검색"
 L["Turning pages"] = "페이지 넘기기"
@@ -1033,7 +1033,7 @@ L["The diary put aside is back. The interface is reloaded."] = "따로 보관한
 -- Angler's log
 L["Angler's log"] = "낚시 일지"
 L["A collector's album of everything the line brought up"] = "낚싯줄이 건져 올린 모든 것의 수집 앨범"
-L["catches collected  -  %d things landed"] = "수집한 어획물  -  건져 올린 것 %d개"
+L["catches collected, %d things landed"] = "수집한 어획물, 건져 올린 것 %d개"
 L["Land %d different catches."] = "서로 다른 어획물 %d종을 낚으세요."
 L["Casts"] = "던진 횟수"
 L["Fish"] = "물고기"
@@ -1119,7 +1119,7 @@ L["A small window beside the game shows today's figures, the tasks and the honou
 L["Show it"] = "보이기"
 L["Names from the game (places, creatures, items) stay in the language of the game client."] = "게임에서 오는 이름(장소, 몬스터, 아이템)은 게임 클라이언트의 언어로 남습니다."
 
-L["%d days  -  %d kills  -  %d quests"] = "%d일  -  %d마리 처치  -  퀘스트 %d개"
+L["%d days, %d kills, %d quests"] = "%d일, %d마리 처치, 퀘스트 %d개"
 
 -- memories and anniversaries
 L["A memory"] = "추억"
@@ -1245,3 +1245,38 @@ L["The first year is still being written."] = "첫 해는 아직 쓰이는 중�
 L["Time online: %s"] = "접속 시간: %s"
 L["Year %d"] = "%d년"
 L["Year book"] = "연감"
+L["If you enjoy the diary, you can support its development:"] = "일기가 마음에 드신다면 개발을 후원해 주세요:"
+L["Support"] = "후원"
+L["%d mounts"] = "탈것 %d종"
+L["%d rides"] = "탑승 %d회"
+L["%d factions"] = "진영 %d개"
+L["%d years ago today, %s brought me down in %s."] = "%d년 전 오늘, %s에게 %s에서 쓰러졌다."
+L["%d years ago today I fell in %s."] = "%d년 전 오늘, %s에서 쓰러졌다."
+L["First ridden on day %d"] = "%d일째에 처음 탑승"
+L["Into the chat"] = "대화창으로"
+L["Most days were: %s (%d)"] = "가장 많았던 날: %s (%d)"
+L["Mounts"] = "탈것"
+L["My week: %d kills, %d quests, %s km, %d levels, %d new places."] = "나의 한 주: 처치 %d, 퀘스트 %d, %s km, 레벨 %d, 새로운 장소 %d."
+L["Narrow down the days: z:region  lv:20-30  d:30 (the last 30 days)"] = "날짜 좁히기: z:지역  lv:20-30  d:30 (최근 30일)"
+L["Reputation"] = "평판"
+L["Reputation steps up: %d"] = "오른 평판 단계: %d"
+L["Seen on day %d as %s"] = "%d일째에 %s 상태로 확인"
+L["The copy from before the update to version %s is back. The interface is reloaded."] = "버전 %s 업데이트 전의 사본이 돌아왔습니다. 인터페이스를 다시 불러옵니다."
+L["The first ride is still to come."] = "첫 탑승은 아직 오지 않았다."
+L["There is no copy from before an update."] = "업데이트 전의 사본이 없습니다."
+L["A day of battle"] = "전투의 날"
+L["A day on the road"] = "길 위의 날"
+L["A day of quests"] = "퀘스트의 날"
+L["A day of fortune"] = "행운의 날"
+L["A quiet day"] = "조용한 날"
+L["A day of mourning"] = "애도의 날"
+L["Every mount, and the day it was first ridden"] = "모든 탈것과 처음 탄 날"
+L["How the factions came to see me"] = "진영들이 나를 알게 된 과정"
+L["bring back the copy from before the last update"] = "마지막 업데이트 전의 사본 되돌리기"
+L["Drag to move."] = "드래그하여 이동합니다."
+L["The notes are back at the top of the screen."] = "알림이 다시 화면 위쪽에 표시됩니다."
+L["put the notes back at the top of the screen"] = "알림을 화면 위쪽으로 되돌리기"
+L["Show a note to move it"] = "알림을 띄워 옮기기"
+L["Put the notes back at the top"] = "알림을 위쪽으로 되돌리기"
+L["Pop-up notes"] = "팝업 알림"
+L["Mouse wheel changes the size."] = "마우스 휠로 크기를 바꿉니다."

@@ -5,7 +5,7 @@ _G.WoWForeverDiary = WFD
 local floor, min, format = math.floor, math.min, string.format
 local time, date = time, date
 
-WFD.version = "0.3.0"
+WFD.version = "0.3.1"
 WFD.gameLocale = GetLocale()
 WFD.locale = WFD.gameLocale
 WFD.isDE = (WFD.locale == "deDE")
@@ -185,6 +185,23 @@ WFD:On("ADDON_LOADED", function(_, name)
     WFDiaryChar = WFDiaryChar or {}
 end)
 
+local BACKUP_DAYS = 30
+
+-- A copy of the diary as the last version left it (the diary put aside and an older copy are not part of it).
+function WFD:SnapshotDiary(C)
+    local function copy(v)
+        if type(v) ~= "table" then return v end
+        local out = {}
+        for k, x in pairs(v) do out[k] = copy(x) end
+        return out
+    end
+    local data = {}
+    for k, v in pairs(C) do
+        if k ~= "previous" and k ~= "backup" then data[k] = copy(v) end
+    end
+    C.backup = { version = C.lastVersion or "?", t = time(), data = data }
+end
+
 WFD:On("PLAYER_LOGIN", function()
     local C = WFDiaryChar
     -- A new character with the name of a deleted one finds that one's diary (the game keeps it by name).
@@ -199,6 +216,11 @@ WFD:On("PLAYER_LOGIN", function()
         WFD.startedOver = true
     end
     C.guid = C.guid or guid
+    -- An update may change how the diary is stored: before it does, one copy of what the last version left.
+    -- It is dropped again after BACKUP_DAYS, so the saved file does not stay twice as large for good.
+    if C.backup and (time() - (C.backup.t or 0)) > BACKUP_DAYS * 86400 then C.backup = nil end
+    if C.born and C.lastVersion ~= WFD.version then WFD:SnapshotDiary(C) end
+    C.lastVersion = WFD.version
     if not C.born then
         C.born = time()
         C.name = UnitName("player")
@@ -228,7 +250,7 @@ WFD:On("PLAYER_LOGIN", function()
         print("|cffffd100WoW Forever Diary:|r " .. L["The diary found here belonged to an earlier character of the same name. It has been put aside and a new diary has been started for you. |cffffd100/wfd restore|r brings it back."])
     end
     local idx = WFD:DayIndex()
-    local msg = L["Travel diary active - today is |cffffd100day %d|r. |cffffd100/wfd|r opens the diary."]
+    local msg = L["Travel diary active. Today is |cffffd100day %d|r. |cffffd100/wfd|r opens the diary."]
     print("|cffffd100WoW Forever Diary:|r " .. format(msg, idx))
 end)
 
@@ -460,10 +482,10 @@ local COUNTED_EN = {
     ["%d caught in %d casts"] = "%d caught in %d {cast|casts}",
     ["%d kills today"] = "%d {kill|kills} today",
     ["%d quests today"] = "%d {quest|quests} today",
-    ["%d kinds  -  %d slain"] = "%d {kind|kinds}  -  %d slain",
-    ["%d days  -  %d kills  -  %d quests"] = "%d {day|days}  -  %d {kill|kills}  -  %d {quest|quests}",
-    ["%d days of life  -  %d creatures slain  -  %d quests completed"] =
-        "%d {day|days} of life  -  %d {creature|creatures} slain  -  %d {quest|quests} completed",
+    ["%d kinds, %d slain"] = "%d {kind|kinds}, %d slain",
+    ["%d days, %d kills, %d quests"] = "%d {day|days}, %d {kill|kills}, %d {quest|quests}",
+    ["%d days of life, %d creatures slain, %d quests completed"] =
+        "%d {day|days} of life, %d {creature|creatures} slain, %d {quest|quests} completed",
     ["%d enemies fell that day."] = "%d {enemy|enemies} fell that day.",
     ["%d kills together"] = "%d {kill|kills} together",
     ["%d treasures collected"] = "%d {treasure|treasures} collected",
@@ -477,6 +499,11 @@ local COUNTED_EN = {
     ["You slew them %d times."] = "You slew them %d {time|times}.",
     ["Got you %d times."] = "Got you %d {time|times}.",
     ["%d times grouped"] = "%d {time|times} grouped",
+    ["%d mounts"] = "%d {mount|mounts}",
+    ["%d rides"] = "%d {ride|rides}",
+    ["%d factions"] = "%d {faction|factions}",
+    ["%d years ago today, %s brought me down in %s."] = "%d {year|years} ago today, %s brought me down in %s.",
+    ["%d years ago today I fell in %s."] = "%d {year|years} ago today I fell in %s.",
 }
 
 function WFD:Count(key, ...)
@@ -655,6 +682,29 @@ function WFD:RestorePrevious()
     ReloadUI()
 end
 
+-- Brings back the copy made before the last update. The diary as it is now is put aside (/wfd restore undoes it).
+function WFD:RestoreBackup()
+    if self.demo then
+        print("|cffffd100WoW Forever Diary:|r " .. L["Leave demo mode first."])
+        return
+    end
+    local cur = WFDiaryChar
+    local b = cur and cur.backup
+    if type(b) ~= "table" or type(b.data) ~= "table" or not b.data.born then
+        print("|cffffd100WoW Forever Diary:|r " .. L["There is no copy from before an update."])
+        return
+    end
+    local old = b.data
+    cur.backup, cur.previous = nil, nil
+    old.previous = cur
+    old.guid = UnitGUID("player") or old.guid
+    -- the next login should not take the old version number for a reason to copy again
+    WFDiaryChar = old
+    self.paused = true
+    print("|cffffd100WoW Forever Diary:|r " .. format(L["The copy from before the update to version %s is back. The interface is reloaded."], WFD.version))
+    ReloadUI()
+end
+
 ------------------------------------------------------------------------
 -- Slash commands
 ------------------------------------------------------------------------
@@ -694,12 +744,19 @@ SlashCmdList["WOWFOREVERDIARY"] = function(msg)
         WFD:KillDebug()
     elseif msg == "restore" then
         WFD:RestorePrevious()
+    elseif msg == "resettoast" then
+        WFD.UI:ResetToastPlace()
+        print("|cffffd100WoW Forever Diary:|r " .. L["The notes are back at the top of the screen."])
+    elseif msg == "restore backup" or msg == "backup" then
+        WFD:RestoreBackup()
     elseif msg == "help" then
         for _, h in ipairs({ { "/wfd", "open or close the diary" }, { "/wfd demo", "explore with invented data" },
             { "/wfd shot", "screenshots on or off" }, { "/wfd minimap", "minimap button on or off" },
             { "/wfd export", "moving code of this character" }, { "/wfd import", "read a moving code" },
             { "/wfd companion", "show or hide the companion" },
             { "/wfd memory", "show today's memory again" }, { "/wfd restore", "bring back the diary put aside" },
+            { "/wfd backup", "bring back the copy from before the last update" },
+            { "/wfd resettoast", "put the notes back at the top of the screen" },
             { "/wfd bestiary", "open a part: today, bestiary, honour, ledger, atlas, settings ... or a day number" } }) do
             print("|cffffd100" .. h[1] .. "|r - " .. L[h[2]])
         end

@@ -5,8 +5,8 @@ local L, loc = WFD:NewLocale("zhTW")
 local T = {
     -- chat / log
     ["Diary"] = "日記",
-    ["Travel diary active - today is |cffffd100day %d|r. |cffffd100/wfd|r opens the diary."] =
-        "旅行日記已啟用 - 今天是|cffffd100第%d天|r。輸入|cffffd100/wfd|r開啟日記。",
+    ["Travel diary active. Today is |cffffd100day %d|r. |cffffd100/wfd|r opens the diary."] =
+        "旅行日記已啟用。今天是|cffffd100第%d天|r。輸入|cffffd100/wfd|r開啟日記。",
     ["%d creatures slain in total"] = "總共擊殺了%d個生物",
     ["First victory over the boss %s!"] = "首次擊敗首領%s！",
     ["Rare creature slain: %s"] = "擊殺稀有生物：%s",
@@ -48,7 +48,7 @@ local T = {
     ["Click to open the diary."] = "點擊開啟日記。",
     ["%d kills today"] = "今天擊殺%d",
     ["%d quests today"] = "今天%d個任務",
-    ["DEMO MODE - invented data"] = "示範模式 - 虛構資料",
+    ["DEMO MODE: invented data"] = "示範模式：虛構資料",
 
     -- tabs
     ["Bestiary"] = "怪物圖鑑",
@@ -204,8 +204,8 @@ loc.narrator = {
         "世上又少了%d個敵人。",
     },
     top = {
-        "其中最多的是%s（%dx）。",
-        "最常擋路的是%s（%dx）。",
+        "其中最多的是%s（%d隻）。",
+        "最常擋路的是%s（%d次）。",
     },
     special = "值得記住的：%s。",
     deaths = {
@@ -352,7 +352,7 @@ L["Click for the portrait."] = "點擊查看肖像。"
 
 -- collector's album
 L["A collector's album of every creature slain"] = "所有擊殺生物的收藏圖鑑"
-L["kinds collected  -  %d creatures slain"] = "種已收集  -  擊殺%d個生物"
+L["kinds collected, %d creatures slain"] = "種已收集，擊殺%d個生物"
 L["Bronze"] = "青銅"
 L["Silver"] = "白銀"
 L["Mithril"] = "秘銀"
@@ -393,7 +393,7 @@ L["Most hunted here"] = "在此最常狩獵"
 L["Places discovered"] = "已發現的地點"
 
 -- companions, honours, treasures, memories, obituary
-L["%d days of life  -  %d creatures slain  -  %d quests completed"] = "生命%d天  -  擊殺%d個生物  -  完成%d個任務"
+L["%d days of life, %d creatures slain, %d quests completed"] = "生命%d天，擊殺%d個生物，完成%d個任務"
 L["%d days"] = "%d天"
 L["%d enemies fell that day."] = "那天有%d個敵人倒下。"
 L["%d kills together"] = "共同擊殺%d"
@@ -537,7 +537,7 @@ L["Loot %d items."] = "拾取%d件物品。"
 L["Marathon"] = "馬拉松"
 L["Master of a Craft"] = "技藝大師"
 L["Meet %d people."] = "結識%d個人。"
-L["Mouse wheel: zoom  -  drag: move  -  right click: reset"] = "滑鼠滾輪：縮放  -  拖曳：移動  -  右鍵：重設"
+L["Mouse wheel: zoom, drag: move, right click: reset"] = "滑鼠滾輪：縮放，拖曳：移動，右鍵：重設"
 L["Next goals"] = "下一個目標"
 L["Next rank: %s"] = "下一階：%s"
 L["Night Owl"] = "夜貓子"
@@ -689,7 +689,7 @@ L["Per day"] = "每日平均"
 L["Honour earned"] = "獲得榮譽"
 L["Landmark discovered"] = "發現名勝"
 L["Next tier:"] = "下一階："
-L["Every tier earned - complete!"] = "所有階級均已獲得－全部完成！"
+L["Every tier earned!"] = "所有階級均已獲得！"
 L["The game blocked the function %s. Please tell the author."] = "遊戲封鎖了函式 %s。請通知作者。"
 L["This game client does not allow addons to take screenshots. Screenshots at milestones are now switched off."] = "此遊戲客戶端不允許插件擷取畫面。重要時刻的截圖已關閉。"
 L['"Here the journey ends, but not the story."'] = '「旅程在此結束，但故事不會。」'
@@ -735,12 +735,12 @@ L["Seal the letter and open it ..."] = "封好這封信，在……開啟"
 L["in a week"] = "一週後"
 L["in a month"] = "一個月後"
 L["at level %d"] = "%d級時"
-L["Until then the letter stays sealed - not even you can read it."] = "在那之前信會一直封著，連你自己也看不到。"
+L["Until then the letter stays sealed. Not even you can read it."] = "在那之前信會一直封著，連你自己也看不到。"
 L["No letters yet."] = "還沒有信。"
 L["Written on day %d, at level %d"] = "寫於第%d天，%d級時"
 L["Opened on %s"] = "於%s開啟"
-L["Sealed - opens on day %d"] = "已封存 - 第%d天開啟"
-L["Sealed - opens at level %d"] = "已封存 - %d級時開啟"
+L["Sealed, opens on day %d"] = "已封存，第%d天開啟"
+L["Sealed, opens at level %d"] = "已封存，%d級時開啟"
 L["in %d days"] = "還有%d天"
 L["A letter for later was sealed."] = "封好了一封寫給以後的信。"
 L["A letter from the past has opened."] = "一封來自過去的信開啟了。"
@@ -773,7 +773,7 @@ L["Search the diary"] = "搜尋日記"
 L["Days, people, creatures, quests, places, treasures and catches."] = "日子、人物、怪物、任務、地點、寶物和漁獲。"
 L["Search: a name, a quest, a place ..."] = "搜尋：名字、任務、地點……"
 L["Nothing found."] = "沒有找到。"
-L["%d more results - type a little more"] = "還有%d個結果，請再多輸入一些"
+L["%d more results, type a little more"] = "還有%d個結果，請再多輸入一些"
 
 L["The binding"] = "書封"
 L["Corner studs"] = "護角"
@@ -792,11 +792,11 @@ L["SAYING OF THE DAY"] = "每日一句"
 L["Whoever wanders, gathers stories."] = "行旅之人，收集故事。"
 L["Every road starts at your own door."] = "每條路都從自家門口開始。"
 L["A full pack is light when the heart is lighter."] = "心情輕鬆，滿滿的行囊也不重。"
-L["Maps show the way - only feet know it."] = "地圖指出方向，真正認得路的是雙腳。"
+L["Maps show the way, but only feet know it."] = "地圖指出方向，真正認得路的是雙腳。"
 L["The longest journey is the one you never write down."] = "最漫長的旅程，是從未寫下的那一段。"
 L["Ink fades slower than memory."] = "墨水褪色得比記憶還慢。"
 L["A good campfire turns strangers into companions."] = "一堆好營火，能讓陌生人成為同伴。"
-L["The mountain does not care how tired you are - just keep going."] = "山不在乎你有多累，只在乎你有沒有繼續走。"
+L["The mountain does not care how tired you are. Just keep going."] = "山不在乎你有多累，只在乎你有沒有繼續走。"
 L["Today's detour is tomorrow's best story."] = "今天繞的遠路，就是明天最好的故事。"
 L["Gold comes and goes, the story stays."] = "金幣來來去去，故事會留下來。"
 L["Count the days by friends, not by miles."] = "用朋友來數日子，而不是用里程。"
@@ -804,12 +804,12 @@ L["Even the smallest kobold guards a candle for someone."] = "再小的狗頭人
 L["Resting is part of the road."] = "休息也是旅程的一部分。"
 L["Fear is a map with too many blank spots."] = "恐懼是一張空白太多的地圖。"
 L["Every scar has a page in this book."] = "每一道傷疤，在這本書裡都有一頁。"
-L["Look back now and then - the view is part of the journey."] = "偶爾回頭看看，風景也是旅程的一部分。"
+L["Look back now and then. The view is part of the journey."] = "偶爾回頭看看，風景也是旅程的一部分。"
 L["The wise traveller asks the innkeeper first."] = "聰明的旅人，會先去問旅店老闆。"
 L["Rain on the road, sunshine in the story."] = "路上下著雨，故事裡出著太陽。"
 L["Whoever never falls never learns to get up."] = "從不跌倒的人，學不會站起來。"
 L["A quest half done is still a step forward."] = "做到一半的任務，也是向前的一步。"
-L["The horizon travels with you - that is why it never gets dull."] = "地平線跟著你旅行，所以永遠不會無聊。"
+L["The horizon travels with you, which is why it never gets dull."] = "地平線跟著你旅行，所以永遠不會無聊。"
 L["Write it down, or it never happened."] = "寫下來，不然就等於沒發生過。"
 L["Old boots know more than new maps."] = "舊靴子懂的比新地圖還多。"
 L["Courage is being afraid and saddling up anyway."] = "勇氣就是害怕，卻還是套上馬鞍。"
@@ -837,7 +837,7 @@ L["To the contents"] = "前往目錄"
 L["Screenshots at milestones: on"] = "重要時刻截圖：開啟"
 L["Screenshots at milestones: off"] = "重要時刻截圖：關閉"
 L["Demo mode is off."] = "示範模式已關閉。"
-L["Demo mode is on. Nothing you do now is written into your diary - type /wfd demo again to leave."] = "示範模式已開啟。現在做的事不會寫進你的日記，再輸入一次 /wfd demo 即可離開。"
+L["Demo mode is on. Nothing you do now is written into your diary. Type /wfd demo again to leave."] = "示範模式已開啟。現在做的事不會寫進你的日記，再輸入一次 /wfd demo 即可離開。"
 L["You have died, but who did it slipped past the diary."] = "你已經倒下過，但是誰下的手，日記沒能記下。"
 L["Already in the quest log"] = "日記開始前接下的任務"
 L["Angler"] = "釣客"
@@ -880,7 +880,7 @@ L["Just play, I'll write along. Every day you play becomes a page in this book."
 L["See a sample book"] = "查看範例日記"
 L["To today's entry"] = "前往今天"
 L["Discover %d flight paths."] = "發現%d條飛行路線。"
-L["A sketch - %d more and it is in colour."] = "素描 - 再 %d 隻就會上色。"
+L["A sketch: %d more and it is in colour."] = "素描：再 %d 隻就會上色。"
 L["%d more to become a connoisseur."] = "再 %d 隻就能成為行家。"
 L["Connoisseur of this kind"] = "此物種的行家"
 L["First slain on day %d"] = "第 %d 天首次擊殺"
@@ -918,7 +918,7 @@ L["Every kind known here is collected."] = "此地已知的物種全部收集完
 L["Kinds of creatures"] = "生物類型"
 L["What you have slain, by type"] = "你擊敗的生物，依類型"
 L["Unknown kind"] = "未知類型"
-L["%d kinds  -  %d slain"] = "%d 種  -  擊殺 %d"
+L["%d kinds, %d slain"] = "%d 種，擊殺 %d"
 L["Hunting grounds"] = "狩獵場"
 L["Sighted"] = "已目擊"
 L["Kinds slain here"] = "在此擊殺的物種"
@@ -935,7 +935,7 @@ L["Smells worse than it fights."] = "聞起來比打起來更可怕。"
 L["Dead once already. Twice is a habit."] = "早就死過一次了，兩次就成了習慣。"
 L["Burning eyes, burning temper."] = "燃燒的雙眼，火爆的脾氣。"
 L["Whoever summoned this one owes me an apology."] = "召喚牠的人欠我一個道歉。"
-L["Not alive, not dead - simply angry."] = "不生不死，只是憤怒。"
+L["Not alive, not dead, simply angry."] = "不生不死，只是憤怒。"
 L["Left nothing behind but a puddle of fury."] = "只留下一灘怒火。"
 L["Scales like armour. Mind the tail."] = "鱗片如鎧甲，小心尾巴。"
 L["One day I will face its big brothers."] = "總有一天我會面對牠的兄長們。"
@@ -949,7 +949,7 @@ L["A strange creature. I made a note, just in case."] = "奇怪的生物，我�
 L["Worth remembering, or at least worth writing down."] = "值得記住，至少值得寫下來。"
 L["Back"] = "返回"
 L["To the page you came from (Backspace)."] = "回到你來自的頁面（Backspace）。"
-L["Go to page (1 - %d):"] = "前往頁面（1 - %d）："
+L["Go to page (1-%d):"] = "前往頁面（1-%d）："
 L["Size: %d%%"] = "大小：%d%%"
 L["Search"] = "搜尋"
 L["Turning pages"] = "翻頁"
@@ -1036,7 +1036,7 @@ L["The diary put aside is back. The interface is reloaded."] = "另外保存的�
 -- Angler's log
 L["Angler's log"] = "釣魚日誌"
 L["A collector's album of everything the line brought up"] = "釣線所釣起一切事物的收藏圖鑑"
-L["catches collected  -  %d things landed"] = "已收集的漁獲  -  共釣起 %d 件"
+L["catches collected, %d things landed"] = "已收集的漁獲，共釣起 %d 件"
 L["Land %d different catches."] = "釣起 %d 種不同的漁獲。"
 L["Casts"] = "拋竿"
 L["Fish"] = "魚"
@@ -1122,7 +1122,7 @@ L["A small window beside the game shows today's figures, the tasks and the honou
 L["Show it"] = "顯示"
 L["Names from the game (places, creatures, items) stay in the language of the game client."] = "來自遊戲的名稱（地點、生物、物品）會維持遊戲用戶端的語言。"
 
-L["%d days  -  %d kills  -  %d quests"] = "%d天  -  擊殺%d  -  任務%d"
+L["%d days, %d kills, %d quests"] = "%d天，擊殺%d，任務%d"
 
 -- memories and anniversaries
 L["A memory"] = "回憶"
@@ -1248,3 +1248,38 @@ L["The first year is still being written."] = "第一年仍在書寫中。"
 L["Time online: %s"] = "上線時間：%s"
 L["Year %d"] = "%d年"
 L["Year book"] = "年鑑"
+L["If you enjoy the diary, you can support its development:"] = "如果你喜歡這本日記，歡迎支持它的開發："
+L["Support"] = "支持"
+L["%d mounts"] = "%d匹坐騎"
+L["%d rides"] = "%d次騎乘"
+L["%d factions"] = "%d個陣營"
+L["%d years ago today, %s brought me down in %s."] = "%d年前的今天，%s在%s將我擊倒。"
+L["%d years ago today I fell in %s."] = "%d年前的今天，我在%s倒下。"
+L["First ridden on day %d"] = "第%d天首次騎乘"
+L["Into the chat"] = "傳到聊天"
+L["Most days were: %s (%d)"] = "最多的日子是：%s（%d）"
+L["Mounts"] = "坐騎"
+L["My week: %d kills, %d quests, %s km, %d levels, %d new places."] = "我的一週：擊殺%d、任務%d、%s公里、升級%d次、新地點%d處。"
+L["Narrow down the days: z:region  lv:20-30  d:30 (the last 30 days)"] = "篩選日子：z:地區  lv:20-30  d:30（最近30天）"
+L["Reputation"] = "聲望"
+L["Reputation steps up: %d"] = "聲望提升次數：%d"
+L["Seen on day %d as %s"] = "第%d天見到，當時為%s"
+L["The copy from before the update to version %s is back. The interface is reloaded."] = "版本%s更新前的備份已恢復。介面將重新載入。"
+L["The first ride is still to come."] = "第一次騎乘還在等著你。"
+L["There is no copy from before an update."] = "沒有更新前的備份。"
+L["A day of battle"] = "戰鬥之日"
+L["A day on the road"] = "旅途之日"
+L["A day of quests"] = "任務之日"
+L["A day of fortune"] = "幸運之日"
+L["A quiet day"] = "平靜之日"
+L["A day of mourning"] = "哀悼之日"
+L["Every mount, and the day it was first ridden"] = "每一匹坐騎，以及第一次騎乘的那一天"
+L["How the factions came to see me"] = "各陣營如何認識我"
+L["bring back the copy from before the last update"] = "恢復上次更新前的備份"
+L["Drag to move."] = "拖曳以移動。"
+L["The notes are back at the top of the screen."] = "提示已回到畫面上方。"
+L["put the notes back at the top of the screen"] = "把提示放回畫面上方"
+L["Show a note to move it"] = "顯示提示以便移動"
+L["Put the notes back at the top"] = "把提示放回上方"
+L["Pop-up notes"] = "彈出提示"
+L["Mouse wheel changes the size."] = "滑鼠滾輪可調整大小。"

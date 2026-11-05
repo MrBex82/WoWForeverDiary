@@ -23,7 +23,7 @@ local T = {
     ["Found %s"] = "Gefunden: %s",
     ["Epic find: %s"] = "Epischer Fund: %s",
     ["Rare find: %s"] = "Seltener Fund: %s",
-    ["Discovered a new land: %s"] = "Neues Land entdeckt: %s",
+    ["Discovered a new land: %s"] = "Neues Gebiet entdeckt: %s",
     ["Entered %s"] = "%s betreten",
     ["Discovered: %s (%s)"] = "Entdeckt: %s (%s)",
     ["First visit to the dungeon %s"] = "Zum ersten Mal im Dungeon %s",
@@ -44,7 +44,7 @@ local T = {
     ["Click to open the diary."] = "Klicken, um das Tagebuch zu öffnen.",
     ["%d kills today"] = "%d {Kill|Kills} heute",
     ["%d quests today"] = "%d {Quest|Quests} heute",
-    ["DEMO MODE - invented data"] = "DEMO-MODUS - erfundene Daten",
+    ["DEMO MODE: invented data"] = "DEMO-MODUS: erfundene Daten",
 
     -- tabs
     ["Bestiary"] = "Bestiarium",
@@ -166,8 +166,8 @@ local T2 = {
 }
 for k, v in pairs(T2) do L[k] = v end
 
-L["Travel diary active - today is |cffffd100day %d|r. |cffffd100/wfd|r opens the diary."] =
-    "Reisetagebuch bereit - heute ist |cffffd100Tag %d|r. Mit |cffffd100/wfd|r schlägst du es auf."
+L["Travel diary active. Today is |cffffd100day %d|r. |cffffd100/wfd|r opens the diary."] =
+    "Reisetagebuch bereit. Heute ist |cffffd100Tag %d|r. Mit |cffffd100/wfd|r schlägst du es auf."
 
 -- dates and diary entries
 loc.date = "%d.%m.%Y"
@@ -176,7 +176,9 @@ loc.thousands = "."
 loc.listAnd = " und "
 loc.nounCase = true   -- nouns keep their capital letter inside a sentence
 -- ... but these first words of a moment are no nouns: "Mutter Fang (seltene Kreatur erlegt)"
-loc.lowerFirst = { Erster = true, Erste = true, Seltene = true, Seltener = true, Epischer = true, Neues = true, Zum = true }
+loc.zoneFix = { Stormwind = "Sturmwind" }   -- the map of this client names the city in English
+loc.momentShort ={ ["Sehenswürdigkeit entdeckt"] = "Sehenswürdigkeit", ["Neues Gebiet entdeckt"] = "neues Gebiet", ["Neues Land entdeckt"] = "neues Gebiet" }
+loc.lowerFirst ={ Erster = true, Erste = true, Seltene = true, Seltener = true, Epischer = true, Neues = true, Zum = true }
 loc.quotes = { "„", "“" }
 
 -- "im Wald von Elwynn", "in der Sengenden Schlucht", "in den Östlichen Pestländern", "nach Westfall":
@@ -243,8 +245,8 @@ end
 
 loc.narrator = {
     birth = {
-        "Tag 1. %s, %s, heute %s aufgewacht. Was jetzt kommt? Keine Ahnung.",
-        "Tag 1. %s, %s, gerade erst %s angekommen. Mal sehen, wohin das führt.",
+        "Tag 1. Ich bin %s und %s und bin heute %s aufgewacht. Was jetzt kommt? Keine Ahnung.",
+        "Tag 1. Ich bin %s und %s, gerade erst %s angekommen. Mal sehen, wohin das führt.",
     },
     begin = {
         "Tag 1. Ab heute schreibe ich auf, was mir unterwegs so passiert.",
@@ -418,7 +420,7 @@ L["Click for the portrait."] = "Klicken für das Porträt."
 
 -- collector's album
 L["A collector's album of every creature slain"] = "Ein Sammelalbum aller erlegten Kreaturen"
-L["kinds collected  -  %d creatures slain"] = "Arten gesammelt - %d Kreaturen erlegt"
+L["kinds collected, %d creatures slain"] = "Arten gesammelt, %d Kreaturen erlegt"
 L["Bronze"] = "Bronze"
 L["Silver"] = "Silber"
 L["Mithril"] = "Mithril"
@@ -459,7 +461,7 @@ L["Most hunted here"] = "Hier am häufigsten gejagt"
 L["Places discovered"] = "Entdeckte Orte"
 
 -- companions, honours, treasures, memories, obituary
-L["%d days of life  -  %d creatures slain  -  %d quests completed"] = "%d {Lebenstag|Lebenstage} - %d {Kreatur|Kreaturen} erlegt - %d {Quest|Quests} erledigt"
+L["%d days of life, %d creatures slain, %d quests completed"] = "%d {Lebenstag|Lebenstage}, %d {Kreatur|Kreaturen} erlegt, %d {Quest|Quests} erledigt"
 L["%d days"] = "%d {Tag|Tage}"
 L["%d enemies fell that day."] = "An diesem Tag {fiel|fielen} %d Gegner."
 L["%d kills together"] = "%d {gemeinsamer Kill|gemeinsame Kills}"
@@ -657,7 +659,7 @@ L["Every region of this continent is explored."] = "Jede Region dieses Kontinent
 L["%d of %d regions explored"] = "%d von %d Regionen erkundet"
 L["Not yet explored"] = "Noch nicht erkundet"
 L["Explored"] = "Erkundet"
-L["Mouse wheel: zoom  -  drag: move  -  right click: reset"] = "Mausrad: zoomen - ziehen: verschieben - Rechtsklick: zurücksetzen"
+L["Mouse wheel: zoom, drag: move, right click: reset"] = "Mausrad: zoomen, ziehen: verschieben, Rechtsklick: zurücksetzen"
 L["Explorer's checklist"] = "Entdecker-Checkliste"
 L["Click for the map of this region."] = "Klicken für die Karte dieser Region."
 
@@ -709,7 +711,7 @@ L["A quiet week"] = "Eine ruhige Woche"
 L["The book waits for new stories."] = "Das Buch wartet auf neue Geschichten."
 L["Show a note for new discoveries"] = "Hinweis bei neuen Entdeckungen zeigen"
 L["Weekly look back at login"] = "Wochenrückblick beim Einloggen"
-L["Show when an item was first found in its tooltip"] = "In der Gegenstandsinfo zeigen, wann ich ihn zuerst gefunden habe"
+L["Show when an item was first found in its tooltip"] = "Erstfund in der Gegenstandsinfo zeigen"
 L["In the diary: first found on %s"] = "Im Tagebuch: zuerst gefunden am %s"
 L["from %s"] = "von %s"
 
@@ -761,7 +763,7 @@ L["The game blocked the function %s. Please tell the author."] = "Das Spiel hat 
 L["Honour earned"] = "Neue Ehrung"
 L["Landmark discovered"] = "Sehenswürdigkeit entdeckt"
 L["Next tier:"] = "Nächste Stufe:"
-L["Every tier earned - complete!"] = "Alle Stufen geschafft!"
+L["Every tier earned!"] = "Alle Stufen geschafft!"
 
 -- ledger figures
 L["Best day: day %d"] = "Bester Tag: Tag %d"
@@ -813,12 +815,12 @@ L["Seal the letter and open it ..."] = "Versiegeln und öffnen …"
 L["in a week"] = "in einer Woche"
 L["in a month"] = "in einem Monat"
 L["at level %d"] = "auf Stufe %d"
-L["Until then the letter stays sealed - not even you can read it."] = "Bis dahin bleibt der Brief zu - nicht mal du kannst ihn lesen."
+L["Until then the letter stays sealed. Not even you can read it."] = "Bis dahin bleibt der Brief zu. Nicht mal du kannst ihn lesen."
 L["No letters yet."] = "Noch keine Briefe."
 L["Written on day %d, at level %d"] = "Geschrieben an Tag %d, auf Stufe %d"
 L["Opened on %s"] = "Geöffnet am %s"
-L["Sealed - opens on day %d"] = "Versiegelt - geht an Tag %d auf"
-L["Sealed - opens at level %d"] = "Versiegelt - geht auf Stufe %d auf"
+L["Sealed, opens on day %d"] = "Versiegelt, geht an Tag %d auf"
+L["Sealed, opens at level %d"] = "Versiegelt, geht auf Stufe %d auf"
 L["in %d days"] = "in %d {Tag|Tagen}"
 L["A letter for later was sealed."] = "Einen Brief für später versiegelt."
 L["A letter from the past has opened."] = "Ein Brief aus der Vergangenheit hat sich geöffnet."
@@ -851,7 +853,7 @@ L["Search the diary"] = "Tagebuch durchsuchen"
 L["Days, people, creatures, quests, places, treasures and catches."] = "Tage, Personen, Kreaturen, Quests, Orte, Schätze und Fänge."
 L["Search: a name, a quest, a place ..."] = "Suche: ein Name, eine Quest, ein Ort …"
 L["Nothing found."] = "Nichts gefunden."
-L["%d more results - type a little more"] = "%d weitere Treffer - tipp noch etwas mehr"
+L["%d more results, type a little more"] = "%d weitere Treffer, tipp noch etwas mehr"
 
 L["The binding"] = "Der Einband"
 L["Corner studs"] = "Eckbeschläge"
@@ -870,11 +872,11 @@ L["SAYING OF THE DAY"] = "SPRUCH DES TAGES"
 L["Whoever wanders, gathers stories."] = "Wer wandert, sammelt Geschichten."
 L["Every road starts at your own door."] = "Jeder Weg beginnt vor der eigenen Tür."
 L["A full pack is light when the heart is lighter."] = "Ein voller Rucksack ist leicht, wenn das Herz noch leichter ist."
-L["Maps show the way - only feet know it."] = "Karten zeigen den Weg - kennen tun ihn nur die Füße."
+L["Maps show the way, but only feet know it."] = "Karten zeigen den Weg, aber kennen tun ihn nur die Füße."
 L["The longest journey is the one you never write down."] = "Die längste Reise ist die, die man nie aufschreibt."
 L["Ink fades slower than memory."] = "Tinte verblasst langsamer als Erinnerung."
 L["A good campfire turns strangers into companions."] = "Ein gutes Lagerfeuer macht aus Fremden Gefährten."
-L["The mountain does not care how tired you are - just keep going."] = "Dem Berg ist egal, wie müde du bist - Hauptsache, du gehst weiter."
+L["The mountain does not care how tired you are. Just keep going."] = "Dem Berg ist egal, wie müde du bist. Hauptsache, du gehst weiter."
 L["Today's detour is tomorrow's best story."] = "Der Umweg von heute ist die beste Geschichte von morgen."
 L["Gold comes and goes, the story stays."] = "Gold kommt und geht, die Geschichte bleibt."
 L["Count the days by friends, not by miles."] = "Zähl die Tage nach Freunden, nicht nach Meilen."
@@ -882,12 +884,12 @@ L["Even the smallest kobold guards a candle for someone."] = "Auch der kleinste 
 L["Resting is part of the road."] = "Rasten gehört zum Weg."
 L["Fear is a map with too many blank spots."] = "Angst ist eine Karte mit zu vielen weißen Flecken."
 L["Every scar has a page in this book."] = "Jede Narbe hat eine Seite in diesem Buch."
-L["Look back now and then - the view is part of the journey."] = "Schau ab und zu zurück - die Aussicht gehört zur Reise."
+L["Look back now and then. The view is part of the journey."] = "Schau ab und zu zurück. Die Aussicht gehört zur Reise."
 L["The wise traveller asks the innkeeper first."] = "Der kluge Reisende fragt zuerst den Wirt."
 L["Rain on the road, sunshine in the story."] = "Regen auf dem Weg, Sonne in der Geschichte."
 L["Whoever never falls never learns to get up."] = "Wer nie fällt, lernt nie aufzustehen."
 L["A quest half done is still a step forward."] = "Eine halbe Quest ist immer noch ein Schritt nach vorn."
-L["The horizon travels with you - that is why it never gets dull."] = "Der Horizont wandert mit - darum wird es nie langweilig."
+L["The horizon travels with you, which is why it never gets dull."] = "Der Horizont wandert mit, darum wird es nie langweilig."
 L["Write it down, or it never happened."] = "Schreib es auf, sonst ist es nie passiert."
 L["Old boots know more than new maps."] = "Alte Stiefel wissen mehr als neue Karten."
 L["Courage is being afraid and saddling up anyway."] = "Mut heißt, Angst zu haben und trotzdem aufzusatteln."
@@ -915,7 +917,7 @@ L["To the contents"] = "Zum Inhaltsverzeichnis"
 L["Screenshots at milestones: on"] = "Screenshots bei Meilensteinen: an"
 L["Screenshots at milestones: off"] = "Screenshots bei Meilensteinen: aus"
 L["Demo mode is off."] = "Demo-Modus ist aus."
-L["Demo mode is on. Nothing you do now is written into your diary - type /wfd demo again to leave."] = "Demo-Modus ist an. Was du jetzt tust, landet nicht in deinem Tagebuch - mit /wfd demo kommst du wieder heraus."
+L["Demo mode is on. Nothing you do now is written into your diary. Type /wfd demo again to leave."] = "Demo-Modus ist an. Was du jetzt tust, landet nicht in deinem Tagebuch. Mit /wfd demo kommst du wieder heraus."
 L["You have died, but who did it slipped past the diary."] = "Gestorben bist du schon, aber wer es war, ist dem Tagebuch entgangen."
 L["Already in the quest log"] = "Vor dem Tagebuch angenommen"
 L["Angler"] = "Angler"
@@ -956,7 +958,7 @@ L["Just play, I'll write along. Every day you play becomes a page in this book."
 L["See a sample book"] = "Beispielbuch ansehen"
 L["To today's entry"] = "Zum heutigen Tag"
 L["Discover %d flight paths."] = "Entdecke %d Flugrouten."
-L["A sketch - %d more and it is in colour."] = "Eine Skizze - noch %d, dann ist sie farbig."
+L["A sketch: %d more and it is in colour."] = "Eine Skizze: noch %d, dann ist sie farbig."
 L["%d more to become a connoisseur."] = "Noch %d, dann bist du Kenner."
 L["Connoisseur of this kind"] = "Kenner dieser Art"
 L["First slain on day %d"] = "Zum ersten Mal erlegt an Tag %d"
@@ -994,7 +996,7 @@ L["Every kind known here is collected."] = "Jede hier bekannte Art ist gesammelt
 L["Kinds of creatures"] = "Kreaturentypen"
 L["What you have slain, by type"] = "Was du erlegt hast, nach Typ"
 L["Unknown kind"] = "Unbekannte Art"
-L["%d kinds  -  %d slain"] = "%d {Art|Arten} - %d erlegt"
+L["%d kinds, %d slain"] = "%d {Art|Arten}, %d erlegt"
 L["Hunting grounds"] = "Jagdgründe"
 L["Sighted"] = "Gesichtet"
 L["Kinds slain here"] = "Hier erlegte Arten"
@@ -1011,7 +1013,7 @@ L["Smells worse than it fights."] = "Riecht schlimmer, als es kämpft."
 L["Dead once already. Twice is a habit."] = "Schon einmal tot gewesen. Zweimal ist Gewohnheit."
 L["Burning eyes, burning temper."] = "Glühende Augen, glühendes Gemüt."
 L["Whoever summoned this one owes me an apology."] = "Wer den beschworen hat, schuldet mir eine Entschuldigung."
-L["Not alive, not dead - simply angry."] = "Nicht lebendig, nicht tot - einfach wütend."
+L["Not alive, not dead, simply angry."] = "Nicht lebendig, nicht tot, einfach wütend."
 L["Left nothing behind but a puddle of fury."] = "Hinterließ nichts als eine Pfütze voller Zorn."
 L["Scales like armour. Mind the tail."] = "Schuppen wie eine Rüstung. Vorsicht vor dem Schwanz."
 L["One day I will face its big brothers."] = "Eines Tages stelle ich mich seinen großen Brüdern."
@@ -1025,7 +1027,7 @@ L["A strange creature. I made a note, just in case."] = "Ein seltsames Wesen. Ic
 L["Worth remembering, or at least worth writing down."] = "Einer Erinnerung wert, oder wenigstens einer Notiz."
 L["Back"] = "Zurück"
 L["To the page you came from (Backspace)."] = "Zur Seite, von der du kamst (Rücktaste)."
-L["Go to page (1 - %d):"] = "Gehe zu Seite (1-%d):"
+L["Go to page (1-%d):"] = "Gehe zu Seite (1-%d):"
 L["Size: %d%%"] = "Größe: %d%%"
 L["Search"] = "Suche"
 L["Turning pages"] = "Blättern"
@@ -1095,6 +1097,8 @@ L["Modern"] = "Modern"
 L["Next honours"] = "Nächste Ehrungen"
 L["Online"] = "Online"
 L["Show the companion beside the game"] = "Begleitfenster neben dem Spiel zeigen"
+L["If you enjoy the diary, you can support its development:"] = "Wenn dir das Tagebuch gefällt, kannst du die Entwicklung unterstützen:"
+L["Support"] = "Unterstützung"
 L["Size of the writing"] = "Schriftgröße"
 L["Strong contrast"] = "Starker Kontrast"
 L["Style of the book"] = "Stil des Buches"
@@ -1112,7 +1116,7 @@ L["The diary put aside is back. The interface is reloaded."] = "Das beiseitegele
 -- Angler's log
 L["Angler's log"] = "Anglerbuch"
 L["A collector's album of everything the line brought up"] = "Ein Sammelalbum von allem, was die Angel heraufgeholt hat"
-L["catches collected  -  %d things landed"] = "Fänge gesammelt - %d Dinge an Land gezogen"
+L["catches collected, %d things landed"] = "Fänge gesammelt, %d Dinge an Land gezogen"
 L["Land %d different catches."] = "Zieh %d verschiedene Fänge an Land."
 L["Casts"] = "Würfe"
 L["Fish"] = "Fisch"
@@ -1198,7 +1202,7 @@ L["A small window beside the game shows today's figures, the tasks and the honou
 L["Show it"] = "Einblenden"
 L["Names from the game (places, creatures, items) stay in the language of the game client."] = "Namen aus dem Spiel (Orte, Kreaturen, Gegenstände) bleiben in der Sprache des Spielclients."
 
-L["%d days  -  %d kills  -  %d quests"] = "%d {Tag|Tage}  -  %d {Kill|Kills}  -  %d {Quest|Quests}"
+L["%d days, %d kills, %d quests"] = "%d {Tag|Tage}, %d {Kill|Kills}, %d {Quest|Quests}"
 
 -- memories and anniversaries
 L["A memory"] = "Erinnerung"
@@ -1324,3 +1328,36 @@ L["The first year is still being written."] = "Das erste Jahr wird noch geschrie
 L["Time online: %s"] = "Online: %s"
 L["Year %d"] = "Jahr %d"
 L["Year book"] = "Jahrbuch"
+L["%d mounts"] = "%d {Reittier|Reittiere}"
+L["%d rides"] = "%d {Ritt|Ritte}"
+L["%d factions"] = "%d {Fraktion|Fraktionen}"
+L["%d years ago today, %s brought me down in %s."] = "Vor %d {Jahr|Jahren} an diesem Tag hat mich %s in %s niedergestreckt."
+L["%d years ago today I fell in %s."] = "Vor %d {Jahr|Jahren} an diesem Tag bin ich in %s gefallen."
+L["First ridden on day %d"] = "Zum ersten Mal geritten an Tag %d"
+L["Into the chat"] = "In den Chat"
+L["Most days were: %s (%d)"] = "Die meisten Tage waren: %s (%d)"
+L["Mounts"] = "Reittiere"
+L["My week: %d kills, %d quests, %s km, %d levels, %d new places."] = "Meine Woche: %d Kills, %d Quests, %s km, %d Stufen, %d neue Orte."
+L["Narrow down the days: z:region  lv:20-30  d:30 (the last 30 days)"] = "Tage eingrenzen: z:Region  lv:20-30  d:30 (die letzten 30 Tage)"
+L["Reputation"] = "Ruf"
+L["Reputation steps up: %d"] = "Rufstufen gestiegen: %d"
+L["Seen on day %d as %s"] = "Gesehen an Tag %d als %s"
+L["The copy from before the update to version %s is back. The interface is reloaded."] = "Die Kopie von vor dem Update auf Version %s ist zurück. Die Oberfläche wird neu geladen."
+L["The first ride is still to come."] = "Der erste Ritt steht noch aus."
+L["There is no copy from before an update."] = "Es gibt keine Kopie von vor einem Update."
+L["A day of battle"] = "Ein Tag der Schlacht"
+L["A day on the road"] = "Ein Tag auf der Straße"
+L["A day of quests"] = "Ein Tag der Quests"
+L["A day of fortune"] = "Ein Glückstag"
+L["A quiet day"] = "Ein ruhiger Tag"
+L["A day of mourning"] = "Ein Trauertag"
+L["Every mount, and the day it was first ridden"] = "Jedes Reittier und der Tag, an dem es zum ersten Mal geritten wurde"
+L["How the factions came to see me"] = "Wie die Fraktionen mich kennenlernten"
+L["bring back the copy from before the last update"] = "die Kopie von vor dem letzten Update zurückholen"
+L["Drag to move."] = "Zum Verschieben ziehen."
+L["The notes are back at the top of the screen."] = "Die Meldungen erscheinen wieder oben am Bildschirm."
+L["put the notes back at the top of the screen"] = "die Meldungen wieder an den oberen Bildschirmrand setzen"
+L["Show a note to move it"] = "Meldung zum Verschieben zeigen"
+L["Put the notes back at the top"] = "Meldungen wieder nach oben setzen"
+L["Pop-up notes"] = "Meldungen"
+L["Mouse wheel changes the size."] = "Das Mausrad ändert die Größe."

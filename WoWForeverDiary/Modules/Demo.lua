@@ -239,6 +239,18 @@ local function build()
             days = { [OFF + 4] = true }, kills = 21, groups = 1, zone = WFD:MapName(MAPS[2]) },
     }
     C.traders = { Brannok = { first = WFD:DayTime(OFF + 2) + 3600, count = 2, got = 1500, gave = 0, zone = WFD:MapName(MAPS[1]) } }
+    C.mounts = {
+        [458] = { name = "Brown Horse", icon = "Interface\\Icons\\Ability_Mount_RidingHorse", first = WFD:DayTime(OFF + 6), day = OFF + 6,
+            zone = WFD:MapName(MAPS[1]), rides = 23, last = now },
+        [6653] = { name = "Dire Wolf", icon = "Interface\\Icons\\Ability_Mount_WhiteTiger", first = WFD:DayTime(OFF + 8), day = OFF + 8,
+            zone = WFD:MapName(MAPS[2]), rides = 4, last = now },
+    }
+    C.rep = {
+        Stormwind = { first = WFD:DayTime(OFF + 1), day = OFF + 1, st0 = 4, st = 6,
+            reached = { [5] = WFD:DayTime(OFF + 3), [6] = WFD:DayTime(OFF + 7) } },
+        Darnassus = { first = WFD:DayTime(OFF + 4), day = OFF + 4, st0 = 4, st = 5, reached = { [5] = WFD:DayTime(OFF + 8) } },
+        Ironforge = { first = WFD:DayTime(OFF + 5), day = OFF + 5, st0 = 4, st = 4, reached = {} },
+    }
     C.rests = {
         { t = WFD:DayTime(OFF + 1) + 20000, map = MAPS[1], x = 0.42, y = 0.65, zone = WFD:MapName(MAPS[1]), sub = "Goldshire", dur = 30000 },
         { t = WFD:DayTime(OFF + 5) + 20000, map = MAPS[2], x = 0.56, y = 0.47, zone = WFD:MapName(MAPS[2]), sub = "Sentinel Hill", dur = 50000 },
@@ -413,7 +425,7 @@ function WFD:ToggleDemo()
         self.C = C
         self.paused = true
         self.demo = true
-        print("|cffffd100WoW Forever Diary:|r " .. WFD.L["Demo mode is on. Nothing you do now is written into your diary - type /wfd demo again to leave."])
+        print("|cffffd100WoW Forever Diary:|r " .. WFD.L["Demo mode is on. Nothing you do now is written into your diary. Type /wfd demo again to leave."])
     end
     if self.UI then
         self.UI:DataSwitched()

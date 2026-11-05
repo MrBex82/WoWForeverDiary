@@ -379,8 +379,15 @@ function Pool:Check(label, getter, setter)
         return cb
     end)
     b.getter, b.setter = getter, setter
+    -- a label never runs over the edge of the page: it gets smaller, then shortened
+    local maxW = UI.TextW() - 30
+    if not b.txtFont then b.txtFont = { b.txt:GetFont() } end
+    b.txt:SetFont(b.txtFont[1], b.txtFont[2], b.txtFont[3] or "")
+    b.txt:SetWordWrap(false)
+    b.txt:SetWidth(maxW)
     b.txt:SetText(label)
-    b:SetWidth(b.txt:GetStringWidth() + 40)
+    UI.Unclip(b.txt)
+    b:SetWidth(min(b.txt:GetStringWidth(), maxW) + 40)
     b.tick:SetShown(getter() and true or false)
     b:SetFrameLevel(self.parent:GetFrameLevel() + 6)
     return b
@@ -422,6 +429,30 @@ function Pool:NoteEdit(w, h, lineH, text, onSave, hint)
     eb.hint:SetWidth(w)
     eb.hint:SetText(hint or "")
     eb.hint:SetShown((text or "") == "")
+    return eb
+end
+
+-- One line of text that can be selected and copied, but not changed
+function Pool:CopyField(w, text, col)
+    local eb = self:Get("copyfield", function(p)
+        local e = CreateFrame("EditBox", nil, p)
+        e:SetAutoFocus(false)
+        e:SetShadowOffset(0, 0)
+        e:SetScript("OnEscapePressed", function(s) s:ClearFocus() end)
+        e:SetScript("OnEnterPressed", function(s) s:ClearFocus() end)
+        e:SetScript("OnEditFocusGained", function(s) s:HighlightText() end)
+        e:SetScript("OnEditFocusLost", function(s) s:HighlightText(0, 0) end)
+        e:SetScript("OnTextChanged", function(s, user)
+            if user then s:SetText(s.fixed or ""); s:HighlightText() end
+        end)
+        return e
+    end)
+    eb:SetFont(UI.FONT, UI.FS and UI.FS(12) or 12, "")
+    eb:SetTextColor(col[1], col[2], col[3], 1)
+    eb:SetSize(w, 18)
+    eb.fixed = text
+    eb:SetText(text)
+    eb:SetCursorPosition(0)
     return eb
 end
 

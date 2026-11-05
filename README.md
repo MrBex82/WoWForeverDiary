@@ -25,6 +25,7 @@ Den Ordner `WoWForeverDiary` nach `World of Warcraft\_classic_era_\Interface\Add
 | `/wfd erinnerung` (oder `memory`) | Die Erinnerung von heute noch einmal als Notiz zeigen |
 | `/wfd export`, `/wfd import` | Umzugs-Code für einen anderen Rechner erstellen oder einlesen |
 | `/wfd restore` | Ein beiseitegelegtes Tagebuch zurückholen |
+| `/wfd backup` | Die Kopie von vor dem letzten Update zurückholen (wird beim ersten Start nach einer neuen Version angelegt und nach 30 Tagen verworfen) |
 
 Im Buch, in Gruppen; jede Gruppe hat einen Reiter, der eine Übersicht ihrer Teile öffnet. Zeigst du auf den Reiter, klappt eine Liste seiner Teile auf:
 
@@ -33,11 +34,11 @@ Im Buch, in Gruppen; jede Gruppe hat einen Reiter, der eine Übersicht ihrer Tei
 - **Chronik:** Meilensteine, Premieren, Rekorde, Stufen-Zeitstrahl, Galerie, Jahrbuch
 - **Die Welt:** Atlas (mit Zeitraffer: der Abspielknopf unter dem „?“ der Kontinentkarte lässt die Reise Tag für Tag wachsen), Karten mit Gebietschronik, Sehenswürdigkeiten, Fundorte, Dungeon-Berichte
 - **Jagd & Beute:** Bestiarium mit Steckbriefen, „Fast geschafft“ und Jagdkarte, Schicksal (jeder Tod auf der Karte, wo und gegen wen am häufigsten), Erzfeinde, Anglerbuch, Schätze mit Ausrüstungspuppe
-- **Leute & Geld:** Personen, Gefährten, Kassenbuch mit Sparziel
+- **Leute & Geld:** Personen, Gefährten, Reittiere (erster Ritt, Anzahl der Ritte), Ruf (wann welche Stufe erreicht wurde), Kassenbuch mit Sparziel
 - **Andenken:** Bibliothek, Familienbuch, Zeitkapsel
 - **Einstellungen:** eigener Reiter ganz unten, in vier Seiten (Allgemein, Aussehen, Bedienung mit den Tasten, Daten) mit Stil, Schriftgröße und Sprache
 
-Die Lupe oben am Buchrücken (oder Strg + F) durchsucht alles, das „?“ darunter zeigt die Einführung. Ein Klick auf
+Die Lupe oben am Buchrücken (oder Strg + F) durchsucht alles, das „?“ darunter zeigt die Einführung. Tage lassen sich mit Filtern eingrenzen: `z:Elwynn` (Gebiet), `lv:20-30` (Stufe), `d:30` (die letzten 30 Tage), auch zusammen mit Suchtext. Auf der Heute-Seite steht außerdem, was für ein Tag es war (Schlacht, Straße, Quests, Glück oder ruhig); im Wochenrückblick schreibt „In den Chat“ eine Zeile ins Eingabefeld, abgeschickt wird sie erst mit Enter. Ein Klick auf
 die Seitenzahl springt zu einer Seite, ein Klick auf das Eselsohr setzt ein eigenes Lesezeichen (bis zu zwölf). Eine Zeile oben auf jeder Seite zeigt, wo du bist. Solange die Maus über dem Buch ist, blättern Pfeiltasten und Mausrad; Pos1 führt zum Inhalt, Ende zu heute,
 die Rücktaste zurück.
 

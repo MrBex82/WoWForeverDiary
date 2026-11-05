@@ -16,6 +16,15 @@ local function zoneNow()
     local real = GetRealZoneText()
     if not (C_Map and C_Map.GetBestMapForUnit and C_Map.GetMapInfo) or IsInInstance() then return real end
     local info = C_Map.GetMapInfo(C_Map.GetBestMapForUnit("player") or 0)
+    -- standing in the zone itself the game's own text is right (the map names may be English on this client)
+    if info and info.mapType == 3 and real and real ~= "" then
+        -- an older entry under the map's name is moved to the game's own name
+        if info.name and info.name ~= real and WFD.FixZoneName then
+            local old = info.name
+            C_Timer.After(1, function() WFD:FixZoneName(old, real) end)
+        end
+        return real
+    end
     for _ = 1, 4 do
         if not info or not info.mapType then break end
         if info.mapType == 3 then return (info.name and info.name ~= "") and info.name or real end   -- a zone

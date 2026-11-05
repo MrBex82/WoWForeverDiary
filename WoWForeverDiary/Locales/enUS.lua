@@ -35,6 +35,6 @@ L["Next metal at %d honour points (now %d)."] = "Next metal at %d honor points (
 L["One gem for every ten honour tiers (now %d)."] = "One gem for every ten honor tiers (now %d)."
 L["First honour"] = "First honor"
 L["Walk one kilometre today."] = "Walk one kilometer today."
-L["A sketch - %d more and it is in colour."] = "A sketch - %d more and it is in color."
+L["A sketch: %d more and it is in colour."] = "A sketch: %d more and it is in color."
 L["Scales like armour. Mind the tail."] = "Scales like armor. Mind the tail."
 L["Right-click an earned honour in the book of honour to show it here."] = "Right-click an earned honor in the book of honor to show it here."

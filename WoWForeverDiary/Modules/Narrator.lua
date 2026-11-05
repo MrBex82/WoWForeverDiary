@@ -218,6 +218,9 @@ local function moment(s)
     local what, name = s:match("^(.-):%s*(.+)$")
     if not name or name:find("%(") then return s end
     name = name:gsub("!$", "")
+    -- a language may keep a label short inside the sentence ("Nordhaintal (Sehenswürdigkeit)")
+    local short = WFD.loc.momentShort and WFD.loc.momentShort[what]
+    if short then return name .. " (" .. short .. ")" end
     -- lower case inside the sentence, except in languages that capitalise nouns
     local first, rest = what:match("^([%z\1-\127\194-\244][\128-\191]*)(.*)$")
     -- languages that capitalise nouns lower only the words listed as no nouns ("seltene Kreatur erlegt")
@@ -278,6 +281,24 @@ function WFD:DayFacts(idx)
         if ev.day == idx then f.events[#f.events + 1] = ev end
     end
     return f
+end
+
+-- What kind of day it was, from its figures: the one that stands out most against what a busy day looks like
+-- (80 kills, 5 kilometres, 6 quests, 5 gold). Nothing stands out: a quiet day. A day without time online: nil.
+local MOOD = {
+    { "A day of battle", function(d) return (d.killTotal or 0) / 80 end },
+    { "A day on the road", function(d) return ((d.steps or 0) * 0.9144 / 1000) / 5 end },
+    { "A day of quests", function(d) return #(d.qd or {}) / 6 end },
+    { "A day of fortune", function(d) return WFD:Sum(d.income or {}) / 50000 end },
+}
+function WFD:DayMood(d)
+    if not d or (d.online or 0) <= 0 then return nil end
+    local best, score = "A quiet day", 1
+    for _, m in ipairs(MOOD) do
+        local v = m[2](d)
+        if v > score then best, score = m[1], v end
+    end
+    return best
 end
 
 ------------------------------------------------------------------------
@@ -506,5 +527,10 @@ function WFD:NarrateJubilee(j)
     local J = templates().jubilee
     if j.kind == "hours" then return format(J.hours, j.n) end
     if j.kind == "level" then return counted(J.level, j.n, j.level) end
+    if j.kind == "death" then
+        local place = self:Place(j.zone or "?", "in")
+        if j.by then return self:Count("%d years ago today, %s brought me down in %s.", j.n, j.by, place) end
+        return self:Count("%d years ago today I fell in %s.", j.n, place)
+    end
     return counted(J.born, j.n)
 end

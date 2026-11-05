@@ -18,7 +18,7 @@
 ## Title-zhTW: |cffffd100WoW Forever|r 旅行日記
 ## Notes-zhTW: 一本活生生的旅行日記：你的角色遇見的每個NPC、每個任務、每次擊殺、每枚錢幣與每一步，都化為一段故事。
 ## Author: MrBex
-## Version: 0.3.0
+## Version: 0.3.1
 ## X-License: MIT
 ## IconTexture: Interface\Icons\INV_Misc_Book_09
 ## SavedVariables: WFDiaryDB
@@ -52,6 +52,8 @@ Modules\Honours.lua
 Modules\Transfer.lua
 Modules\Challenges.lua
 Modules\Firsts.lua
+Modules\Stable.lua
+Modules\Reputation.lua
 Modules\Family.lua
 Modules\Capsules.lua
 Modules\Gathering.lua
@@ -78,6 +80,7 @@ UI\PagesExplore.lua
 UI\PagesChronicle.lua
 UI\PagesKeepsakes.lua
 UI\PagesLibrary.lua
+UI\PagesStanding.lua
 UI\PagesYearbook.lua
 UI\Cards.lua
 UI\Toast.lua
