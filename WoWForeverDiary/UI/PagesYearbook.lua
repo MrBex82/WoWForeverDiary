@@ -4,7 +4,7 @@ local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
 local c = UI.c
-local floor, max, min, format = math.floor, math.max, math.min, string.format
+local floor, max, format = math.floor, math.max, string.format
 
 local GOLD = { 0.86, 0.62, 0.18, 1 }
 

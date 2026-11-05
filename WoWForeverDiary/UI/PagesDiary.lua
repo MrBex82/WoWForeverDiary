@@ -242,7 +242,6 @@ function UI.LayoutDiary(book, chapters)
             local f = WFD:DayFacts(day)
             if y + H_DAY + 70 > AREA then newPage(head) end
             book.dayPage[day] = page.index
-            local dayY = y
             put({ t = "day", day = day, place = f and f.mainZone or ch.zone, time = f and timeLine(f.d) }, H_DAY)
             -- the facts of the day in one line under the date (they stood small in the margin before)
             local facts = f and marginNotes(f)

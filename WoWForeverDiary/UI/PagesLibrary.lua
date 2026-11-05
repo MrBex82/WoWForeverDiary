@@ -6,7 +6,7 @@ local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
 local c = UI.c
-local floor, max, min, ceil, format = math.floor, math.max, math.min, math.ceil, string.format
+local floor, max, min, ceil = math.floor, math.max, math.min, math.ceil
 
 local SPINE_W, GAP = 17, 3
 local ROW_H = 92                   -- a spine up to 76 high, the plank, some air

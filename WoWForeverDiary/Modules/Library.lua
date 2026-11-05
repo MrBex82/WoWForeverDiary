@@ -5,8 +5,7 @@
 -- open, ITEM_TEXT_READY fires for every page that is shown; ItemTextGetText() is the text of that page.
 -- Pages are only read, never turned by the diary. A book read in parts is completed by the next reading.
 local ADDON, WFD = ...
-local L = WFD.L
-local time, format = time, string.format
+local time = time
 
 local MAX_BOOKS = 300           -- the shelf has room for this many
 local MAX_CHARS = 30000         -- of one book; a longer text is cut
