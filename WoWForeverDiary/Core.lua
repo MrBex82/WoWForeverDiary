@@ -5,7 +5,7 @@ _G.WoWForeverDiary = WFD
 local floor, min, format = math.floor, math.min, string.format
 local time, date = time, date
 
-WFD.version = "0.3.1"
+WFD.version = "0.3.2"
 WFD.gameLocale = GetLocale()
 WFD.locale = WFD.gameLocale
 WFD.isDE = (WFD.locale == "deDE")
@@ -742,6 +742,16 @@ SlashCmdList["WOWFOREVERDIARY"] = function(msg)
         WFD.UI:ShowMovingImport()
     elseif msg == "killdebug" and WFD.KillDebug then
         WFD:KillDebug()
+    elseif msg == "cleanup" or msg == "cleanup yes" then
+        local doIt = msg == "cleanup yes"
+        local n, list = WFD:CleanCompanions(doIt)
+        local p = "|cffffd100WoW Forever Diary:|r "
+        if n == 0 then print(p .. "Keine Gefaehrten zum Entfernen gefunden.")
+        elseif doIt then print(p .. n .. " Gefaehrten entfernt.")
+        else
+            print(p .. n .. " Gefaehrten wuerden entfernt (Fremde aus Schlachtfeldern): " .. table.concat(list, ", ", 1, math.min(#list, 15)) .. (#list > 15 and ", ..." or ""))
+            print(p .. "Mit /wfd cleanup yes werden sie entfernt.")
+        end
     elseif msg == "restore" then
         WFD:RestorePrevious()
     elseif msg == "resettoast" then

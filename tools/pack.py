@@ -1,7 +1,7 @@
 import zipfile, os
 os.chdir(r"D:\Git\WoW_Forever_Diary")
-old = set(zipfile.ZipFile("release/WoWForeverDiary-0.3.0.zip").namelist())
-out = "release/WoWForeverDiary-0.3.1.zip"
+old = set(zipfile.ZipFile("release/WoWForeverDiary-0.3.1.zip").namelist())
+out = "release/WoWForeverDiary-0.3.2.zip"
 names = []
 with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
     for root, d, files in os.walk("WoWForeverDiary"):

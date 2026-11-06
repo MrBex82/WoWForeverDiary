@@ -49,7 +49,7 @@ local function buildPatterns()
 end
 
 WFD:On("CHAT_MSG_LOOT", function(_, msg)
-    if WFD.paused or not WFD.C or type(msg) ~= "string" then return end
+    if WFD.paused or not WFD.C or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
     if not patterns then buildPatterns() end
     local link, count, created
     for _, p in ipairs(patterns) do

@@ -153,7 +153,7 @@ end)
 ------------------------------------------------------------------------
 local skillPattern
 WFD:On("CHAT_MSG_SKILL", function(_, msg)
-    if WFD.paused or not WFD.C or type(msg) ~= "string" then return end
+    if WFD.paused or not WFD.C or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
     if skillPattern == nil then
         skillPattern = SKILL_RANK_UP and WFD:Pattern(SKILL_RANK_UP) or false
     end

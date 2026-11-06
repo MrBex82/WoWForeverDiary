@@ -81,7 +81,7 @@ WFD:On("CONFIRM_BINDER", function(_, loc)
     WFD.pendingBind = loc
 end)
 WFD:On("CHAT_MSG_SYSTEM", function(_, msg)
-    if WFD.paused or not WFD.C or type(msg) ~= "string" then return end
+    if WFD.paused or not WFD.C or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
     local p = WFD.bindPattern
     if p == nil then
         p = ERR_DEATHBIND_SUCCESS_S and WFD:Pattern(ERR_DEATHBIND_SUCCESS_S) or false

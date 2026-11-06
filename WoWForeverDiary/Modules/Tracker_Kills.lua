@@ -51,14 +51,18 @@ end
 
 local function cacheUnit(unit)
     if not unit or not UnitExists(unit) then return end
-    local kind, id = WFD:ParseGUID(UnitGUID(unit))
+    -- the game hides some unit details ("secret values") in certain situations: such a unit is skipped
+    local isSecret = issecretvalue
+    local guid = UnitGUID(unit)
+    if not guid or (isSecret and isSecret(guid)) then return end
+    local kind, id = WFD:ParseGUID(guid)
     if kind ~= "Creature" or not id then return end
     if UnitIsPlayer(unit) then return end
-    mobCache[id] = {
-        UnitLevel(unit), UnitClassification(unit), UnitCreatureType(unit), UnitName(unit),
-        UnitCreatureFamily and UnitCreatureFamily(unit) or nil,
-    }
     local name = UnitName(unit)
+    local level, class, ctype, family = UnitLevel(unit), UnitClassification(unit), UnitCreatureType(unit),
+        UnitCreatureFamily and UnitCreatureFamily(unit) or nil
+    if isSecret and (isSecret(name) or isSecret(level) or isSecret(class) or isSecret(ctype) or isSecret(family)) then return end
+    mobCache[id] = { level, class, ctype, name, family }
     if name then
         nameToId[name] = id
         adoptName(name, id)
@@ -190,7 +194,7 @@ else
     end
     local xpPatterns
     WFD:On("CHAT_MSG_COMBAT_XP_GAIN", function(_, msg)
-        if WFD.paused or not WFD.C or type(msg) ~= "string" then return end
+        if WFD.paused or not WFD.C or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
         if not xpPatterns then
             xpPatterns = {}
             for _, n in ipairs({ "COMBATLOG_XPGAIN_FIRSTPERSON", "COMBATLOG_XPGAIN_FIRSTPERSON_GROUP", "COMBATLOG_XPGAIN_FIRSTPERSON_RAID" }) do
@@ -298,7 +302,7 @@ else
 
     local hitPatterns
     local function hit(_, msg)
-        if type(msg) ~= "string" then return end
+        if type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
         if not hitPatterns then
             hitPatterns = {}
             for _, n in ipairs({ "COMBATHITOTHERSELF", "COMBATHITCRITOTHERSELF", "MISSEDOTHERSELF" }) do

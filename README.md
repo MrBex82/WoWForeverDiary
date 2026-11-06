@@ -26,6 +26,7 @@ Den Ordner `WoWForeverDiary` nach `World of Warcraft\_classic_era_\Interface\Add
 | `/wfd export`, `/wfd import` | Umzugs-Code für einen anderen Rechner erstellen oder einlesen |
 | `/wfd restore` | Ein beiseitegelegtes Tagebuch zurückholen |
 | `/wfd backup` | Die Kopie von vor dem letzten Update zurückholen (wird beim ersten Start nach einer neuen Version angelegt und nach 30 Tagen verworfen) |
+| `/wfd cleanup` | Zeigt, welche Gefährten aus Schlachtfeldern oder Einmal-Gruppen entfernt würden. Mit `/wfd cleanup yes` werden sie entfernt |
 
 Im Buch, in Gruppen; jede Gruppe hat einen Reiter, der eine Übersicht ihrer Teile öffnet. Zeigst du auf den Reiter, klappt eine Liste seiner Teile auf:
 

@@ -8,8 +8,23 @@ local time, format = time, string.format
 ------------------------------------------------------------------------
 local current = {}      -- key -> true while grouped right now
 
+-- battlegrounds and arenas throw strangers together by the dozen: they are no companions
+local function inPvP()
+    local _, kind = IsInInstance()
+    if kind == "pvp" or kind == "arena" then return true end
+    -- other ways the game tells a battleground apart, also while the map is still loading
+    if UnitInBattleground and UnitInBattleground("player") then return true end
+    if C_PvP and C_PvP.IsPVPMap and C_PvP.IsPVPMap() then return true end
+    if IsActiveBattlefieldArena and IsActiveBattlefieldArena() then return true end
+    return false
+end
+
 local function roster()
     if WFD.paused or not WFD.C then return end
+    if inPvP() then
+        current = {}
+        return
+    end
     local C = WFD.C
     C.companions = C.companions or {}
     local now, day = time(), WFD:DayIndex()
@@ -43,6 +58,53 @@ local function roster()
     end
     current = seen
     WFD.dirty = true
+end
+
+-- Companions gathered in battlegrounds before they were left out: they are found by the place they were last met
+local PVP_PLACES = {
+    "Warsong Gulch", "Arathi Basin", "Alterac Valley", "Eye of the Storm", "Strand of the Ancients", "Isle of Conquest",
+    "Twin Peaks", "The Battle for Gilneas", "Blade's Edge Arena", "Nagrand Arena", "Ruins of Lordaeron",
+    "Kriegshymnenschlucht", "Arathibecken", "Alteractal", "Auge des Sturms", "Strand der Uralten", "Insel der Eroberung",
+    "Zwillingsgipfel", "Schlacht um Gilneas", "Arena des Schergrats", "Arena von Nagrand", "Ruinen von Lordaeron",
+}
+
+local function pvpPlaces()
+    local set = {}
+    for _, n in ipairs(PVP_PLACES) do set[n] = true end
+    -- the game's own names for the client's language
+    if GetNumBattlegroundTypes and GetBattlegroundInfo then
+        for i = 1, GetNumBattlegroundTypes() do
+            local name = GetBattlegroundInfo(i)
+            if type(name) == "string" and name ~= "" then set[name] = true end
+        end
+    end
+    return set
+end
+
+-- "/wfd cleanup": first only counts, "/wfd cleanup yes" removes. Friends met often elsewhere stay.
+function WFD:CleanCompanions(doIt)
+    local C = self.C
+    if not C or not C.companions then return 0 end
+    local places, drop = pvpPlaces(), {}
+    for key, e in pairs(C.companions) do
+        local days = 0
+        for _ in pairs(e.days or {}) do days = days + 1 end
+        local groups = e.groups or 0
+        -- met in a battleground, or a stranger of a single group who never stood beside you for one kill
+        -- (the place is that of the last meeting, which may be the city after the battleground)
+        if (places[e.zone or ""] and groups <= 2) or ((e.kills or 0) == 0 and groups <= 1 and days <= 1) then
+            drop[#drop + 1] = key
+        end
+    end
+    table.sort(drop)
+    if doIt then
+        for _, key in ipairs(drop) do C.companions[key] = nil end
+        if #drop > 0 then
+            self.dirty = true
+            if self.UI and self.UI.ClearCaches then self.UI.ClearCaches() end
+        end
+    end
+    return #drop, drop
 end
 
 WFD:On("GROUP_ROSTER_UPDATE", roster)
