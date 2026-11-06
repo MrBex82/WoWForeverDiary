@@ -44,11 +44,20 @@ local function refreshZone()
 
     if not C.startZone then C.startZone = zone end
     local z = C.zones[zone]
+    -- a land already on record counts as announced, whatever the list says
+    if z then C.announced = C.announced or {} C.announced[zone] = true end
     if not z then
         z = { first = time(), day = WFD:DayIndex(), sub = {}, visits = 0 }
         C.zones[zone] = z
         if zone ~= C.startZone then
-            WFD:Milestone("zone", format(L["Discovered a new land: %s"], zone), true)
+            -- the same land is announced only once, even when its record was moved or renamed in between
+            -- (a start building and the valley around it may carry different names for the same zone)
+            -- the list of announced names is not touched by the renaming of stored names
+            C.announced = C.announced or {}
+            if not C.announced[zone] then
+                C.announced[zone] = true
+                WFD:Milestone("zone", format(L["Discovered a new land: %s"], zone), true)
+            end
         end
     end
     if lastZone ~= zone then
@@ -97,6 +106,10 @@ WFD:OnInit(function()
     st.level, st.xp, st.max = UnitLevel("player"), UnitXP("player"), UnitXPMax("player")
     local C = WFD.C
     C.levelTimes = C.levelTimes or {}
+    -- lands recorded before the list existed are not announced again
+    C.announced = C.announced or {}
+    for name in pairs(C.zones or {}) do C.announced[name] = true end
+    if C.startZone then C.announced[C.startZone] = true end
     if C.fresh and not C.levelTimes[st.level] then C.levelTimes[st.level] = C.born end
     refreshZone()
 end)

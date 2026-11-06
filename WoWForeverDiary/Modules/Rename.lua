@@ -152,6 +152,7 @@ local function applyAll(C)
         return a
     end)
     rekey(C.zoneMaps)
+    rekey(C.announced)
     rekey(C.instances, earlier)
     rekey(C.encounters, sum)
     rekey(C.nemesis, function(a, b) a.n = (a.n or 0) + (b.n or 0) return a end)
