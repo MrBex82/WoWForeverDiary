@@ -73,7 +73,7 @@ local MAX = 40
 local function same(a, b)
     if not a or not b or a.view ~= b.view then return false end
     if a.view == "legacy" then return a.page == b.page end
-    return a.section == b.section
+    return a.section == b.section and a.group == b.group and a.key == b.key
 end
 
 -- the place of the book that is open right now, so the way back leads to the very spread
@@ -147,9 +147,9 @@ function UI.PartRoute(key)
     return { view = "legacy", part = key, page = function(book) return book.sectionStart[key] end }
 end
 
--- the route of a group: Start for Start, the days of the diary, else the overview page of the group
+-- the route of a group: Start for Start, the days of the diary, else the overview of the group on the desk
 function UI.GroupRoute(g)
     if g.route then return g.route end
     if g.key == "diary" then return UI.PartRoute("diary") end
-    return { view = "legacy", part = g.old, page = function(book) return book.sectionStart[g.old] end }
+    return { view = "group", group = g.key }
 end

@@ -65,6 +65,13 @@ local function newItem(parent)
     b.text:SetPoint("LEFT", b.ring, "RIGHT", 10, 0)
     b.text:SetPoint("RIGHT", b, "RIGHT", -34, 0)
     b.text:SetWordWrap(false)
+    b.glow = b:CreateTexture(nil, "BACKGROUND", nil, 2)
+    b.glow:SetTexture(UI.WHITE)
+    b.glow:SetAllPoints()
+    b.accent = K.Fill(b, "gold", "ARTWORK", 3)
+    b.accent:SetWidth(3)
+    b.accent:SetPoint("TOPLEFT", -6, -4)
+    b.accent:SetPoint("BOTTOMLEFT", -6, 4)
     b.badge = K.Box(b, "gold", nil)
     b.badge:SetSize(20, 18)
     b.badge:SetPoint("RIGHT", -8, 0)
@@ -77,7 +84,10 @@ local function newItem(parent)
     end)
     b:SetScript("OnLeave", function(self) self.hover = nil self:Paint() GameTooltip:Hide() end)
     function b:Paint()
-        self:SetSurface((self.active or self.hover) and "hover" or nil)
+        local r, g, bb = UI.Tok("gold")
+        local a = self.active and 0.30 or (self.hover and 0.14 or 0)
+        UI.Gradient(self.glow, "HORIZONTAL", { r, g, bb, a }, { r, g, bb, 0 })
+        self.accent:SetShown(self.active and true or false)
         K.Recolor(self.text, self.active and "title" or "ink")
         local col = self.col or { 0.4, 0.3, 0.2 }
         local k = (self.active or self.hover) and 1.25 or 1
@@ -89,17 +99,19 @@ end
 local function newSub(parent)
     local b = K.Box(parent, nil, nil, "Button")
     b:SetHeight(28)
+    b.dot = UI.Diamond(b, 5, { 1, 1, 1, 1 }, "ARTWORK", 1)
+    b.dot:SetPoint("LEFT", 4, 0)
     b.text = K.Text(b, "body", "soft")
-    b.text:SetPoint("LEFT", 12, 0)
-    b.text:SetPoint("RIGHT", b, "RIGHT", -34, 0)
-    b.text:SetWordWrap(false)
+    b.text:SetPoint("LEFT", 14, 0)
+    b.text:SetSpacing(1)
     b.count = K.Text(b, "small", "gold", "RIGHT")
     b.count:SetPoint("RIGHT", -8, 0)
     b:SetScript("OnEnter", function(self) self.hover = true self:Paint() end)
     b:SetScript("OnLeave", function(self) self.hover = nil self:Paint() end)
     function b:Paint()
-        self:SetSurface(self.active and "card" or (self.hover and "hover" or nil))
+        self:SetSurface((self.active or self.hover) and "hover" or nil, nil, self.active and 0.9 or 0.6)
         K.Recolor(self.text, self.active and "title" or (self.empty and "muted" or "soft"))
+        self.dot:SetVertexColor(UI.Tok(self.active and "gold" or "muted", self.active and 1 or 0.6))
     end
     return b
 end
@@ -132,6 +144,7 @@ local function openPlace()
     local cur = R.cur
     if not cur then return "start" end
     if cur.view == "start" then return "start" end
+    if cur.view == "group" then return cur.group end
     local place = UI.VIEW_PLACE and UI.VIEW_PLACE[cur.view]
     if place then return place[1], place[2] end
     if cur.view ~= "legacy" then return nil end
@@ -183,6 +196,7 @@ function UI:RefreshRail()
                 si = si + 1
                 local sb = S.subs[si] or newSub(rail)
                 S.subs[si] = sb
+                sb.text:SetWidth(RAIL_W - 44 - 6 - 14 - 30)
                 sb.text:SetText(UI.PartLabel(key))
                 sb.empty = UI.IsEmptyPart and UI.IsEmptyPart(key)
                 sb.active = (key == part)
@@ -194,7 +208,9 @@ function UI:RefreshRail()
                 sb:SetPoint("RIGHT", rail, "RIGHT", -6, 0)
                 sb:Paint()
                 sb:Show()
-                y = y - 28
+                local sh = max(26, sb.text:GetStringHeight() + 10)
+                sb:SetHeight(sh)
+                y = y - sh
             end
             y = y - 6
         end
@@ -494,19 +510,22 @@ function UI:BuildShell()
     local h = self.holder
     S = { items = {}, subs = {}, marks = {} }
     UI.shell = S
-    local f = K.Box(h, "frame", "edge")
+    local f = K.Box(h, nil, "edge")
+    K.Material(f, "leather")
     f:SetAllPoints(h)
     f:SetFrameLevel(h:GetFrameLevel())
     f:EnableMouse(true)
     S.frame = f
-    local inner = K.Box(f, "shell", "line")
-    inner:SetPoint("TOPLEFT", 6, -6)
-    inner:SetPoint("BOTTOMRIGHT", -6, 6)
+    local inner = K.Box(f, nil, "line")
+    K.Material(inner, "leaf")
+    inner:SetPoint("TOPLEFT", 7, -7)
+    inner:SetPoint("BOTTOMRIGHT", -7, 7)
     inner:SetFrameLevel(f:GetFrameLevel())
     S.inner = inner
 
     -- moving the window by its head bar
-    local top = K.Box(inner, "panel", nil)
+    local top = K.Box(inner, nil, nil)
+    K.Material(top, "dark")
     top:SetPoint("TOPLEFT", 1, -1)
     top:SetPoint("TOPRIGHT", -1, -1)
     top:SetHeight(TOP_H)
@@ -517,9 +536,10 @@ function UI:BuildShell()
         h:StopMovingOrSizing()
         if UI.SavePosition then UI:SavePosition() end
     end)
-    local rule = K.Rule(top, "line")
-    rule:SetPoint("BOTTOMLEFT")
-    rule:SetPoint("BOTTOMRIGHT")
+    local rule = K.GoldRule(top)
+    rule:SetPoint("BOTTOMLEFT", 0, -4)
+    rule:SetPoint("BOTTOMRIGHT", 0, -4)
+    rule:SetFrameLevel(top:GetFrameLevel() + 5)
     S.top = top
 
     S.back = K.IconButton(top, "left", { L["Back"], L["To the page you came from (Backspace)."] }, function() R.Back() end)
@@ -559,11 +579,12 @@ function UI:BuildShell()
     S.title:SetPoint("RIGHT", S.search, "LEFT", -12, 0)
 
     -- the register
-    local rail = K.Box(inner, "panel", nil)
+    local rail = K.Box(inner, nil, nil)
+    K.Material(rail, "dark")
     rail:SetPoint("TOPLEFT", top, "BOTTOMLEFT", 0, 0)
     rail:SetPoint("BOTTOMLEFT", 1, 1)
     rail:SetWidth(RAIL_W)
-    local rr = K.Fill(rail, "line", "ARTWORK", 1)
+    local rr = K.Fill(rail, "gold", "ARTWORK", 1, 0.35)
     rr:SetWidth(1)
     rr:SetPoint("TOPRIGHT")
     rr:SetPoint("BOTTOMRIGHT")

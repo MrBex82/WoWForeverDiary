@@ -102,3 +102,4 @@ UI\Views\Albums.lua
 UI\Views\Registers.lua
 UI\Views\Trophies.lua
 UI\Views\Goals.lua
+UI\Views\Group.lua

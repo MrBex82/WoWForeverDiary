@@ -91,8 +91,16 @@ function K.Box(parent, bg, border, kind)
     return f
 end
 
+-- a card on the desk: its own surface with a soft sheen, a fine gold edge and gold corner pieces
 function K.Card(parent)
-    return K.Box(parent, "card", "line")
+    local c = K.Box(parent, nil, "line")
+    if K.Material then
+        K.Material(c, "card")
+        K.Corners(c, 5, 6)
+    else
+        c:SetSurface("card", "line")
+    end
+    return c
 end
 
 ------------------------------------------------------------------------
@@ -191,6 +199,7 @@ local function paintButton(b)
     paintText(b.label)
     if b.glyph then b.glyph:SetColorKey(b.label.colorKey) end
     b:SetAlpha(b:IsEnabled() and 1 or 0.45)
+    if b.sheen then b.sheen:SetShown(b.style ~= "ghost" or hot) end
     -- the width follows the label (it changes with the size of the writing and the language)
     if not b.fixedW then
         local extra = b.glyph and 18 or 0
@@ -205,6 +214,11 @@ function K.Button(parent, text, style, onClick, width)
     b.style = style or "secondary"
     b.fixedW = width
     if width then b:SetWidth(width) end
+    b.sheen = b:CreateTexture(nil, "ARTWORK", nil, -1)
+    b.sheen:SetTexture(WHITE)
+    b.sheen:SetPoint("TOPLEFT", 1, -1)
+    b.sheen:SetPoint("BOTTOMRIGHT", -1, 1)
+    UI.Gradient(b.sheen, "VERTICAL", { 0, 0, 0, 0.14 }, { 1, 1, 1, 0.09 })
     b.label = b:CreateFontString(nil, "OVERLAY")
     b.label.role, b.label.colorKey = "strong", "ink"
     paintText(b.label)          -- a font first: the game refuses text on a string without one
@@ -488,14 +502,33 @@ end
 function K.SectionHead(parent, text, right)
     local f = CreateFrame("Frame", nil, parent)
     f:SetHeight(18)
+    -- as in the book: a small diamond, the words in capitals, a gold line running out towards the figure
+    f.dia = UI.Diamond(f, 6, { 1, 1, 1, 1 }, "ARTWORK", 1)
+    f.dia:SetPoint("LEFT", 2, 0)
     f.text = K.Text(f, "section", "gold")
-    f.text:SetPoint("LEFT", 0, 0)
+    f.text:SetPoint("LEFT", 12, 0)
     f.right = K.Text(f, "small", "soft", "RIGHT")
     f.right:SetPoint("RIGHT", 0, 0)
+    f.rule = f:CreateTexture(nil, "ARTWORK")
+    f.rule:SetTexture(UI.WHITE)
+    f.rule:SetHeight(1)
+    local function paint(s)
+        local r, g, b = UI.Tok("gold")
+        s.dia:SetVertexColor(r, g, b, 1)
+        UI.Gradient(s.rule, "HORIZONTAL", { r, g, b, 0.55 }, { r, g, b, 0 })
+    end
     function f:Set(t, r)
         self.text:SetText(UI.Upper(t or ""))
         self.right:SetText(r or "")
+        self.rule:ClearAllPoints()
+        self.rule:SetPoint("LEFT", self.text, "RIGHT", 8, 0)
+        if (r or "") ~= "" then
+            self.rule:SetPoint("RIGHT", self.right, "LEFT", -8, 0)
+        else
+            self.rule:SetPoint("RIGHT", self, "RIGHT", 0, 0)
+        end
     end
+    UI.Skin.Add(f, paint)
     f:Set(text, right)
     return f
 end
@@ -667,4 +700,113 @@ end
 function K.CloseDialog()
     if dlg and dlg:IsShown() then dlg:Hide() return true end
     return false
+end
+
+------------------------------------------------------------------------
+-- Materials: the leather of the binding, the dark leaf of the pages, gold leaf. Drawn once per style (the classic
+-- styles use the book's own textures, Modern and Strong contrast stay flat) and swapped when the style changes.
+------------------------------------------------------------------------
+local CLASSIC = { codex = true, parchment = true }
+local function tokenAt(key)
+    local t = UI.T[key]
+    return { t[1], t[2], t[3], t[4] or 1 }
+end
+
+local function leather(f, dark)
+    local art = UI.TiledArt(f, UI.BINDING_ART, "BACKGROUND", 1)
+    if not art then
+        local g = UI.GradRect(f, "VERTICAL", { 0.08, 0.04, 0.02, 1 }, { 0.24, 0.13, 0.07, 1 }, "BACKGROUND", 1)
+        g:SetAllPoints()
+    end
+    -- light from above, the lower part in shadow
+    local shade = UI.GradRect(f, "VERTICAL", { 0, 0, 0, dark and 0.55 or 0.40 }, { 0, 0, 0, dark and 0.25 or 0 }, "BACKGROUND", 2)
+    shade:SetAllPoints()
+    UI.EdgeFade(f, "TOP", 30, { 1, 0.80, 0.55 }, 0.06, "BACKGROUND", 3)
+end
+
+local function leaf(f)
+    if UI.THEME == "parchment" then
+        local base = UI.Fill(f, tokenAt("shell"), "BACKGROUND", 1)
+        base:SetAllPoints()
+        UI.Grain(f, { 0.55, 0.40, 0.20 }, 0.10, "BACKGROUND", 2)
+        for _, e in ipairs({ "TOP", "BOTTOM", "LEFT", "RIGHT" }) do UI.EdgeFade(f, e, 60, { 0.40, 0.25, 0.08 }, 0.22, "BACKGROUND", 3) end
+        return
+    end
+    local art = UI.TiledArt(f, UI.PAGE_ART, "BACKGROUND", 1)
+    if not art then
+        local base = UI.Fill(f, tokenAt("shell"), "BACKGROUND", 1)
+        base:SetAllPoints()
+    end
+    local glow = UI.GradRect(f, "VERTICAL", { 0.03, 0.02, 0.01, 0.55 }, { 0.20, 0.13, 0.07, 0.35 }, "BACKGROUND", 2)
+    glow:SetAllPoints()
+    for _, e in ipairs({ "TOP", "BOTTOM", "LEFT", "RIGHT" }) do UI.EdgeFade(f, e, 70, { 0, 0, 0 }, 0.45, "BACKGROUND", 3) end
+end
+
+-- kind: "leather" (the frame), "dark" (head bar and register), "leaf" (the desk), "card"
+function K.Material(f, kind)
+    UI.Themed(f, function(fr)
+        local classic = CLASSIC[UI.THEME or "codex"]
+        if kind == "card" then
+            local base = UI.Fill(fr, tokenAt("card"), "BACKGROUND", 1)
+            base:SetAllPoints()
+            local sheen = UI.GradRect(fr, "VERTICAL", { 0, 0, 0, classic and 0.18 or 0.06 }, { 1, 0.92, 0.75, classic and 0.06 or 0.03 }, "BACKGROUND", 2)
+            sheen:SetAllPoints()
+            return
+        end
+        if not classic then
+            local key = (kind == "leaf") and "shell" or (kind == "dark" and "panel" or "frame")
+            local base = UI.Fill(fr, tokenAt(key), "BACKGROUND", 1)
+            base:SetAllPoints()
+            local g = UI.GradRect(fr, "VERTICAL", { 0, 0, 0, 0.10 }, { 1, 1, 1, 0.025 }, "BACKGROUND", 2)
+            g:SetAllPoints()
+            return
+        end
+        if kind == "leaf" then leaf(fr) else leather(fr, kind == "dark") end
+    end)
+    return f
+end
+
+-- a line of gold leaf that fades out at both ends, with a small diamond in the middle (diamond = false: without)
+function K.GoldRule(parent, diamond)
+    local f = CreateFrame("Frame", nil, parent)
+    f:SetHeight(9)
+    f.l = K.Fill(f, "gold", "ARTWORK", 0)
+    f.r = K.Fill(f, "gold", "ARTWORK", 0)
+    f.l:SetHeight(1)
+    f.r:SetHeight(1)
+    f.l:SetPoint("LEFT", f, "LEFT", 0, 0)
+    f.l:SetPoint("RIGHT", f, "CENTER", diamond == false and 0 or -6, 0)
+    f.r:SetPoint("LEFT", f, "CENTER", diamond == false and 0 or 6, 0)
+    f.r:SetPoint("RIGHT", f, "RIGHT", 0, 0)
+    local function fade(s)
+        local r, g, b = UI.Tok("gold")
+        UI.Gradient(s.l, "HORIZONTAL", { r, g, b, 0 }, { r, g, b, 0.75 })
+        UI.Gradient(s.r, "HORIZONTAL", { r, g, b, 0.75 }, { r, g, b, 0 })
+        if s.d then s.d:SetVertexColor(r, g, b, 1) end
+    end
+    if diamond ~= false then
+        f.d = UI.Diamond(f, 6, { 1, 1, 1, 1 }, "ARTWORK", 1)
+        f.d:SetPoint("CENTER")
+    end
+    UI.Skin.Add(f, fade)
+    return f
+end
+
+-- small gold diamonds in the four corners of a frame (the old book's corner pieces)
+function K.Corners(f, size, inset)
+    size, inset = size or 6, inset or 5
+    f.corners = {}
+    for _, pt in ipairs({ { "TOPLEFT", 1, -1 }, { "TOPRIGHT", -1, -1 }, { "BOTTOMLEFT", 1, 1 }, { "BOTTOMRIGHT", -1, 1 } }) do
+        local d = UI.Diamond(f, size, { 1, 1, 1, 1 }, "OVERLAY", 3)
+        d:SetPoint("CENTER", f, pt[1], pt[2] * inset, pt[3] * inset)
+        f.corners[#f.corners + 1] = d
+    end
+    UI.Skin.Add(f, function(s)
+        local classic = CLASSIC[UI.THEME or "codex"]
+        for _, d in ipairs(s.corners) do
+            d:SetVertexColor(UI.Tok("gold", 0.85))
+            d:SetShown(classic)
+        end
+    end)
+    return f
 end
