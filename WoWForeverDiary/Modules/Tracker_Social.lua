@@ -34,9 +34,10 @@ local function roster()
     local count = raid and n or math.max(0, n - 1)
     for i = 1, count do
         local unit = (raid and "raid" or "party") .. i
+        local isSecret = issecretvalue
         if UnitExists(unit) and UnitIsPlayer(unit) and not UnitIsUnit(unit, "player") then
             local name, realm = UnitName(unit)
-            if name and name ~= "" and name ~= UNKNOWNOBJECT then
+            if name and not (isSecret and (isSecret(name) or isSecret(realm))) and name ~= "" and name ~= UNKNOWNOBJECT then
                 local key = (realm and realm ~= "") and (name .. "-" .. realm) or name
                 seen[key] = true
                 local e = C.companions[key]
@@ -49,7 +50,7 @@ local function roster()
                 e.name = name
                 e.class, e.classFile = UnitClass(unit)
                 local lvl = UnitLevel(unit)
-                if lvl and lvl > 0 then e.level = lvl end
+                if lvl and not (isSecret and isSecret(lvl)) and lvl > 0 then e.level = lvl end
                 e.last = now
                 e.days[day] = true
                 e.zone = WFD.zoneName or e.zone

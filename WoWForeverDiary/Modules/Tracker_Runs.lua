@@ -120,10 +120,13 @@ end)
 -- and merely registering for it gets the addon blocked.
 local down = {}      -- name -> true while that member lies dead
 WFD:On("UNIT_HEALTH", function(_, unit)
-    if not run or type(unit) ~= "string" or not (unit:find("^party%d") or unit:find("^raid%d")) then return end
+    local isSecret = issecretvalue
+    if not run or type(unit) ~= "string" or (isSecret and isSecret(unit)) then return end
+    if not (unit:find("^party%d") or unit:find("^raid%d")) then return end
     local name = UnitName(unit)
-    if not name or not run.party[name] then return end
+    if not name or (isSecret and isSecret(name)) or not run.party[name] then return end
     local dead = UnitIsDeadOrGhost(unit)
+    if isSecret and isSecret(dead) then return end
     if dead and not down[name] then
         down[name] = true
         run.deaths[#run.deaths + 1] = { who = name }

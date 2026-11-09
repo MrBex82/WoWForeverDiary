@@ -57,7 +57,8 @@ local function cacheUnit(unit)
     if not guid or (isSecret and isSecret(guid)) then return end
     local kind, id = WFD:ParseGUID(guid)
     if kind ~= "Creature" or not id then return end
-    if UnitIsPlayer(unit) then return end
+    local isPlayer = UnitIsPlayer(unit)
+    if isPlayer or (isSecret and isSecret(isPlayer)) then return end
     local name = UnitName(unit)
     local level, class, ctype, family = UnitLevel(unit), UnitClassification(unit), UnitCreatureType(unit),
         UnitCreatureFamily and UnitCreatureFamily(unit) or nil
@@ -69,7 +70,8 @@ local function cacheUnit(unit)
     end
     -- a creature seen but not yet slain: the bestiary shows it as a covered card with the place it was seen
     local C = WFD.C
-    if C and not WFD.paused and not C.mobs[id] and name and UnitCanAttack("player", unit) then
+    local canAttack = UnitCanAttack("player", unit)
+    if C and not WFD.paused and not C.mobs[id] and name and canAttack and not (isSecret and isSecret(canAttack)) then
         C.sighted = C.sighted or {}
         if not C.sighted[id] then
             local map, x, y = WFD:PlayerPos()
@@ -235,18 +237,24 @@ else
         return AIMED[unit] or unit == "focus" or unit == "mouseover" or unit:find("^nameplate") or unit:find("^boss")
     end
     local function watch(unit, why)
-        if WFD.paused or not WFD.C or type(unit) ~= "string" or not creatureUnit(unit) or not UnitExists(unit) then return end
+        if WFD.paused or not WFD.C or type(unit) ~= "string" or (issecretvalue and issecretvalue(unit)) or not creatureUnit(unit) or not UnitExists(unit) then return end
+        local isSecret = issecretvalue
         local guid = UnitGUID(unit)
+        if not guid or (isSecret and isSecret(guid)) then return end
         local kind, id = WFD:ParseGUID(guid)
-        if kind ~= "Creature" or not id or UnitIsPlayer(unit) then return end
-        if not UnitIsDead(unit) then
+        if kind ~= "Creature" or not id then return end
+        local isPlayer, isDead = UnitIsPlayer(unit), UnitIsDead(unit)
+        if isSecret and (isSecret(isPlayer) or isSecret(isDead)) then return end
+        if isPlayer then return end
+        if not isDead then
             if AIMED[unit] then aliveAt[guid] = GetTime() end
             local ok, st = false, nil
             if UnitThreatSituation then ok, st = pcall(UnitThreatSituation, "player", unit) end
             if ok and st and not (issecretvalue and issecretvalue(st)) then
                 engaged[guid] = GetTime()
                 -- 2 and 3: the creature is after you. Without a combat log that is the best guess at a killer
-                if st >= 2 then lastThreat = { name = UnitName(unit), t = time() } end
+                local tn = UnitName(unit)
+                if st >= 2 and not (issecretvalue and issecretvalue(tn)) then lastThreat = { name = tn, t = time() } end
             end
             return
         end
@@ -255,11 +263,14 @@ else
         if not t and AIMED[unit] and aliveAt[guid] and GetTime() - aliveAt[guid] < 30 and fighting() then t = GetTime() end
         say(why or "?", unit, UnitName(unit), "dead", "fight:", tostring(t ~= nil), "tapped by others:", tostring(UnitIsTapDenied and UnitIsTapDenied(unit)))
         if not t or GetTime() - t > 60 then return end
-        if UnitIsTapDenied and UnitIsTapDenied(unit) then return end      -- someone else's kill
+        local denied = UnitIsTapDenied and UnitIsTapDenied(unit)
+        if isSecret and isSecret(denied) then return end
+        if denied then return end      -- someone else's kill
         counted[guid] = GetTime()
         engaged[guid] = nil
         cacheUnit(unit)
         local name = UnitName(unit)
+        if isSecret and isSecret(name) then return end
         if not matched(byXP, name) then
             countKill(id, name)
             remember(byHealth, name)
@@ -277,12 +288,15 @@ else
     WFD:On("UNIT_COMBAT", function(_, unit, action, _, amount)
         -- this client hands some combat numbers out as secret values that throw when compared:
         -- a wound of secret size is still a wound
-        if issecretvalue and issecretvalue(action) then return end
+        if issecretvalue and (issecretvalue(action) or issecretvalue(unit)) then return end
         if issecretvalue and issecretvalue(amount) then amount = 1 end
         if type(unit) ~= "string" or action ~= "WOUND" or not (amount and amount > 0) then return end
         if not (AIMED[unit] or unit:find("^nameplate")) then return end
-        if not (UnitAffectingCombat and UnitAffectingCombat("player")) and not UnitIsDead(unit) then return end
+        local dead = UnitIsDead(unit)
+        if issecretvalue and issecretvalue(dead) then return end
+        if not (UnitAffectingCombat and UnitAffectingCombat("player")) and not dead then return end
         local guid = UnitExists(unit) and UnitGUID(unit)
+        if guid and issecretvalue and issecretvalue(guid) then return end
         if guid then engaged[guid] = GetTime() end
         say("UNIT_COMBAT", unit, action, amount)
         watch(unit, "UNIT_COMBAT")
@@ -334,6 +348,7 @@ WFD:On("PLAYER_DEAD", function()
     if not by and lastThreat and time() - lastThreat.t < 12 then by = lastThreat.name end
     if not by and UnitExists("target") and UnitCanAttack("player", "target") then
         by = UnitName("target")
+        if issecretvalue and issecretvalue(by) then by = nil end
     end
     if by then
         local n = C.nemesis[by]

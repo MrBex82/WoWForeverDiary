@@ -74,6 +74,8 @@ WFD.evf = evf
 local seenErrors = {}
 function WFD:Error(where, err)
     local key = tostring(err)
+    -- a "secret value" refusal (inside instances) is expected and harmless: that event is simply skipped, quietly
+    if key:find("secret", 1, true) then return end
     if seenErrors[key] then return end
     seenErrors[key] = true
     print("|cffff5555WoW Forever Diary|r error in " .. tostring(where) .. ": " .. key)
@@ -633,7 +635,7 @@ function WFD:MapName(mapID)
 end
 
 function WFD:ParseGUID(guid)
-    if not guid then return end
+    if type(guid) ~= "string" or (issecretvalue and issecretvalue(guid)) then return end
     local kind, _, _, _, _, id = strsplit("-", guid)
     return kind, tonumber(id)
 end
