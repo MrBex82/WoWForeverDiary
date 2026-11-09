@@ -1261,6 +1261,7 @@ L["%d years ago today, %s brought me down in %s."] = "Il y a %d {an|ans}, jour p
 L["%d years ago today I fell in %s."] = "Il y a %d {an|ans}, jour pour jour, je suis tombé à %s."
 L["First ridden on day %d"] = "Montée pour la première fois le jour %d"
 L["Into the chat"] = "Dans le chat"
+L["Do not show again"] = "Ne plus afficher"
 L["Most days were: %s (%d)"] = "La plupart des jours : %s (%d)"
 L["Mounts"] = "Montures"
 L["My week: %d kills, %d quests, %s km, %d levels, %d new places."] = "Ma semaine : %d victimes, %d quêtes, %s km, %d niveaux, %d nouveaux lieux."

@@ -1273,6 +1273,7 @@ L["%d years ago today, %s brought me down in %s."] = "Hace %d {año|años}, tal 
 L["%d years ago today I fell in %s."] = "Hace %d {año|años}, tal día como hoy, caí en %s."
 L["First ridden on day %d"] = "Montada por primera vez el día %d"
 L["Into the chat"] = "Al chat"
+L["Do not show again"] = "No mostrar más"
 L["Most days were: %s (%d)"] = "La mayoría de los días fueron: %s (%d)"
 L["Mounts"] = "Monturas"
 L["My week: %d kills, %d quests, %s km, %d levels, %d new places."] = "Mi semana: %d bajas, %d misiones, %s km, %d niveles, %d lugares nuevos."

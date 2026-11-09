@@ -1268,6 +1268,7 @@ L["%d years ago today, %s brought me down in %s."] = "Лет назад: %d. В 
 L["%d years ago today I fell in %s."] = "Лет назад: %d. В этот день я пал. Место: %s."
 L["First ridden on day %d"] = "Впервые оседлан в день %d"
 L["Into the chat"] = "В чат"
+L["Do not show again"] = "Больше не показывать"
 L["Most days were: %s (%d)"] = "Чаще всего дни были такими: %s (%d)"
 L["Mounts"] = "Верховые животные"
 L["My week: %d kills, %d quests, %s km, %d levels, %d new places."] = "Моя неделя: убийств %d, заданий %d, %s км, уровней %d, новых мест %d."

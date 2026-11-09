@@ -1260,6 +1260,7 @@ L["%d years ago today, %s brought me down in %s."] = "Há %d {ano|anos}, neste m
 L["%d years ago today I fell in %s."] = "Há %d {ano|anos}, neste mesmo dia, eu caí em %s."
 L["First ridden on day %d"] = "Cavalgada pela primeira vez no dia %d"
 L["Into the chat"] = "Para o chat"
+L["Do not show again"] = "Não mostrar mais"
 L["Most days were: %s (%d)"] = "A maioria dos dias foi: %s (%d)"
 L["Mounts"] = "Montarias"
 L["My week: %d kills, %d quests, %s km, %d levels, %d new places."] = "Minha semana: %d abates, %d missões, %s km, %d níveis, %d lugares novos."

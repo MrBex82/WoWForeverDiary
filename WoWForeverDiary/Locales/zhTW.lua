@@ -1257,6 +1257,7 @@ L["%d years ago today, %s brought me down in %s."] = "%d年前的今天，%s在%
 L["%d years ago today I fell in %s."] = "%d年前的今天，我在%s倒下。"
 L["First ridden on day %d"] = "第%d天首次騎乘"
 L["Into the chat"] = "傳到聊天"
+L["Do not show again"] = "不再顯示"
 L["Most days were: %s (%d)"] = "最多的日子是：%s（%d）"
 L["Mounts"] = "坐騎"
 L["My week: %d kills, %d quests, %s km, %d levels, %d new places."] = "我的一週：擊殺%d、任務%d、%s公里、升級%d次、新地點%d處。"

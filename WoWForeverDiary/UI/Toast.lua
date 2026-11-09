@@ -555,7 +555,7 @@ local function list3(t)
 end
 
 local recap
-local RW, RH = 400, 360
+local RW, RH = 400, 430
 
 local function buildRecap()
     local f = UI.Frame(UIParent, RW, RH)
@@ -587,17 +587,23 @@ local function buildRecap()
         f:Hide()
         UI:OpenAt("diary")
     end, 15, c.redInk)
-    open:SetPoint("BOTTOMRIGHT", -34, 20)
-    local close = UI.InkButton(canvas, L["Close"], function() f:Hide() end, 15, c.inkSoft)
-    close:SetPoint("BOTTOMLEFT", 34, 20)
+    open:SetPoint("BOTTOM", 0, 52)
+    local close = UI.InkButton(canvas, L["Close"], function() f:Hide() end, 13, c.inkSoft)
+    close:SetPoint("BOTTOMLEFT", 30, 20)
+    -- the look back can be switched off right here (it is also in the options)
+    local never = UI.InkButton(canvas, L["Do not show again"], function()
+        if WFD.S then WFD.S.recap = false end
+        f:Hide()
+    end, 13, c.inkFaint)
+    never:SetPoint("BOTTOM", 0, 20)
     -- the week as one line in the chat's input field: it is only sent when you press Enter yourself
     local share = UI.InkButton(canvas, L["Into the chat"], function()
         local s = f.stats
         if not s or not ChatFrame_OpenChat then return end
         ChatFrame_OpenChat(format(L["My week: %d kills, %d quests, %s km, %d levels, %d new places."],
             s.kills, s.quests, WFD:Dec(s.km), #s.levels, s.places))
-    end, 15, c.inkSoft)
-    share:SetPoint("BOTTOM", 0, 20)
+    end, 13, c.inkSoft)
+    share:SetPoint("BOTTOMRIGHT", -30, 20)
     f:Hide()
     return f
 end
@@ -636,20 +642,20 @@ function UI:ShowRecap(force)
         local col = (i - 1) % 3
         local row = floor((i - 1) / 3)
         local x = 32 + col * (tw + 8)
-        local y = -94 - row * 50
+        local y = -94 - row * 56
         local bg = pool:Rect(c.paperDk, 0.45)
-        bg:SetSize(tw, 42)
+        bg:SetSize(tw, 48)
         bg:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, y)
         local v = pool:Text(18, (i == 6 and s.deaths > 0) and c.redInk or c.ink, UI.HEAD, "CENTER")
         v:SetText(tostring(fg[1]))
         v:SetWidth(tw)
-        v:SetPoint("TOP", bg, "TOP", 0, -5)
+        v:SetPoint("TOP", bg, "TOP", 0, -4)
         local l = pool:Text(9, c.inkSoft, UI.FONT, "CENTER")
         l:SetText(fg[2]:upper())
-        UI.FitText(l, tw - 6, 9, 7, UI.FONT)
-        l:SetWidth(tw - 4)
-        l:SetWordWrap(false)
-        l:SetPoint("TOP", bg, "TOP", 0, -28)
+        l:SetWidth(tw - 6)
+        l:SetWordWrap(true)
+        if l.SetMaxLines then l:SetMaxLines(2) end        -- a long label takes a second line instead of being cut off
+        l:SetPoint("TOP", bg, "TOP", 0, -25)
     end
 
     -- the highlights
@@ -659,7 +665,7 @@ function UI:ShowRecap(force)
     if #s.honours > 0 then lines[#lines + 1] = { L["Honours"], list3(s.honours) } end
     if s.best then lines[#lines + 1] = { L["Best day"], format(L["Day %d"], s.best) .. "  -  " .. WFD:Count("%d kills", s.bestK) } end
     if #lines == 0 then lines[1] = { L["A quiet week"], L["The book waits for new stories."] } end
-    local y = -204
+    local y = -218
     for i = 1, min(4, #lines) do
         local k = pool:Text(10, c.redInk, UI.FONT)
         k:SetText(lines[i][1]:upper())
@@ -669,7 +675,11 @@ function UI:ShowRecap(force)
         v:SetWidth(W)
         v:SetWordWrap(false)
         v:SetPoint("TOPLEFT", canvas, "TOPLEFT", 32, y - 12)
-        y = y - 30
+        -- a long list is cut off at the edge: the hover shows all of it
+        local hot = pool:Hot({ lines[i][1], lines[i][2] }, nil)
+        hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", 30, y + 2)
+        hot:SetSize(W + 4, 30)
+        y = y - 34
     end
     pool:End()
     recap:Show()

@@ -1254,6 +1254,7 @@ L["%d years ago today, %s brought me down in %s."] = "%d년 전 오늘, %s에게
 L["%d years ago today I fell in %s."] = "%d년 전 오늘, %s에서 쓰러졌다."
 L["First ridden on day %d"] = "%d일째에 처음 탑승"
 L["Into the chat"] = "대화창으로"
+L["Do not show again"] = "다시 표시 안 함"
 L["Most days were: %s (%d)"] = "가장 많았던 날: %s (%d)"
 L["Mounts"] = "탈것"
 L["My week: %d kills, %d quests, %s km, %d levels, %d new places."] = "나의 한 주: 처치 %d, 퀘스트 %d, %s km, 레벨 %d, 새로운 장소 %d."
