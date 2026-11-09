@@ -492,12 +492,12 @@ local function everywhere(label)
                 for _, so in ipairs(v.sortKeys or {}) do v.state.sort = so v:Refresh() end
             end
             if v.search then v.search:SetText("a") v.search:SetText("") end
-            for item, f in pairs(v.list.active) do
+            for item, f in pairs(v.list and v.list.active or {}) do
                 local click = f:GetScript("OnClick")
                 if click and item.entry and not item.entry.hint then click(f, "LeftButton") break end
             end
             if v.next and v.next:IsShown() then v.next:Click() v.prev:Click() end
-            if v.detail:IsShown() then v:CloseDetail() end
+            if v.detail and v.detail:IsShown() then v:CloseDetail() end
         end)
     end
     step(label .. " back", function() for _ = 1, 6 do Rt.Back() end end)
