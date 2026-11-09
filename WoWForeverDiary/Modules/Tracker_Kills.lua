@@ -261,7 +261,7 @@ else
         if counted[guid] then return end
         local t = engaged[guid]
         if not t and AIMED[unit] and aliveAt[guid] and GetTime() - aliveAt[guid] < 30 and fighting() then t = GetTime() end
-        say(why or "?", unit, UnitName(unit), "dead", "fight:", tostring(t ~= nil), "tapped by others:", tostring(UnitIsTapDenied and UnitIsTapDenied(unit)))
+        if debug then say(why or "?", unit, UnitName(unit), "dead", "fight:", tostring(t ~= nil), "tapped by others:", tostring(UnitIsTapDenied and UnitIsTapDenied(unit))) end
         if not t or GetTime() - t > 60 then return end
         local denied = UnitIsTapDenied and UnitIsTapDenied(unit)
         if isSecret and isSecret(denied) then return end

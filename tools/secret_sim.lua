@@ -63,6 +63,15 @@ env.GetBuildInfo = function() return "12.0.0", "1", "Jan 1 2026", 120000 end
 env.GetLocale = function() return "enUS" end
 env.GetTime = function() return os.clock() end
 env.GetRealmName = function() return "Realm" end
+-- the game's own string functions refuse a secret value (they have to read it)
+local function noSecret(fn)
+    return function(...)
+        for i = 1, select("#", ...) do
+            if SECRET[(select(i, ...))] then error("attempt to perform string conversion on a secret string value", 2) end
+        end
+        return fn(...)
+    end
+end
 env.strsplit = function(sep, s, n)
     local out, pos = {}, 1
     while true do
@@ -73,7 +82,9 @@ env.strsplit = function(sep, s, n)
     end
     return table.unpack(out)
 end
-env.format, env.floor, env.min, env.max = string.format, math.floor, math.min, math.max
+env.strsplit = noSecret(env.strsplit)
+env.tonumber = noSecret(tonumber)
+env.format, env.floor, env.min, env.max = noSecret(string.format), math.floor, math.min, math.max
 env.wipe = function(t) for k in pairs(t) do t[k] = nil end return t end
 env.tinsert, env.tremove = table.insert, table.remove
 env.CreateFrame = function()
@@ -158,6 +169,7 @@ fire("PLAYER_ENTERING_WORLD")
 ------------------------------------------------------------------------ the events
 local units = { "target", "mouseover", "softenemy", "focus", "nameplate1", "boss1", "party1", "party2", "raid1" }
 local unitEvents = { "UNIT_HEALTH", "UNIT_THREAT_LIST_UPDATE", "UNIT_FLAGS", "NAME_PLATE_UNIT_ADDED", "UNIT_AURA", "UNIT_TARGET" }
+local function runEvents()
 for round = 1, 2 do
     for _, ev in ipairs(unitEvents) do
         for _, u in ipairs(units) do fire(ev, u) end
@@ -181,6 +193,31 @@ for round = 1, 2 do
     end
     fire("ENCOUNTER_END", secret("number"), secret(), secret("number"), secret("number"), secret("number"))
     fire("ENCOUNTER_END", 1, "Boss", 1, 5, 1)
+end
+
+end
+
+-- mode "all": every unit query is secret. Then one query after the other is secret while the rest is real
+-- (a dead creature, not a player, tapped by nobody ...): this reaches the code behind the early exits.
+local REAL = { UnitGUID = "Creature-0-1-2-3-1234-0000000001", UnitName = "Wolf", UnitLevel = 10, UnitClassification = "normal",
+    UnitCreatureType = "Beast", UnitCreatureFamily = "Wolf", UnitIsPlayer = false, UnitIsDead = true, UnitIsDeadOrGhost = true,
+    UnitCanAttack = true, UnitIsTapDenied = false, UnitThreatSituation = 3, UnitHealth = 0, UnitHealthMax = 100 }
+local SECRET_KIND = { UnitLevel = "number", UnitThreatSituation = "number", UnitHealth = "number", UnitHealthMax = "number" }
+local base = {}
+for fn in pairs(REAL) do base[fn] = env[fn] end
+local function setMode(secretFn)
+    for fn, value in pairs(REAL) do
+        if secretFn == "all" or fn == secretFn then env[fn] = base[fn]
+        else
+            env[fn] = function(unit) if unit == "player" then return base[fn](unit) end return value end
+        end
+    end
+end
+for _, mode in ipairs({ "all", "UnitGUID", "UnitName", "UnitLevel", "UnitClassification", "UnitCreatureType", "UnitCreatureFamily",
+    "UnitIsPlayer", "UnitIsDead", "UnitIsDeadOrGhost", "UnitCanAttack", "UnitIsTapDenied", "UnitThreatSituation" }) do
+    setMode(mode)
+    mode = mode
+    runEvents()
 end
 
 ------------------------------------------------------------------------ report
