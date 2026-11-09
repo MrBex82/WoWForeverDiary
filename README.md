@@ -28,20 +28,19 @@ Den Ordner `WoWForeverDiary` nach `World of Warcraft\_classic_era_\Interface\Add
 | `/wfd backup` | Die Kopie von vor dem letzten Update zurückholen (wird beim ersten Start nach einer neuen Version angelegt und nach 30 Tagen verworfen) |
 | `/wfd cleanup` | Zeigt, welche Gefährten aus Schlachtfeldern oder Einmal-Gruppen entfernt würden. Mit `/wfd cleanup yes` werden sie entfernt |
 
-Im Buch, in Gruppen; jede Gruppe hat einen Reiter, der eine Übersicht ihrer Teile öffnet. Zeigst du auf den Reiter, klappt eine Liste seiner Teile auf:
+Das Tagebuch öffnet sich in einem Fenster, dessen Größe du an der Ecke unten rechts ziehen kannst (Strg + Mausrad ändert die Größe von allem). Oben stehen Zurück und Vor, wo du gerade bist, die Suche, das „?“ mit allen Tasten und Befehlen und das Zahnrad für die Einstellungen. Links steht das Register mit den Gruppen; ein Klick zeigt ihre Teile, Neues hat eine kleine Zahl. Darunter stehen deine Lesezeichen. Ist das Fenster schmal, zeigt das Register nur die Symbole.
 
-- **Vorne:** Inhalt, Heute (der Tag bis jetzt, eine Erinnerung an diesen Tag in einem früheren Jahr, Neues seit dem letzten Lesen, nächste Ziele), Tagebuch mit Kapiteln, Questbuch
-- **Ziele & Ruhm:** Aufgaben (Tag, Woche, Monat, eigene Ziele), Sammelalbum mit nächsten Zielen, Ehrenbuch
-- **Chronik:** Meilensteine, Premieren, Rekorde, Stufen-Zeitstrahl, Galerie, Jahrbuch
+- **Start:** der Tag bis jetzt in Zahlen und ein paar Zeilen, die Aufgaben, Neues seit dem letzten Lesen, eine Erinnerung an diesen Tag in einem früheren Jahr, das Reiseziel des Tages, die Ehrung, die du fast hast, und wie weit deine Sammlungen sind
+- **Tagebuch:** die Tage mit Kapiteln, Questbuch
+- **Chronik:** Meilensteine, Premieren, Rekorde, Stufen-Zeitstrahl, Jahrbuch, Galerie
+- **Ziele & Ruhm:** Aufgaben (Tag, Woche, Monat, eigene Ziele), Sammelalbum, Ehrenbuch
 - **Die Welt:** Atlas (mit Zeitraffer: der Abspielknopf unter dem „?“ der Kontinentkarte lässt die Reise Tag für Tag wachsen), Karten mit Gebietschronik, Sehenswürdigkeiten, Fundorte, Dungeon-Berichte
-- **Jagd & Beute:** Bestiarium mit Steckbriefen, „Fast geschafft“ und Jagdkarte, Schicksal (jeder Tod auf der Karte, wo und gegen wen am häufigsten), Erzfeinde, Anglerbuch, Schätze mit Ausrüstungspuppe
+- **Jagd & Beute:** Bestiarium mit Steckbriefen und Jagdkarte, Anglerbuch, Schätze mit Ausrüstungspuppe, Schicksal (jeder Tod auf der Karte, wo und gegen wen am häufigsten), Erzfeinde
 - **Leute & Geld:** Personen, Gefährten, Reittiere (erster Ritt, Anzahl der Ritte), Ruf (wann welche Stufe erreicht wurde), Kassenbuch mit Sparziel
 - **Andenken:** Bibliothek, Familienbuch, Zeitkapsel
-- **Einstellungen:** eigener Reiter ganz unten, in vier Seiten (Allgemein, Aussehen, Bedienung mit den Tasten, Daten) mit Stil, Schriftgröße und Sprache
+- **Einstellungen** (Zahnrad): Allgemein, Aussehen, Bedienung, Daten. Stil und Schriftgröße wechseln sofort; das Fenster lässt sich sperren.
 
-Die Lupe oben am Buchrücken (oder Strg + F) durchsucht alles, das „?“ darunter zeigt die Einführung. Tage lassen sich mit Filtern eingrenzen: `z:Elwynn` (Gebiet), `lv:20-30` (Stufe), `d:30` (die letzten 30 Tage), auch zusammen mit Suchtext. Auf der Heute-Seite steht außerdem, was für ein Tag es war (Schlacht, Straße, Quests, Glück oder ruhig); im Wochenrückblick schreibt „In den Chat“ eine Zeile ins Eingabefeld, abgeschickt wird sie erst mit Enter. Ein Klick auf
-die Seitenzahl springt zu einer Seite, ein Klick auf das Eselsohr setzt ein eigenes Lesezeichen (bis zu zwölf). Eine Zeile oben auf jeder Seite zeigt, wo du bist. Solange die Maus über dem Buch ist, blättern Pfeiltasten und Mausrad; Pos1 führt zum Inhalt, Ende zu heute,
-die Rücktaste zurück.
+Die Suche oben (oder Strg + F) durchsucht alles, mit Filtern nach Art (Tage, Personen, Kreaturen, Orte ...). Tage lassen sich zusätzlich eingrenzen: `z:Elwynn` (Gebiet), `lv:20-30` (Stufe), `d:30` (die letzten 30 Tage), auch zusammen mit Suchtext. Im Wochenrückblick schreibt „In den Chat“ eine Zeile ins Eingabefeld, abgeschickt wird sie erst mit Enter. Ein Klick auf das Eselsohr einer Buchseite setzt ein eigenes Lesezeichen (bis zu zwölf). Solange die Maus über dem Fenster ist, blättern Pfeiltasten und Mausrad im Buch; Pos1 führt zu Start, Ende zum heutigen Eintrag, die Rücktaste zurück.
 
 Stile: Leder und Gold, Pergament, Modern, Starker Kontrast. Sprachen: Deutsch, Englisch, Französisch, Spanisch, Portugiesisch, Russisch, Koreanisch und Traditionelles Chinesisch.
 
