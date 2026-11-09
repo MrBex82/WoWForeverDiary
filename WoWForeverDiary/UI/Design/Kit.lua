@@ -747,6 +747,12 @@ function K.Material(f, kind)
     UI.Themed(f, function(fr)
         local classic = CLASSIC[UI.THEME or "codex"]
         if kind == "card" then
+            -- a soft shadow below and to the right: the card lies on the desk
+            for i, off in ipairs({ { 2, 3, 0.22 }, { 4, 6, 0.10 } }) do
+                local sh = UI.Fill(fr, { 0, 0, 0 }, "BACKGROUND", -2 + i, off[3])
+                sh:SetPoint("TOPLEFT", fr, "TOPLEFT", off[1], -off[2])
+                sh:SetPoint("BOTTOMRIGHT", fr, "BOTTOMRIGHT", off[1], -off[2])
+            end
             local base = UI.Fill(fr, tokenAt("card"), "BACKGROUND", 1)
             base:SetAllPoints()
             local sheen = UI.GradRect(fr, "VERTICAL", { 0, 0, 0, classic and 0.18 or 0.06 }, { 1, 0.92, 0.75, classic and 0.06 or 0.03 }, "BACKGROUND", 2)

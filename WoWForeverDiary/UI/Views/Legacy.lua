@@ -105,7 +105,10 @@ UI:RegisterView({
             local sec = key and UI.SectionOf(key)
             if sec and sec.index then title = L["Overview"] end
             local head = page and page.head
-            if head and head ~= "" and L[head]:lower() ~= title:lower() then title = title .. "  -  " .. L[head] end
+            if head and head ~= "" and L[head]:lower() ~= title:lower() then
+                -- in the diary the group already says "Diary": the chapter alone
+                title = (key == "diary") and L[head] or (title .. "  -  " .. L[head])
+            end
             if g and g.key ~= "start" then return title, L[g.label], UI.GroupRoute(g) end
             return title
         end

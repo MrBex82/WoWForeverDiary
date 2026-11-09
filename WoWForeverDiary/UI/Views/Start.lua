@@ -14,7 +14,7 @@ local PAD, GAP = 16, 14
 -- Small parts of the cards
 ------------------------------------------------------------------------
 local function tile(parent)
-    local t = K.Box(parent, "inset", nil, "Button")
+    local t = K.Box(parent, "inset", "line", "Button")
     t.value = K.Text(t, "value", "ink")
     t.value:SetPoint("TOPLEFT", 10, -8)
     t.value:SetPoint("RIGHT", -8, 0)
@@ -24,7 +24,7 @@ local function tile(parent)
     t.label:SetPoint("RIGHT", -8, 0)
     t.label:SetWordWrap(false)
     t:SetScript("OnEnter", function(self) if self.go then self:SetSurface("hover", "gold") end end)
-    t:SetScript("OnLeave", function(self) self:SetSurface("inset", nil) end)
+    t:SetScript("OnLeave", function(self) self:SetSurface("inset", "line") end)
     t:SetScript("OnClick", function(self) if self.go then self.go() end end)
     function t:Height() return 8 + self.value:GetStringHeight() + 3 + self.label:GetStringHeight() + 9 end
     return t
@@ -220,7 +220,7 @@ function cards.tasks(parent)
             local v, gl = WFD:WeeklyProgress(w, wk.task)
             self.week:SetText(L["Task of the week"] .. ": " .. WFD:WeeklyText(wk.task))
             self.weekBar:SetValue(wk.done and 1 or (v / max(1, gl)))
-            self.weekBar:SetFill(wk.done and "pos" or "gold")
+            self.weekBar:SetFill("gold")
             self.weekValue:SetText(wk.done and L["done"] or (WFD:TaskValueText(wk.task, v) .. " / " .. gl))
         end
         for _, f in ipairs({ self.rule, self.week, self.weekBar, self.weekValue }) do f:SetShown(self.hasWeek) end

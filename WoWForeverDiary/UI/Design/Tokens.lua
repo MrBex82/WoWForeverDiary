@@ -23,10 +23,10 @@ local TOKENS = {
     },
     parchment = {
         frame = { 0.29, 0.196, 0.125 }, edge = { 0.69, 0.54, 0.24 }, shell = { 0.902, 0.839, 0.698 },
-        panel = { 0.863, 0.792, 0.627 }, card = { 0.957, 0.914, 0.812 }, inset = { 0.902, 0.839, 0.690 },
+        panel = { 0.863, 0.792, 0.627 }, card = { 0.945, 0.898, 0.790 }, inset = { 0.868, 0.796, 0.635 },
         hover = { 0.804, 0.725, 0.541 }, line = { 0.43, 0.31, 0.12, 0.30 },
         gold = { 0.54, 0.35, 0.07 }, onGold = { 0.984, 0.953, 0.863 }, title = { 0.353, 0.212, 0.031 },
-        ink = { 0.165, 0.110, 0.055 }, soft = { 0.290, 0.220, 0.149 }, muted = { 0.400, 0.314, 0.227 },
+        ink = { 0.150, 0.098, 0.047 }, soft = { 0.250, 0.180, 0.110 }, muted = { 0.340, 0.260, 0.170 },
         pos = { 0.18, 0.43, 0.16 }, neg = { 0.66, 0.28, 0.10 }, danger = { 0.60, 0.17, 0.09 },
         shade = { 0.2, 0.12, 0.04, 0.35 },
     },
@@ -71,6 +71,17 @@ local function copyTokens(name)
     end
     -- writing on a red danger button: white in every style
     UI.T.white = UI.T.white or { 1, 1, 1, 1 }
+    -- writing on the leather of the register, the head bar and the column of a card: the writing of the page,
+    -- except in Parchment, where the pages are light but the leather stays dark
+    local leather = (name == "parchment") and {
+        rail = { 0.93, 0.87, 0.75 }, railSoft = { 0.84, 0.76, 0.62 }, railMuted = { 0.70, 0.62, 0.50 },
+        railTitle = { 0.96, 0.82, 0.50 }, railGold = { 0.88, 0.68, 0.30 },
+    } or { rail = src.ink, railSoft = src.soft, railMuted = src.muted, railTitle = src.title, railGold = src.gold }
+    for k, v in pairs(leather) do
+        local t = UI.T[k] or {}
+        t[1], t[2], t[3], t[4] = v[1], v[2], v[3], v[4] or 1
+        UI.T[k] = t
+    end
 end
 copyTokens("codex")
 
@@ -88,7 +99,7 @@ UI.SP = { xs = 4, s = 8, m = 12, l = 16, xl = 24, xxl = 32 }
 -- type roles: size in points (before the size of the writing is applied) and the font
 -- (head = the book's display font, body = the text font). Nothing readable is smaller than 11.
 UI.TYPE = {
-    display = { 26, "head" }, title = { 19, "head" }, heading = { 16, "head" }, section = { 12, "head" },
+    display = { 26, "head" }, title = { 19, "head" }, heading = { 16, "head" }, section = { 11, "body" },
     value = { 19, "body" }, strong = { 14, "body" }, body = { 13, "body" }, small = { 11, "body" },
 }
 function UI.TypeFont(role)

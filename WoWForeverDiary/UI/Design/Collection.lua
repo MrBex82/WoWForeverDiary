@@ -222,7 +222,7 @@ function UI.CollectionView(def)
             V.detail:SetPoint("TOPRIGHT", 0, 0)
             V.detail:SetPoint("BOTTOMRIGHT", 0, 0)
             V.detail:Hide()
-            local dl = K.Fill(V.detail, "gold", "ARTWORK", 1, 0.35)
+            local dl = K.Fill(V.detail, "railGold", "ARTWORK", 1, 0.35)
             dl:SetWidth(1)
             dl:SetPoint("TOPLEFT")
             dl:SetPoint("BOTTOMLEFT")
@@ -230,7 +230,7 @@ function UI.CollectionView(def)
             V.prev:SetPoint("TOPLEFT", 12, -10)
             V.next = K.IconButton(V.detail, "right", { L["Next"] }, function() V:Step(1) end, 28)
             V.next:SetPoint("LEFT", V.prev, "RIGHT", 4, 0)
-            V.pos = K.Text(V.detail, "small", "soft", "CENTER")
+            V.pos = K.Text(V.detail, "small", "railSoft", "CENTER")
             V.pos:SetPoint("LEFT", V.next, "RIGHT", 6, 0)
             V.close = K.IconButton(V.detail, "close", { CLOSE or "Close" }, function() V:CloseDetail() end, 28)
             V.close:SetPoint("TOPRIGHT", -12, -10)
@@ -362,9 +362,10 @@ function UI.CollectionView(def)
                         if def.cell then
                             local cw, ch, gap = def.cell.w, def.cell.h, def.cell.gap or 12
                             local cols = max(1, floor((inner + gap) / (cw + gap)))
+                            local off = floor((inner - (cols * cw + (cols - 1) * gap)) / 2)
                             for i, e in ipairs(sec.items) do
                                 local col, row = (i - 1) % cols, floor((i - 1) / cols)
-                                items[#items + 1] = { kind = "cell", x = PAD + col * (cw + gap), y = y + row * (ch + gap), w = cw, h = ch, entry = e }
+                                items[#items + 1] = { kind = "cell", x = PAD + off + col * (cw + gap), y = y + row * (ch + gap), w = cw, h = ch, entry = e }
                             end
                             y = y + (floor((#sec.items - 1) / cols) + 1) * (ch + gap) + 10
                         else
