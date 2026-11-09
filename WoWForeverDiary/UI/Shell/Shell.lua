@@ -14,6 +14,9 @@ local TOP_H, RAIL_W, RAIL_NARROW = 48, 200, 54
 local NARROW_AT = 900          -- below this width the register shows its signs only
 
 local S          -- the shell's frames
+
+-- the width of the register: wider with bigger writing, so the names of the groups stay whole
+function UI.RailWidth() return floor(RAIL_W * math.max(1, UI.FONT_SCALE or 1) + 0.5) end
 local views = {}
 
 ------------------------------------------------------------------------
@@ -63,7 +66,6 @@ local function newItem(parent)
     UI.Round(b.icon, b)
     b.text = K.Text(b, "strong", "rail")
     b.text:SetPoint("LEFT", b.ring, "RIGHT", 10, 0)
-    b.text:SetPoint("RIGHT", b, "RIGHT", -34, 0)
     b.text:SetWordWrap(false)
     b.glow = b:CreateTexture(nil, "BACKGROUND", nil, 2)
     b.glow:SetTexture(UI.WHITE)
@@ -179,6 +181,7 @@ function UI:RefreshRail()
         local new = 0
         for _, p in ipairs(parts) do new = new + (counts[p] or 0) end
         b.badge:SetShown(new > 0 and not (b.active and not narrow))
+        b.text:SetWidth(max(40, UI.RailWidth() - 12 - 8 - 28 - 10 - (b.badge:IsShown() and 34 or 8)))
         b.badge.text:SetText(new > 99 and "99" or tostring(new))
         b.badge:SetWidth(max(20, b.badge.text:GetStringWidth() + 10))
         if narrow then
@@ -202,7 +205,7 @@ function UI:RefreshRail()
                 si = si + 1
                 local sb = S.subs[si] or newSub(rail)
                 S.subs[si] = sb
-                sb.text:SetWidth(RAIL_W - 44 - 6 - 14 - 30)
+                sb.text:SetWidth(UI.RailWidth() - 44 - 6 - 14 - 30)
                 sb.text:SetText(UI.PartLabel(key))
                 sb.empty = UI.IsEmptyPart and UI.IsEmptyPart(key)
                 sb.active = (key == part)
@@ -494,7 +497,7 @@ end
 -- moment the window opens)
 local function contentSize()
     local w, h = UI.holder:GetSize()
-    local rw = S.narrow and RAIL_NARROW or RAIL_W
+    local rw = S.narrow and RAIL_NARROW or UI.RailWidth()
     return max(1, (w or DEF_W) - 14 - rw), max(1, (h or DEF_H) - 14 - TOP_H)
 end
 
@@ -502,7 +505,7 @@ local function layout()
     if not S then return end
     local w = UI.holder:GetWidth() or DEF_W
     S.narrow = (w < NARROW_AT) or WFD.S.navCollapsed and true or false
-    local rw = S.narrow and RAIL_NARROW or RAIL_W
+    local rw = S.narrow and RAIL_NARROW or UI.RailWidth()
     S.rail:SetWidth(rw)
     S.search:SetWidth(max(160, min(300, w - rw - 520)))
     UI:RefreshRail()

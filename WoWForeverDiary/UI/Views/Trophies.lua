@@ -197,7 +197,7 @@ local function makeHonourRow(parent)
     r.title.minH = 26
     r.show = K.Button(r, L["Showcase"], "secondary", function(self) WFD:ToggleShowcase(self.key) r.refresh() end)
     r.show.minH = 26
-    r.show:SetPoint("TOPRIGHT", -10, -8)
+    r.show:SetPoint("RIGHT", -10, 0)
     r.title:SetPoint("RIGHT", r.show, "LEFT", -6, 0)
     r.name = K.Text(r, "strong", "ink")
     r.name:SetPoint("TOPLEFT", r.ring, "TOPRIGHT", 12, 0)
@@ -318,6 +318,8 @@ UI.CollectionView({
             r.desc:SetWidth(max(40, r:GetWidth() - 66 - 12))
             r.desc:SetText(e.hidden and L[h.secret] or WFD:HonourText(h, e.next or h.tiers[e.n]))
             r.value:SetText(e.hidden and "" or (e.next and UI.HonourProgressText(e) or L["Complete!"]))
+            r.value:ClearAllPoints()
+            r.value:SetPoint("BOTTOMRIGHT", r, "BOTTOMRIGHT", earned and -(r.title:GetWidth() + r.show:GetWidth() + 28) or -12, 9)
             K.Recolor(r.value, e.next and "soft" or "pos")
             r.bar:SetShown(not e.hidden)
             if not e.hidden then

@@ -184,7 +184,6 @@ local function themeCards(parent)
         b.ink2:SetVertexColor(tk.soft[1], tk.soft[2], tk.soft[3], 1)
         b.name = K.Text(b, "strong", "ink")
         b.name:SetText(themeName(key))
-        b.name:SetWordWrap(false)
         b:SetScript("OnClick", function(self)
             if (UI.THEME or "codex") ~= self.key then UI.SetTheme(self.key) end
         end)
@@ -201,9 +200,14 @@ local function themeCards(parent)
     end
     function f:Measure(w)
         local n = #self.cards
-        local per = (w >= 560) and n or 2
+        local per = (w >= 560 * math.max(1, UI.FONT_SCALE or 1)) and n or 2
         local cw = (w - (per - 1) * 10) / per
-        local ch = 92
+        local nameH = 0
+        for _, b in ipairs(self.cards) do
+            b.name:SetWidth(cw - 20)
+            nameH = math.max(nameH, b.name:GetStringHeight())
+        end
+        local ch = 8 + 50 + 9 + nameH + 10
         for i, b in ipairs(self.cards) do
             local row, col = floor((i - 1) / per), (i - 1) % per
             b:SetSize(cw, ch)
@@ -220,7 +224,6 @@ local function themeCards(parent)
             b.ink2:SetSize(cw * 0.45, 4)
             b.ink2:SetPoint("TOPLEFT", b.ink1, "BOTTOMLEFT", 0, -6)
             b.name:SetPoint("TOPLEFT", b.sample, "BOTTOMLEFT", 2, -9)
-            b.name:SetWidth(cw - 20)
         end
         local rows = floor((n - 1) / per) + 1
         local h = rows * (ch + 10) - 10
@@ -378,17 +381,17 @@ UI:RegisterView({
         v.tabs = {}
         for i, sec in ipairs(UI.SettingsSchema()) do
             local b = K.Box(tabs, nil, nil, "Button")
-            b:SetHeight(50)
-            b:SetPoint("TOPLEFT", tabs, "TOPLEFT", 10, -16 - (i - 1) * 54)
+            b:SetHeight(58)
+            b:SetPoint("TOPLEFT", tabs, "TOPLEFT", 10, -16 - (i - 1) * 62)
             b:SetPoint("RIGHT", tabs, "RIGHT", -10, 0)
             b.title = K.Text(b, "strong", "ink")
             b.title:SetPoint("TOPLEFT", 12, -9)
             b.title:SetText(sec.label)
             b.sub = K.Text(b, "small", "muted")
             b.sub:SetPoint("TOPLEFT", b.title, "BOTTOMLEFT", 0, -3)
-            b.sub:SetPoint("RIGHT", b, "RIGHT", -8, 0)
-            b.sub:SetWordWrap(false)
+            b.sub:SetWidth(200 - 20 - 20)
             b.sub:SetText(sec.sub)
+            if b.sub.SetMaxLines then b.sub:SetMaxLines(2) end
             b:SetScript("OnEnter", function(self) if v.section ~= i then self:SetSurface("hover") end end)
             b:SetScript("OnLeave", function(self) v:PaintTabs() end)
             b:SetScript("OnClick", function() R.Go({ view = "settings", section = i }) end)

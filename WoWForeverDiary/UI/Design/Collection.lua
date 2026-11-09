@@ -369,9 +369,10 @@ function UI.CollectionView(def)
                             end
                             y = y + (floor((#sec.items - 1) / cols) + 1) * (ch + gap) + 10
                         else
+                            local rh = floor(def.row.h * math.max(1, UI.FONT_SCALE or 1) + 0.5)
                             for _, e in ipairs(sec.items) do
-                                items[#items + 1] = { kind = "row", x = PAD - 6, y = y, w = inner + 12, h = def.row.h, entry = e }
-                                y = y + def.row.h
+                                items[#items + 1] = { kind = "row", x = PAD - 6, y = y, w = inner + 12, h = rh, entry = e }
+                                y = y + rh
                             end
                             y = y + 14
                         end

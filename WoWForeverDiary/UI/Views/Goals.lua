@@ -73,7 +73,6 @@ local function tilesRow(parent, n)
         t.value:SetPoint("TOPLEFT", 10, -8)
         t.label = K.Text(t, "small", "muted")
         t.label:SetPoint("TOPLEFT", t.value, "BOTTOMLEFT", 0, -3)
-        t.label:SetWordWrap(false)
         f.tiles[i] = t
     end
     function f:Set(list)

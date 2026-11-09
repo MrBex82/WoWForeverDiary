@@ -194,6 +194,32 @@ local function paintButton(b)
     b.bgKey = hot and (st.hoverBg or st.bg) or st.bg
     b.borderKey = hot and (st.hoverBorder or st.border) or st.border
     paintBox(b)
+    -- the main action is gilded: a gold that darkens towards the foot, a darker rim, a light edge at the top
+    if b.style == "primary" or b.style == "danger" then
+        if not b.gild then
+            b.gild = b:CreateTexture(nil, "BACKGROUND", nil, 1)
+            b.gild:SetTexture(WHITE)
+            b.gild:SetPoint("TOPLEFT", 1, -1)
+            b.gild:SetPoint("BOTTOMRIGHT", -1, 1)
+            b.edge = b:CreateTexture(nil, "ARTWORK", nil, 1)
+            b.edge:SetTexture(WHITE)
+            b.edge:SetHeight(1)
+            b.edge:SetPoint("TOPLEFT", 1, -1)
+            b.edge:SetPoint("TOPRIGHT", -1, -1)
+        end
+        local r, g, bl = Tok(b.style == "danger" and "danger" or "gold")
+        local k = hot and 1.12 or 1
+        UI.Gradient(b.gild, "VERTICAL", { r * 0.62 * k, g * 0.58 * k, bl * 0.55 * k, 1 },
+            { min(1, r * 0.98 * k), min(1, g * 0.92 * k), min(1, bl * 0.90 * k), 1 })
+        b.edge:SetVertexColor(1, 0.95, 0.80, 0.35)
+        b:SetBackdropBorderColor(r * 0.5, g * 0.5, bl * 0.5, 1)
+        b:SetBackdropColor(0, 0, 0, 0)          -- the flat colour would lie over the gilding
+        b.gild:Show()
+        b.edge:Show()
+    elseif b.gild then
+        b.gild:Hide()
+        b.edge:Hide()
+    end
     b.label.colorKey = hot and (st.hoverText or st.text) or st.text
     if b.style == "danger" then b.label.colorKey = "white" end
     paintText(b.label)
