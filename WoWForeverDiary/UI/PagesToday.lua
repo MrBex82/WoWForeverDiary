@@ -202,6 +202,26 @@ for _, g in ipairs(UI.GROUPS) do
     end
 end
 
+-- The parts of a group as the register of the travel desk lists them: parts of the book and parts that are views
+-- of their own (an album, a list). A part of the book leads to its page, a view opens on the desk.
+local NAV_OF_GROUP = { back = "keep" }
+local VIEW_ICON = { bestiary = "beast", fishbook = "fish", treasures = "loot", honour = "honour", tasks = "task",
+    collection = "album", people = "people", quests = "quests" }
+local function groupParts(gkey)
+    local nav = UI.NAV_GROUP and UI.NAV_GROUP[NAV_OF_GROUP[gkey] or gkey]
+    local out = {}
+    if not (nav and UI.PartsOf) then return out end
+    for _, key in ipairs(UI.PartsOf(nav)) do
+        local sec = UI.SectionOf(key)
+        local st = UI.book and UI.book.sectionStart[key]
+        local lay = UI.LAYOUT and UI.LAYOUT[key]
+        out[#out + 1] = { key = key, label = UI.PartLabel(key), icon = (sec and sec.icon) or VIEW_ICON[key] or "journal",
+            sub = (sec and sec.sub) or (lay and lay[3]), st = st,
+            go = st and function() UI:GoToPage(st) end or function() UI.Router.Go(UI.PartRoute(key)) end }
+    end
+    return out
+end
+
 UI:RegisterRenderer("groupindex", function(pool, page, side, canvas)
     local g = UI.GROUP[page.group]
     if not g then return end
@@ -210,13 +230,13 @@ UI:RegisterRenderer("groupindex", function(pool, page, side, canvas)
     local bright = { math.min(1, g.col[1] * 1.7 + 0.1), math.min(1, g.col[2] * 1.7 + 0.1), math.min(1, g.col[3] * 1.7 + 0.1), 1 }
     local counts = UI.NewCounts and UI.NewCounts() or {}
     local ROW = 58
-    for _, sec in ipairs(UI.sections) do
-        local st = UI.book and UI.book.sectionStart[sec.key]
-        if sec.group == g.key and not sec.index and st then
+    for _, sec in ipairs(groupParts(g.key)) do
+        do
+            local st = sec.st
             local empty = UI.IsEmptyPart(sec.key)
             pool:Plaque(tx + 20, y - 22, 32, UI.Icon(sec.icon), empty and LOCKED or bright, not empty)
             local name = pool:Text(16, empty and c.inkSoft or c.ink, UI.HEAD)
-            name:SetText(L[sec.label])
+            name:SetText(sec.label)
             name:SetWordWrap(false)
             name:SetWidth(tw - 46 - 70)
             name:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 46, y - 4)
@@ -226,7 +246,7 @@ UI:RegisterRenderer("groupindex", function(pool, page, side, canvas)
             if sub.SetMaxLines then sub:SetMaxLines(2) end      -- a long line takes a second one
             sub:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 46, y - 26)
             local pr = pool:Text(12, c.inkFaint, UI.FONT, "RIGHT")
-            pr:SetText(format(L["p. %d"], UI.PageNumber(st)))
+            pr:SetText(st and format(L["p. %d"], UI.PageNumber(st)) or "")
             pr:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 6)
             local n = counts[sec.key]
             if n and n > 0 then
@@ -234,11 +254,11 @@ UI:RegisterRenderer("groupindex", function(pool, page, side, canvas)
                 nw:SetText("+" .. n)
                 nw:SetPoint("TOPRIGHT", pr, "TOPLEFT", -10, 1)
             end
-            local tip = { L[sec.label] }
+            local tip = { sec.label }
             if sec.sub then tip[#tip + 1] = L[sec.sub] end
             if n and n > 0 then tip[#tip + 1] = format(L["%d new since you last read"], n) end
             tip[#tip + 1] = L["Click to open this part of the book."]
-            local hot = pool:Hot(tip, function() UI:GoToPage(st) end)
+            local hot = pool:Hot(tip, sec.go)
             hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx - 2, y + 2)
             hot:SetSize(tw + 4, ROW - 6)
             y = y - ROW
@@ -287,14 +307,13 @@ UI:RegisterRenderer("groupglance", function(pool, page, side, canvas)
     local C = WFD.C
     local counts = UI.NewCounts and UI.NewCounts() or {}
     local boxes = {}
-    for _, sec in ipairs(UI.sections) do
-        local st = UI.book and UI.book.sectionStart[sec.key]
+    for _, sec in ipairs(groupParts(g.key)) do
         local fn = STAT[sec.key]
-        if sec.group == g.key and not sec.index and st and fn then
+        if fn then
             local ok, v = pcall(fn, C)
             if ok and v ~= nil then
                 local fresh = (counts[sec.key] or 0) > 0
-                boxes[#boxes + 1] = { v, L[sec.label], fresh and c.redInk or c.ink, function() UI:GoToPage(st) end }
+                boxes[#boxes + 1] = { v, sec.label, fresh and c.redInk or c.ink, sec.go }
             end
         end
     end

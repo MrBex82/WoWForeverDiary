@@ -31,12 +31,12 @@ Den Ordner `WoWForeverDiary` nach `World of Warcraft\_classic_era_\Interface\Add
 Das Tagebuch öffnet sich in einem Fenster, dessen Größe du an der Ecke unten rechts ziehen kannst (Strg + Mausrad ändert die Größe von allem). Oben stehen Zurück und Vor, wo du gerade bist, die Suche, das „?“ mit allen Tasten und Befehlen und das Zahnrad für die Einstellungen. Links steht das Register mit den Gruppen; ein Klick zeigt ihre Teile, Neues hat eine kleine Zahl. Darunter stehen deine Lesezeichen. Ist das Fenster schmal, zeigt das Register nur die Symbole.
 
 - **Start:** der Tag bis jetzt in Zahlen und ein paar Zeilen, die Aufgaben, Neues seit dem letzten Lesen, eine Erinnerung an diesen Tag in einem früheren Jahr, das Reiseziel des Tages, die Ehrung, die du fast hast, und wie weit deine Sammlungen sind
-- **Tagebuch:** die Tage mit Kapiteln, Questbuch
+- **Tagebuch:** die Tage mit Kapiteln, Questbuch (offen, erledigt, abgebrochen; nach Gebiet oder neueste zuerst)
 - **Chronik:** Meilensteine, Premieren, Rekorde, Stufen-Zeitstrahl, Jahrbuch, Galerie
-- **Ziele & Ruhm:** Aufgaben (Tag, Woche, Monat, eigene Ziele), Sammelalbum, Ehrenbuch
+- **Ziele & Ruhm:** Aufgaben (Tag, Woche, Monat, eigene Ziele zum Abhaken), Sammlung, Ehrenbuch (Titel und Vitrine über eigene Knöpfe)
 - **Die Welt:** Atlas (mit Zeitraffer: der Abspielknopf unter dem „?“ der Kontinentkarte lässt die Reise Tag für Tag wachsen), Karten mit Gebietschronik, Sehenswürdigkeiten, Fundorte, Dungeon-Berichte
-- **Jagd & Beute:** Bestiarium mit Steckbriefen und Jagdkarte, Anglerbuch, Schätze mit Ausrüstungspuppe, Schicksal (jeder Tod auf der Karte, wo und gegen wen am häufigsten), Erzfeinde
-- **Leute & Geld:** Personen, Gefährten, Reittiere (erster Ritt, Anzahl der Ritte), Ruf (wann welche Stufe erreicht wurde), Kassenbuch mit Sparziel
+- **Jagd & Beute:** Bestiarium und Anglerbuch als Sammelkarten-Alben (nach Gebiet, Art oder Menge, mit Filtern wie Selten, Kenner oder Noch zu finden; der Steckbrief liegt rechts daneben), Jagdgründe, Gewässer und Angelzeug, Schätze (nach Platz, Qualität, Bestes je Platz, gerade getragen), Schicksal (jeder Tod auf der Karte, wo und gegen wen am häufigsten), Erzfeinde
+- **Leute & Geld:** Personen (nach A bis Z, Gebiet oder Gesprächen, Filter nach Rolle; die Visitenkarte liegt rechts daneben), Gefährten, Reittiere (erster Ritt, Anzahl der Ritte), Ruf (wann welche Stufe erreicht wurde), Kassenbuch mit Sparziel
 - **Andenken:** Bibliothek, Familienbuch, Zeitkapsel
 - **Einstellungen** (Zahnrad): Allgemein, Aussehen, Bedienung, Daten. Stil und Schriftgröße wechseln sofort; das Fenster lässt sich sperren.
 

@@ -56,6 +56,8 @@ local LAYOUT = {
     family = { "back", 86, "Who got there first?" }, library = { "back", 85.7, "Books I read along the way" }, capsule = { "back", 88, "Letters to my future self" },
 }
 
+UI.LAYOUT = LAYOUT        -- the overview pages read the lines of parts that are views of the travel desk now
+
 -- def = { key, label, icon, order, build = function(book) ... end }
 function UI:RegisterSection(def)
     local lay = LAYOUT[def.key]
