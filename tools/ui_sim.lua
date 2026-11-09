@@ -459,6 +459,15 @@ fire("PLAYER_LOGIN")
 fire("PLAYER_ENTERING_WORLD", true, false)
 
 ------------------------------------------------------------------------ go everywhere
+local cardsShown, cardsDocked = 0, 0
+do
+    local show0 = UI.ShowCard
+    UI.ShowCard = function(self, kind, key)
+        show0(self, kind, key)
+        cardsShown = cardsShown + 1
+        if self.card and self.card.docked then cardsDocked = cardsDocked + 1 end
+    end
+end
 local function everywhere(label)
     local Rt = UI.Router
     step(label .. " start", function() UI:OpenStart() end)
@@ -472,6 +481,25 @@ local function everywhere(label)
         step(label .. " settings " .. i, function() Rt.Go({ view = "settings", section = i }) end)
     end
     step(label .. " help", function() Rt.Go({ view = "help" }) end)
+    -- the views of the collections: every chip, every order, the first card opened and leafed through
+    for key in pairs(UI.PART_VIEW or {}) do
+        step(label .. " view " .. key, function()
+            Rt.Go({ view = key })
+            local v = UI.ViewInstance(key)
+            for _, b in ipairs(v.chips or {}) do b:Click() end
+            if v.chips and v.chips[1] then v.chips[1]:Click() end
+            if v.sort then
+                for _, so in ipairs(v.sortKeys or {}) do v.state.sort = so v:Refresh() end
+            end
+            if v.search then v.search:SetText("a") v.search:SetText("") end
+            for item, f in pairs(v.list.active) do
+                local click = f:GetScript("OnClick")
+                if click and item.entry and not item.entry.hint then click(f, "LeftButton") break end
+            end
+            if v.next and v.next:IsShown() then v.next:Click() v.prev:Click() end
+            if v.detail:IsShown() then v:CloseDetail() end
+        end)
+    end
     step(label .. " back", function() for _ = 1, 6 do Rt.Back() end end)
     step(label .. " forward", function() for _ = 1, 3 do Rt.Forward() end end)
     step(label .. " search", function()
@@ -535,6 +563,7 @@ for _, g in ipairs(UI.NAV) do parts = parts + #UI.PartsOf(g) end
 print(string.format("Reached: %d pages in the book, %d parts in the register, demo %s, theme %s, window %dx%d",
     UI.book and #UI.book.pages or 0, parts, WFD.demo and "on" or "off", tostring(UI.THEME),
     UI.holder and UI.holder:GetWidth() or 0, UI.holder and UI.holder:GetHeight() or 0))
+print(string.format("Cards opened: %d, in the column of a view: %d", cardsShown, cardsDocked))
 local names = {}
 for k in pairs(unknown) do names[#names + 1] = k end
 table.sort(names)

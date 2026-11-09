@@ -132,6 +132,8 @@ local function openPlace()
     local cur = R.cur
     if not cur then return "start" end
     if cur.view == "start" then return "start" end
+    local place = UI.VIEW_PLACE and UI.VIEW_PLACE[cur.view]
+    if place then return place[1], place[2] end
     if cur.view ~= "legacy" then return nil end
     return S.bookGroup, S.bookPart
 end
@@ -630,7 +632,7 @@ function UI:BuildShell()
         UI.storyCache[WFD:NumDays()] = nil
         UI:Paginate()
         local v = R.cur and views[R.cur.view]
-        if v and v.Refresh then v:Refresh() end
+        if v and v.Refresh then v:Refresh(true) end      -- true: keep the place the reader scrolled to
         UI:RefreshRail()
     end)
 
@@ -694,6 +696,9 @@ function UI:OnSpreadShown(s)
     self:RefreshRail()
     self:RefreshHead()
 end
+
+-- the view object of a key, once it was built (for the load test)
+function UI.ViewInstance(key) return views[key] end
 
 function UI:ShellCloseLayer()
     return closeResults()

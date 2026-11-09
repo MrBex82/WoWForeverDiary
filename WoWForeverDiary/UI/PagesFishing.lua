@@ -85,55 +85,19 @@ local function collection()
     return arr
 end
 
+-- The album itself is a view of the travel desk now (UI/Views/Albums.lua). The book keeps the waters and the
+-- tackle on a page of their own.
 UI:RegisterSection({
-    key = "fishbook", label = "Angler's log", icon = "fish", order = 33,
+    key = "fishwaters", label = "Waters and tackle", icon = "fish", order = 33,
+    enabled = function() local C = WFD.C return next(C.catchZone or {}) ~= nil or next(C.tackle or {}) ~= nil end,
     build = function(book)
-        local arr = collection()
-        local zones, byZone = {}, {}
-        for _, a in ipairs(arr) do
-            if not byZone[a.zone] then
-                byZone[a.zone] = {}
-                zones[#zones + 1] = a.zone
-            end
-            table.insert(byZone[a.zone], a)
-        end
-        -- what the other characters landed: covered cards after your own, in waters only they know too
-        local hints = WFD.CatchHints and WFD:CatchHints() or {}
-        local own = {}
-        for _, z in ipairs(zones) do own[z] = #byZone[z] end
-        local extra = {}
-        for z, list in pairs(hints) do
-            if not byZone[z] then
-                byZone[z] = {}
-                extra[#extra + 1] = z
-            end
-        end
-        table.sort(extra)
-        for _, z in ipairs(extra) do zones[#zones + 1] = z end
-        local head = L["Angler's log"]
-        local intro = book:Add({ kind = "fishintro", numbered = true, head = head, zoneIndex = {} })
-        for _, z in ipairs(zones) do
-            local list = {}
-            for _, a in ipairs(byZone[z]) do list[#list + 1] = a end
-            local hidden = hints[z] and #hints[z] or 0
-            for _, h in ipairs(hints[z] or {}) do list[#list + 1] = h end
-            local pages = ceil(#list / PER_PAGE)
-            local first
-            for p = 1, pages do
-                local cards = {}
-                for i = (p - 1) * PER_PAGE + 1, min(#list, p * PER_PAGE) do cards[#cards + 1] = list[i] end
-                local pg = book:Add({ kind = "fishalbum", numbered = true, head = head, zone = z, cards = cards,
-                    part = (pages > 1) and p or nil, count = own[z] or 0, hidden = hidden })
-                first = first or pg.index
-            end
-            intro.zoneIndex[#intro.zoneIndex + 1] = { zone = z, page = first, count = own[z] or 0, hidden = hidden }
-        end
-        local C = WFD.C
-        if next(C.catchZone or {}) or next(C.tackle or {}) then
-            book.fishWaters = book:Add({ kind = "fishwaters", numbered = true, head = head }).index
-        end
+        book.fishWaters = book:Add({ kind = "fishwaters", numbered = true, head = L["Waters and tackle"] }).index
     end,
 })
+
+-- for the album on the travel desk
+UI.CatchCollection = collection
+UI.CATCH_CARD_W, UI.CATCH_CARD_H = CARD_W, CARD_H
 
 ------------------------------------------------------------------------
 -- One card, drawn on the page
@@ -223,6 +187,8 @@ local function drawCard(pool, canvas, x, y, a)
     hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, y)
     hot:SetSize(CARD_W, CARD_H)
 end
+
+UI.DrawCatchCard = drawCard
 
 UI:RegisterRenderer("fishalbum", function(pool, page, side, canvas)
     local tx, tw = UI.TextX(side), UI.TextW()

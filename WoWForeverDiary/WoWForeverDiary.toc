@@ -68,6 +68,7 @@ UI\Widgets.lua
 UI\Themes.lua
 UI\Design\Tokens.lua
 UI\Design\Kit.lua
+UI\Design\Collection.lua
 UI\Components.lua
 UI\Book.lua
 UI\PagesFront.lua
@@ -97,3 +98,4 @@ UI\Views\Legacy.lua
 UI\Views\Start.lua
 UI\Views\Settings.lua
 UI\Views\Help.lua
+UI\Views\Albums.lua

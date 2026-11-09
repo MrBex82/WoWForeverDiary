@@ -48,6 +48,7 @@ local function buildCard(self)
     close:SetPoint("TOPRIGHT", -4, -4)
     close:SetFrameLevel(card:GetFrameLevel() + 20)
     close:SetScript("OnClick", function() card:Hide() end)
+    card.closeBtn = close
 
     local canvas = CreateFrame("Frame", nil, card)
     canvas:SetAllPoints()
@@ -74,8 +75,13 @@ local function buildCard(self)
     dim:SetColorTexture(0, 0, 0, 0.35)
     shade:SetScript("OnMouseDown", function() card:Hide() end)
     shade:Hide()
-    card:HookScript("OnShow", function() shade:Show() end)
-    card:HookScript("OnHide", function() shade:Hide() end)
+    -- in the column of a view on the travel desk the card lies beside the list: nothing is darkened
+    card:HookScript("OnShow", function() if not card.docked then shade:Show() end end)
+    card:HookScript("OnHide", function()
+        shade:Hide()
+        local owner = card.docked and card.dockOwner
+        if owner and owner.detail:IsShown() then owner:CloseDetail() end
+    end)
 
     -- arrows beside the card: the previous and the next one of the same album
     local function step(dir)
@@ -679,11 +685,38 @@ local function renderBook(card, id)
     later:SetPoint("BOTTOMLEFT", canvas, "BOTTOMLEFT", PAD, 8)
 end
 
+-- the card in the column of a view: as large as the column allows
+function UI:FitDockedCard()
+    local card = self.card
+    if not (card and card.docked and card.dockOwner) then return end
+    local w, h = card.dockOwner:DockSize()
+    local k = min(1, (w - 24) / CW, (h - 12) / CH)
+    card:SetScale(max(0.4, k))
+    card:ClearAllPoints()
+    card:SetPoint("TOP", card:GetParent(), "TOP", 0, -2)
+end
+
 function UI:ShowCard(kind, key)
     if not self.holder then return end
     local card = self.card or buildCard(self)
     card.kind, card.key = kind, key
-    local many = #UI.CardOrder(kind) > 1
+    -- a view on the travel desk may take the card into its column; else it lies over the book
+    local dock, owner
+    if self.cardDockProvider then dock, owner = self.cardDockProvider(kind) end
+    card.docked, card.dockOwner = dock ~= nil, owner
+    if dock then
+        card:SetParent(dock)
+        card:SetFrameLevel(dock:GetFrameLevel() + 2)
+        self:FitDockedCard()
+    else
+        card:SetParent(self.holder)
+        card:ClearAllPoints()
+        card:SetPoint("CENTER", self.bookFrame, "CENTER", 0, 0)
+        card:SetScale(self.bookFrame:GetScale() or 1)
+        card:SetFrameLevel(self.bookFrame:GetFrameLevel() + 60)
+    end
+    card.closeBtn:SetShown(not dock)
+    local many = not dock and #UI.CardOrder(kind) > 1
     card.prev:SetShown(many)
     card.next:SetShown(many)
     card.pool:Begin()
@@ -697,6 +730,7 @@ function UI:ShowCard(kind, key)
     card.pool:End()
     card.overPool:End()
     card:Show()
+    if owner then owner:ShowingCard(key) end
     card:SetAlpha(0)
     card.t = 0
     card:SetScript("OnUpdate", function(s, dt)

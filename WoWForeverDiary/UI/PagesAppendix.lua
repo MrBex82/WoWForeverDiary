@@ -608,12 +608,13 @@ local function addHints(book, g)
     return first
 end
 
+-- The album itself is a view of the travel desk now (UI/Views/Albums.lua). The book keeps the hunting grounds:
+-- one map per area, where each kind was slain (until the map of the world takes them in).
 UI:RegisterSection({
-    key = "bestiary", label = "Bestiary", icon = "beast", order = 30,
+    key = "huntgrounds", label = "Hunting grounds", icon = "atlas", order = 30,
+    enabled = function() return next(WFD.C.mobs) ~= nil end,
     build = function(book)
-        hintPage, hintUsed = nil, 0
         local arr = collection()
-        -- group by area, areas in order of their first creature
         local zones, byZone = {}, {}
         for _, e in ipairs(arr) do
             local z = e.m.zone or "?"
@@ -623,28 +624,6 @@ UI:RegisterSection({
             end
             table.insert(byZone[z], e)
         end
-        -- kinds your other characters already know: covered cards with a hint where to look
-        local hints = WFD.CreatureHints and WFD:CreatureHints() or {}
-        local own = {}
-        for _, z in ipairs(zones) do own[z] = #byZone[z] end
-        local extra = {}
-        for z, list in pairs(hints) do
-            if byZone[z] then
-                for _, h in ipairs(list) do table.insert(byZone[z], h) end
-            else
-                byZone[z] = list
-                own[z] = 0
-                extra[#extra + 1] = { z = z, lv = list[1] and list[1].h.lv or 0 }
-            end
-        end
-        table.sort(extra, function(a, b) return (a.lv or 0) < (b.lv or 0) end)
-        for _, e in ipairs(extra) do zones[#zones + 1] = e.z end
-        local intro = book:Add({ kind = "albumintro", numbered = true, head = L["Bestiary"], zoneIndex = {} })
-        if next(WFD.C.mobs) then book:Add({ kind = "albumkinds", numbered = true, head = L["Bestiary"] }) end
-        book.nextPage = nil
-        if next(WFD.C.mobs) or next(WFD.C.sighted or {}) then
-            book.nextPage = book:Add({ kind = "albumnext", numbered = true, head = L["Bestiary"] }).index
-        end
         local grounds = {}
         for _, z in ipairs(zones) do
             local map = mapOfZone(z, byZone[z])
@@ -652,54 +631,15 @@ UI:RegisterSection({
         end
         book.huntZones = {}
         if #grounds > 0 then
-            book.huntPage = book:Add({ kind = "huntmap", numbered = true, head = L["Bestiary"], grounds = grounds }).index
+            book.huntPage = book:Add({ kind = "huntmap", numbered = true, head = L["Hunting grounds"], grounds = grounds }).index
             for _, g in ipairs(grounds) do book.huntZones[g.zone] = true end
         end
-        book.albumPage = {}
-        for _, z in ipairs(zones) do
-            local list = byZone[z]
-            -- your own cards; what you only saw and what your other characters know goes in a list after them
-            local mine, hints = {}, {}
-            for _, e in ipairs(list) do
-                if e.hint then hints[#hints + 1] = e else mine[#mine + 1] = e end
-            end
-            -- what is worth hunting first; critters and what is grey to you at the end, each part by level
-            local lvl = UnitLevel("player") or 1
-            local function minor(h)
-                return h.cls == "trivial" or h.cls == "minus" or (h.lv and h.lv > 0 and h.lv < lvl - 7) or false
-            end
-            table.sort(hints, function(a, b)
-                local ma, mb = minor(a.h), minor(b.h)
-                if ma ~= mb then return mb end
-                if (a.h.lv or 0) ~= (b.h.lv or 0) then return (a.h.lv or 0) < (b.h.lv or 0) end
-                return (a.h.n or "") < (b.h.n or "")
-            end)
-            local hidden = #hints
-            local first
-            local pages = math.ceil(#mine / PER_PAGE)
-            for p = 1, pages do
-                local cards = {}
-                for i = (p - 1) * PER_PAGE + 1, math.min(#mine, p * PER_PAGE) do cards[#cards + 1] = mine[i] end
-                local pg = book:Add({ kind = "album", numbered = true, head = L["Bestiary"], zone = z, cards = cards,
-                    part = (pages > 1) and p or nil, count = own[z], hidden = hidden })
-                if #cards < PER_PAGE and hidden == 0 then pg.fill = quietCorners(mapOfZone(z, list)) end
-                first = first or pg.index
-            end
-            if #hints > 0 then
-                -- an area with cards of its own keeps its list to itself; areas known only from hints share pages
-                if #mine > 0 then hintPage = nil end
-                local at = addHints(book, { zone = z, rows = bundleHints(hints), count = own[z], hidden = hidden })
-                first = first or at
-                if #mine > 0 then hintPage = nil end
-            end
-            if first then
-                intro.zoneIndex[#intro.zoneIndex + 1] = { zone = z, page = first, count = own[z], hidden = hidden }
-                book.albumPage[z] = first
-            end
-        end
-        for _, g in ipairs(grounds) do g.page = book.albumPage[g.zone] end
     end,
 })
+
+-- for the album on the travel desk: the creatures in album order, and the places worth a second look
+UI.BestiaryCollection = collection
+UI.QuietCorners = function(z, list) return quietCorners(mapOfZone(z, list or {})) end
 
 -- Where a long word may be broken: between syllables, as Latin writing does it - before a single consonant
 -- between vowels, and before the letters a syllable can start with ("Wald-schreiter", "Mondpirscher-patriarch").
@@ -1089,7 +1029,11 @@ local function newCard(parent)
     return f
 end
 
+-- the trading card is used by the album on the travel desk as well
+UI.NewCreatureCard, UI.CREATURE_CARD_W, UI.CREATURE_CARD_H = newCard, CARD_W, CARD_H
+
 local function kindsText(n) return n == 1 and L["1 kind"] or format(L["%d kinds"], n) end
+UI.KindsText = kindsText
 
 -- the head of an album page: the area (a click leads to its hunting grounds), how many kinds, a thin bar
 function UI.AlbumHead(pool, canvas, tx, tw, page, top)

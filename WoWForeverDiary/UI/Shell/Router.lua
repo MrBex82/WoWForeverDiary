@@ -17,7 +17,7 @@ UI.NAV = {
         parts = { "milestones", "firsts", "records", "levels", "yearbook", "gallery" } },
     { key = "goals", label = "Goals and honour", icon = "album", old = "grp_goals", parts = { "tasks", "collection", "honour" } },
     { key = "world", label = "The world", icon = "atlas", old = "grp_world", parts = { "atlas", "maps", "landmarks", "gathering", "runs" } },
-    { key = "hunt", label = "Hunt and loot", icon = "beast", old = "grp_hunt", parts = { "bestiary", "fishbook", "treasures", "fates", "nemesis" } },
+    { key = "hunt", label = "Hunt and loot", icon = "beast", old = "grp_hunt", parts = { "bestiary", "huntgrounds", "fishbook", "fishwaters", "treasures", "fates", "nemesis" } },
     { key = "people", label = "People and money", icon = "party", old = "grp_people", parts = { "people", "companions", "stable", "standing", "ledger" } },
     { key = "keep", label = "Keepsakes", icon = "kin", old = "grp_back", parts = { "library", "family", "capsule" } },
 }
@@ -38,6 +38,7 @@ end
 -- the name of a part as the register writes it
 function UI.PartLabel(key)
     if key == "diary" then return WFD.L["Days"] end
+    if UI.PART_LABEL and UI.PART_LABEL[key] then return WFD.L[UI.PART_LABEL[key]] end
     local s = UI.SectionOf(key)
     return s and WFD.L[s.label] or key
 end
@@ -48,7 +49,7 @@ function UI.PartsOf(g)
     local book = UI.book
     for _, key in ipairs(g.parts or {}) do
         local s = UI.SectionOf(key)
-        local there = key == "diary" or (book and book.sectionStart[key])
+        local there = key == "diary" or (UI.PART_VIEW and UI.PART_VIEW[key]) or (book and book.sectionStart[key])
         if there and (key == "diary" or not s or not s.enabled or s.enabled()) then out[#out + 1] = key end
     end
     return out
@@ -140,6 +141,8 @@ function R.Resume() return snapshot(R.cur) end
 
 -- the route of a part of the book
 function UI.PartRoute(key)
+    -- a part with a view of its own on the desk
+    if UI.PART_VIEW and UI.PART_VIEW[key] then return { view = UI.PART_VIEW[key] } end
     if key == "diary" then return { view = "legacy", part = "diary", page = function() return UI:TodayPage() end } end
     return { view = "legacy", part = key, page = function(book) return book.sectionStart[key] end }
 end

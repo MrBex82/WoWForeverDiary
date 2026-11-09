@@ -538,6 +538,7 @@ function K.Scroll(parent)
     function sf:ScrollTo(y)
         self:SetVerticalScroll(max(0, min(range(), y)))
         place()
+        if self.onScroll then self.onScroll(self) end
     end
     function sf:SetContentHeight(h)
         self.contentH = h
