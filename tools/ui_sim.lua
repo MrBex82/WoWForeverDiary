@@ -391,7 +391,11 @@ env.InterfaceOptions_AddCategory = noop
 env.Settings = { RegisterCanvasLayoutCategory = function() return {} end, RegisterAddOnCategory = noop }
 env.C_Map = setmetatable({ GetBestMapForUnit = function() return 1429 end, GetPlayerMapPosition = function() return nil end,
     GetMapInfo = function(id) return { mapID = id, name = "Karte " .. tostring(id), mapType = 3, parentMapID = 1415 } end,
-    GetMapChildrenInfo = function() return {} end, GetAreaInfo = function() return "Gebiet" end,
+    GetMapChildrenInfo = function(id)
+        if id == 1415 then return { { mapID = 1429, name = "Wald von Elwynn" }, { mapID = 1436, name = "Westfall" } } end
+        if id == 1414 then return { { mapID = 1411, name = "Durotar" } } end
+        return {}
+    end, GetAreaInfo = function() return "Gebiet" end,
     GetMapArtLayerTextures = function() return {} end, GetMapArtLayers = function() return {} end,
     GetMapRectOnMap = function() return 0, 1, 0, 1 end, GetWorldPosFromMapPos = function() return 0, { x = 0, y = 0 } end },
     { __index = function() return noop end })
@@ -459,7 +463,7 @@ fire("PLAYER_LOGIN")
 fire("PLAYER_ENTERING_WORLD", true, false)
 
 ------------------------------------------------------------------------ go everywhere
-local cardsShown, cardsDocked = 0, 0
+local cardsShown, cardsDocked, reportsOpened = 0, 0, 0
 do
     local show0 = UI.ShowCard
     UI.ShowCard = function(self, kind, key)
@@ -482,9 +486,11 @@ local function everywhere(label)
     end
     step(label .. " help", function() Rt.Go({ view = "help" }) end)
     -- the views of the collections: every chip, every order, the first card opened and leafed through
-    for key in pairs(UI.PART_VIEW or {}) do
-        step(label .. " view " .. key, function()
-            Rt.Go({ view = key })
+    for part in pairs(UI.PART_VIEW or {}) do
+        step(label .. " view " .. part, function()
+            local route = UI.PartRoute(part)
+            Rt.Go(route)
+            local key = route.view
             local v = UI.ViewInstance(key)
             for _, b in ipairs(v.chips or {}) do b:Click() end
             if v.chips and v.chips[1] then v.chips[1]:Click() end
@@ -496,10 +502,29 @@ local function everywhere(label)
                 local click = f:GetScript("OnClick")
                 if click and item.entry and not item.entry.hint then click(f, "LeftButton") break end
             end
+            if v.report and v.selected ~= nil then reportsOpened = reportsOpened + 1 end
             if v.next and v.next:IsShown() then v.next:Click() v.prev:Click() end
             if v.detail and v.detail:IsShown() then v:CloseDetail() end
         end)
     end
+    -- the world map: a continent, the replay, a region with every layer on and off, the places on no continent
+    step(label .. " world", function()
+        Rt.Go({ view = "world", cont = 1415 })
+        local v = UI.ViewInstance("world")
+        v.replay:Click()
+        if v.map:IsReplaying() then v.map:StepReplay() end
+        v.map:StopReplay()
+        Rt.Go({ view = "world", cont = 1415, map = 1429 })
+        for _, b in ipairs(v.chips) do b:Click() end
+        for _, b in ipairs(v.chips) do b:Click() end
+        v:Layout(700, 500)
+        v:Layout(1300, 860)
+        Rt.Go({ view = "world", cont = "other" })
+        Rt.Go({ view = "world", layer = "hunt" })
+        Rt.Go({ view = "world", layer = "finds" })
+        v.up:Click()
+        Rt.Back()
+    end)
     step(label .. " back", function() for _ = 1, 6 do Rt.Back() end end)
     step(label .. " forward", function() for _ = 1, 3 do Rt.Forward() end end)
     step(label .. " search", function()
@@ -563,7 +588,7 @@ for _, g in ipairs(UI.NAV) do parts = parts + #UI.PartsOf(g) end
 print(string.format("Reached: %d pages in the book, %d parts in the register, demo %s, theme %s, window %dx%d",
     UI.book and #UI.book.pages or 0, parts, WFD.demo and "on" or "off", tostring(UI.THEME),
     UI.holder and UI.holder:GetWidth() or 0, UI.holder and UI.holder:GetHeight() or 0))
-print(string.format("Cards opened: %d, in the column of a view: %d", cardsShown, cardsDocked))
+print(string.format("Cards opened: %d, in the column of a view: %d; reports opened: %d", cardsShown, cardsDocked, reportsOpened))
 -- every part of the register has a name of its own, not its key
 for _, g in ipairs(UI.NAV) do
     for _, key in ipairs(UI.PartsOf(g)) do

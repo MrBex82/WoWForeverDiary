@@ -290,3 +290,6 @@ UI.CollectionView({
         return L["Nothing matches this choice."]
     end,
 })
+
+-- for the other lists of the travel desk (UI/Views/Reports.lua, UI/Views/People.lua)
+UI.ListRow, UI.ListMatches, UI.ListGroupBy = makeRow, matches, groupBy

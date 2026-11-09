@@ -628,6 +628,16 @@ function UI.MapSketch(parent, w, h)
     play:Hide()
     box.playButton = play
 
+    -- a new size (the map of the travel desk grows with the window); the caller draws again.
+    -- Returns true when the size changed.
+    function box:Resize(nw, nh)
+        nw, nh = floor(nw + 0.5), floor(nh + 0.5)
+        if nw == w and nh == h then return false end
+        w, h = nw, nh
+        self:SetSize(w, h)
+        return true
+    end
+
     -- zoom with the mouse wheel, drag to pan, right click to reset
     box.zoom, box.panX, box.panY = 1, 0, 0
     function box:ApplyZoom()
@@ -858,6 +868,7 @@ function UI.MapSketch(parent, w, h)
                 p.num:SetFont(UI.FONT, 8, "")
                 p.label:SetText(z.visited and z.name or "")
                 p.info = z.info
+                p.onClick = z.onClick
                 p.fx, p.fy = (x1 + x2) / 2, (y1 + y2) / 2
                 p:SetFrameLevel(mf:GetFrameLevel() + (z.visited and 7 or 6))
                 p:SetScale(1)
@@ -866,18 +877,23 @@ function UI.MapSketch(parent, w, h)
                 p:Show()
             end
         end
+        self.np = np
         self:LayoutLabels()
         self.playButton:SetShown(used > 0)
     end
 
     -- the map with small coloured dots: points = { { x, y, col, { tooltip lines }, ring, onClick } }
     -- a ring is drawn hollow (something seen, not had); onClick makes the pin a button
-    function box:DrawPoints(mapID, points)
-        local mw, mh = drawArt(self, mapID)
+    local function placePoints(self, points, from, limit)
+        local mw, mh = self.mw or (w - 8), self.mh or (h - 8)
+        local z = self.zoom or 1
         local k = UI.CanRound() and 1 or 0.74
-        for i = 1, math.min(#points, 400) do
+        local n = from
+        for i = 1, #points do
+            if n >= limit then break end
             local pt = points[i]
-            local p = pin(i)
+            n = n + 1
+            local p = pin(n)
             if pt[5] then
                 p:SetSize(12, 12)
                 p.rim:SetSize(12 * k, 12 * k)
@@ -891,16 +907,28 @@ function UI.MapSketch(parent, w, h)
                 p.dot:SetVertexColor(col4(pt[3]))
             end
             p.num:SetText("")
+            p.skull:Hide()
             p.info = pt[4]
             p.onClick = pt[6]
             p.fx, p.fy = pt[1], pt[2]
             -- what you had sits above what you only saw
             p:SetFrameLevel(mf:GetFrameLevel() + (pt[5] and 6 or 7))
-            p:SetScale(1)
+            p:SetScale(1 / z)
             p:ClearAllPoints()
-            p:SetPoint("CENTER", mf, "TOPLEFT", pt[1] * mw, -pt[2] * mh)
+            p:SetPoint("CENTER", mf, "TOPLEFT", pt[1] * mw * z, -pt[2] * mh * z)
             p:Show()
         end
+        self.np = n
+    end
+
+    function box:DrawPoints(mapID, points)
+        drawArt(self, mapID)
+        placePoints(self, points, 0, 400)
+    end
+
+    -- more dots on what is drawn already (a layer of the map of the travel desk)
+    function box:AddPoints(points)
+        placePoints(self, points, self.np or 0, (self.np or 0) + 400)
     end
 
     -- where you stand right now: a small arrow turned the way you face (x, y: 0..1 on the drawn map)
@@ -934,7 +962,10 @@ function UI.MapSketch(parent, w, h)
         me:Show()
     end
 
-    function box:Draw(mapID)
+    -- the map of an area with the route, the kill sites, people, graves and resting places;
+    -- opts = { route, kills, people, graves, rests } (each false leaves that layer out)
+    function box:Draw(mapID, opts)
+        local o = opts or {}
         local mw, mh = drawArt(self, mapID)
         local C = WFD.C
         local steps, kills = {}, {}
@@ -960,8 +991,8 @@ function UI.MapSketch(parent, w, h)
                 t:Show()
             end
         end
-        paint(steps, { 0.55, 0.08, 0.05 }, 0.45, 0.08, 0.8, pi / 4)
-        paint(kills, { 0.16, 0.24, 0.62 }, 0.60, 0.12, 1.3, pi / 4)
+        if o.route ~= false then paint(steps, { 0.55, 0.08, 0.05 }, 0.45, 0.08, 0.8, pi / 4) end
+        if o.kills ~= false then paint(kills, { 0.16, 0.24, 0.62 }, 0.60, 0.12, 1.3, pi / 4) end
 
         -- pins: the most important places get a number that matches the legend on the page
         local k = UI.CanRound() and 1 or 0.74
@@ -1020,39 +1051,50 @@ function UI.MapSketch(parent, w, h)
             p:ClearAllPoints()
             p:SetPoint("CENTER", mf, "TOPLEFT", x * mw, -y * mh)
             p:Show()
+            return p
         end
         local people = {}
-        for key, npc in pairs(C.npcs) do
+        for key, npc in pairs(o.people ~= false and C.npcs or {}) do
             if npc.map == mapID and npc.x then people[#people + 1] = { key = key, n = npc } end
         end
         table.sort(people, function(a, b) return (a.n.talks or 0) > (b.n.talks or 0) end)
         for i = #people, 1, -1 do       -- small ones first, numbered ones on top
             local e = people[i]
-            addPin(e.n.x, e.n.y, { 0.80, 0.55, 0.12, 1 }, { e.n.name, WFD:Count("Spoken to %d times", e.n.talks or 0) },
+            local p = addPin(e.n.x, e.n.y, { 0.80, 0.55, 0.12, 1 }, { e.n.name, WFD:Count("Spoken to %d times", e.n.talks or 0) },
                 (i <= 6) and { kind = "npc", key = e.key, name = e.n.name, num = i } or nil)
+            if p and o.onPerson then
+                p.onClick = function() o.onPerson(e.key) end
+                p.info[#p.info + 1] = L["Click for the portrait."]
+            end
         end
         local graves = 0
-        for i, d in pairs(C.days) do
+        for i, d in pairs(o.graves ~= false and C.days or {}) do
             -- older graves do not carry their killer: the list of killers only lines up when every death had one
             local aligned = #d.dpos == #d.deathBy and #d.deathBy == (d.deaths or 0)
             for j, pos in ipairs(d.dpos) do
                 if pos[1] == mapID then
                     graves = graves + 1
                     local by = pos[4] or (#pos < 4 and aligned and d.deathBy[j]) or nil
-                    addPin(pos[2], pos[3], { 0.55, 0.04, 0.04, 1 }, {
+                    local p = addPin(pos[2], pos[3], { 0.55, 0.04, 0.04, 1 }, {
                         L["You died here"], by and format(L["Killed by %s"], by) or "", format(L["Day %d"], i),
                     }, (graves <= 2) and { kind = "grave", day = i, by = by, num = math.min(6, #people) + graves } or nil, true)
+                    if p and o.onDay then
+                        local day = i
+                        p.onClick = function() o.onDay(day) end
+                        p.info[#p.info + 1] = L["Click to read this day."]
+                    end
                 end
             end
         end
         -- resting places
-        for _, r in ipairs(C.rests or {}) do
+        for _, r in ipairs(o.rests ~= false and C.rests or {}) do
             if r.map == mapID and r.x then
                 addPin(r.x, r.y, { 1, 0.55, 0.15, 1 }, {
                     L["Rested here"], r.sub ~= "" and r.sub or r.zone or "", r.dur and WFD:DurationText(r.dur) or "",
                 })
             end
         end
+        self.np = np
         -- numbered entries sorted by their number for the legend
         table.sort(legend, function(a, b) return a.num < b.num end)
         return legend

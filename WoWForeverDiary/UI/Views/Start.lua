@@ -125,7 +125,7 @@ function cards.today(parent)
         local vals = {
             { d.killTotal or 0, L["Kills"], "bestiary" },
             { #(d.qd or {}), L["Quests"], "quests" },
-            { WFD:Dec((d.steps or 0) * 0.9144 / 1000) .. " km", L["on foot"], "maps" },
+            { WFD:Dec((d.steps or 0) * 0.9144 / 1000) .. " km", L["on foot"], "atlas" },
             { (net < 0 and "-" or "+") .. UI.CoinIcons(net, 13), L["Gold today"], "ledger", net < 0 and "neg" or "pos" },
         }
         for i, v in ipairs(vals) do

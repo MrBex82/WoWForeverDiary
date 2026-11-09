@@ -126,6 +126,8 @@ end
 --   cell = { w, h, gap, make, fill }  (a grid of cards)   or   row = { h, make, fill }  (one line each)
 --   empty = function(state) return text end,
 --   cardKind = "creature" | "catch" | "person"   (the card of Cards.lua that opens on the right)
+--   detail = function(report, key)              (or a report of its own in that column, see Report.lua;
+--                                                V:Select(key) opens it)
 --   keyOf = function(entry) return key end      (to leaf through the cards in the order shown)
 --   extra = { { label, fn } }                  (buttons at the end of the filter bar)
 -- }
@@ -239,6 +241,30 @@ function UI.CollectionView(def)
             V.dock:SetPoint("TOPLEFT", 0, -46)
             V.dock:SetPoint("BOTTOMRIGHT", 0, 0)
 
+            -- a report of its own in the column: a card on the leather, written by def.detail
+            if def.detail then
+                V.sheet = K.Card(V.dock)
+                V.sheet:SetPoint("TOPLEFT", 10, 0)
+                V.sheet:SetPoint("BOTTOMRIGHT", -10, 10)
+                V.report = K.Report(V.sheet)
+                V.report:SetAllPoints(V.sheet)
+                V.report.fill = function() V:FillDetail() end
+            end
+            function V:FillDetail()
+                if self.selected == nil or not self.report then return end
+                self.report:Begin()
+                local ok, err = pcall(def.detail, self.report, self.selected)
+                if not ok then WFD:Error("view " .. def.key, err) end
+                self.report:End()
+            end
+            function V:Select(key)
+                self.selected = key
+                self:OpenDetail()
+                self:FillDetail()
+                self.report.scroll:ScrollTo(0)
+                self:ShowingCard(key)
+            end
+
             -- the card of Cards.lua opens in the column while this view is on the desk
             function V:OpenDetail()
                 if not self.detail:IsShown() then
@@ -248,6 +274,7 @@ function UI.CollectionView(def)
                 return self.dock
             end
             function V:CloseDetail()
+                self.selected = nil
                 self.detail:Hide()
                 if UI.card and UI.card.docked then UI.card:Hide() end
                 self:Arrange()
@@ -256,11 +283,12 @@ function UI.CollectionView(def)
                 return self.detail:GetWidth() or DETAIL_MIN, (self.h or host:GetHeight() or 600) - 46
             end
             function V:Step(dir)
-                local card = UI.card
-                if not (card and card.key) or #self.order == 0 then return end
+                local cur = def.detail and self.selected or (UI.card and UI.card.key)
+                if cur == nil or #self.order == 0 then return end
                 local at = 1
-                for i, k in ipairs(self.order) do if k == card.key then at = i break end end
-                UI:ShowCard(def.cardKind, self.order[((at - 1 + dir) % #self.order) + 1])
+                for i, k in ipairs(self.order) do if k == cur then at = i break end end
+                local key = self.order[((at - 1 + dir) % #self.order) + 1]
+                if def.detail then self:Select(key) else UI:ShowCard(def.cardKind, key) end
             end
             function V:ShowingCard(key)
                 local at
@@ -395,6 +423,8 @@ function UI.CollectionView(def)
                 if self.detail:IsShown() and UI.card and UI.card.docked and UI.card:IsShown() then
                     UI:FitDockedCard()
                     self:ShowingCard(UI.card.key)
+                elseif self.detail:IsShown() and self.selected ~= nil then
+                    self:ShowingCard(self.selected)
                 end
             end
 
@@ -419,10 +449,12 @@ function UI.CollectionView(def)
                 if route.chip then self.state.chip = route.chip end
                 if route.sort then self.state.sort = route.sort end
                 self:Refresh()
-                if route.key ~= nil and def.cardKind then UI:ShowCard(def.cardKind, route.key) end
+                if route.key ~= nil and def.detail then self:Select(route.key)
+                elseif route.key ~= nil and def.cardKind then UI:ShowCard(def.cardKind, route.key) end
             end
             function V:Hide()
                 if UI.cardDockProvider then UI.cardDockProvider = nil end
+                self.selected = nil
                 self.detail:Hide()
                 if UI.card and UI.card.docked then UI.card:Hide() end
             end

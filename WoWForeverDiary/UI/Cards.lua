@@ -742,12 +742,4 @@ function UI:ShowCard(kind, key)
 end
 
 -- open the map page of an area
-function UI:ShowMapOf(mapID)
-    local b = self.book
-    if not b then return end
-    if b.mapPage and b.mapPage[mapID] then
-        self:GoToPage(b.mapPage[mapID])
-        return
-    end
-    if b.sectionStart.maps then self:GoToPage(b.sectionStart.maps) end
-end
+-- (UI:ShowMapOf is in UI/Views/World.lua)

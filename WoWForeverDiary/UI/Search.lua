@@ -51,21 +51,25 @@ local function buildIndex()
             for _, e in ipairs(p.entries or {}) do
                 if not e.header and e.page then add("part", e.text, e.icon and UI.Icon(e.icon) or UI.Icon("journal"), toPage(e.page), nil, 1) end
             end
-        elseif p.kind == "map" and p.entry and p.entry.zone then
-            add("place", p.entry.zone, UI.Icon("map"), toPage(p.index), nil, 4)
+        end
+    end
+    -- the parts that are views of the travel desk
+    for _, g in ipairs(UI.NAV or {}) do
+        for _, key in ipairs(g.parts or {}) do
+            if UI.PART_VIEW and UI.PART_VIEW[key] and not book.sectionStart[key] then
+                add("part", UI.PartLabel(key), UI.Icon(g.icon or "journal"), function() UI:OpenShell(UI.PartRoute(key)) end, nil, 1)
+            end
         end
     end
     -- regions and the places within them: their map page, else the day you first came there
     local placed = {}
-    for _, p in ipairs(book.pages) do
-        if p.kind == "map" and p.entry and p.entry.zone then placed[p.entry.zone] = true end
-    end
     local function dayOf(t) local d = t and WFD:DayIndex(t) return d and book.dayPage[d] end
     for name, z in pairs(C.zones or {}) do
         if not placed[name] then
             placed[name] = true
-            local mp = book.mapPage and z.map and book.mapPage[z.map]
-            add("place", name, UI.Icon("map"), toPage(mp or book.dayPage[z.day or 0] or dayOf(z.first)), nil, 4)
+            local map = z.map
+            add("place", name, UI.Icon("map"), map and function() UI:OpenShell({ view = "world", map = map }) end
+                or toPage(book.dayPage[z.day or 0] or dayOf(z.first)), nil, 4)
         end
         for sub, t in pairs(z.sub or {}) do
             if not placed[sub] then

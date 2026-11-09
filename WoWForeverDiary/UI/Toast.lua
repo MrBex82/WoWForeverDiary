@@ -13,7 +13,7 @@ function UI:OpenAt(target)
     if target == "today" and self.OpenStart then return self:OpenStart() end
     if target == "notes" then return self:OpenSettings() end
     if type(target) == "string" and UI.PART_VIEW and UI.PART_VIEW[target] then
-        return self:OpenShell({ view = UI.PART_VIEW[target] })
+        return self:OpenShell(UI.PartRoute(target))
     end
     self:OpenBook(function(b)
         local page

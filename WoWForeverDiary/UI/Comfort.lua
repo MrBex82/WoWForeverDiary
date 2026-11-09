@@ -624,7 +624,7 @@ local function newCounts(since)
     for _, q in pairs(C.quests or {}) do if (q.done or 0) > since then add("quests") end end
     for _, t in pairs(C.rares or {}) do if type(t) == "number" and t > since then add("treasures") end end
     for _, e in pairs(C.catch or {}) do if (e.first or 0) > since then add("fishbook") end end
-    for _, z in pairs(C.zones or {}) do if (z.first or 0) > since then add("maps") end end
+    for _, z in pairs(C.zones or {}) do if (z.first or 0) > since then add("atlas") end end
     for _, e in ipairs(C.events or {}) do
         if (e.t or 0) > since then
             if e.k == "honour" then add("honour") elseif e.k == "first" then add("firsts") end

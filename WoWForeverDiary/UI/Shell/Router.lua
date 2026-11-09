@@ -16,8 +16,8 @@ UI.NAV = {
     { key = "chronicle", label = "Chronicle", icon = "records", old = "grp_chronicle",
         parts = { "milestones", "firsts", "records", "levels", "yearbook", "gallery" } },
     { key = "goals", label = "Goals and honour", icon = "album", old = "grp_goals", parts = { "tasks", "collection", "honour" } },
-    { key = "world", label = "The world", icon = "atlas", old = "grp_world", parts = { "atlas", "maps", "landmarks", "gathering", "runs" } },
-    { key = "hunt", label = "Hunt and loot", icon = "beast", old = "grp_hunt", parts = { "bestiary", "huntgrounds", "fishbook", "fishwaters", "treasures", "fates", "nemesis" } },
+    { key = "world", label = "The world", icon = "atlas", old = "grp_world", parts = { "atlas", "landmarks", "runs" } },
+    { key = "hunt", label = "Hunt and loot", icon = "beast", old = "grp_hunt", parts = { "bestiary", "fishbook", "fishwaters", "treasures", "fates" } },
     { key = "people", label = "People and money", icon = "party", old = "grp_people", parts = { "people", "companions", "stable", "standing", "ledger" } },
     { key = "keep", label = "Keepsakes", icon = "kin", old = "grp_back", parts = { "library", "family", "capsule" } },
 }
@@ -73,7 +73,7 @@ local MAX = 40
 local function same(a, b)
     if not a or not b or a.view ~= b.view then return false end
     if a.view == "legacy" then return a.page == b.page end
-    return a.section == b.section and a.group == b.group and a.key == b.key
+    return a.section == b.section and a.group == b.group and a.key == b.key and a.map == b.map and a.cont == b.cont
 end
 
 -- the place of the book that is open right now, so the way back leads to the very spread
@@ -142,7 +142,14 @@ function R.Resume() return snapshot(R.cur) end
 -- the route of a part of the book
 function UI.PartRoute(key)
     -- a part with a view of its own on the desk
-    if UI.PART_VIEW and UI.PART_VIEW[key] then return { view = UI.PART_VIEW[key] } end
+    -- (a view's name, or a route of its own: a layer of the world map)
+    local pv = UI.PART_VIEW and UI.PART_VIEW[key]
+    if type(pv) == "table" then
+        local r = {}
+        for k, v in pairs(pv) do r[k] = v end
+        return r
+    end
+    if pv then return { view = pv } end
     if key == "diary" then return { view = "legacy", part = "diary", page = function() return UI:TodayPage() end } end
     return { view = "legacy", part = key, page = function(book) return book.sectionStart[key] end }
 end
