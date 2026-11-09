@@ -34,9 +34,9 @@ Das Tagebuch öffnet sich in einem Fenster, dessen Größe du an der Ecke unten 
 - **Tagebuch:** die Tage mit Kapiteln, Questbuch (offen, erledigt, abgebrochen; nach Gebiet oder neueste zuerst)
 - **Chronik:** Meilensteine, Premieren, Rekorde, Stufen-Zeitstrahl, Jahrbuch, Galerie
 - **Ziele & Ruhm:** Aufgaben (Tag, Woche, Monat, eigene Ziele zum Abhaken), Sammlung, Ehrenbuch (Titel und Vitrine über eigene Knöpfe)
-- **Die Welt:** Atlas (mit Zeitraffer: der Abspielknopf unter dem „?“ der Kontinentkarte lässt die Reise Tag für Tag wachsen), Karten mit Gebietschronik, Sehenswürdigkeiten, Fundorte, Dungeon-Berichte
-- **Jagd & Beute:** Bestiarium und Anglerbuch als Sammelkarten-Alben (nach Gebiet, Art oder Menge, mit Filtern wie Selten, Kenner oder Noch zu finden; der Steckbrief liegt rechts daneben), Jagdgründe, Gewässer und Angelzeug, Schätze (nach Platz, Qualität, Bestes je Platz, gerade getragen), Schicksal (jeder Tod auf der Karte, wo und gegen wen am häufigsten), Erzfeinde
-- **Leute & Geld:** Personen (nach A bis Z, Gebiet oder Gesprächen, Filter nach Rolle; die Visitenkarte liegt rechts daneben), Gefährten, Reittiere (erster Ritt, Anzahl der Ritte), Ruf (wann welche Stufe erreicht wurde), Kassenbuch mit Sparziel
+- **Die Welt:** eine Weltkarte für die ganze Reise: Kontinent und Gebiet, mit Ebenen zum Zuschalten (Route, Kampfplätze, Personen, Gräber, Rastplätze, Fundorte, Kreaturen), dem Zeitraffer und daneben der Gebietschronik; Sehenswürdigkeiten; Dungeon-Berichte als Liste mit dem ganzen Bericht daneben (die ganze Gruppe, jeder Boss, jede Beute)
+- **Jagd & Beute:** Bestiarium und Anglerbuch als Sammelkarten-Alben (nach Gebiet, Art oder Menge, mit Filtern wie Selten, Kenner oder Noch zu finden; der Steckbrief liegt rechts daneben), Gewässer und Angelzeug, Schätze (nach Platz, Qualität, Bestes je Platz, gerade getragen), Schicksal (jeder Tod nach Zeit, Gebiet, Gegner oder Stufe, die Erzfeinde mit Rache-Stand)
+- **Leute & Geld:** Personen (nach A bis Z, Gebiet oder Gesprächen, Filter nach Rolle; die Visitenkarte liegt rechts daneben), Gefährten und Handelspartner, Reittiere (erster Ritt, Anzahl der Ritte), Ruf (wann welche Stufe erreicht wurde), Kassenbuch als Übersicht (Einnahmen, Ausgaben, Sparziel, Herkunft und Verbleib des Geldes, Geldbeutel über die Tage, jeder Tag)
 - **Andenken:** Bibliothek, Familienbuch, Zeitkapsel
 - **Einstellungen** (Zahnrad): Allgemein, Aussehen, Bedienung, Daten. Stil und Schriftgröße wechseln sofort; das Fenster lässt sich sperren.
 
