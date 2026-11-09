@@ -829,3 +829,36 @@ UI:RegisterRenderer("companions", function(pool, page, side, canvas)
         end
     end
 end)
+
+------------------------------------------------------------------------
+-- For the views of the travel desk (UI/Views/Trophies.lua)
+------------------------------------------------------------------------
+-- every notable find once, with its group (the slot it is worn in, weapons, goods) and its place on the doll
+function UI.TreasureList()
+    local C = WFD.C
+    local agg, list = {}, {}
+    for d = 1, WFD:NumDays() do
+        local day = C.days[d]
+        if day then
+            for id, e in pairs(day.loot or {}) do
+                if (e.q or 1) >= 2 then
+                    local a = agg[id]
+                    if not a then
+                        a = { id = id, link = e.link, q = e.q, n = 0, day = d, src = e.src }
+                        agg[id] = a
+                        list[#list + 1] = a
+                    end
+                    a.n = a.n + e.n
+                end
+            end
+        end
+    end
+    for _, a in ipairs(list) do
+        a.gkey, a.gname, a.rank = treasureGroup(a.link)
+        a.slot = DOLL_OF[a.gkey]
+    end
+    return list
+end
+UI.TreasureInk, UI.TreasureFrame, UI.QualityName = qink, QFRAME, qualityName
+UI.WornNow, UI.MobByName = wornNow, mobByName
+UI.HonourTip, UI.HonourProgressText = honourTip, progressText

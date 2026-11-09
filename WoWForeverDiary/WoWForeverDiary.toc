@@ -100,3 +100,4 @@ UI\Views\Settings.lua
 UI\Views\Help.lua
 UI\Views\Albums.lua
 UI\Views\Registers.lua
+UI\Views\Trophies.lua
