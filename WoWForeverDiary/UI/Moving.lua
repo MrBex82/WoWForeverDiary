@@ -162,6 +162,7 @@ function UI:ShowMovingImport()
             return
         end
         WFD:ApplyMovingCode(f.data)
-        ReloadUI()
+        f:Hide()
+        WFD:Reload(L["The diary was replaced. Reload the interface to finish."])
     end)
 end

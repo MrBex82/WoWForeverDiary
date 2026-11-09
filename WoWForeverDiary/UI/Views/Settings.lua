@@ -39,9 +39,9 @@ local function setLanguage(code)
         title = L["Change the language?"],
         text = L["The diary will reload the interface to switch the language."],
         ok = L["Reload now"],
+        reload = true,
         onOk = function()
             WFDiaryDB.language = (code ~= "game") and code or nil
-            ReloadUI()
         end,
     })
 end

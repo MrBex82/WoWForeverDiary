@@ -681,7 +681,17 @@ function WFD:RestorePrevious()
     WFDiaryChar = old
     self.paused = true          -- nothing more is written into the diary that was just put aside
     print("|cffffd100WoW Forever Diary:|r " .. L["The diary put aside is back. The interface is reloaded."])
-    ReloadUI()
+    self:Reload()
+end
+
+-- Reloads the interface. Some game clients refuse ReloadUI() from an addon: then a dialog with a secure button
+-- of the game does it (UI:AskReload), and failing that the player is told to type /reload.
+function WFD:Reload(text)
+    if self.UI and self.UI.AskReload then
+        self.UI:AskReload(text)
+        return
+    end
+    if not pcall(ReloadUI) then print("|cffffd100WoW Forever Diary:|r " .. L["Type /reload to finish."]) end
 end
 
 -- Brings back the copy made before the last update. The diary as it is now is put aside (/wfd restore undoes it).
@@ -704,7 +714,7 @@ function WFD:RestoreBackup()
     WFDiaryChar = old
     self.paused = true
     print("|cffffd100WoW Forever Diary:|r " .. format(L["The copy from before the update to version %s is back. The interface is reloaded."], WFD.version))
-    ReloadUI()
+    self:Reload()
 end
 
 ------------------------------------------------------------------------

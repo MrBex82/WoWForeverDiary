@@ -667,7 +667,30 @@ local function buildDialog()
     return d
 end
 
--- opt = { title, text, ok, danger, onOk, input = { value, numeric, max }, cancel }
+-- Some game clients refuse ReloadUI() from an addon. A secure button of the game that runs "/reload" like a macro
+-- is always allowed: it lies over the OK button of a dialog that reloads, and onOk runs just before it.
+local function secureReload(d)
+    if d.reloadBtn ~= nil then return d.reloadBtn end
+    local ok, b = pcall(CreateFrame, "Button", nil, d.box, "SecureActionButtonTemplate")
+    if not (ok and b) then d.reloadBtn = false return false end
+    b:SetAttribute("type", "macro")
+    b:SetAttribute("macrotext", "/reload")
+    b:RegisterForClicks("AnyUp", "AnyDown")
+    b:SetAllPoints(d.ok)
+    b:SetFrameLevel(d.ok:GetFrameLevel() + 5)
+    b:SetScript("PreClick", function()
+        local fn = d.preReload
+        d.preReload = nil
+        if fn then fn() end
+    end)
+    b:HookScript("OnEnter", function() d.ok.hover = true K.Repaint(d.ok) end)
+    b:HookScript("OnLeave", function() d.ok.hover = nil K.Repaint(d.ok) end)
+    d.reloadBtn = b
+    return b
+end
+
+-- opt = { title, text, ok, danger, onOk, input = { value, numeric, max }, cancel, reload }
+-- reload = true: OK reloads the interface (after onOk)
 local function openDialog(opt)
     dlg = dlg or buildDialog()
     local d = dlg
@@ -709,6 +732,25 @@ local function openDialog(opt)
     d.cancel:ClearAllPoints()
     d.cancel:SetPoint("RIGHT", d.ok, "LEFT", -8, 0)
     d.box:SetHeight(y + d.ok:GetHeight() + 18)
+    local fighting = InCombatLockdown and InCombatLockdown()
+    local rb = not fighting and secureReload(d)
+    if rb then
+        if opt.reload then
+            d.preReload = opt.onOk
+            rb:Show()
+        else
+            rb:Hide()
+        end
+    end
+    if opt.reload and not rb then
+        -- no secure button (in a fight, or an old client): the player reloads by hand
+        local onOk = opt.onOk
+        d.ok.onClick = function()
+            d:Hide()
+            if onOk then onOk() end
+            print("|cffffd100WoW Forever Diary:|r " .. L["Type /reload to finish."])
+        end
+    end
     d:Show()
     if opt.input then
         d.input:SetFocus()
@@ -718,6 +760,11 @@ end
 
 -- a question with two answers; onOk runs on the first
 function UI:Confirm(opt) openDialog(opt) end
+
+-- the interface has to be reloaded to finish something: the player is asked, and the button reloads
+function UI:AskReload(text)
+    openDialog({ title = L["Reload the interface"], text = text, ok = L["Reload now"], reload = true })
+end
 -- a value to type; onOk(text) runs with what was typed
 function UI:Ask(opt)
     opt.input = opt.input or {}

@@ -10,7 +10,7 @@ local floor, max, min, format = math.floor, math.max, math.min, string.format
 
 local MIN_W, MIN_H = 760, 520
 local DEF_W, DEF_H = 1080, 700
-local TOP_H, RAIL_W, RAIL_NARROW = 48, 200, 54
+local TOP_H, RAIL_W, RAIL_NARROW = 48, 212, 54
 local NARROW_AT = 900          -- below this width the register shows its signs only
 
 local S          -- the shell's frames
@@ -181,9 +181,9 @@ function UI:RefreshRail()
         local new = 0
         for _, p in ipairs(parts) do new = new + (counts[p] or 0) end
         b.badge:SetShown(new > 0 and not (b.active and not narrow))
-        b.text:SetWidth(max(40, UI.RailWidth() - 12 - 8 - 28 - 10 - (b.badge:IsShown() and 34 or 8)))
         b.badge.text:SetText(new > 99 and "99" or tostring(new))
         b.badge:SetWidth(max(20, b.badge.text:GetStringWidth() + 10))
+        b.text:SetWidth(max(40, UI.RailWidth() - 12 - 8 - 28 - 10 - (b.badge:IsShown() and (b.badge:GetWidth() + 12) or 8)))
         if narrow then
             b.badge:ClearAllPoints()
             b.badge:SetPoint("TOPRIGHT", b, "TOPRIGHT", -2, -1)
