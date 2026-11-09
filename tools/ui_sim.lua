@@ -564,6 +564,12 @@ print(string.format("Reached: %d pages in the book, %d parts in the register, de
     UI.book and #UI.book.pages or 0, parts, WFD.demo and "on" or "off", tostring(UI.THEME),
     UI.holder and UI.holder:GetWidth() or 0, UI.holder and UI.holder:GetHeight() or 0))
 print(string.format("Cards opened: %d, in the column of a view: %d", cardsShown, cardsDocked))
+-- every part of the register has a name of its own, not its key
+for _, g in ipairs(UI.NAV) do
+    for _, key in ipairs(UI.PartsOf(g)) do
+        if UI.PartLabel(key) == key then report("register", "part without a name: " .. key) end
+    end
+end
 local names = {}
 for k in pairs(unknown) do names[#names + 1] = k end
 table.sort(names)

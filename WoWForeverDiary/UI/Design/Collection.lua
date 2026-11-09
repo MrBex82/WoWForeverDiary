@@ -138,6 +138,7 @@ local DETAIL_MIN, DETAIL_MAX = 300, 420
 
 function UI.CollectionView(def)
     UI.VIEW_PLACE[def.key] = { def.group, def.part or def.key }
+    UI.PART_LABEL[def.part or def.key] = def.label        -- the name in the register (an English key)
     UI:RegisterView({
         key = def.key,
         build = function(host)

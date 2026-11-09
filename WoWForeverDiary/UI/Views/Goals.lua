@@ -136,6 +136,7 @@ end
 ------------------------------------------------------------------------
 UI.PART_VIEW.tasks = "tasks"
 UI.VIEW_PLACE.tasks = { "goals", "tasks" }
+UI.PART_LABEL.tasks = "Tasks"
 
 UI:RegisterView({
     key = "tasks",
@@ -361,6 +362,7 @@ UI:RegisterView({
 ------------------------------------------------------------------------
 UI.PART_VIEW.collection = "collection"
 UI.VIEW_PLACE.collection = { "goals", "collection" }
+UI.PART_LABEL.collection = "Collection"
 
 local QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 
