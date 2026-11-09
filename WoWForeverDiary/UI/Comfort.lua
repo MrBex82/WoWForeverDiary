@@ -32,6 +32,12 @@ function UI:Back()
 end
 
 function UI:UpdateBack()
+    -- on the travel desk the way back is the arrow in its head bar
+    if self.inShell then
+        if self.backBtn then self.backBtn:Hide() end
+        if self.OnHistoryChanged then self:OnHistoryChanged() end
+        return
+    end
     if self.backBtn then self.backBtn:SetShown(self.history and #self.history > 0) end
 end
 
@@ -265,9 +271,31 @@ local function markTitle(mk)
     return part
 end
 
+-- the bookmarks with their names and the way to their page (the register of the travel desk lists them)
+function UI.MarkList()
+    local out = {}
+    for i, m in ipairs(WFD.C and WFD.C.marks or {}) do
+        out[#out + 1] = { i = i, title = markTitle(m), col = MARK_COLS[((i - 1) % #MARK_COLS) + 1],
+            go = function() local to = resolveMark(m) if to then UI:OpenBook(to) end end }
+    end
+    return out
+end
+
+function UI.RemoveMark(i)
+    if WFD.C and WFD.C.marks then table.remove(WFD.C.marks, i) end
+    UI:UpdateMarks()
+    UI:UpdateEars()
+end
+
 function UI:UpdateMarks()
     local bf, C = self.bookFrame, WFD.C
     if not bf then return end
+    -- on the travel desk the bookmarks are listed in the register, not hung out of the book
+    if self.inShell then
+        for _, f in pairs(markFrames) do f:Hide() end
+        if self.OnMarksChanged then self:OnMarksChanged() end
+        return
+    end
     local marks = C and C.marks or {}
     local left, right = (self.spread or 1) * 2 - 1, (self.spread or 1) * 2
     for i = 1, MAX_MARKS do
@@ -412,13 +440,19 @@ end
 ------------------------------------------------------------------------
 -- Keys, while the mouse is over the open book (so walking and fighting stay untouched)
 ------------------------------------------------------------------------
+-- turning pages only while the book is open on the desk; the rest works everywhere in the window
+local function flip(dir) return function() if UI.bookFrame:IsShown() then UI:Flip(dir) end end end
 local KEYS = {
-    LEFT = function() UI:Flip(-1) end, PAGEUP = function() UI:Flip(-1) end,
-    RIGHT = function() UI:Flip(1) end, PAGEDOWN = function() UI:Flip(1) end,
-    HOME = function() if UI.book and UI.book.sectionStart.toc then UI:GoToPage(UI.book.sectionStart.toc) end end,
+    LEFT = flip(-1), PAGEUP = flip(-1), RIGHT = flip(1), PAGEDOWN = flip(1),
+    HOME = function()
+        if UI.inShell and UI.OpenStart then UI:OpenStart() return end
+        if UI.book and UI.book.sectionStart.toc then UI:GoToPage(UI.book.sectionStart.toc) end
+    end,
     END = function() UI:GoToPage(UI:TodayPage()) end,
-    BACKSPACE = function() UI:Back() end,
-    ["CTRL-F"] = function() if UI.ToggleSearch then UI:ToggleSearch() end end,
+    BACKSPACE = function() if UI.ShellBack then UI:ShellBack() else UI:Back() end end,
+    ["CTRL-F"] = function()
+        if UI.FocusSearch then UI:FocusSearch() elseif UI.ToggleSearch then UI:ToggleSearch() end
+    end,
 }
 local function propagate(frame, v)
     if frame.SetPropagateKeyboardInput and not (InCombatLockdown and InCombatLockdown()) then
@@ -427,6 +461,9 @@ local function propagate(frame, v)
 end
 -- Escape closes what lies on top of the book first (a card, the search); the book itself only after that
 local function closeLayer()
+    -- a question, an open list, the search results of the desk come first
+    if UI.Kit and (UI.Kit.CloseDialog() or UI.Kit.CloseMenu()) then return true end
+    if UI.ShellCloseLayer and UI:ShellCloseLayer() then return true end
     if UI.replayBox and UI.replayBox:IsReplaying() then UI.replayBox:StopReplay() return true end
     if UI.card and UI.card:IsShown() then UI.card:Hide() return true end
     if UI.kindPanel and UI.kindPanel:IsShown() then UI.kindPanel:Hide() return true end
@@ -450,7 +487,8 @@ local function setupKeys(holder)
             end
             return
         end
-        if fn and not typing and UI.bookFrame:IsShown() and self:IsMouseOver() and not (InCombatLockdown and InCombatLockdown()) then
+        local open = UI.bookFrame:IsShown() or UI.inShell
+        if fn and not typing and open and self:IsMouseOver() and not (InCombatLockdown and InCombatLockdown()) then
             propagate(self, false)
             fn()
             -- hand the keyboard straight back to the game
@@ -535,6 +573,8 @@ function UI:TurnSweep(dir)
         sheet.edge:SetWidth(1)
     end
     sheet:SetFrameLevel(lp.canvas:GetFrameLevel() + 4)
+    sheet.base:SetVertexColor(col4(c.paper))      -- the style may have changed since the sheet was made
+    if sheet.art then sheet.art:SetShown(UI.THEME ~= "modern") end
     local W, H = rp:GetWidth(), rp:GetHeight()
     local from, to = (dir > 0) and rp or lp, (dir > 0) and lp or rp
     sheet.t = 0
@@ -795,369 +835,5 @@ function UI:OpenBook(page)
     end
 end
 
-------------------------------------------------------------------------
--- The page of handling: notifications, keys, the book itself
-------------------------------------------------------------------------
-UI:RegisterRenderer("handling", function(pool, page, side, canvas)
-    local tx, tw = UI.TextX(side), UI.TextW()
-    local y = UI.PageTitle(pool, canvas, side, L["Handling"], nil, -56, UI.SettingsTabs(3))
-    local S = WFD.S
-    local function caption(text)
-        local t = pool:Text(10, c.redInk, UI.FONT)
-        t:SetText(text:upper())
-        t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-        y = y - 18
-    end
-    local function links(items)
-        local x = tx
-        for _, it in ipairs(items) do
-            local fs = pool:Link(it.text, it.fn, 13, it.active and c.redInk or c.inkSoft)
-            local w = fs:GetStringWidth()
-            if x > tx and x + w > tx + tw then x = tx; y = y - 20 end
-            fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, y)
-            x = x + w + 16
-        end
-        y = y - 24
-    end
-    local function small(text)
-        local t = pool:Text(12, c.inkSoft, UI.FONT)
-        t:SetWidth(tw)
-        t:SetText(text)
-        -- with large writing the last hints may not fit: they are left out rather than cut
-        if y - t:GetStringHeight() < -(UI.PH - UI.BOTTOM) then
-            t:SetText("")
-            return
-        end
-        t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-        y = y - t:GetStringHeight() - 10
-    end
-
-    caption(L["The book"])
-    for _, ch in ipairs({
-        { L["Show minimap button"], "minimap", function() UI:UpdateMinimapButton() end },
-        { L["Show the cover when the book is first opened"], "cover" },
-    }) do
-        local cb = pool:Check(ch[1], function() return S[ch[2]] end, function(v)
-            S[ch[2]] = v
-            if ch[3] then ch[3]() end
-        end)
-        cb:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-        y = y - 19
-    end
-    y = y - 4
-    links({
-        { text = L["Reset the position"], fn = function() UI:ResetPosition() end },
-        { text = L["Show the introduction again"], fn = function() WFD.S.tourDone = nil; UI:StartTour() end },
-    })
-
-    -- the small notes that slide in: a sample to drag to where it suits, and the way back to the top
-    caption(L["Pop-up notes"])
-    links({
-        { text = L["Show a note to move it"], fn = function()
-            UI:Toast({ k = "memory", jubilee = true, when = L["Anniversary"], title = L["The diary's birthday"],
-                hint = L["Drag to move."], day = 1, t = time(), quiet = true }, true)
-        end },
-        { text = L["Put the notes back at the top"], fn = function()
-            UI:ResetToastPlace()
-            print("|cffffd100WoW Forever Diary:|r " .. L["The notes are back at the top of the screen."])
-        end },
-    })
-
-    -- what the keyboard and the mouse do in the book
-    caption(L["Keys while the mouse is over the book"])
-    local rows = {
-        { L["Arrow keys, Page up / down"], L["turn the page"] },
-        { L["Home"], L["contents"] },
-        { L["End"], L["today's entry"] },
-        { L["Backspace"], L["back"] },
-        { L["Ctrl + F"], L["search the book"] },
-        { L["Ctrl + mouse wheel"], L["size of the book"] },
-        { L["Click the page number"], L["go to a page"] },
-        { L["Click the folded corner"], L["bookmark"] },
-        { "/wfd", L["open or close the book"] },
-    }
-    for _, r in ipairs(rows) do
-        if y - 22 < -(UI.PH - UI.BOTTOM) then break end
-        UI.LeaderLine(pool, canvas, tx, y, tw, r[1], r[2], 13, c.inkSoft)
-        y = y - 22
-    end
-    y = y - 4
-    small(L["A key to open the book can be set in the game's key bindings, under AddOns."])
-end)
-
-------------------------------------------------------------------------
--- The page of the look: the style of the book, the size of the writing, the companion
-------------------------------------------------------------------------
-local THEME_NAMES = { codex = "Leather and gold", parchment = "Parchment", modern = "Modern", contrast = "Strong contrast" }
-local SIZES = { 1, 1.1, 1.2 }
-local function setAndReload(key, value)
-    WFD.S[key] = value
-    ReloadUI()
-end
-UI.SetAndReload = setAndReload
-
-UI:RegisterRenderer("appearance", function(pool, page, side, canvas)
-    local tx, tw = UI.TextX(side), UI.TextW()
-    local y = UI.PageTitle(pool, canvas, side, L["Appearance"], nil, -56, UI.SettingsTabs(2))
-    local S = WFD.S
-    local function caption(text)
-        local t = pool:Text(10, c.redInk, UI.FONT)
-        t:SetText(text:upper())
-        t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-        y = y - 18
-    end
-    local function links(items)
-        local x = tx
-        for _, it in ipairs(items) do
-            local fs = pool:Link(it.text, it.fn, 13, it.active and c.redInk or c.inkSoft)
-            local w = fs:GetStringWidth()
-            if x > tx and x + w > tx + tw then x = tx; y = y - 20 end
-            fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, y)
-            if it.active then
-                local u = pool:Rect(c.redInk, 1)
-                u:SetSize(w, 1)
-                u:SetPoint("TOPLEFT", fs, "BOTTOMLEFT", 0, -2)
-            end
-            x = x + w + 16
-        end
-        y = y - 24
-    end
-    local function small(text)
-        local t = pool:Text(12, c.inkSoft, UI.FONT)
-        t:SetWidth(tw)
-        t:SetText(text)
-        -- with large writing the last hint may not fit: it is left out rather than cut
-        if y - t:GetStringHeight() < -(UI.PH - UI.BOTTOM) then
-            t:SetText("")
-            return
-        end
-        t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-        y = y - t:GetStringHeight() - 10
-    end
-
-    caption(L["Style of the book"])
-    local items = {}
-    for _, key in ipairs(UI.THEMES) do
-        local cur = UI.THEME or "codex"
-        items[#items + 1] = { text = L[THEME_NAMES[key]], active = cur == key,
-            fn = function() if cur ~= key then setAndReload("theme", key ~= "codex" and key or nil) end end }
-    end
-    links(items)
-    small(L["Leather and gold is the classic book. Modern is flat and calm, strong contrast makes all writing brighter."])
-    small(L["Parchment is bright, like old quest paper."])
-
-    caption(L["Size of the writing"])
-    items = {}
-    for _, k in ipairs(SIZES) do
-        local cur = S.fontScale or 1
-        items[#items + 1] = { text = floor(k * 100 + 0.5) .. "%", active = math.abs(cur - k) < 0.01,
-            fn = function() if math.abs(cur - k) >= 0.01 then setAndReload("fontScale", k ~= 1 and k or nil) end end }
-    end
-    links(items)
-    small(L["Both reload the interface. With bigger writing a few long lines may run close together."])
-
-    caption(L["Size of the book"])
-    items = {}
-    -- a size set with Ctrl + mouse wheel joins the row, so the current one is always marked
-    local cur, steps = S.scale or 0.9, { 0.75, 0.8, 0.9, 1, 1.1 }
-    local known = false
-    for _, st in ipairs(steps) do if math.abs(cur - st) < 0.001 then known = true end end
-    if not known then
-        steps[#steps + 1] = cur
-        table.sort(steps)
-    end
-    for _, st in ipairs(steps) do
-        items[#items + 1] = { text = floor(st * 100 + 0.5) .. "%", active = math.abs(cur - st) < 0.001,
-            fn = function()
-                UI:SetScale(st)
-                UI:ShowSpread(UI.spread)
-            end }
-    end
-    links(items)
-
-    caption(L["Turning the pages"])
-    local cb = pool:Check(L["Turn the leaves visibly"], function() return S.turnAnim ~= false end, function(v) if v then S.turnAnim = nil else S.turnAnim = false end end)
-    cb:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-    y = y - 30
-
-    -- the small window beside the game is part of the look
-    caption(L["Companion"])
-    local cc = pool:Check(L["Show the companion beside the game"], function() return S.companion end, function(v) UI:ShowCompanion(v) end)
-    cc:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-    y = y - 26
-    small(L["A small window with today's figures, the tasks and the honours closest to their next tier. Drag it by its title, fold it with the minus."])
-end)
-
-------------------------------------------------------------------------
--- An entry in the game's options (Interface -> AddOns)
-------------------------------------------------------------------------
-local function buildOptions()
-    local p = CreateFrame("Frame")
-    p.name = "WoW Forever Diary"
-    local title = p:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
-    title:SetPoint("TOPLEFT", 16, -16)
-    title:SetText("WoW Forever Diary")
-    local sub = p:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-    sub:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
-    sub:SetWidth(560)
-    sub:SetJustifyH("LEFT")
-    sub:SetText(L["Just play, I'll write along. Every day you play becomes a page in this book."])
-
-    local function closeOptions()
-        for _, f in ipairs({ _G.SettingsPanel, _G.InterfaceOptionsFrame }) do
-            if f and f:IsShown() then pcall(HideUIPanel, f) end
-        end
-    end
-    local function button(text, x, y, fn)
-        local b = CreateFrame("Button", nil, p, "UIPanelButtonTemplate")
-        b:SetSize(200, 24)
-        b:SetPoint("TOPLEFT", x, y)
-        b:SetText(text)
-        b:SetScript("OnClick", fn)
-        return b
-    end
-    button(L["Open the diary"], 16, -70, function() closeOptions(); UI:Show() end)
-    button(L["Open the scribe's notes"], 226, -70, function() closeOptions(); UI:OpenSettings() end)
-
-    local checks = {
-        { L["Take a screenshot at milestones"], "screenshots" },
-        { L["Show minimap button"], "minimap", function() UI:UpdateMinimapButton() end },
-        { L["Show a note for new discoveries"], "toasts" },
-        { L["Weekly look back at login"], "recap" },
-        { L["A memory on the Today page"], "memoryPage" },
-        { L["A memory as a note at login"], "memoryToast" },
-        { L["Show when an item was first found in its tooltip"], "itemTip" },
-        { L["Show the cover when the book is first opened"], "cover" },
-    }
-    local boxes = {}
-    for i, ch in ipairs(checks) do
-        local cb = CreateFrame("CheckButton", nil, p, "UICheckButtonTemplate")
-        cb:SetPoint("TOPLEFT", 16, -110 - (i - 1) * 28)
-        local tl = rawget(cb, "Text") or rawget(cb, "text")
-        if type(tl) ~= "table" or not tl.SetText then tl = nil end
-        local label = tl or cb:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-        if not tl then label:SetPoint("LEFT", cb, "RIGHT", 4, 0) end
-        label:SetText(ch[1])
-        cb:SetScript("OnClick", function(s)
-            WFD.S[ch[2]] = s:GetChecked() and true or false
-            if ch[3] then ch[3]() end
-        end)
-        boxes[#boxes + 1] = { cb, ch[2] }
-    end
-
-    local y = -110 - #checks * 28 - 14
-    local nl = p:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    nl:SetPoint("TOPLEFT", 16, y)
-    nl:SetText(L["Notifications"])
-    local levels = { { "all", L["All"] }, { "important", L["Important only"] }, { "quiet", L["Quiet"] } }
-    local radios = {}
-    for i, lv in ipairs(levels) do
-        local cb = CreateFrame("CheckButton", nil, p, "UICheckButtonTemplate")
-        cb:SetPoint("TOPLEFT", 16 + (i - 1) * 170, y - 18)
-        local tl = rawget(cb, "Text") or rawget(cb, "text")
-        if type(tl) ~= "table" or not tl.SetText then tl = nil end
-        local label = tl or cb:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-        if not tl then label:SetPoint("LEFT", cb, "RIGHT", 4, 0) end
-        label:SetText(lv[2])
-        cb:SetScript("OnClick", function()
-            WFD.S.notify = lv[1]
-            for _, r in ipairs(radios) do r[1]:SetChecked(r[2] == lv[1]) end
-        end)
-        radios[#radios + 1] = { cb, lv[1] }
-    end
-
-    y = y - 62
-    local sl = p:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    sl:SetPoint("TOPLEFT", 16, y)
-    local function showSize() sl:SetText(format(L["Size: %d%%"], floor((WFD.S.scale or 0.9) * 100 + 0.5))) end
-    local minus = button("-", 16, y - 20, function()
-        if UI.holder then UI:StepScale(-1) else WFD.S.scale = max(0.6, (WFD.S.scale or 0.9) - 0.05) end
-        showSize()
-    end)
-    minus:SetWidth(40)
-    local plus = button("+", 62, y - 20, function()
-        if UI.holder then UI:StepScale(1) else WFD.S.scale = min(1.4, (WFD.S.scale or 0.9) + 0.05) end
-        showSize()
-    end)
-    plus:SetWidth(40)
-    button(L["Reset the position"], 116, y - 20, function() UI:ResetPosition() end)
-
-    y = y - 62
-    local tl = p:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    tl:SetPoint("TOPLEFT", 16, y)
-    tl:SetText(L["Style of the book"] .. "  (" .. L["reloads the interface"] .. ")")
-    local tx = 16
-    for _, key in ipairs(UI.THEMES) do
-        local b = button(L[THEME_NAMES[key]], tx, y - 20, function()
-            if (UI.THEME or "codex") ~= key then UI.SetAndReload("theme", key ~= "codex" and key or nil) end
-        end)
-        b:SetWidth(150)
-        tx = tx + 156
-    end
-    y = y - 52
-    local fl = p:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    fl:SetPoint("TOPLEFT", 16, y)
-    fl:SetText(L["Size of the writing"] .. "  (" .. L["reloads the interface"] .. ")")
-    tx = 16
-    for _, k in ipairs(SIZES) do
-        local b = button(floor(k * 100 + 0.5) .. "%", tx, y - 20, function()
-            if math.abs((WFD.S.fontScale or 1) - k) >= 0.01 then UI.SetAndReload("fontScale", k ~= 1 and k or nil) end
-        end)
-        b:SetWidth(70)
-        tx = tx + 76
-    end
-    y = y - 56
-    local comp = CreateFrame("CheckButton", nil, p, "UICheckButtonTemplate")
-    comp:SetPoint("TOPLEFT", 16, y)
-    local ctl = rawget(comp, "Text") or rawget(comp, "text")
-    if type(ctl) ~= "table" or not ctl.SetText then
-        ctl = comp:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-        ctl:SetPoint("LEFT", comp, "RIGHT", 4, 0)
-    end
-    ctl:SetText(L["Show the companion beside the game"])
-    comp:SetScript("OnClick", function(s) UI:ShowCompanion(s:GetChecked() and true or false) end)
-    boxes[#boxes + 1] = { comp, "companion" }
-
-    -- a quiet line at the very bottom: a link to copy, nothing more
-    local KOFI = "https://ko-fi.com/mrbex"
-    local support = p:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
-    support:SetPoint("BOTTOMLEFT", 16, 40)
-    support:SetText(L["If you enjoy the diary, you can support its development:"])
-    local link = CreateFrame("EditBox", nil, p, BackdropTemplateMixin and "BackdropTemplate" or nil)
-    link:SetSize(260, 20)
-    link:SetPoint("BOTTOMLEFT", 16, 16)
-    link:SetAutoFocus(false)
-    link:SetFontObject("GameFontDisableSmall")
-    link:SetTextInsets(6, 6, 0, 0)
-    if link.SetBackdrop then
-        link:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
-        link:SetBackdropColor(0, 0, 0, 0.35)
-        link:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8)
-    end
-    link:SetText(KOFI)
-    link:SetCursorPosition(0)
-    -- the text stays as it is, it can only be selected and copied
-    link:SetScript("OnTextChanged", function(s, user) if user then s:SetText(KOFI); s:HighlightText() end end)
-    link:SetScript("OnEditFocusGained", function(s) s:HighlightText() end)
-    link:SetScript("OnEditFocusLost", function(s) s:HighlightText(0, 0) end)
-    link:SetScript("OnEscapePressed", function(s) s:ClearFocus() end)
-    link:SetScript("OnEnterPressed", function(s) s:ClearFocus() end)
-
-    p:SetScript("OnShow", function()
-        for _, b in ipairs(boxes) do b[1]:SetChecked(WFD.S[b[2]] and true or false) end
-        for _, r in ipairs(radios) do r[1]:SetChecked(r[2] == (WFD.S.notify or "all")) end
-        showSize()
-    end)
-
-    if type(Settings) == "table" and Settings.RegisterCanvasLayoutCategory and Settings.RegisterAddOnCategory then
-        local cat = Settings.RegisterCanvasLayoutCategory(p, p.name)
-        Settings.RegisterAddOnCategory(cat)
-    elseif InterfaceOptions_AddCategory then
-        InterfaceOptions_AddCategory(p)
-    end
-end
-
-WFD:OnInit(function()
-    local ok, err = pcall(buildOptions)
-    if not ok then WFD:Error("options", err) end
-end)
+-- (the pages of handling and appearance became the settings view of the travel desk: UI/Views/Settings.lua)
+-- (the entry in the game's options is built from the settings schema: UI/Views/Settings.lua)

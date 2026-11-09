@@ -10,4 +10,8 @@ PY=py
 command -v py >/dev/null 2>&1 || PY=python
 $PY tools/check_locales.py || fail=1
 $PY tools/check_usage.py || fail=1
+# the interface loads and every view opens (a fake game, see the file)
+if command -v lua >/dev/null 2>&1; then
+    out=$(lua tools/ui_sim.lua WoWForeverDiary 2>&1) || { echo "$out" | grep -v "^Methods"; fail=1; }
+fi
 exit $fail

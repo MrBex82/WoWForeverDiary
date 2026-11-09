@@ -54,7 +54,6 @@ local LAYOUT = {
     stable = { "people", 46, "Every mount, and the day it was first ridden" }, standing = { "people", 47, "How the factions came to see me" },
     ledger = { "people", 50, "Every coin, in and out" },
     family = { "back", 86, "Who got there first?" }, library = { "back", 85.7, "Books I read along the way" }, capsule = { "back", 88, "Letters to my future self" },
-    notes = { "back", 90, "How this book is kept" },
 }
 
 -- def = { key, label, icon, order, build = function(book) ... end }
@@ -114,6 +113,15 @@ end
 function UI.ClearCaches()
     measureCache = {}
     UI.storyCache = {}
+end
+
+-- text is measured at the scale it is drawn at: the frame the pages are drawn in
+function UI.MeasureAt(frame)
+    measureFrame:SetParent(frame)
+    measureFrame:ClearAllPoints()
+    measureFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+    measureFrame:SetFrameLevel(1)
+    measureCache = {}
 end
 UI.storyCache = {}
 
@@ -615,6 +623,8 @@ function UI:ShowSpread(s)
     if self.UpdateBack then self:UpdateBack() end
     local today = self:TodayPage()
     self.followToday = (ceil(today / 2) == s)
+    -- the travel desk around the book follows: the path in its head bar, the open part in the register
+    if self.OnSpreadShown then self:OnSpreadShown(s) end
 end
 
 -- Where reading stopped, kept so that it survives a growing book: a diary day, or a page within its section.
@@ -734,9 +744,6 @@ function UI:ThumbList()
                 group = sec.group }
         end
     end
-    -- the settings have a tab of their own at the very end: no wandering through the keepsakes to find them
-    list[#list + 1] = { key = "notes", label = L["Settings"], icon = "settings", group = "settings",
-        hint = L["Click to open the settings."] }
     -- the colour of its group; neighbours within a group a shade apart
     local nth, last = 0, nil
     for _, t in ipairs(list) do
@@ -1074,11 +1081,15 @@ local function buildBook(holder)
     local bf = UI.Frame(holder, BW, BH)
     bf:SetPoint("CENTER")
     UI.Backdrop(bf, "tooltip", 16, 4, c.leather, { 0.78, 0.60, 0.28, 1 })
-    leather(bf, 4)
-    stitches(bf, 9, BW, BH, { 0.85, 0.66, 0.32, 0.4 })
+    -- the leather of the binding differs by style: drawn once per style, swapped when the style changes
+    UI.Themed(bf, function(f)
+        leather(f, 4)
+        stitches(f, 9, BW, BH, { 0.85, 0.66, 0.32, 0.4 })
+    end)
+    UI.OnRestyle(function() bf:SetBackdropColor(col4(c.leather)) end)
     bf:EnableMouse(true)
     bf:RegisterForDrag("LeftButton")
-    bf:SetScript("OnDragStart", function() holder:StartMoving() end)
+    bf:SetScript("OnDragStart", function() if not WFD.S.locked then holder:StartMoving() end end)
     bf:SetScript("OnDragStop", function()
         holder:StopMovingOrSizing()
         if UI.SavePosition then UI:SavePosition() end
@@ -1183,8 +1194,9 @@ local function buildBook(holder)
     local shade = UI.GradRect(rb, "VERTICAL", { 0, 0, 0, 0 }, { 0, 0, 0, 0.7 }, "OVERLAY", 0)
     shade:SetPoint("TOPLEFT"); shade:SetPoint("TOPRIGHT"); shade:SetHeight(UNDER + 8)
     -- it belongs to the open book: hidden with it (the closed cover has none)
-    bf:HookScript("OnShow", function() rb:Show() end)
+    bf:HookScript("OnShow", function() rb:SetShown(not UI.inShell) end)
     bf:HookScript("OnHide", function() rb:Hide() end)
+    UI.ribbon = rb
     rb:SetScript("OnClick", function() UI:GoToPage(UI:TodayPage()) end)
     rb:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
@@ -1202,6 +1214,7 @@ local function buildBook(holder)
     close:SetPoint("TOPRIGHT", bf, "TOPRIGHT", 6, 6)
     close:SetFrameLevel(base + 20)
     close:SetScript("OnClick", function() holder:Hide() end)
+    UI.bookClose = close
 
     buildThumbs(bf)
     bf:Hide()
@@ -1662,6 +1675,7 @@ local function buildCover(holder)
     end)
     cv:SetScript("OnClick", function()
         if cv.dragEnd and GetTime() - cv.dragEnd < 0.3 then return end
+        if UI.OpenStart then UI:OpenStart() return end
         UI:OpenBook(UI.TodayStart or UI.PlacePage)
     end)
 end
@@ -1808,9 +1822,11 @@ function UI:DataSwitched()
         self:ShowSpread(ceil(self:TodayPage() / 2))
     end
     self:RefreshCover()
+    if self.OnDataSwitched then self:OnDataSwitched() end
 end
 
 function UI:SetScale(s)
+    s = max(0.6, min(1.4, s or 0.9))
     WFD.S.scale = s
     if self.holder then self.holder:SetScale(s) end
     UI.ClearCaches()

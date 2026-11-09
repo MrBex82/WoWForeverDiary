@@ -1,0 +1,777 @@
+-- The travel desk: the window around everything. A head bar (back, forward, where you are, the search, help,
+-- settings, close), the register on the left (the groups and their parts, the own bookmarks) and the desk in
+-- the middle, where one view lies open: Start, the book, the settings. The window can be resized at its corner.
+local ADDON, WFD = ...
+local UI = WFD.UI
+local L = WFD.L
+local K = UI.Kit
+local R = UI.Router
+local floor, max, min, format = math.floor, math.max, math.min, string.format
+
+local MIN_W, MIN_H = 760, 520
+local DEF_W, DEF_H = 1080, 700
+local TOP_H, RAIL_W, RAIL_NARROW = 48, 200, 54
+local NARROW_AT = 900          -- below this width the register shows its signs only
+
+local S          -- the shell's frames
+local views = {}
+
+------------------------------------------------------------------------
+-- Size of the window
+------------------------------------------------------------------------
+local function maxSize()
+    local sc = UI.holder and UI.holder:GetScale() or 1
+    return floor((UIParent:GetWidth() or 1600) / sc), floor((UIParent:GetHeight() or 900) / sc)
+end
+
+local function shellSize()
+    local sz = WFD.S.shellSize
+    local mw, mh = maxSize()
+    local w = sz and sz[1] or DEF_W
+    local h = sz and sz[2] or DEF_H
+    return max(MIN_W, min(mw, w)), max(MIN_H, min(mh, h))
+end
+
+-- the holder is the size of the cover while the cover shows, the size of the desk otherwise
+function UI:SetHolderMode(mode)
+    local h = self.holder
+    if mode == "shell" then
+        self.inShell = true
+        h:SetSize(shellSize())
+        if S then S.frame:Show() end
+        if h.SetResizable then h:SetResizable(true) end
+    else
+        self.inShell = false
+        h:SetSize(self.CoverSize and self.CoverSize() or 450, UI.PH + 36)
+        if S then S.frame:Hide() end
+        if self.bookFrame then self.bookFrame:Hide() end
+    end
+end
+
+------------------------------------------------------------------------
+-- The register
+------------------------------------------------------------------------
+local function newItem(parent)
+    local b = K.Box(parent, nil, nil, "Button")
+    b:SetHeight(36)
+    b.ring = UI.Circle(b, 28, { 1, 1, 1, 1 }, "ARTWORK", 0)
+    b.ring:SetPoint("LEFT", 8, 0)
+    b.icon = b:CreateTexture(nil, "ARTWORK", nil, 2)
+    b.icon:SetSize(22, 22)
+    b.icon:SetPoint("CENTER", b.ring, "CENTER")
+    b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    UI.Round(b.icon, b)
+    b.text = K.Text(b, "strong", "ink")
+    b.text:SetPoint("LEFT", b.ring, "RIGHT", 10, 0)
+    b.text:SetPoint("RIGHT", b, "RIGHT", -34, 0)
+    b.text:SetWordWrap(false)
+    b.badge = K.Box(b, "gold", nil)
+    b.badge:SetSize(20, 18)
+    b.badge:SetPoint("RIGHT", -8, 0)
+    b.badge.text = K.Text(b.badge, "small", "onGold", "CENTER")
+    b.badge.text:SetPoint("CENTER", 0, 0)
+    b:SetScript("OnEnter", function(self)
+        self.hover = true
+        self:Paint()
+        if S.narrow then K.ShowTip(self, self.label, self.tip, "ANCHOR_RIGHT") end
+    end)
+    b:SetScript("OnLeave", function(self) self.hover = nil self:Paint() GameTooltip:Hide() end)
+    function b:Paint()
+        self:SetSurface((self.active or self.hover) and "hover" or nil)
+        K.Recolor(self.text, self.active and "title" or "ink")
+        local col = self.col or { 0.4, 0.3, 0.2 }
+        local k = (self.active or self.hover) and 1.25 or 1
+        self.ring:SetVertexColor(min(1, col[1] * k), min(1, col[2] * k), min(1, col[3] * k), 1)
+    end
+    return b
+end
+
+local function newSub(parent)
+    local b = K.Box(parent, nil, nil, "Button")
+    b:SetHeight(28)
+    b.text = K.Text(b, "body", "soft")
+    b.text:SetPoint("LEFT", 12, 0)
+    b.text:SetPoint("RIGHT", b, "RIGHT", -34, 0)
+    b.text:SetWordWrap(false)
+    b.count = K.Text(b, "small", "gold", "RIGHT")
+    b.count:SetPoint("RIGHT", -8, 0)
+    b:SetScript("OnEnter", function(self) self.hover = true self:Paint() end)
+    b:SetScript("OnLeave", function(self) self.hover = nil self:Paint() end)
+    function b:Paint()
+        self:SetSurface(self.active and "card" or (self.hover and "hover" or nil))
+        K.Recolor(self.text, self.active and "title" or (self.empty and "muted" or "soft"))
+    end
+    return b
+end
+
+local function newMark(parent)
+    local b = CreateFrame("Button", nil, parent)
+    b:SetHeight(24)
+    b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    b.flag = b:CreateTexture(nil, "ARTWORK")
+    b.flag:SetTexture(UI.WHITE)
+    b.flag:SetSize(6, 14)
+    b.flag:SetPoint("LEFT", 12, 0)
+    b.text = K.Text(b, "body", "soft")
+    b.text:SetPoint("LEFT", b.flag, "RIGHT", 8, 0)
+    b.text:SetPoint("RIGHT", b, "RIGHT", -6, 0)
+    b.text:SetWordWrap(false)
+    b:SetScript("OnEnter", function(self)
+        K.Recolor(self.text, "title")
+        K.ShowTip(self, self.mark.title, { { L["Click to open, right-click to remove."], 0.5, 0.8, 1 } }, "ANCHOR_RIGHT")
+    end)
+    b:SetScript("OnLeave", function(self) K.Recolor(self.text, "soft") GameTooltip:Hide() end)
+    b:SetScript("OnClick", function(self, button)
+        if button == "RightButton" then UI.RemoveMark(self.mark.i) else self.mark.go() end
+    end)
+    return b
+end
+
+-- the group and the part that are open (from the route, or from the page of the book)
+local function openPlace()
+    local cur = R.cur
+    if not cur then return "start" end
+    if cur.view == "start" then return "start" end
+    if cur.view ~= "legacy" then return nil end
+    return S.bookGroup, S.bookPart
+end
+
+function UI:RefreshRail()
+    if not S then return end
+    local rail = S.rail
+    local narrow = S.narrow
+    local group, part = openPlace()
+    local counts = UI.NewCounts and UI.NewCounts() or {}
+    local y = -10
+    local ni, si = 0, 0
+    for _, g in ipairs(UI.NAV) do
+        ni = ni + 1
+        local b = S.items[ni] or newItem(rail)
+        S.items[ni] = b
+        b.col = UI.GROUP_COLOURS[g.key]
+        b.icon:SetTexture(UI.Icon(g.icon))
+        b.label = L[g.label]
+        b.text:SetText(b.label)
+        b.text:SetShown(not narrow)
+        b.active = (g.key == group)
+        local parts = UI.PartsOf(g)
+        local new = 0
+        for _, p in ipairs(parts) do new = new + (counts[p] or 0) end
+        b.badge:SetShown(new > 0 and not (b.active and not narrow))
+        b.badge.text:SetText(new > 99 and "99" or tostring(new))
+        b.badge:SetWidth(max(20, b.badge.text:GetStringWidth() + 10))
+        if narrow then
+            b.badge:ClearAllPoints()
+            b.badge:SetPoint("TOPRIGHT", b, "TOPRIGHT", -2, -1)
+        else
+            b.badge:ClearAllPoints()
+            b.badge:SetPoint("RIGHT", -8, 0)
+        end
+        b.tip = new > 0 and { { format(L["%d new since you last read"], new), 1, 0.6, 0.45 } } or nil
+        b:SetScript("OnClick", function() R.Go(UI.GroupRoute(g)) end)
+        b:ClearAllPoints()
+        b:SetPoint("TOPLEFT", rail, "TOPLEFT", 6, y)
+        b:SetPoint("RIGHT", rail, "RIGHT", -6, 0)
+        b:Paint()
+        b:Show()
+        y = y - 38
+        -- the parts of the open group, below it
+        if b.active and not narrow and #parts > 1 then
+            for _, key in ipairs(parts) do
+                si = si + 1
+                local sb = S.subs[si] or newSub(rail)
+                S.subs[si] = sb
+                sb.text:SetText(UI.PartLabel(key))
+                sb.empty = UI.IsEmptyPart and UI.IsEmptyPart(key)
+                sb.active = (key == part)
+                local n = counts[key] or 0
+                sb.count:SetText(n > 0 and ("+" .. n) or "")
+                sb:SetScript("OnClick", function() R.Go(UI.PartRoute(key)) end)
+                sb:ClearAllPoints()
+                sb:SetPoint("TOPLEFT", rail, "TOPLEFT", 44, y)
+                sb:SetPoint("RIGHT", rail, "RIGHT", -6, 0)
+                sb:Paint()
+                sb:Show()
+                y = y - 28
+            end
+            y = y - 6
+        end
+    end
+    for i = ni + 1, #S.items do S.items[i]:Hide() end
+    for i = si + 1, #S.subs do S.subs[i]:Hide() end
+
+    -- the own bookmarks at the foot of the register
+    local marks = (not narrow and UI.MarkList) and UI.MarkList() or {}
+    -- the rows that fit between the groups and the button at the foot (40) below a heading (26)
+    local railH = (UI.holder:GetHeight() or DEF_H) - 14 - TOP_H
+    local room = floor((railH + y - 76) / 24)
+    S.markHead:SetShown(#marks > 0 and room > 0)
+    local shown = 0
+    for i, m in ipairs(marks) do
+        local b = S.marks[i] or newMark(rail)
+        S.marks[i] = b
+        if i <= room then
+            shown = i
+            b.mark = m
+            b.flag:SetVertexColor(m.col[1], m.col[2], m.col[3], 1)
+            b.text:SetText(m.title)
+            b:ClearAllPoints()
+            b:SetPoint("BOTTOMLEFT", rail, "BOTTOMLEFT", 4, 40 + (math.min(#marks, room) - i) * 24)
+            b:SetPoint("RIGHT", rail, "RIGHT", -4, 0)
+            b:Show()
+        else
+            b:Hide()
+        end
+    end
+    for i = #marks + 1, #S.marks do S.marks[i]:Hide() end
+    S.markHead:ClearAllPoints()
+    S.markHead:SetPoint("BOTTOMLEFT", rail, "BOTTOMLEFT", 16, 40 + shown * 24 + 4)
+    S.markHead:SetPoint("RIGHT", rail, "RIGHT", -10, 0)
+
+    S.fold.glyph:SetShape(narrow and "right" or "left")
+end
+function UI:OnMarksChanged() self:RefreshRail() end
+
+------------------------------------------------------------------------
+-- The head bar: back, forward, where you are
+------------------------------------------------------------------------
+function UI:RefreshHead()
+    if not S then return end
+    S.back:SetEnabled(R.CanBack() and true or false)
+    S.fwd:SetEnabled(R.CanForward())
+    local cur = R.cur
+    local v = cur and views[cur.view]
+    local title, path, pathRoute
+    if v and v.Head then title, path, pathRoute = v:Head(cur) end
+    S.title:SetText(title or "")
+    S.path:SetText(path or "")
+    S.pathBtn.route = pathRoute
+    local has = path ~= nil and path ~= ""
+    S.pathBtn:SetShown(has)
+    S.pathBtn:SetWidth(max(1, S.path:GetStringWidth() + 4))
+    S.sep:SetShown(has)
+    S.title:ClearAllPoints()
+    if has then S.title:SetPoint("LEFT", S.sep, "RIGHT", 6, 0) else S.title:SetPoint("LEFT", S.fwd, "RIGHT", 14, 0) end
+    S.title:SetPoint("RIGHT", S.search, "LEFT", -12, 0)
+    S.gear:SetActive(cur and cur.view == "settings")
+    S.help:SetActive(cur and cur.view == "help")
+end
+function UI:OnHistoryChanged() self:RefreshHead() end
+
+------------------------------------------------------------------------
+-- The search in the head bar
+------------------------------------------------------------------------
+local CHIPS = { { nil, "All" }, { "day", "Diary" }, { "person", "Acquaintance" }, { "creature", "Bestiary" },
+    { "place", "Maps" }, { "quest", "Quest" }, { "treasure", "Treasures" }, { "catch", "Angler's log" }, { "honour", "Honour" } }
+local MAX_ROWS = 10
+local paintChips          -- below
+
+local function closeResults()
+    if S and S.results:IsShown() then S.results:Hide() return true end
+    return false
+end
+
+local function chooseRow(i)
+    local res = S.results
+    local n = 0
+    for _, r in ipairs(res.rows) do if r:IsShown() then n = n + 1 end end
+    res.sel = n > 0 and ((((i or 1) - 1) % n) + 1) or nil
+    for k, r in ipairs(res.rows) do r:SetSurface(k == res.sel and "hover" or nil) end
+end
+
+local function showResults()
+    local res = S.results
+    local text = S.search:GetText() or ""
+    if not UI.book then UI:Paginate() end
+    local hits, q = UI.Search.Find(text, res.kind)
+    local typed = #text >= 2 or #hits > 0
+    if not typed then res:Hide() return end
+    res:Show()
+    paintChips()
+    local y = res.chipsBottom or -44
+    for i = 1, MAX_ROWS do
+        local row = res.rows[i]
+        local h = hits[i]
+        if h then
+            local e = h.e
+            row.icon:SetTexture(e.icon)
+            if e.kind == "day" and q == "" then
+                row.text:SetText("|cffe8c26a" .. e.text .. "|r  " .. (e.zone or "") .. (e.level and ("  -  " .. format(L["Level %d"], e.level)) or ""))
+            elseif e.kind == "day" then
+                row.text:SetText("|cffe8c26a" .. e.text .. "|r  " .. UI.Search.Mark(UI.Search.Snippet(e.full, e.hay, q), q))
+            else
+                row.text:SetText(UI.Search.Mark(e.text, q))
+            end
+            row.kind:SetText(UI.Upper(UI.Search.KindLabel(e.kind)))
+            row.go = e.go
+            row:ClearAllPoints()
+            row:SetPoint("TOPLEFT", res, "TOPLEFT", 6, y)
+            row:SetPoint("RIGHT", res, "RIGHT", -6, 0)
+            row:Show()
+            y = y - 28
+        else
+            row:Hide()
+        end
+    end
+    res.none:SetShown(#hits == 0)
+    if #hits == 0 then
+        res.none:ClearAllPoints()
+        res.none:SetPoint("TOPLEFT", res, "TOPLEFT", 14, y - 4)
+        y = y - 26
+    end
+    res.more:SetShown(#hits > MAX_ROWS)
+    if #hits > MAX_ROWS then
+        res.more:SetText(format(L["%d more results, type a little more"], #hits - MAX_ROWS))
+        res.more:ClearAllPoints()
+        res.more:SetPoint("TOPLEFT", res, "TOPLEFT", 14, y - 4)
+        y = y - 22
+    end
+    res.hint:ClearAllPoints()
+    res.hint:SetPoint("TOPLEFT", res, "TOPLEFT", 14, y - 8)
+    res:SetHeight(-y + 8 + res.hint:GetStringHeight() + 12)
+    chooseRow(1)
+end
+
+local function openRow(row)
+    if not row or not row.go then return end
+    local go = row.go
+    closeResults()
+    S.search:ClearFocus()
+    go()
+end
+
+-- the chips in as many rows as they need; the results begin below them
+paintChips = function()
+    local res = S.results
+    local x, y, rowH = 8, -8, 0
+    for _, ch in ipairs(res.chips) do
+        ch.style = (ch.kind == res.kind) and "primary" or "secondary"
+        K.Repaint(ch)
+        local w, h = ch:GetWidth(), ch:GetHeight()
+        if x > 8 and x + w > res:GetWidth() - 8 then
+            x, y = 8, y - rowH - 4
+        end
+        ch:ClearAllPoints()
+        ch:SetPoint("TOPLEFT", res, "TOPLEFT", x, y)
+        x = x + w + 4
+        rowH = max(rowH, h)
+    end
+    res.chipsBottom = y - rowH - 8
+end
+
+local function buildSearch(top)
+    local box = K.Box(top, "inset", "line", "EditBox")
+    box:SetSize(250, 30)
+    box:SetAutoFocus(false)
+    box:SetTextInsets(28, 8, 0, 0)
+    box:SetFontObject(ChatFontNormal)
+    UI.Skin.Add(box, function(e)
+        local font, size = UI.TypeFont("body")
+        e:SetFont(font, size, "")
+        e:SetTextColor(UI.Tok("ink"))
+    end)
+    local icon = box:CreateTexture(nil, "OVERLAY")
+    icon:SetSize(16, 16)
+    icon:SetPoint("LEFT", 7, 0)
+    icon:SetTexture(UI.Icon("search"))
+    icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    box.hint = K.Text(box, "body", "muted")
+    box.hint:SetPoint("LEFT", 28, 0)
+    box.hint:SetPoint("RIGHT", -8, 0)
+    box.hint:SetWordWrap(false)
+    box.hint:SetText(L["Search the diary"] .. "  (" .. L["Ctrl + F"] .. ")")
+    box:SetScript("OnEditFocusGained", function(s) s.hint:Hide() s:SetSurface("inset", "gold") end)
+    box:SetScript("OnEditFocusLost", function(s)
+        s.hint:SetShown((s:GetText() or "") == "")
+        s:SetSurface("inset", "line")
+    end)
+    box:SetScript("OnTextChanged", function(s)
+        s.hint:SetShown((s:GetText() or "") == "" and not s:HasFocus())
+        showResults()
+    end)
+    box:SetScript("OnEscapePressed", function(s)
+        if not closeResults() then s:ClearFocus() end
+    end)
+    box:SetScript("OnEnterPressed", function()
+        local res = S.results
+        if res:IsShown() and res.sel then openRow(res.rows[res.sel]) end
+    end)
+    box:SetScript("OnTabPressed", function() if S.results:IsShown() then chooseRow((S.results.sel or 0) + 1) end end)
+    if box.SetAltArrowKeyMode then box:SetAltArrowKeyMode(false) end
+    box:SetScript("OnArrowPressed", function(_, key)
+        local res = S.results
+        if not res:IsShown() then return end
+        if key == "DOWN" then chooseRow((res.sel or 0) + 1) elseif key == "UP" then chooseRow((res.sel or 2) - 1) end
+    end)
+
+    -- the results below the field, over everything else
+    local res = K.Box(UIParent, "panel", "gold")
+    res:SetFrameStrata("DIALOG")
+    res:SetWidth(460)
+    res:EnableMouse(true)
+    res.chips = {}
+    for _, ch in ipairs(CHIPS) do
+        local b = K.Button(res, L[ch[2]], "secondary", function(self)
+            res.kind = self.kind
+            paintChips()
+            showResults()
+            box:SetFocus()
+        end)
+        b.kind = ch[1]
+        b.minH = 26
+        res.chips[#res.chips + 1] = b
+    end
+    res.rows = {}
+    for i = 1, MAX_ROWS do
+        local row = K.Box(res, nil, nil, "Button")
+        row:SetHeight(26)
+        row.icon = row:CreateTexture(nil, "ARTWORK")
+        row.icon:SetSize(18, 18)
+        row.icon:SetPoint("LEFT", 6, 0)
+        row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        row.kind = K.Text(row, "small", "muted", "RIGHT")
+        row.kind:SetPoint("RIGHT", -8, 0)
+        row.text = K.Text(row, "body", "ink")
+        row.text:SetPoint("LEFT", row.icon, "RIGHT", 8, 0)
+        row.text:SetPoint("RIGHT", row.kind, "LEFT", -8, 0)
+        row.text:SetWordWrap(false)
+        row:SetScript("OnEnter", function(self) chooseRow(i) end)
+        row:SetScript("OnClick", function(self) openRow(self) end)
+        res.rows[i] = row
+    end
+    res.none = K.Text(res, "body", "soft")
+    res.none:SetText(L["Nothing found."])
+    res.more = K.Text(res, "small", "soft")
+    res.hint = K.Text(res, "small", "muted")
+    res.hint:SetWidth(460 - 28)
+    res.hint:SetText(L["Narrow down the days: z:region  lv:20-30  d:30 (the last 30 days)"])
+    res:Hide()
+    res:SetScript("OnShow", function(self)
+        self:SetScale(box:GetEffectiveScale() / UIParent:GetEffectiveScale())
+        self:ClearAllPoints()
+        self:SetPoint("TOPRIGHT", box, "BOTTOMRIGHT", 0, -4)
+        paintChips()
+    end)
+    S.results = res
+    return box
+end
+
+function UI:FocusSearch()
+    if not S or not self.inShell then return end
+    S.search:SetFocus()
+    S.search:HighlightText()
+    showResults()
+end
+
+------------------------------------------------------------------------
+-- Building the desk
+------------------------------------------------------------------------
+-- the size of the desk, worked out from the size of the window (anchored frames may not know theirs yet in the
+-- moment the window opens)
+local function contentSize()
+    local w, h = UI.holder:GetSize()
+    local rw = S.narrow and RAIL_NARROW or RAIL_W
+    return max(1, (w or DEF_W) - 14 - rw), max(1, (h or DEF_H) - 14 - TOP_H)
+end
+
+local function layout()
+    if not S then return end
+    local w = UI.holder:GetWidth() or DEF_W
+    S.narrow = (w < NARROW_AT) or WFD.S.navCollapsed and true or false
+    local rw = S.narrow and RAIL_NARROW or RAIL_W
+    S.rail:SetWidth(rw)
+    S.search:SetWidth(max(160, min(300, w - rw - 520)))
+    UI:RefreshRail()
+    local cur = R.cur and views[R.cur.view]
+    if cur and cur.Layout then cur:Layout(contentSize()) end
+end
+UI.LayoutShell = layout
+
+function UI:BuildShell()
+    if S then return end
+    local h = self.holder
+    S = { items = {}, subs = {}, marks = {} }
+    UI.shell = S
+    local f = K.Box(h, "frame", "edge")
+    f:SetAllPoints(h)
+    f:SetFrameLevel(h:GetFrameLevel())
+    f:EnableMouse(true)
+    S.frame = f
+    local inner = K.Box(f, "shell", "line")
+    inner:SetPoint("TOPLEFT", 6, -6)
+    inner:SetPoint("BOTTOMRIGHT", -6, 6)
+    inner:SetFrameLevel(f:GetFrameLevel())
+    S.inner = inner
+
+    -- moving the window by its head bar
+    local top = K.Box(inner, "panel", nil)
+    top:SetPoint("TOPLEFT", 1, -1)
+    top:SetPoint("TOPRIGHT", -1, -1)
+    top:SetHeight(TOP_H)
+    top:EnableMouse(true)
+    top:RegisterForDrag("LeftButton")
+    top:SetScript("OnDragStart", function() if not WFD.S.locked then h:StartMoving() end end)
+    top:SetScript("OnDragStop", function()
+        h:StopMovingOrSizing()
+        if UI.SavePosition then UI:SavePosition() end
+    end)
+    local rule = K.Rule(top, "line")
+    rule:SetPoint("BOTTOMLEFT")
+    rule:SetPoint("BOTTOMRIGHT")
+    S.top = top
+
+    S.back = K.IconButton(top, "left", { L["Back"], L["To the page you came from (Backspace)."] }, function() R.Back() end)
+    S.back:SetPoint("LEFT", 9, 0)
+    S.fwd = K.IconButton(top, "right", { L["Forward"] }, function() R.Forward() end)
+    S.fwd:SetPoint("LEFT", S.back, "RIGHT", 4, 0)
+
+    -- where you are: the group as a link, then the name of what is open
+    S.pathBtn = CreateFrame("Button", nil, top)
+    S.path = K.Text(S.pathBtn, "body", "soft")
+    S.path:SetPoint("LEFT", 0, 0)
+    S.pathBtn:SetPoint("LEFT", S.fwd, "RIGHT", 14, 0)
+    S.pathBtn:SetHeight(24)
+    S.path.onPaint = function(fs) S.pathBtn:SetWidth(max(1, fs:GetStringWidth() + 4)) end
+    S.pathBtn:SetScript("OnEnter", function() K.Recolor(S.path, "title") end)
+    S.pathBtn:SetScript("OnLeave", function() K.Recolor(S.path, "soft") end)
+    S.pathBtn:SetScript("OnClick", function(self) if self.route then R.Go(self.route) end end)
+    S.sep = K.Glyph(top, "right", 10, "muted")
+    S.sep:SetPoint("LEFT", S.pathBtn, "RIGHT", 2, 0)
+    S.title = K.Text(top, "heading", "title")
+    S.title:SetPoint("LEFT", S.sep, "RIGHT", 6, 0)
+    S.title:SetWordWrap(false)
+
+    S.close = K.IconButton(top, "close", { CLOSE or "Close" }, function() UI:Hide() end)
+    S.close:SetPoint("RIGHT", -9, 0)
+    S.close:SetFlat(true)
+    S.gear = K.IconButton(top, "icon:" .. UI.Icon("settings"), { L["Settings"] }, function()
+        if R.cur and R.cur.view == "settings" then R.Back() else R.Go({ view = "settings" }) end
+    end)
+    S.gear:SetPoint("RIGHT", S.close, "LEFT", -6, 0)
+    S.help = K.IconButton(top, "text:?", { L["Help"], L["Keys, mouse and commands"] }, function()
+        if R.cur and R.cur.view == "help" then R.Back() else R.Go({ view = "help" }) end
+    end)
+    S.help:SetPoint("RIGHT", S.gear, "LEFT", -6, 0)
+    S.search = buildSearch(top)
+    S.search:SetPoint("RIGHT", S.help, "LEFT", -10, 0)
+    S.title:SetPoint("RIGHT", S.search, "LEFT", -12, 0)
+
+    -- the register
+    local rail = K.Box(inner, "panel", nil)
+    rail:SetPoint("TOPLEFT", top, "BOTTOMLEFT", 0, 0)
+    rail:SetPoint("BOTTOMLEFT", 1, 1)
+    rail:SetWidth(RAIL_W)
+    local rr = K.Fill(rail, "line", "ARTWORK", 1)
+    rr:SetWidth(1)
+    rr:SetPoint("TOPRIGHT")
+    rr:SetPoint("BOTTOMRIGHT")
+    S.rail = rail
+    S.markHead = K.Text(rail, "section", "gold")
+    S.markHead:SetText(UI.Upper(L["Bookmarks"]))
+    S.fold = K.IconButton(rail, "left", { L["Narrow register"], L["Shows the register as signs only."] }, function()
+        WFD.S.navCollapsed = not WFD.S.navCollapsed or nil
+        layout()
+    end, 26)
+    S.fold:SetFlat(true)
+    S.fold:SetPoint("BOTTOMLEFT", 12, 8)
+
+    -- the desk
+    local content = CreateFrame("Frame", nil, inner)
+    content:SetPoint("TOPLEFT", rail, "TOPRIGHT", 0, 0)
+    content:SetPoint("BOTTOMRIGHT", -1, 1)
+    if content.SetClipsChildren then content:SetClipsChildren(true) end
+    S.content = content
+
+    -- the grip in the corner
+    local grip = CreateFrame("Button", nil, f)
+    grip:SetSize(18, 18)
+    grip:SetPoint("BOTTOMRIGHT", -2, 2)
+    grip:SetFrameLevel(inner:GetFrameLevel() + 30)
+    for i, len in ipairs({ 12, 7 }) do
+        local t = K.Fill(grip, "gold", "OVERLAY", 0)
+        t:SetSize(len, 2)
+        t:SetPoint("CENTER", grip, "CENTER", 2 + i * 1.5, -2 + i * 1.5)
+        if t.SetRotation then t:SetRotation(math.pi / 4) end
+    end
+    grip:SetScript("OnMouseDown", function()
+        if WFD.S.locked then return end
+        local mw, mh = maxSize()
+        if h.SetResizeBounds then h:SetResizeBounds(MIN_W, MIN_H, mw, mh)
+        elseif h.SetMinResize then h:SetMinResize(MIN_W, MIN_H) h:SetMaxResize(mw, mh) end
+        h:StartSizing("BOTTOMRIGHT")
+        S.sizing = true
+    end)
+    grip:SetScript("OnMouseUp", function()
+        if not S.sizing then return end
+        S.sizing = nil
+        h:StopMovingOrSizing()
+        local w, hh = h:GetSize()
+        WFD.S.shellSize = { floor(w + 0.5), floor(hh + 0.5) }
+        if UI.SavePosition then UI:SavePosition() end
+        layout()
+        local cur = R.cur and views[R.cur.view]
+        if cur and cur.Settled then cur:Settled() end
+    end)
+    K.Tip(grip, L["Drag to change the size of the window."], { L["Ctrl + mouse wheel changes the size of everything."] })
+    h:HookScript("OnSizeChanged", function() if UI.inShell then layout() end end)
+
+    -- Ctrl + mouse wheel anywhere on the desk scales the window
+    f:EnableMouseWheel(true)
+    f:SetScript("OnMouseWheel", function(_, delta) if IsControlKeyDown() and UI.StepScale then UI:StepScale(delta) end end)
+
+    -- keep the desk up to date while playing: when the diary changed and the mouse is not on the window
+    local acc = 0
+    f:SetScript("OnUpdate", function(_, dt)
+        acc = acc + dt
+        if acc < 10 then return end
+        acc = 0
+        if UI.bookFrame:IsShown() or not WFD.dirty or h:IsMouseOver() or UI.noteFocus then return end
+        WFD.dirty = false
+        UI.storyCache[WFD:NumDays()] = nil
+        UI:Paginate()
+        local v = R.cur and views[R.cur.view]
+        if v and v.Refresh then v:Refresh() end
+        UI:RefreshRail()
+    end)
+
+    f:Hide()
+    UI.OnRestyle(function() layout() UI:RefreshHead() end)
+    -- what was open when the window closed is where it opens again
+    h:HookScript("OnHide", function()
+        UI.lastRoute = R.Resume()
+        closeResults()
+        K.CloseMenu()
+        K.CloseDialog()
+    end)
+end
+
+------------------------------------------------------------------------
+-- Showing a route
+------------------------------------------------------------------------
+local function viewFor(key)
+    local v = views[key]
+    if v then return v end
+    local def = UI.Views[key]
+    if not def then return nil end
+    local host = CreateFrame("Frame", nil, S.content)
+    host:SetAllPoints(S.content)
+    v = def.build(host)
+    v.host = host
+    views[key] = v
+    return v
+end
+
+function UI:ShowRoute(route)
+    if not S then return end
+    local v = viewFor(route.view)
+    if not v then return end
+    for key, other in pairs(views) do
+        if other ~= v and other.host:IsShown() then
+            other.host:Hide()
+            if other.Hide then other:Hide() end
+        end
+    end
+    closeResults()
+    GameTooltip:Hide()
+    v.host:Show()
+    if v.Layout then v:Layout(contentSize()) end
+    v:Show(route)
+    self:RefreshRail()
+    self:RefreshHead()
+end
+
+-- the book tells which part it shows; the register and the head bar follow
+function UI:OnSpreadShown(s)
+    if not S or not self.inShell then return end
+    local page = self.book and self.book.pages[s * 2 - 1]
+    local key = page and page.section
+    if key == "toc" or not key then
+        local right = self.book and self.book.pages[s * 2]
+        key = right and right.section or key
+    end
+    S.bookPart = key
+    S.bookGroup = key and (UI.NAV_OF_PART[key] or (key == "diary" and "diary")) or nil
+    self:RefreshRail()
+    self:RefreshHead()
+end
+
+function UI:ShellCloseLayer()
+    return closeResults()
+end
+function UI:ShellBack() R.Back() end
+
+------------------------------------------------------------------------
+-- Opening and closing
+------------------------------------------------------------------------
+-- route: where to open (nil = where the window was left, or Start)
+function UI:OpenShell(route)
+    self:Build()
+    self:BuildShell()
+    local fresh = not (self.holder:IsShown() and self.inShell)
+    if fresh then
+        local C = WFD.C
+        if C and not C.seenAt then C.seenAt = time() end
+        self.readSince = C and C.seenAt
+        self.visited = {}
+        self.openedOnce = true
+        GameTooltip:Hide()
+        self.cover:Hide()
+        self:SetHolderMode("shell")
+        self.holder:Show()
+        UI.Sound("IG_SPELLBOOK_OPEN", 829)
+        -- Start and the search need the book laid out (the book itself lays itself out when it is opened)
+        if (WFD.dirty or not self.book) and not (route and route.view == "legacy") then
+            WFD.dirty = false
+            self:Paginate()
+        end
+        self.history = {}
+        R.Reset()
+        R.cur = nil
+        layout()
+    end
+    R.Go(route or self.lastRoute or { view = "start" })
+end
+
+function UI:OpenStart() self:OpenShell({ view = "start" }) end
+
+-- the old ways into the book lead onto the desk
+function UI:OpenBook(page) self:OpenShell({ view = "legacy", page = page }) end
+function UI:OpenSettings() self:OpenShell({ view = "settings" }) end
+
+local show0 = UI.Show
+function UI:Show()
+    self:Build()
+    self:BuildShell()
+    self:SetHolderMode("cover")
+    show0(self)
+end
+
+function UI:Toggle()
+    self:Build()
+    if self.holder:IsShown() then
+        self:Hide()
+    elseif not self.openedOnce and WFD.S.cover ~= false or WFD.demo then
+        self:Show()
+    else
+        self:OpenShell()
+    end
+end
+
+-- a link on a page of the book that is not on the desk yet: the book is laid open first
+local goto0 = UI.GoToPage
+function UI:GoToPage(index)
+    if self.inShell and not (R.cur and R.cur.view == "legacy") then
+        R.Go({ view = "legacy", page = index })
+        return
+    end
+    goto0(self, index)
+end
+
+function UI:OnDataSwitched()
+    if not S or not self.inShell then return end
+    if not self.bookFrame:IsShown() then self:Paginate() end
+    local v = R.cur and views[R.cur.view]
+    if v and v.Refresh then v:Refresh() end
+    self:RefreshRail()
+    self:RefreshHead()
+end

@@ -438,8 +438,19 @@ function UI.Leather(parent, inset, sub, grain)
 end
 
 -- An aged parchment page. spine = "left" or "right": the edge that bends into the book.
+-- Each style draws the leaf once, the first time it is shown (UI.Themed): a change of style only swaps them.
+local drawPage
 function UI.Page(parent, w, h, spine)
     local p = UI.Frame(parent, w, h)
+    if UI.Themed then
+        UI.Themed(p, function(pg) drawPage(pg, w, h, spine) end)
+    else
+        drawPage(p, w, h, spine)
+    end
+    return p
+end
+
+drawPage = function(p, w, h, spine)
     local base = UI.Fill(p, c.paper, "BACKGROUND", 0)
     base:SetAllPoints()
     if UI.THEME == "modern" then
@@ -450,7 +461,7 @@ function UI.Page(parent, w, h, spine)
         local frame = UI.Frame(p)
         frame:SetAllPoints()
         UI.Backdrop(frame, nil, 1, 0, { 0, 0, 0, 0 }, { 1, 1, 1, 0.07 })
-        return p
+        return
     end
     if UI.THEME == "parchment" then
         -- the quest paper of the game itself (Interface\QuestFrame\QuestBG): one sheet with its torn border all
@@ -482,7 +493,7 @@ function UI.Page(parent, w, h, spine)
             UI.EdgeFade(p, spine == "left" and "LEFT" or "RIGHT", 70, { 0, 0, 0 }, 0.38, "BORDER", 1)
             UI.EdgeFade(p, spine == "left" and "LEFT" or "RIGHT", 6, { 0, 0, 0 }, 0.45, "BORDER", 2)
         end
-        return p
+        return
     end
     -- the painted leaf (Media\page.tga, seamless), repeated at its own size; grain drawn by hand without it
     local hasLeaf = UI.TiledArt(p, UI.PAGE_ART, "BACKGROUND", 1) ~= nil
@@ -518,7 +529,6 @@ function UI.Page(parent, w, h, spine)
     local frame = UI.Frame(p)
     frame:SetAllPoints()
     UI.Backdrop(frame, nil, 1, 0, { 0, 0, 0, 0 }, { 0, 0, 0, 0.85 })
-    return p
 end
 
 -- Dark inset with a gold edge (frames, model boxes)

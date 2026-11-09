@@ -1,0 +1,548 @@
+-- A load test of the interface outside the game.
+-- Usage:  lua tools/ui_sim.lua [addon folder]      (default: WoWForeverDiary)
+--
+-- Loads every file of the addon (the interface too) with a fake game: frames, textures and font strings that keep
+-- their state (size, anchors, text, shown or hidden). Then it logs in, switches the demo on, opens the window and
+-- goes everywhere: every group and part of the register, every section of the settings, the help, the search,
+-- the four styles, three sizes of writing, a narrow and a wide window, back and forward.
+-- Every error is listed; exit code 1. Like in the game, text on a font string without a font is an error.
+--
+-- Limits: nothing is drawn, so nothing about the look is checked; text widths are estimated; mouse-over is never
+-- true. Methods the fake game does not know do nothing: they are listed at the end (a typo shows up there).
+
+local dir = arg and arg[1] or "WoWForeverDiary"
+local errors, seen = {}, {}
+local function report(where, err)
+    local key = tostring(where) .. ": " .. tostring(err)
+    if not seen[key] then seen[key] = true errors[#errors + 1] = key end
+end
+
+------------------------------------------------------------------------ Lua 5.1 behaviour of the game
+-- the game's string.format cuts a fraction for %d; Lua 5.4 refuses it
+local rawformat = string.format
+string.format = function(fmt, ...)
+    local args = table.pack(...)
+    local i = 0
+    for flags, spec in tostring(fmt):gmatch("%%([%-%+ #0]*%d*%.?%d*)([%a%%])") do
+        if spec ~= "%" then
+            i = i + 1
+            if (spec == "d" or spec == "i" or spec == "x" or spec == "X" or spec == "c") and type(args[i]) == "number" then
+                args[i] = math.floor(args[i])
+            end
+        end
+    end
+    return rawformat(fmt, table.unpack(args, 1, args.n))
+end
+
+------------------------------------------------------------------------ the fake widgets
+local unknown = {}
+local W = {}           -- methods by widget type
+local function noop() end
+
+local function newObject(kind, parent)
+    local o = { _kind = kind, _shown = true, _alpha = 1, _scale = 1, _level = 1, _points = {}, _scripts = {},
+        _regions = {}, _children = {}, _parent = parent }
+    if parent and parent._children and kind ~= "Texture" and kind ~= "FontString" and kind ~= "MaskTexture" then
+        parent._children[#parent._children + 1] = o
+        o._level = (parent._level or 0) + 1
+    elseif parent and parent._regions then
+        parent._regions[#parent._regions + 1] = o
+    end
+    return setmetatable(o, { __index = function(t, k)
+        local m = W[kind] and W[kind][k] or W.Region[k]
+        if m then return m end
+        -- a method of the game the fake does not model: does nothing. Only names that look like the game's own
+        -- (a method of the addon, probed with "if f.Measure then", must stay nil)
+        if type(k) == "string" and (k:find("^Set") or k:find("^Enable") or k:find("^Disable") or k:find("^Register")
+            or k:find("^Unregister") or k:find("^Clear") or k:find("^Highlight") or k:find("^Add") or k:find("^Lock")
+            or k:find("^Unlock") or k:find("^Stop") or k:find("^Start") or k:find("^Raise") or k:find("^Lower")
+            or k:find("^Insert") or k:find("^UpdateScrollChildRect") or k:find("^Play") or k:find("^Refresh[A-Z]")
+            or k:find("^Get") or k:find("^Is") or k:find("^Can") or k:find("^Has") or k:find("^Use")
+            or k:find("^Fade") or k:find("^Transform") or k:find("^ApplySpellVisual") or k:find("^Show[A-Z]")) then
+            unknown[kind .. ":" .. k] = true
+            return noop
+        end
+        return nil
+    end })
+end
+
+W.Region = {}
+local R = W.Region
+function R:SetSize(w, h) self._w, self._h = w, h end
+function R:SetWidth(w) self._w = w end
+function R:SetHeight(h) self._h = h end
+function R:GetWidth()
+    if self._w and self._w > 0 then return self._w end
+    local p = self._allPoints or (self._both and self._parent)
+    if p and p.GetWidth then return p:GetWidth() end
+    return self._w or 0
+end
+function R:GetHeight()
+    if self._h and self._h > 0 then return self._h end
+    local p = self._allPoints or (self._bothV and self._parent)
+    if p and p.GetHeight then return p:GetHeight() end
+    return self._h or 0
+end
+function R:GetSize() return self:GetWidth(), self:GetHeight() end
+function R:SetPoint(point, rel, relPoint, x, y)
+    if type(rel) == "number" then rel, relPoint, x, y = nil, nil, rel, relPoint end
+    if type(rel) == "string" then rel = nil end
+    self._points[#self._points + 1] = { point, rel or self._parent, relPoint or point, x or 0, y or 0 }
+    local hasL, hasR, hasT, hasB = false, false, false, false
+    for _, p in ipairs(self._points) do
+        local pt = p[1]
+        if pt:find("LEFT") then hasL = true end
+        if pt:find("RIGHT") then hasR = true end
+        if pt:find("TOP") then hasT = true end
+        if pt:find("BOTTOM") then hasB = true end
+    end
+    self._both, self._bothV = hasL and hasR, hasT and hasB
+end
+function R:ClearAllPoints() self._points = {} self._allPoints = nil self._both, self._bothV = false, false end
+function R:SetAllPoints(rel) self._allPoints = (type(rel) == "table" and rel) or self._parent end
+function R:GetPoint(i)
+    local p = self._points[i or 1]
+    if p then return p[1], p[2], p[3], p[4], p[5] end
+end
+function R:GetNumPoints() return #self._points end
+function R:Show()
+    local was = self._shown
+    self._shown = true
+    if not was and self._scripts.OnShow then self._scripts.OnShow(self) end
+end
+function R:Hide()
+    local was = self._shown
+    self._shown = false
+    if was and self._scripts.OnHide then self._scripts.OnHide(self) end
+end
+function R:SetShown(v) if v then self:Show() else self:Hide() end end
+function R:IsShown() return self._shown end
+function R:IsVisible()
+    local o = self
+    while o do
+        if not o._shown then return false end
+        o = o._parent
+    end
+    return true
+end
+function R:SetAlpha(a) self._alpha = a end
+function R:GetAlpha() return self._alpha end
+function R:SetParent(p)
+    if self._parent and self._parent._children then
+        for i, c in ipairs(self._parent._children) do if c == self then table.remove(self._parent._children, i) break end end
+    end
+    self._parent = p
+    if p and p._children then p._children[#p._children + 1] = self end
+end
+function R:GetParent() return self._parent end
+function R:SetScale(s) self._scale = s end
+function R:GetScale() return self._scale end
+function R:GetEffectiveScale()
+    local s, o = 1, self
+    while o do s = s * (o._scale or 1) o = o._parent end
+    return s
+end
+function R:GetLeft() return 0 end
+function R:GetRight() return self:GetWidth() end
+function R:GetTop() return self:GetHeight() end
+function R:GetBottom() return 0 end
+function R:GetCenter() return self:GetWidth() / 2, self:GetHeight() / 2 end
+function R:IsMouseOver() return false end
+function R:GetName() return self._name end
+function R:GetObjectType() return self._kind end
+function R:IsObjectType(t) return self._kind == t end
+function R:SetDrawLayer(l, s) self._layer = l end
+
+W.Frame = {}
+local F = W.Frame
+function F:SetScript(name, fn) self._scripts[name] = fn end
+function F:GetScript(name) return self._scripts[name] end
+function F:HookScript(name, fn)
+    local old = self._scripts[name]
+    self._scripts[name] = old and function(...) old(...) fn(...) end or fn
+end
+function F:SetFrameLevel(l) self._level = l end
+function F:GetFrameLevel() return self._level end
+function F:SetFrameStrata(s) self._strata = s end
+function F:GetFrameStrata() return self._strata or "MEDIUM" end
+function F:CreateTexture() return newObject("Texture", self) end
+function F:CreateMaskTexture() return newObject("MaskTexture", self) end
+function F:CreateLine() return newObject("Texture", self) end
+function F:CreateAnimationGroup()
+    local g = newObject("Frame", nil)
+    g.CreateAnimation = function() return newObject("Frame", nil) end
+    return g
+end
+function F:CreateFontString(_, _, template)
+    local fs = newObject("FontString", self)
+    if template then fs._font, fs._size = "template", 12 end
+    return fs
+end
+function F:GetRegions() return table.unpack(self._regions) end
+function F:GetChildren() return table.unpack(self._children) end
+function F:GetNumChildren() return #self._children end
+function F:SetBackdrop(b) self._backdrop = b end
+function F:IsMouseEnabled() return true end
+function F:RegisterEvent() return true end
+function F:UnregisterEvent() end
+function F:RegisterUnitEvent() return true end
+function F:IsEventRegistered() return true end
+function F:GetFrameLevel() return self._level end
+
+-- buttons
+local function inherit(kind, base)
+    W[kind] = setmetatable({}, { __index = function(_, k) return W[base] and W[base][k] or W.Frame[k] end })
+    return W[kind]
+end
+local B = inherit("Button", "Frame")
+function B:SetText(t) self._text = t end
+function B:GetText() return self._text end
+function B:Click(button) if self._scripts.OnClick and self:IsEnabled() then self._scripts.OnClick(self, button or "LeftButton") end end
+function B:IsEnabled() return self._enabled ~= false end
+function B:Enable() local was = self:IsEnabled() self._enabled = true if not was and self._scripts.OnEnable then self._scripts.OnEnable(self) end end
+function B:Disable() local was = self:IsEnabled() self._enabled = false if was and self._scripts.OnDisable then self._scripts.OnDisable(self) end end
+function B:SetEnabled(v) if v then self:Enable() else self:Disable() end end
+function B:GetFontString() return self._fs end
+local CB = inherit("CheckButton", "Button")
+function CB:SetChecked(v) self._checked = v end
+function CB:GetChecked() return self._checked end
+local E = inherit("EditBox", "Frame")
+function E:SetText(t)
+    if not self._font then error("EditBox:SetText(): Font not set", 2) end
+    self._text = tostring(t)
+    if self._scripts.OnTextChanged then self._scripts.OnTextChanged(self, false) end
+end
+function E:GetText() return self._text or "" end
+function E:SetFont(f, s) self._font, self._size = f, s return true end
+function E:SetFontObject() self._font = self._font or "object" end
+function E:SetFocus()
+    self._focus = true
+    if self._scripts.OnEditFocusGained then self._scripts.OnEditFocusGained(self) end
+end
+function E:ClearFocus()
+    local was = self._focus
+    self._focus = false
+    if was and self._scripts.OnEditFocusLost then self._scripts.OnEditFocusLost(self) end
+end
+function E:HasFocus() return self._focus end
+function E:GetNumber() return tonumber(self._text) or 0 end
+local SF = inherit("ScrollFrame", "Frame")
+function SF:SetScrollChild(c) self._child = c c:SetParent(self) end
+function SF:GetScrollChild() return self._child end
+function SF:SetVerticalScroll(v) self._vs = v end
+function SF:GetVerticalScroll() return self._vs or 0 end
+function SF:GetVerticalScrollRange() return math.max(0, (self._child and self._child:GetHeight() or 0) - self:GetHeight()) end
+for _, k in ipairs({ "PlayerModel", "DressUpModel", "Model", "CinematicModel", "ModelScene", "Slider", "StatusBar", "GameTooltip", "Cooldown" }) do
+    inherit(k, "Frame")
+end
+W.GameTooltip.GetOwner = function(self) return self._owner end
+W.GameTooltip.SetOwner = function(self, o) self._owner = o end
+W.GameTooltip.NumLines = function() return 0 end
+
+local T = setmetatable({}, { __index = W.Region })
+W.Texture, W.MaskTexture = T, T
+function T:SetTexture(path) self._tex = path return true end
+function T:GetTexture() return self._tex end
+function T:SetVertexColor() end
+function T:SetColorTexture() end
+
+local FS = setmetatable({}, { __index = W.Region })
+W.FontString = FS
+function FS:SetFont(f, s) if not f or not s then error("FontString:SetFont(): bad font", 2) end self._font, self._size = f, s return true end
+function FS:GetFont() return self._font, self._size, "" end
+function FS:SetFontObject() self._font, self._size = self._font or "object", self._size or 12 end
+function FS:SetText(t)
+    if not self._font then error("FontString:SetText(): Font not set", 2) end
+    self._text = t ~= nil and tostring(t) or nil
+end
+function FS:GetText() return self._text end
+function FS:SetFormattedText(fmt, ...) self:SetText(string.format(fmt, ...)) end
+function FS:SetWordWrap(v) self._wrap = v end
+function FS:CanWordWrap() return self._wrap ~= false end
+function FS:SetSpacing(s) self._spacing = s end
+function FS:SetMaxLines(n) self._max = n end
+local function plain(t) return (t or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|T.-|t", "WW") end
+function FS:GetStringWidth()
+    local t = plain(self._text)
+    return #t * (self._size or 12) * 0.5
+end
+FS.GetUnboundedStringWidth = FS.GetStringWidth
+function FS:GetStringHeight()
+    local size = self._size or 12
+    local w = self:GetWidth()
+    local lines = 1
+    if w and w > 0 and self._wrap ~= false then lines = math.max(1, math.ceil(self:GetStringWidth() / w)) end
+    if self._max and self._max > 0 then lines = math.min(lines, self._max) end
+    if (self._text or "") == "" then return 0 end
+    return lines * (size + (self._spacing or 0))
+end
+function FS:IsTruncated() return false end
+function FS:GetLineHeight() return self._size or 12 end
+
+------------------------------------------------------------------------ the fake game
+local env = {}
+local realType = type
+setmetatable(env, { __index = function(_, k)
+    local v = _G[k]
+    if v ~= nil then return v end
+    return nil
+end })
+env._G = env
+env.type = realType
+env.unpack = table.unpack
+env.getn = function(t) return #t end
+env.format, env.floor, env.ceil, env.min, env.max, env.abs = string.format, math.floor, math.ceil, math.min, math.max, math.abs
+env.strlower, env.strupper, env.strlen, env.strsub, env.strfind, env.strrep = string.lower, string.upper, string.len, string.sub, string.find, string.rep
+env.gsub, env.strmatch, env.strbyte, env.strchar = string.gsub, string.match, string.byte, string.char
+env.strtrim = function(s) return (tostring(s or ""):gsub("^%s+", ""):gsub("%s+$", "")) end
+env.strsplit = function(sep, s)
+    local out, pos = {}, 1
+    while true do
+        local a, b = s:find(sep, pos, true)
+        if not a then out[#out + 1] = s:sub(pos) break end
+        out[#out + 1] = s:sub(pos, a - 1)
+        pos = b + 1
+    end
+    return table.unpack(out)
+end
+env.strjoin = function(sep, ...) return table.concat({ ... }, sep) end
+env.tinsert, env.tremove, env.wipe = table.insert, table.remove, function(t) for k in pairs(t) do t[k] = nil end return t end
+env.sort = table.sort
+env.tContains = function(t, v) for _, x in ipairs(t) do if x == v then return true end end return false end
+env.time, env.date, env.difftime = os.time, os.date, os.difftime
+local clock = 1000
+env.GetTime = function() clock = clock + 0.1 return clock end
+env.GetServerTime = os.time
+env.debugprofilestop = function() return os.clock() * 1000 end
+env.bit = { band = function(a, b) return a & b end, bor = function(a, b) return a | b end, bxor = function(a, b) return a ~ b end,
+    lshift = function(a, b) return a << b end, rshift = function(a, b) return a >> b end, bnot = function(a) return ~a end }
+env.hooksecurefunc = function(t, name, fn)
+    if realType(t) == "string" then t, name, fn = env, t, name end
+    local old = t[name]
+    t[name] = function(...) local r = table.pack(old(...)) fn(...) return table.unpack(r, 1, r.n) end
+end
+env.securecall = function(fn, ...) return fn(...) end
+env.issecretvalue = function() return false end
+
+env.CreateFrame = function(kind, name, parent)
+    local o = newObject(W[kind] and kind or "Frame", parent)
+    o._name = name
+    if name then env[name] = o end
+    return o
+end
+env.UIParent = env.CreateFrame("Frame", "UIParent")
+env.UIParent:SetSize(1600, 900)
+env.WorldFrame = env.CreateFrame("Frame", "WorldFrame")
+env.Minimap = env.CreateFrame("Frame", "Minimap", env.UIParent)
+env.Minimap:SetSize(140, 140)
+env.GameTooltip = env.CreateFrame("GameTooltip", "GameTooltip", env.UIParent)
+env.ItemRefTooltip = env.CreateFrame("GameTooltip", "ItemRefTooltip", env.UIParent)
+env.UISpecialFrames = {}
+env.SOUNDKIT = {}
+env.PlaySound = noop
+env.PlaySoundFile = noop
+env.RAID_CLASS_COLORS = setmetatable({}, { __index = function() return { r = 1, g = 1, b = 1, colorStr = "ffffffff" } end })
+env.STANDARD_TEXT_FONT = "Fonts\\FRIZQT__.TTF"
+env.ChatFontNormal, env.GameFontNormal, env.GameFontHighlight, env.GameFontHighlightSmall, env.GameFontNormalLarge = {}, {}, {}, {}, {}
+env.BackdropTemplateMixin = {}
+env.CreateColor = function(r, g, b, a) return { r = r, g = g, b = b, a = a } end
+env.CreateVector2D = function(x, y) return { x = x, y = y } end
+env.GetCursorPosition = function() return 0, 0 end
+env.IsControlKeyDown, env.IsShiftKeyDown, env.IsAltKeyDown = function() return false end, function() return false end, function() return false end
+env.InCombatLockdown = function() return false end
+env.GetCurrentKeyBoardFocus = function() return nil end
+env.GetFileIDFromPath = function() return 1 end
+env.GetLocale = function() return "deDE" end
+env.GetRealmName = function() return "Realm" end
+env.GetBuildInfo = function() return "1.15.7", "1", "Jan 1 2026", 11507 end
+env.UnitName = function() return "Tester", "Realm" end
+env.UnitGUID = function(u) return u == "player" and "Player-1-00000001" or nil end
+env.UnitLevel = function() return 12 end
+env.UnitClass = function() return "Krieger", "WARRIOR", 1 end
+env.UnitRace = function() return "Mensch", "Human" end
+env.UnitSex = function() return 2 end
+env.UnitFactionGroup = function() return "Alliance", "Allianz" end
+env.UnitExists = function(u) return u == "player" end
+env.UnitIsPlayer = function(u) return u == "player" end
+env.UnitIsDeadOrGhost, env.UnitIsDead, env.UnitAffectingCombat = function() return false end, function() return false end, function() return false end
+env.UnitXP, env.UnitXPMax, env.GetXPExhaustion = function() return 10 end, function() return 1000 end, function() return 0 end
+env.UnitHealth, env.UnitHealthMax = function() return 100 end, function() return 100 end
+env.GetMoney = function() return 123456 end
+env.GetZoneText, env.GetRealZoneText, env.GetSubZoneText, env.GetMinimapZoneText = function() return "Wald von Elwynn" end,
+    function() return "Wald von Elwynn" end, function() return "Goldhain" end, function() return "Goldhain" end
+env.IsInInstance = function() return false, "none" end
+env.GetInstanceInfo = function() return "Azeroth", "none" end
+env.GetNumGroupMembers, env.IsInRaid, env.IsInGroup = function() return 0 end, function() return false end, function() return false end
+env.GetNumQuestLogEntries = function() return 0, 0 end
+env.GetQuestLogTitle = function() return nil end
+env.GetNumSkillLines = function() return 0 end
+env.GetNumFactions = function() return 0 end
+env.GetBindLocation = function() return "Goldhain" end
+env.GetPlayerMapPosition = function() return 0.5, 0.5 end
+env.GetMinimapShape = function() return "ROUND" end
+env.GetItemInfo = function() return nil end
+env.GetItemQualityColor = function() return 1, 1, 1, "ffffffff" end
+env.GetMouseFocus = function() return nil end
+env.GetScreenWidth, env.GetScreenHeight = function() return 1600 end, function() return 900 end
+env.ReloadUI = function() env.__reloaded = true end
+env.Screenshot = noop
+env.HideUIPanel, env.ShowUIPanel = noop, noop
+env.InterfaceOptions_AddCategory = noop
+env.Settings = { RegisterCanvasLayoutCategory = function() return {} end, RegisterAddOnCategory = noop }
+env.C_Map = setmetatable({ GetBestMapForUnit = function() return 1429 end, GetPlayerMapPosition = function() return nil end,
+    GetMapInfo = function(id) return { mapID = id, name = "Karte " .. tostring(id), mapType = 3, parentMapID = 1415 } end,
+    GetMapChildrenInfo = function() return {} end, GetAreaInfo = function() return "Gebiet" end,
+    GetMapArtLayerTextures = function() return {} end, GetMapArtLayers = function() return {} end,
+    GetMapRectOnMap = function() return 0, 1, 0, 1 end, GetWorldPosFromMapPos = function() return 0, { x = 0, y = 0 } end },
+    { __index = function() return noop end })
+env.C_Timer = {}
+local timers = {}
+env.C_Timer.After = function(_, fn) timers[#timers + 1] = fn end
+env.C_Timer.NewTicker = function() return { Cancel = noop, IsCancelled = function() return false end } end
+env.C_Timer.NewTimer = function(_, fn) timers[#timers + 1] = fn return { Cancel = noop } end
+env.TooltipDataProcessor = { AddTooltipPostCall = noop }
+env.Enum = { TooltipDataType = { Item = 0 } }
+env.SlashCmdList = {}
+env.OKAY, env.CLOSE, env.CANCEL = "Okay", "Schließen", "Abbrechen"
+env.print = function() end
+env.WFDiaryDB, env.WFDiaryChar = {}, {}
+
+local function flushTimers()
+    for _ = 1, 5 do
+        local list = timers
+        timers = {}
+        for _, fn in ipairs(list) do
+            local ok, err = pcall(fn)
+            if not ok then report("timer", err) end
+        end
+        if #timers == 0 then return end
+    end
+end
+
+------------------------------------------------------------------------ load
+local WFD = {}
+local f = assert(io.open(dir .. "/WoWForeverDiary.toc", "r"))
+local toc = f:read("a")
+f:close()
+for line in toc:gmatch("[^\r\n]+") do
+    if not line:find("^#") and line:find("%.lua%s*$") then
+        local path = dir .. "/" .. line:gsub("\\", "/"):gsub("%s+$", "")
+        local chunk, err = loadfile(path, "t", env)
+        if not chunk then report("load " .. line, err)
+        else
+            local ok, e = pcall(chunk, "WoWForeverDiary", WFD)
+            if not ok then report("load " .. line, e) end
+        end
+    end
+end
+WFD.Error = function(_, where, err) report(where, err) end
+
+local evf = WFD.evf
+local function fire(event, ...)
+    local fn = evf and evf:GetScript("OnEvent")
+    if fn then
+        local ok, err = pcall(fn, evf, event, ...)
+        if not ok then report(event, err) end
+    end
+    flushTimers()
+end
+
+local UI = WFD.UI
+local function step(name, fn)
+    local ok, err = pcall(fn)
+    if not ok then report(name, err) end
+    flushTimers()
+end
+
+fire("ADDON_LOADED", "WoWForeverDiary")
+fire("PLAYER_LOGIN")
+fire("PLAYER_ENTERING_WORLD", true, false)
+
+------------------------------------------------------------------------ go everywhere
+local function everywhere(label)
+    local Rt = UI.Router
+    step(label .. " start", function() UI:OpenStart() end)
+    for _, g in ipairs(UI.NAV) do
+        step(label .. " group " .. g.key, function() Rt.Go(UI.GroupRoute(g)) end)
+        for _, key in ipairs(UI.PartsOf(g)) do
+            step(label .. " part " .. key, function() Rt.Go(UI.PartRoute(key)) end)
+        end
+    end
+    for i = 1, #UI.SettingsSchema() do
+        step(label .. " settings " .. i, function() Rt.Go({ view = "settings", section = i }) end)
+    end
+    step(label .. " help", function() Rt.Go({ view = "help" }) end)
+    step(label .. " back", function() for _ = 1, 6 do Rt.Back() end end)
+    step(label .. " forward", function() for _ = 1, 3 do Rt.Forward() end end)
+    step(label .. " search", function()
+        UI:OpenStart()
+        UI:FocusSearch()
+        UI.shell.search:SetText("wolf")
+        UI.shell.search:SetText("z:Elwynn")
+        UI.shell.search:SetText("")
+    end)
+end
+
+step("toggle (cover)", function() UI:Toggle() end)
+step("cover click", function() UI.cover:GetScript("OnClick")(UI.cover) end)
+everywhere("empty")
+step("close", function() UI:Hide() end)
+step("demo", function() WFD:ToggleDemo() end)
+everywhere("demo")
+for _, theme in ipairs({ "parchment", "modern", "contrast", "codex" }) do
+    step("theme " .. theme, function() UI.SetTheme(theme) end)
+    step("theme " .. theme .. " book", function() UI.Router.Go(UI.PartRoute("bestiary")) end)
+    step("theme " .. theme .. " start", function() UI:OpenStart() end)
+end
+for _, k in ipairs({ 1.1, 1.2, 1 }) do step("font " .. k, function() UI.SetFontScale(k) end) end
+for _, size in ipairs({ { 760, 520 }, { 1400, 900 }, { 1080, 700 } }) do
+    step("size " .. size[1], function()
+        UI.holder:SetSize(size[1], size[2])
+        UI.LayoutShell()
+        UI.Router.Go(UI.PartRoute("diary"))
+        UI.LayoutShell()
+        UI:OpenStart()
+        UI.LayoutShell()
+    end)
+end
+-- every switch of the settings, twice (back to where it was)
+step("settings switches", function()
+    for _, sec in ipairs(UI.SettingsSchema()) do
+        for _, it in ipairs(sec.items) do
+            if it.type == "toggle" and it.flag ~= "locked" then
+                local v = it.get()
+                it.set(not v)
+                it.set(v)
+            end
+        end
+    end
+end)
+step("dialog", function()
+    UI:Confirm({ title = "Frage", text = "Text", ok = "Ja", onOk = function() end })
+    UI.Kit.CloseDialog()
+    UI:Ask({ title = "Wert", input = { value = "5", numeric = true }, onOk = function() end })
+    UI.Kit.CloseDialog()
+end)
+step("slash", function()
+    for _, cmd in ipairs({ "bestiarium", "12", "einstellungen", "heute", "" }) do env.SlashCmdList.WOWFOREVERDIARY(cmd) end
+end)
+step("close again", function() UI:Hide() UI:Toggle() end)
+
+------------------------------------------------------------------------ report
+-- what was really reached, so a quiet run is not mistaken for a thorough one
+local parts = 0
+for _, g in ipairs(UI.NAV) do parts = parts + #UI.PartsOf(g) end
+print(string.format("Reached: %d pages in the book, %d parts in the register, demo %s, theme %s, window %dx%d",
+    UI.book and #UI.book.pages or 0, parts, WFD.demo and "on" or "off", tostring(UI.THEME),
+    UI.holder and UI.holder:GetWidth() or 0, UI.holder and UI.holder:GetHeight() or 0))
+local names = {}
+for k in pairs(unknown) do names[#names + 1] = k end
+table.sort(names)
+print("Methods the fake game does not know (" .. #names .. "): " .. table.concat(names, ", "))
+if #errors == 0 then
+    print("OK: the interface loaded and every view opened without an error")
+    os.exit(0)
+end
+print(#errors .. " error(s):")
+for _, e in ipairs(errors) do print("  " .. e) end
+os.exit(1)

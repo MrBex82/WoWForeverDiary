@@ -9,6 +9,9 @@ local floor, max, min, format = math.floor, math.max, math.min, string.format
 -- Opening the book at the right place
 ------------------------------------------------------------------------
 function UI:OpenAt(target)
+    -- today and the settings have views of their own on the travel desk
+    if target == "today" and self.OpenStart then return self:OpenStart() end
+    if target == "notes" then return self:OpenSettings() end
     self:OpenBook(function(b)
         local page
         if type(target) == "number" then

@@ -355,3 +355,11 @@ UI:RegisterRenderer("groupglance", function(pool, page, side, canvas)
         UI.NoteArea(pool, canvas, side, top, "group:" .. g.key)
     end
 end)
+
+-- the figure of a part (nil when it has none), for Start and the register of the travel desk
+function UI.PartStat(key)
+    local fn = STAT[key]
+    if not fn or not WFD.C then return nil end
+    local ok, v = pcall(fn, WFD.C)
+    if ok then return v end
+end

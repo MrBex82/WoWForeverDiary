@@ -66,6 +66,8 @@ Modules\Demo.lua
 
 UI\Widgets.lua
 UI\Themes.lua
+UI\Design\Tokens.lua
+UI\Design\Kit.lua
 UI\Components.lua
 UI\Book.lua
 UI\PagesFront.lua
@@ -89,3 +91,9 @@ UI\Search.lua
 UI\Comfort.lua
 UI\Moving.lua
 UI\Companion.lua
+UI\Shell\Router.lua
+UI\Shell\Shell.lua
+UI\Views\Legacy.lua
+UI\Views\Start.lua
+UI\Views\Settings.lua
+UI\Views\Help.lua

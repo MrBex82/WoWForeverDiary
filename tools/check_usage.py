@@ -18,7 +18,7 @@ USED = re.compile(r'\bL\[\s*"((?:[^"\\]|\\.)*)"\s*\]|\bWFD:Count\(\s*"((?:[^"\\]
 
 def main():
     used = {}
-    files = list(ROOT.glob("UI/*.lua")) + list(ROOT.glob("Modules/*.lua")) + [ROOT / "Core.lua"]
+    files = list(ROOT.glob("UI/**/*.lua")) + list(ROOT.glob("Modules/*.lua")) + [ROOT / "Core.lua"]
     for f in files:
         for m in USED.finditer(f.read_text(encoding="utf-8")):
             used.setdefault(cl.unescape(m.group(1) if m.group(1) is not None else m.group(2)), f.name)

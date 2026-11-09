@@ -506,3 +506,12 @@ function UI:Build()
     build0(self)
     addButton()
 end
+
+-- for the search field in the head bar of the travel desk: the same index, the same ranking, the same marks
+UI.Search = {
+    Find = function(q, kind) return find(q or "", kind) end,
+    Snippet = snippet,
+    Mark = mark,
+    KindLabel = function(kind) return L[KIND_LABEL[kind] or "Diary"] end,
+    Forget = function() index = nil end,
+}

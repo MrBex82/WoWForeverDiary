@@ -635,3 +635,13 @@ UI:RegisterRenderer("tasks", function(pool, page, side, canvas)
         })
     end
 end)
+
+-- for Start on the travel desk: the destination of the day (nil when every landmark was seen) and the way to it
+UI.DayDestination = function(g)
+    g = g or gather()
+    local dest = destination(g)
+    if not dest then return nil end
+    local mapID = landmarkMap(dest.it)
+    return { name = dest.it.name, icon = UI.IconPath({ dest.it.icon }, "sight"), group = WFD.L[dest.grp.def.label],
+        go = mapID and function() return setWaypoint(mapID) end or nil }
+end

@@ -28,9 +28,17 @@ local PALETTES = {
     },
 }
 
+-- the colours of the dark codex as Widgets.lua set them: a switch back to it (without reloading) starts from here
+local BASE = {}
+for key, col in pairs(c) do BASE[key] = { col[1], col[2], col[3], col[4] } end
+
 function UI.ApplyTheme(name)
     local p = PALETTES[name]
     UI.THEME = p and name or "codex"
+    for key, col in pairs(BASE) do
+        local t = c[key]
+        t[1], t[2], t[3], t[4] = col[1], col[2], col[3], col[4]
+    end
     if not p then return end
     for key, col in pairs(p) do
         local t = c[key]
