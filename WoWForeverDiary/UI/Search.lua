@@ -31,15 +31,6 @@ end
 ------------------------------------------------------------------------
 local index, indexBook
 
-local function pageOfQuest(book, id)
-    for i, p in ipairs(book.pages) do
-        if p.kind == "quests" then
-            for _, r in ipairs(p.rows or {}) do if r.id == id then return i end end
-        end
-    end
-    return book.sectionStart.quests
-end
-
 local function buildIndex()
     local book, C = UI.book, WFD.C
     local out = {}
@@ -48,31 +39,12 @@ local function buildIndex()
         out[#out + 1] = { kind = kind, text = text, icon = icon, go = go, hay = lower(hay or text), rank = rank or 5 }
     end
     local function toPage(p) return p and function() UI:GoToPage(p) end end
-    -- where a creature, a catch or a person stands in the book: the album page, the register page
-    local where = { creature = {}, catch = {}, person = {} }
-    for i, p in ipairs(book.pages) do
-        if p.kind == "album" then
-            for _, e in ipairs(p.cards or {}) do
-                if e.id and not where.creature[e.id] then where.creature[e.id] = i end
-            end
-        elseif p.kind == "fishalbum" then
-            for _, e in ipairs(p.cards or {}) do
-                if e.id and not where.catch[e.id] then where.catch[e.id] = i end
-            end
-        elseif p.kind == "people" then
-            for _, r in ipairs(p.rows or {}) do
-                if r.e and r.e.key and not where.person[r.e.key] then where.person[r.e.key] = i end
-            end
-        end
-    end
-    -- the book turns to that page and the card lies over it: when it is put away the reader stands there
+    -- the card beside its album or register on the travel desk
+    local VIEW_OF = { creature = "bestiary", catch = "fishbook", person = "people" }
     local function toCard(kind, key)
-        local pg = where[kind][key]
-        return function()
-            if pg then UI:GoToPage(pg) end
-            UI:ShowCard(kind, key)
-        end
+        return function() UI:OpenShell({ view = VIEW_OF[kind], key = key }) end
     end
+    local function toView(view) return function() UI:OpenShell({ view = view }) end end
     -- parts of the book and chapters, as in the contents
     for _, p in ipairs(book.pages) do
         if p.kind == "toc" then
@@ -111,35 +83,31 @@ local function buildIndex()
     for id, e in pairs(C.catch or {}) do
         if e.name then add("catch", e.name, UI.FishIcon and UI.FishIcon(e, id) or UI.Icon("loot"), toCard("catch", id), nil, 3) end
     end
-    for id, q in pairs(C.quests or {}) do
+    -- a quest leads to the day it was done (or taken)
+    for _, q in pairs(C.quests or {}) do
         if q.title then
-            local p = pageOfQuest(book, id)
-            add("quest", q.title, UI.Icon("quests"), toPage(p), q.title .. " " .. (q.quote or ""), 3)
+            local t = q.done or q.acc
+            local d = t and WFD:DayIndex(t)
+            add("quest", q.title, UI.Icon("quests"), toPage(d and book.dayPage[d]) or toView("quests"), q.title .. " " .. (q.quote or ""), 3)
         end
     end
-    -- treasures: every notable find, leading to the page it is shown on
-    local treasurePage = {}
-    for _, p in ipairs(book.pages) do
-        if p.kind == "treasures" then
-            for _, r in ipairs(p.rows or {}) do
-                for _, it in ipairs(r.pair or {}) do treasurePage[it.id] = p.index end
-            end
-        end
-    end
-    local seenItem = {}
-    for _, d in pairs(C.days) do
+    -- treasures: every notable find, leading to the day it was first found
+    local firstDay = {}
+    for idx, d in pairs(C.days) do
         for id, e in pairs(d.loot or {}) do
-            if (e.q or 1) >= 2 and not seenItem[id] and e.link then
-                seenItem[id] = true
-                add("treasure", WFD:ItemName(e.link), WFD:ItemIcon(e.link) or UI.Icon("loot"),
-                    toPage(treasurePage[id] or book.sectionStart.treasures), nil, 4)
+            if (e.q or 1) >= 2 and e.link and (not firstDay[id] or idx < firstDay[id].day) then
+                firstDay[id] = { day = idx, link = e.link }
             end
         end
+    end
+    for _, f in pairs(firstDay) do
+        add("treasure", WFD:ItemName(f.link), WFD:ItemIcon(f.link) or UI.Icon("loot"),
+            toPage(book.dayPage[f.day]) or toView("treasures"), nil, 4)
     end
     for _, h in ipairs(WFD.HONOURS or {}) do
         local tiers = C.honourTiers and C.honourTiers[h.key] or 0
         if not h.secret or tiers > 0 then
-            add("honour", L[h.name], UI.IconPath(h.icon, "honour"), toPage(book.sectionStart.honour), nil, 4)
+            add("honour", L[h.name], UI.IconPath(h.icon, "honour"), toView("honour"), nil, 4)
         end
     end
     -- every day: the told story and your own notes

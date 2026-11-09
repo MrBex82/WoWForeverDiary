@@ -27,7 +27,9 @@ local function pageOf(kind)
     end
 end
 
+-- fn: a page of the book (a function that finds it), or a route of the travel desk ({ view = "honour" })
 local function openAt(fn)
+    if type(fn) == "table" then UI:OpenShell(fn) return end
     UI:OpenBook(fn)
 end
 
@@ -180,7 +182,7 @@ local function build()
         WFD.S.compCollapsed = not WFD.S.compCollapsed
         UI:UpdateCompanion(true)
     end, L["Fold in or out"])
-    head:SetScript("OnClick", function() openAt(function(b) return UI.TodayPage(UI) end) end)
+    head:SetScript("OnClick", function() openAt({ view = "start" }) end)
 
     local body = CreateFrame("Frame", nil, f)
     body:SetPoint("TOPLEFT", 10, -30)
@@ -281,7 +283,7 @@ function UI:UpdateCompanion(relayout)
         setRow(r, ...)
         y = y - ROW
     end
-    local goals = pageOf("nextgoals")
+    local goals = { view = "tasks" }
 
     -- tasks of the day
     local tasks = WFD.TodayChallenges and WFD:TodayChallenges()
@@ -315,7 +317,7 @@ function UI:UpdateCompanion(relayout)
         for i = 1, min(3, #hons) do
             local e = hons[i]
             row(L[e.def.name], e.value .. "/" .. e.next, e.frac, false,
-                { L[e.def.name], WFD:HonourText(e.def, e.next) }, function(b) return b.sectionStart.honour or 1 end)
+                { L[e.def.name], WFD:HonourText(e.def, e.next) }, { view = "honour", sort = "next" })
         end
     end
     -- the creature closest to its next stage in the bestiary
@@ -333,7 +335,7 @@ function UI:UpdateCompanion(relayout)
         place(comp.capNext, L["Almost there"])
         local what = format(near.stage == 1 and L["%d more, then in colour"] or L["%d more, then a connoisseur"], near.left)
         row(near.m.name or "?", (near.m.kills or 0) .. "/" .. near.goal, (near.m.kills or 0) / near.goal, false,
-            { near.m.name or "?", what }, function(b) return b.nextPage or b.sectionStart.bestiary or 1 end)
+            { near.m.name or "?", what }, { view = "bestiary", sort = "next" })
     end
     for i = used + 1, #comp.rows do comp.rows[i]:Hide() end
     comp.body:SetHeight(-y)

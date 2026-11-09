@@ -413,6 +413,7 @@ function UI.CollectionView(def)
                     return V:OpenDetail(), V
                 end
                 if route.chip then self.state.chip = route.chip end
+                if route.sort then self.state.sort = route.sort end
                 self:Refresh()
                 if route.key ~= nil and def.cardKind then UI:ShowCard(def.cardKind, route.key) end
             end

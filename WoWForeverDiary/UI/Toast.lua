@@ -12,6 +12,9 @@ function UI:OpenAt(target)
     -- today and the settings have views of their own on the travel desk
     if target == "today" and self.OpenStart then return self:OpenStart() end
     if target == "notes" then return self:OpenSettings() end
+    if type(target) == "string" and UI.PART_VIEW and UI.PART_VIEW[target] then
+        return self:OpenShell({ view = UI.PART_VIEW[target] })
+    end
     self:OpenBook(function(b)
         local page
         if type(target) == "number" then
