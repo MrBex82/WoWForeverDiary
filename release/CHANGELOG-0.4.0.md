@@ -40,6 +40,8 @@ changed since 0.3, in short.
   the name the game gave the region, so region pages find their districts and visits again.
 - The first time you discover a place inside a region you know, a small note shows it, with the region below
   (only with all notes switched on, without a screenshot, not while flying).
+- Landmarks and creatures seen from a flight path are no longer recorded as discovered or sighted. The landmark
+  where you land is checked right away.
 - Long notes no longer run out of their box: the notes card grows with your text, and the page follows the cursor
   while you write.
 - Screenshots at milestones are now off by default. Switch them on in the settings or with "/wfd shot".
@@ -85,6 +87,8 @@ changed since 0.3, in short.
   jetzt den Namen, den das Spiel dem Gebiet gab. So finden Gebietsseiten ihre Bezirke und Besuche wieder.
 - Entdeckst du zum ersten Mal einen Ort in einem bekannten Gebiet, zeigt eine kleine Meldung den Ort und darunter
   das Gebiet (nur wenn alle Meldungen an sind, ohne Screenshot, nicht im Flug).
+- Sehenswürdigkeiten und Kreaturen, die du nur vom Greifen aus siehst, gelten nicht mehr als entdeckt oder
+  gesichtet. Die Sehenswürdigkeit, an der du landest, wird sofort geprüft.
 - Lange Notizen laufen nicht mehr aus ihrem Feld: Die Notizkarte wächst mit deinem Text, und die Seite folgt beim
   Schreiben dem Cursor.
 - Screenshots bei Meilensteinen sind jetzt standardmäßig aus. In den Einstellungen oder mit „/wfd shot“ lassen sie

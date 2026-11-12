@@ -567,6 +567,8 @@ end
 local function checkLandmark()
     local C = WFD.C
     if not C or WFD.paused or WFD.demo then return end
+    -- a landmark seen from a flight path is not visited; the place you land at is checked when the flight ends
+    if UnitOnTaxi and UnitOnTaxi("player") then return end
     buildNames()
     if not C.landmarks then return end   -- filled once at login, see below
     for _, name in ipairs({ GetRealZoneText and GetRealZoneText() or "", GetSubZoneText and GetSubZoneText() or "" }) do
@@ -606,3 +608,4 @@ end)
 for _, ev in ipairs({ "ZONE_CHANGED", "ZONE_CHANGED_INDOORS", "ZONE_CHANGED_NEW_AREA", "PLAYER_ENTERING_WORLD" }) do
     WFD:On(ev, function() checkLandmark() end)
 end
+WFD:OnSignal("landed", function() checkLandmark() end)
