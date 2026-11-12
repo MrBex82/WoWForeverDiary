@@ -26,13 +26,20 @@ local function Tick(el)
     d.hours = d.hours or {}
     local h = tonumber(date("%H", now))
     d.hours[h] = (d.hours[h] or 0) + el
+    -- time in a land counts only on the ground: the lands below a flight path are not visited
+    local onTaxi = UnitOnTaxi and UnitOnTaxi("player") or false
     local zone = WFD.zoneName
-    if zone and zone ~= "" then
+    if zone and zone ~= "" and not onTaxi then
         d.zones[zone] = (d.zones[zone] or 0) + el
     end
 
+    -- landed: the land you are in now is checked at once (it may be new)
+    if inAir and not onTaxi and WFD.RefreshZone then
+        local ok, err = pcall(WFD.RefreshZone)
+        if not ok then WFD:Error("zone", err) end
+    end
+
     -- a flight is counted when it begins, not when a destination was clicked
-    local onTaxi = UnitOnTaxi and UnitOnTaxi("player") or false
     if onTaxi and not inAir then
         d.flights = (d.flights or 0) + 1
         local dest = WFD.flightDest and WFD.flightDest:gsub(",.*$", "") or "?"
