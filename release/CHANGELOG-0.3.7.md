@@ -8,6 +8,11 @@
   no visits. Maps now use the name the game gave the region when you were there, so the districts of a capital
   show up again. The atlas uses the same names.
 
+**New**
+- The first time you discover a place inside a region you know (for example a district of a capital), a small
+  note now shows it, with the region below. It comes only with all notes switched on, without a
+  screenshot, and not while flying.
+
 ## Deutsch
 
 **Behoben**
@@ -15,3 +20,8 @@
   „Stormwind“ im deutschen Spiel). Die Gebietsseiten bei den Karten zeigten dann diesen Namen und fanden nichts:
   keine Bezirke, keine Besuche. Die Karten nehmen jetzt den Namen, den das Spiel dem Gebiet gab, als du dort warst.
   So erscheinen auch die Bezirke einer Hauptstadt wieder. Der Atlas nutzt dieselben Namen.
+
+**Neu**
+- Entdeckst du zum ersten Mal einen Ort in einem Gebiet, das du schon kennst (zum Beispiel „Der Waldrand“ im Wald
+  von Elwynn), zeigt eine kleine Meldung den Ort und darunter das Gebiet. Sie kommt nur, wenn alle Meldungen an
+  sind, ohne Screenshot und nicht während eines Flugs.

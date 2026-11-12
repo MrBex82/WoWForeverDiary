@@ -1437,6 +1437,7 @@ UI.SEAL = {
     first    = { col = { 0.72, 0.45, 0.22, 1 }, size = 17, icon = "first" },
     capsule  = { col = { 0.55, 0.12, 0.10, 1 }, size = 18, icon = "capsule" },
     catch    = { col = c.teal,   size = 16, icon = "fish" },
+    place    = { col = c.green,  size = 15, icon = "map" },
 }
 
 -- the item of a find: kept with newer moments, looked up by its name in that day's loot for older ones
@@ -1482,6 +1483,7 @@ UI.SEAL_LABEL = {
     death = "Death", zone = "New land", dungeon = "Dungeon", quest = "Quest", wealth = "Wealth",
     skill = "Skill", kills = "Hunt", honour = "Honour", landmark = "Landmark", challenge = "Task of the day",
     weekly = "Task of the week", first = "First time", capsule = "Time capsule", catch = "Catch",
+    place = "Place discovered",
 }
 
 ------------------------------------------------------------------------

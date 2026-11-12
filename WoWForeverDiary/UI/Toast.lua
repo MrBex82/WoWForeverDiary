@@ -404,6 +404,12 @@ local function describe(ev)
         d.kicker = ev.when or L["A memory"]
         d.name = ev.title or ""
         d.hint = ev.hint or L["Click to read this day."]
+    elseif ev.k == "place" then
+        -- a new place inside a land you know: its name, the land below it
+        d.name = ev.place or ""
+        d.metal = ev.zone
+        d.metalCol = c.green
+        d.hint = L["Click to read this day."]
     elseif ev.k == "capsule" then
         d.kicker = L["Time capsule"]
         d.name = L["A letter from the past has opened."]
@@ -464,6 +470,14 @@ function UI:Toast(ev, force)
     queue[#queue + 1] = ev
     if not (toast and toast:IsShown()) then self:NextToast() end
 end
+
+-- a place discovered inside a land you know: a small note of its own, without a screenshot and not kept as a
+-- moment (there are many of them); only with every note switched on
+WFD:OnSignal("place", function(place, zone)
+    if WFD.paused or WFD.demo then return end
+    if WFD.ShouldNotify and not WFD:ShouldNotify("place") then return end
+    UI:Toast({ k = "place", place = place, zone = zone, t = time(), day = WFD:DayIndex() })
+end)
 
 -- a death is written into the diary, but no note pops up for it
 WFD:OnSignal("milestone", function(ev)
