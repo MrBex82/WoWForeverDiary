@@ -394,14 +394,20 @@ function Pool:Check(label, getter, setter)
 end
 
 -- Multi-line handwriting field for notes, saved on every keystroke
+-- A field to write in, as tall as the room it is given. A longer text scrolls inside it (mouse wheel, or the
+-- cursor moving down), always by whole lines, so the writing stays on the ruled lines and inside the page.
+-- Returns the scroll frame; SetFocus, ClearFocus, HasFocus and GetText reach the edit box inside.
 function Pool:NoteEdit(w, h, lineH, text, onSave, hint)
-    local eb = self:Get("noteedit", function(p)
-        local e = CreateFrame("EditBox", nil, p)
+    local sf = self:Get("noteedit", function(p)
+        local f = CreateFrame("ScrollFrame", nil, p)
+        local e = CreateFrame("EditBox", nil, f)
+        f:SetScrollChild(e)
+        f.edit = e
         e:SetMultiLine(true)
         e:SetAutoFocus(false)
         e:SetMaxLetters(4000)
         e:SetShadowOffset(0, 0)
-        e:SetTextColor(UI.THEME == "parchment" and 0.10 or 0.74, UI.THEME == "parchment" and 0.17 or 0.84, UI.THEME == "parchment" and 0.36 or 0.98, 1)
+        e:SetPoint("TOPLEFT", 0, 0)
         e.hint = e:CreateFontString(nil, "OVERLAY")
         e.hint:SetPoint("TOPLEFT", 0, 0)
         e.hint:SetJustifyH("LEFT")
@@ -409,6 +415,40 @@ function Pool:NoteEdit(w, h, lineH, text, onSave, hint)
             s.hint:SetShown(s:GetText() == "" and not s:HasFocus())
             UI.noteFocus = s:HasFocus() and true or false
         end
+        -- scroll to `v`, rounded to whole lines and kept inside what there is to scroll
+        local function scrollTo(v)
+            local step = f.lineH or 26
+            -- the last line has no room below it, so the end is rounded up to a whole line as well
+            local range = max(0, ceil(((f.edit:GetHeight() or 0) - f:GetHeight()) / step - 0.05) * step)
+            v = floor(v / step + 0.5) * step
+            f:SetVerticalScroll(max(0, min(v, range)))
+        end
+        f.scrollTo = scrollTo
+        -- the cursor stays in sight: checked one frame later, when the box has grown to its new text
+        f:SetScript("OnUpdate", function(s)
+            local cy, ch = s.cursorY, s.cursorH
+            if not cy then return end
+            local top, bottom = -cy, -cy + ch
+            local cur, vh = s:GetVerticalScroll(), s:GetHeight()
+            local step = s.lineH or 26
+            local want = cur
+            if top < cur then
+                want = floor(top / step) * step
+            elseif bottom > cur + vh then
+                want = ceil((bottom - vh) / step) * step
+            end
+            if want ~= cur then scrollTo(want) end
+            -- the box may grow a few frames after the cursor moved: try again until the line is in sight
+            s.tries = (s.tries or 0) + 1
+            if math.abs(s:GetVerticalScroll() - want) < 1 or s.tries > 10 then s.cursorY, s.tries = nil, 0 end
+        end)
+        e:SetScript("OnCursorChanged", function(_, _, y, _, ch)
+            f.cursorY, f.cursorH, f.tries = y, ch, 0
+        end)
+        f:EnableMouseWheel(true)
+        f:SetScript("OnMouseWheel", function(s, delta)
+            scrollTo(s:GetVerticalScroll() - delta * (s.lineH or 26))
+        end)
         e:SetScript("OnEscapePressed", function(s) s:ClearFocus() end)
         e:SetScript("OnEditFocusGained", updHint)
         e:SetScript("OnEditFocusLost", updHint)
@@ -416,20 +456,34 @@ function Pool:NoteEdit(w, h, lineH, text, onSave, hint)
             if user and s.onSave then s.onSave(s:GetText()) end
             updHint(s)
         end)
-        return e
+        -- the box sits above whatever the scroll frame is raised over
+        hooksecurefunc(f, "SetFrameLevel", function(s, lvl) s.edit:SetFrameLevel(lvl + 1) end)
+        f.SetFocus = function(s) s.edit:SetFocus() end
+        f.ClearFocus = function(s) s.edit:ClearFocus() end
+        f.HasFocus = function(s) return s.edit:HasFocus() end
+        f.GetText = function(s) return s.edit:GetText() end
+        return f
     end)
+    local eb = sf.edit
+    -- the window is a whole number of lines tall, so the lines it shows match the ruled lines
+    h = max(lineH, floor(h / lineH) * lineH)
+    sf.lineH = lineH
+    sf:SetSize(w, h)
     eb:SetFont(UI.FONT, 14, "")
+    eb:SetTextColor(UI.THEME == "parchment" and 0.10 or 0.74, UI.THEME == "parchment" and 0.17 or 0.84, UI.THEME == "parchment" and 0.36 or 0.98, 1)
     if eb.SetSpacing then eb:SetSpacing(max(0, lineH - 14)) end
-    eb:SetSize(w, h)
+    eb:SetWidth(w)
     eb.onSave = nil
     eb:SetText(text or "")
     eb.onSave = onSave
+    sf.cursorY = nil
+    sf:SetVerticalScroll(0)
     eb.hint:SetFont(UI.FONT, 13, "")
     if UI.THEME == "parchment" then eb.hint:SetTextColor(0.40, 0.30, 0.18, 0.85) else eb.hint:SetTextColor(0.58, 0.64, 0.78, 0.8) end
     eb.hint:SetWidth(w)
     eb.hint:SetText(hint or "")
     eb.hint:SetShown((text or "") == "")
-    return eb
+    return sf
 end
 
 -- One line of text that can be selected and copied, but not changed
