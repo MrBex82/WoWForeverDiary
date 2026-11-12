@@ -5,7 +5,7 @@ _G.WoWForeverDiary = WFD
 local floor, min, format = math.floor, math.min, string.format
 local time, date = time, date
 
-WFD.version = "0.3.6"
+WFD.version = "0.3.7"
 WFD.gameLocale = GetLocale()
 WFD.locale = WFD.gameLocale
 WFD.isDE = (WFD.locale == "deDE")
@@ -634,9 +634,25 @@ function WFD:CellKey(x, y)
     return min(99, floor(x * 100)) * 100 + min(99, floor(y * 100))
 end
 
+-- The name of a map as the diary uses it. The map of some clients names a zone in another language than the game
+-- ("Stormwind" on a German client): a zone on record for this map keeps the name the game gave it when you were
+-- there, otherwise the list of the language file puts the map's name right.
 function WFD:MapName(mapID)
     local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(mapID)
-    return info and info.name or ("Map " .. tostring(mapID))
+    if not info then return "Map " .. tostring(mapID) end
+    local C = self.C
+    if info.mapType == 3 and C and C.zoneMaps and C.zones then
+        local best, visits
+        for name, id in pairs(C.zoneMaps) do
+            local z = id == mapID and C.zones[name]
+            if z and (not best or (z.visits or 0) > visits or ((z.visits or 0) == visits and name < best)) then
+                best, visits = name, z.visits or 0
+            end
+        end
+        if best then return best end
+    end
+    local fix = self.loc and self.loc.zoneFix
+    return (info.name and fix and fix[info.name]) or info.name or ("Map " .. tostring(mapID))
 end
 
 function WFD:ParseGUID(guid)
