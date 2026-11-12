@@ -16,14 +16,13 @@ local function zoneNow()
     local real = GetRealZoneText()
     if not (C_Map and C_Map.GetBestMapForUnit and C_Map.GetMapInfo) or IsInInstance() then return real end
     local info = C_Map.GetMapInfo(C_Map.GetBestMapForUnit("player") or 0)
-    -- standing in the zone itself the game's own text is right (the map names may be English on this client)
-    if info and info.mapType == 3 and real and real ~= "" then
-        -- an older entry under the map's name is moved to the game's own name
-        if info.name and info.name ~= real and WFD.FixZoneName then
-            local old = info.name
-            C_Timer.After(1, function() WFD:FixZoneName(old, real) end)
-        end
-        return real
+    -- standing in a zone: the map names it. Inside inns and town halls the game's text is the building
+    -- ("Gasthaus Seenhain"), which is no land of its own. Map names this client gives in another language
+    -- are put right by the list of the language file (Stormwind -> Sturmwind).
+    if info and info.mapType == 3 then
+        local fix = WFD.loc and WFD.loc.zoneFix
+        local name = info.name and info.name ~= "" and ((fix and fix[info.name]) or info.name)
+        return name or real
     end
     for _ = 1, 4 do
         if not info or not info.mapType then break end
@@ -41,7 +40,8 @@ local function zoneMapOf(id)
     for _ = 1, 5 do
         if not info then return nil end
         if info.mapType == 3 then return info.mapID end
-        if (info.mapType or 0) < 3 or not info.parentMapID then return nil end
+        -- only small maps (a building, a cave) belong to the zone around them; dungeons are places of their own
+        if info.mapType ~= 5 or not info.parentMapID then return nil end
         info = C_Map.GetMapInfo(info.parentMapID)
     end
 end
