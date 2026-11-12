@@ -67,62 +67,14 @@ end
 -- Writing your own thoughts into a day
 ------------------------------------------------------------------------
 function UI:EditDayNote(day)
-    local pop = self.dayNotePop
-    if not pop then
-        pop = UI.Frame(UIParent, 440, 300)
-        pop:SetPoint("CENTER")
-        pop:SetFrameStrata("DIALOG")
-        pop:EnableMouse(true)
-        pop:SetMovable(true)
-        pop:RegisterForDrag("LeftButton")
-        pop:SetScript("OnDragStart", pop.StartMoving)
-        pop:SetScript("OnDragStop", pop.StopMovingOrSizing)
-        UI.Backdrop(pop, "dialog", 32, 11, c.paper, { 1, 0.92, 0.80, 1 })
-        _G.WoWForeverDiaryDayNote = pop
-        tinsert(UISpecialFrames, "WoWForeverDiaryDayNote")
-        pop.title = UI.Text(pop, 20, c.ink, "CENTER", UI.HEAD)
-        pop.title:SetPoint("TOP", 0, -24)
-        pop.sub = UI.Caps(pop, L["My own thoughts:"], 9, c.redInk)
-        pop.sub:SetJustifyH("CENTER")
-        pop.sub:SetPoint("TOP", 0, -52)
-        local inset = UI.Inset(pop, 396, 170)
-        inset:SetPoint("TOP", 0, -70)
-        local sf = CreateFrame("ScrollFrame", nil, inset)
-        sf:SetPoint("TOPLEFT", 10, -10)
-        sf:SetPoint("BOTTOMRIGHT", -10, 10)
-        local eb = CreateFrame("EditBox", nil, sf)
-        eb:SetMultiLine(true)
-        eb:SetAutoFocus(false)
-        eb:SetMaxLetters(2000)
-        eb:SetFont(UI.FONT, 13, "")
-        eb:SetTextColor(unpack(UI.NoteInk()))
-        eb:SetShadowOffset(0, 0)
-        eb:SetWidth(372)
-        sf:SetScrollChild(eb)
-        eb:SetScript("OnEscapePressed", function() pop:Hide() end)
-        local hot = CreateFrame("Button", nil, inset)
-        hot:SetAllPoints()
-        hot:SetScript("OnClick", function() eb:SetFocus() end)
-        sf:SetFrameLevel(hot:GetFrameLevel() + 1)
-        pop.edit = eb
-        local save = UI.InkButton(pop, L["Save"], function()
-            local C = WFD.C
+    local C = WFD.C
+    UI:Ask({
+        title = WFD:LongDate(day), text = L["My own thoughts:"], ok = L["Save"],
+        input = { value = C.dayNotes and C.dayNotes[day] or "", lines = 8, max = 2000 },
+        onOk = function(text)
             C.dayNotes = C.dayNotes or {}
-            local text = pop.edit:GetText() or ""
-            C.dayNotes[pop.day] = text:find("%S") and text or nil
-            pop:Hide()
+            C.dayNotes[day] = (text and text:find("%S")) and text or nil
             UI:Reflow()
-            local v = UI.ViewInstance and UI.ViewInstance("diary")
-            if v and v.host:IsShown() then v:Refresh() end
-        end, 16, c.redInk)
-        save:SetPoint("BOTTOMRIGHT", -40, 24)
-        local cancel = UI.InkButton(pop, L["Cancel"], function() pop:Hide() end, 16, c.inkSoft)
-        cancel:SetPoint("BOTTOMLEFT", 40, 24)
-        self.dayNotePop = pop
-    end
-    pop.day = day
-    pop.title:SetText(WFD:LongDate(day))
-    pop.edit:SetText(WFD.C.dayNotes and WFD.C.dayNotes[day] or "")
-    pop:Show()
-    pop.edit:SetFocus()
+        end,
+    })
 end

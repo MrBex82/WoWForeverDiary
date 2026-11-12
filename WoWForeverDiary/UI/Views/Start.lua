@@ -284,7 +284,7 @@ function cards.new(parent)
         for _, g in ipairs(UI.NAV) do
             for _, key in ipairs(g.parts or {}) do
                 local n = counts[key]
-                if n and n > 0 and ((UI.PART_VIEW and UI.PART_VIEW[key]) or (UI.book and UI.book.sectionStart[key])) then
+                if n and n > 0 and UI.PART_VIEW and UI.PART_VIEW[key] then
                     list[#list + 1] = { key = key, n = n, col = UI.GROUP_COLOURS[g.key] }
                     total = total + n
                 end
@@ -512,7 +512,7 @@ function cards.progress(parent)
         local n = 0
         for _, key in ipairs(PROGRESS) do
             local v = UI.PartStat and UI.PartStat(key)
-            if v ~= nil and ((UI.PART_VIEW and UI.PART_VIEW[key]) or (UI.book and UI.book.sectionStart[key])) then
+            if v ~= nil and UI.PART_VIEW and UI.PART_VIEW[key] then
                 n = n + 1
                 local t = self.tiles[n] or tile(self)
                 self.tiles[n] = t

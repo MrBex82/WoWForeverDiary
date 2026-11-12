@@ -47,7 +47,6 @@ function UI:SetHolderMode(mode)
         self.inShell = false
         h:SetSize(self.CoverSize and self.CoverSize() or 450, UI.PH + 36)
         if S then S.frame:Hide() end
-        if self.bookFrame then self.bookFrame:Hide() end
     end
 end
 

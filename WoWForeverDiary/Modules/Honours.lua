@@ -48,7 +48,7 @@ local function refreshAll()
     WFD.dirty = true
     if UI then
         if UI.RefreshCover then UI:RefreshCover() end
-        if UI.bookFrame and UI.bookFrame:IsShown() and UI.spread then UI:ShowSpread(UI.spread) end
+        if UI.inShell and UI.Reflow then UI:Reflow() end
     end
     if WFD.UpdateFamily then WFD.UpdateFamily() end
 end

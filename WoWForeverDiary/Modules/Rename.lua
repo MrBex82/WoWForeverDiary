@@ -232,7 +232,7 @@ local function finish(C)
     if next(renames) then
         WFD.dirty = true
         if WFD.UI and WFD.UI.ClearCaches then WFD.UI.ClearCaches() end
-        if WFD.UI and WFD.UI.bookFrame and WFD.UI.bookFrame:IsShown() and WFD.UI.Reflow then WFD.UI:Reflow() end
+        if WFD.UI and WFD.UI.inShell and WFD.UI.Reflow then WFD.UI:Reflow() end
     end
 end
 

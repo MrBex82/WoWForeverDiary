@@ -14,8 +14,8 @@ local levelText = UI.LevelText      -- "12", "??" for a skull, "?" when unknown 
 
 local function buildCard(self)
     local card = UI.Frame(self.holder, CW, CH)
-    card:SetPoint("CENTER", self.bookFrame, "CENTER", 0, 0)
-    card:SetFrameLevel(self.bookFrame:GetFrameLevel() + 60)
+    card:SetPoint("CENTER", self.holder, "CENTER", 0, 0)
+    card:SetFrameLevel(self.holder:GetFrameLevel() + 60)
     card:EnableMouse(true)
     card:EnableMouseWheel(true)
     card:SetScript("OnMouseWheel", function() end)
@@ -67,7 +67,7 @@ local function buildCard(self)
 
     -- the book behind the card darkens a little; a click on it puts the card away
     local shade = CreateFrame("Frame", nil, self.holder)
-    shade:SetAllPoints(self.bookFrame)
+    shade:SetAllPoints(self.holder)
     shade:SetFrameLevel(card:GetFrameLevel() - 1)
     shade:EnableMouse(true)
     local dim = shade:CreateTexture(nil, "BACKGROUND")
@@ -680,7 +680,8 @@ local function renderBook(card, id)
     end
     local later = pool:Check(L["Read later"], function() return b.later == true end, function(v)
         b.later = v or nil
-        if UI.ShowSpread and UI.spread then UI:ShowSpread(UI.spread) end
+        local lib = UI.ViewInstance and UI.ViewInstance("library")
+        if lib and lib.host:IsShown() then lib:Refresh(true) end
     end)
     later:SetPoint("BOTTOMLEFT", canvas, "BOTTOMLEFT", PAD, 8)
 end
@@ -711,9 +712,9 @@ function UI:ShowCard(kind, key)
     else
         card:SetParent(self.holder)
         card:ClearAllPoints()
-        card:SetPoint("CENTER", self.bookFrame, "CENTER", 0, 0)
-        card:SetScale(self.bookFrame:GetScale() or 1)
-        card:SetFrameLevel(self.bookFrame:GetFrameLevel() + 60)
+        card:SetPoint("CENTER", self.holder, "CENTER", 0, 0)
+        card:SetScale(1)
+        card:SetFrameLevel(self.holder:GetFrameLevel() + 60)
     end
     card.closeBtn:SetShown(not dock)
     local many = not dock and #UI.CardOrder(kind) > 1

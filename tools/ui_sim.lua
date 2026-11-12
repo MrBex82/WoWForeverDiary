@@ -599,8 +599,8 @@ step("close again", function() UI:Hide() UI:Toggle() end)
 -- what was really reached, so a quiet run is not mistaken for a thorough one
 local parts = 0
 for _, g in ipairs(UI.NAV) do parts = parts + #UI.PartsOf(g) end
-print(string.format("Reached: %d pages in the book, %d parts in the register, demo %s, theme %s, window %dx%d",
-    UI.book and #UI.book.pages or 0, parts, WFD.demo and "on" or "off", tostring(UI.THEME),
+print(string.format("Reached: %d parts in the register, demo %s, theme %s, window %dx%d",
+    parts, WFD.demo and "on" or "off", tostring(UI.THEME),
     UI.holder and UI.holder:GetWidth() or 0, UI.holder and UI.holder:GetHeight() or 0))
 print(string.format("Cards opened: %d, in the column of a view: %d; reports opened: %d", cardsShown, cardsDocked, reportsOpened))
 -- every part of the register has a name of its own, not its key
