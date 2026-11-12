@@ -121,6 +121,36 @@ function WFD:IdTest()
     out("model:SetUnit", okU, errU)
     local okF, file = pcall(testModel.GetModelFileID, testModel)
     out("model file", okF, file)
+    if testModel.GetDisplayInfo then out("model display", pcall(testModel.GetDisplayInfo, testModel)) end
+    if IsUnitModelReadyForUI then out("IsUnitModelReadyForUI", pcall(IsUnitModelReadyForUI, "target")) end
+    -- the same through a model scene actor (another way of loading a unit)
+    if not testModel.scene then
+        local sc = CreateFrame("ModelScene", nil, UIParent)
+        sc:SetSize(1, 1)
+        sc:SetPoint("CENTER")
+        testModel.scene = sc
+        testModel.actor = sc.CreateActor and sc:CreateActor()
+        -- the 2D portrait, as the target frame shows it
+        testModel.portrait = testModel:CreateTexture(nil, "OVERLAY")
+        testModel.portrait:SetSize(64, 64)
+        testModel.portrait:SetPoint("BOTTOMLEFT", testModel, "BOTTOMRIGHT", 8, 0)
+    end
+    local actor = testModel.actor
+    if actor then
+        out("actor:SetModelByUnit", pcall(actor.SetModelByUnit, actor, "target"))
+        out("actor file", pcall(actor.GetModelFileID, actor))
+        if actor.GetModelUnitGUID then out("actor unit guid", pcall(actor.GetModelUnitGUID, actor)) end
+    else
+        print("|cff88ccffWFD id|r no model scene actor")
+    end
+    out("SetPortraitTexture", pcall(SetPortraitTexture, testModel.portrait, "target"))
+    out("portrait texture", pcall(testModel.portrait.GetTexture, testModel.portrait))
+    -- a model may load a moment later: asked once more after a second
+    C_Timer.After(1, function()
+        out("later: model file", pcall(testModel.GetModelFileID, testModel))
+        if testModel.GetDisplayInfo then out("later: model display", pcall(testModel.GetDisplayInfo, testModel)) end
+        if actor then out("later: actor file", pcall(actor.GetModelFileID, actor)) end
+    end)
     C_Timer.After(10, function() testModel:Hide() end)
 end
 
