@@ -190,7 +190,6 @@ function WFD:AtlasState()
         for z, t in pairs(d.zones or {}) do secs[z] = (secs[z] or 0) + t end
     end
     -- lands on record by their map: a land counts as seen even when its stored name differs from the map's
-    local fix = self.loc and self.loc.zoneFix or {}
     local byMap = {}
     for name, id in pairs(C.zoneMaps or {}) do
         if C.zones[name] and type(id) == "number" then byMap[id] = byMap[id] or name end
@@ -201,7 +200,7 @@ function WFD:AtlasState()
             local e = { id = cont, name = self:MapName(cont), zones = {}, visited = 0, secs = 0 }
             local seen = {}
             for _, k in ipairs(kids) do
-                local name = k.name and (fix[k.name] or k.name)
+                local name = k.name and self:MapName(k.mapID)
                 if name and not seen[name] then
                     seen[name] = true
                     local stored = C.zones[name] and name or byMap[k.mapID]
