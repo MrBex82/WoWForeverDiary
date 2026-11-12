@@ -1,4 +1,4 @@
--- Little parchment notes that slide in when something new happens, and the weekly look back.
+-- Little cards that slide in when something new happens, the memory at login and the weekly look back.
 local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
@@ -62,15 +62,20 @@ local TARGET = { honour = "honour", landmark = "landmarks", dungeon = "runs", ch
     first = "firsts", capsule = "capsule", catch = "fishbook", summary = "today" }
 
 ------------------------------------------------------------------------
--- Toasts
+-- Toasts: small cards in the style of the desk, up to three on top of each other. More than that wait; when many
+-- wait at once they become one card that leads to Start, where everything new is listed.
 ------------------------------------------------------------------------
-local TW, TH = 430, 112
-local TX = 92                -- where the words start
-local NAME_W = TW - TX - 80  -- room left of the points
-local IN, HOLD, OUT = 0.35, 6, 0.6
-local SCALE = 0.65           -- the note is drawn a little smaller than laid out
+local K = UI.Kit
+local TW, TH = 400, 104
+local TX = 86                -- where the words start
+local NAME_W = TW - TX - 92  -- room left of the points
+local IN, HOLD, OUT = 0.35, 7, 0.6
+local SCALE = 0.8            -- the cards are drawn a little smaller than laid out
+local MAX_SHOWN = 3
 local queue = {}
-local toast
+local shown = {}             -- the cards on the screen, the newest at the top
+local spare = {}             -- cards put away, to be used again
+local stack                  -- the frame the cards hang from: the player can drag it
 
 -- a trophy plaque built from plain textures: shadow, metal frame with bevel, dark inset, icon
 local function makePlaque(parent, size)
@@ -86,18 +91,10 @@ local function makePlaque(parent, size)
     p.hi:SetPoint("TOPLEFT")
     p.hi:SetPoint("TOPRIGHT")
     p.hi:SetHeight(1)
-    p.hi2 = UI.Fill(p, { 1, 1, 1 }, "ARTWORK", 1, 0.45)
-    p.hi2:SetPoint("TOPLEFT")
-    p.hi2:SetPoint("BOTTOMLEFT")
-    p.hi2:SetWidth(1)
     p.lo = UI.Fill(p, { 0, 0, 0 }, "ARTWORK", 1, 0.5)
     p.lo:SetPoint("BOTTOMLEFT")
     p.lo:SetPoint("BOTTOMRIGHT")
     p.lo:SetHeight(1)
-    p.lo2 = UI.Fill(p, { 0, 0, 0 }, "ARTWORK", 1, 0.5)
-    p.lo2:SetPoint("TOPRIGHT")
-    p.lo2:SetPoint("BOTTOMRIGHT")
-    p.lo2:SetWidth(1)
     p.inset = UI.Fill(p, { 0.06, 0.04, 0.02 }, "ARTWORK", 2)
     p.inset:SetSize(size + 2, size + 2)
     p.inset:SetPoint("CENTER")
@@ -112,200 +109,132 @@ local function makePlaque(parent, size)
     return p
 end
 
--- Where the note stands: the place the player dragged it to, else the top of the screen.
--- extra lifts it a little while it slides in.
-local function place(f, extra)
-    local p = WFD.S and WFD.S.toastPos
-    f:ClearAllPoints()
-    if p then
-        f:SetPoint(p[1], UIParent, p[2], p[3], p[4] + extra)
-    else
-        f:SetPoint("TOP", UIParent, "TOP", 0, -140 / f:GetScale() + extra)
-    end
-end
-
--- The size the player chose (the mouse wheel over a note), as a factor of the usual size
+-- The size the player chose (the mouse wheel over a card), as a factor of the usual size
 local MIN_SIZE, MAX_SIZE = 0.6, 2
 local function sizeFactor()
     local v = WFD.S and tonumber(WFD.S.toastSize) or 1
     return math.max(MIN_SIZE, math.min(MAX_SIZE, v))
 end
 
--- sets the size and keeps the note where it is on the screen: its saved offset is in units of its own size
-local function setSize(f, factor)
-    local old = f:GetScale()
+-- where the stack stands: the place the player dragged it to, else the top of the screen
+local function placeStack()
+    local p = WFD.S and WFD.S.toastPos
+    stack:ClearAllPoints()
+    if p then stack:SetPoint(p[1], UIParent, p[2], p[3], p[4])
+    else stack:SetPoint("TOP", UIParent, "TOP", 0, -140 / stack:GetScale()) end
+end
+
+local function buildStack()
+    stack = CreateFrame("Frame", "WoWForeverDiaryToasts", UIParent)
+    stack:SetSize(TW, TH)
+    stack:SetFrameStrata("HIGH")
+    stack:SetClampedToScreen(true)
+    stack:SetMovable(true)
+    stack:SetScale(SCALE * sizeFactor())
+    placeStack()
+end
+
+local function setSize(factor)
     factor = math.max(MIN_SIZE, math.min(MAX_SIZE, factor))
+    local old = stack:GetScale()
     if WFD.S then WFD.S.toastSize = factor end
-    f:SetScale(SCALE * factor)
+    stack:SetScale(SCALE * factor)
     local p = WFD.S and WFD.S.toastPos
     if p then
-        local k = old / f:GetScale()
+        local k = old / stack:GetScale()
         p[3], p[4] = p[3] * k, p[4] * k
     end
-    place(f, 0)
+    placeStack()
 end
 
 -- back to the top of the screen, at the usual size
 function UI:ResetToastPlace()
-    if WFD.S then WFD.S.toastPos = nil end
-    if toast then
-        toast:SetScale(SCALE)
-        place(toast, 0)
+    if WFD.S then WFD.S.toastPos, WFD.S.toastSize = nil, nil end
+    if stack then
+        stack:SetScale(SCALE)
+        placeStack()
     end
-    if WFD.S then WFD.S.toastSize = nil end
 end
 
-local function build()
-    local f = CreateFrame("Button", "WoWForeverDiaryToast", UIParent)
-    f:SetSize(TW, TH)
-    f:SetScale(SCALE * sizeFactor())
-    place(f, 0)
-    f:SetMovable(true)
-    f:EnableMouseWheel(true)
-    f:SetScript("OnMouseWheel", function(self, delta)
-        setSize(self, sizeFactor() + (delta > 0 and 0.1 or -0.1))
-    end)
-    f:RegisterForDrag("LeftButton")
-    f:SetScript("OnDragStart", function(self)
-        self.dragging = true
-        self:StartMoving()
-    end)
-    f:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        self.dragging = false
-        self.dragged = GetTime()
-        local a, _, b, x, y = self:GetPoint(1)
-        if WFD.S then WFD.S.toastPos = { a, b, x, y } end
-    end)
-    f:SetFrameStrata("HIGH")
-    f:SetClampedToScreen(true)
-    local base = f:GetFrameLevel()
-
-    -- dark leather with a gold edge, like the cover of the book
-    local shadow = UI.Fill(f, { 0, 0, 0 }, "BACKGROUND", -8, 0.5)
-    shadow:SetPoint("TOPLEFT", 5, -6)
-    shadow:SetPoint("BOTTOMRIGHT", 5, -6)
-    local body = CreateFrame("Frame", nil, f)
-    body:SetAllPoints()
-    body:SetFrameLevel(base + 1)
-    UI.Leather(body, 3, 1, 0.15)
-    UI.EdgeFade(body, "TOP", 30, { 1, 0.80, 0.55 }, 0.10, "BACKGROUND", 3, 3)
-    local edge = UI.Frame(f)
-    edge:SetAllPoints()
-    edge:SetFrameLevel(base + 2)
-    UI.Backdrop(edge, "tooltip", 14, 3, { 0, 0, 0, 0 }, { 0.90, 0.70, 0.30, 1 })
-    -- inner gold rule
-    local inner = UI.Frame(f)
-    inner:SetPoint("TOPLEFT", 7, -7)
-    inner:SetPoint("BOTTOMRIGHT", -7, 7)
-    inner:SetFrameLevel(base + 2)
-    UI.Backdrop(inner, nil, 1, 0, { 0, 0, 0, 0 }, { 0.85, 0.66, 0.30, 0.35 })
-
-    local top = CreateFrame("Frame", nil, f)
-    top:SetAllPoints()
-    top:SetFrameLevel(base + 4)
-    f.top = top
-
-    -- glow behind the plaque, pulsing
-    f.glow = UI.Circle(top, 86, c.gold, "BACKGROUND", 0)
-    f.glow:SetPoint("CENTER", top, "LEFT", 48, 0)
-    f.plaque = makePlaque(top, 50)
-    f.plaque:SetPoint("CENTER", top, "LEFT", 48, 0)
-    f.plaque:SetFrameLevel(base + 5)
-
-    -- a calm dark panel behind the words, so they stand out from the grain
-    local panel = UI.GradRect(body, "HORIZONTAL", { 0.02, 0.01, 0.005, 0.55 }, { 0.02, 0.01, 0.005, 0.30 }, "BACKGROUND", 4)
-    panel:SetPoint("TOPLEFT", TX - 8, -10)
-    panel:SetPoint("BOTTOMRIGHT", -10, 10)
-
-    local function shade(fs)
-        fs:SetShadowColor(0, 0, 0, 1)
-        fs:SetShadowOffset(1, -1)
-        return fs
+-- the cards one below the other, the newest on top; a card that is sliding in comes from a little above
+local function layout()
+    local y = 0
+    for _, f in ipairs(shown) do
+        f:ClearAllPoints()
+        f:SetPoint("TOP", stack, "TOP", 0, -y + (f.lift or 0))
+        y = y + TH + 8
     end
-    f.kicker = shade(UI.Caps(top, "", 11, { 1, 0.82, 0.40, 1 }))
-    f.kicker:SetPoint("TOPLEFT", TX, -15)
-    f.name = UI.Text(top, 20, { 1, 0.96, 0.86, 1 }, "LEFT", UI.HEAD, true)
+end
+
+local function closeCard(f) if f.phase ~= "out" then f.phase, f.t = "out", 0 end end
+
+local function buildCard()
+    local f = K.Box(stack, "panel", "gold", "Button")
+    f:SetSize(TW, TH)
+    K.Material(f, "dark")
+    f:SetFrameStrata("HIGH")
+    local sh = UI.Fill(f, { 0, 0, 0 }, "BACKGROUND", -8, 0.4)
+    sh:SetPoint("TOPLEFT", 4, -6)
+    sh:SetPoint("BOTTOMRIGHT", 4, -6)
+    f.glow = UI.Circle(f, 80, c.gold, "BORDER", 0)
+    f.glow:SetPoint("CENTER", f, "LEFT", 44, 0)
+    f.plaque = makePlaque(f, 46)
+    f.plaque:SetPoint("CENTER", f, "LEFT", 44, 0)
+    f.plaque:SetFrameLevel(f:GetFrameLevel() + 2)
+    f.kicker = K.Text(f, "section", "railGold")
+    f.kicker:SetPoint("TOPLEFT", TX, -14)
+    f.name = K.Text(f, "heading", "railTitle")
     f.name:SetPoint("TOPLEFT", TX, -30)
     f.name:SetWidth(NAME_W)
     f.name:SetWordWrap(false)
-    f.metal = shade(UI.Caps(top, "", 11, c.gold))
-    f.metal:SetPoint("TOPLEFT", TX, -56)
+    f.metal = K.Text(f, "section", "railGold")
+    f.metal:SetPoint("TOPLEFT", f.name, "BOTTOMLEFT", 0, -4)
     f.pips = {}
-    for i = 1, 5 do
-        local d = UI.Diamond(top, 7, c.gold, "ARTWORK", 2)
-        f.pips[i] = d
-    end
-    -- the hint may take two lines instead of being cut off
-    f.hint = UI.Text(top, 12, { 0.95, 0.89, 0.76, 1 }, "LEFT", UI.FONT, true)
-    f.hint:SetPoint("TOPLEFT", TX, -74)
-    f.hint:SetWidth(TW - TX - 18)
+    for i = 1, 5 do f.pips[i] = UI.Diamond(f, 7, c.gold, "ARTWORK", 2) end
+    f.hint = K.Text(f, "small", "rail")
+    f.hint:SetWidth(TW - TX - 16)
     f.hint:SetJustifyV("TOP")
-    f.hint:SetWordWrap(true)
     if f.hint.SetMaxLines then f.hint:SetMaxLines(2) end
-    f.points = UI.Text(top, 24, { 1, 0.85, 0.40, 1 }, "RIGHT", UI.HEAD, true)
-    f.points:SetPoint("TOPRIGHT", -18, -16)
-    f.pointsLabel = shade(UI.Caps(top, "", 9, { 0.95, 0.80, 0.50, 1 }))
-    f.pointsLabel:SetJustifyH("RIGHT")
-    f.pointsLabel:SetPoint("TOPRIGHT", -18, -44)
-
-    -- a sheen that sweeps across once
-    local clip = CreateFrame("Frame", nil, f)
-    clip:SetPoint("TOPLEFT", 4, -4)
-    clip:SetPoint("BOTTOMRIGHT", -4, 4)
-    clip:SetFrameLevel(base + 6)
-    if clip.SetClipsChildren then clip:SetClipsChildren(true) end
-    f.sheen = UI.GradRect(clip, "HORIZONTAL", { 1, 0.95, 0.80, 0 }, { 1, 0.95, 0.80, 0.22 }, "OVERLAY", 0)
-    f.sheen:SetSize(60, TH - 8)
-    f.sheen2 = UI.GradRect(clip, "HORIZONTAL", { 1, 0.95, 0.80, 0.22 }, { 1, 0.95, 0.80, 0 }, "OVERLAY", 0)
-    f.sheen2:SetSize(60, TH - 8)
-    f.sheen2:SetPoint("LEFT", f.sheen, "RIGHT")
-
-    -- a click opens the book where the moment is told; a right-click only puts the note away
+    f.points = K.Text(f, "title", "railGold", "RIGHT")
+    f.points:SetPoint("TOPRIGHT", -42, -14)
+    f.close = K.IconButton(f, "close", { L["Close"] }, function() closeCard(f) end, 22)
+    f.close:SetFlat(true)
+    f.close:SetPoint("TOPRIGHT", -8, -8)
+    -- a click opens the diary where the moment is told; a right-click only puts the card away
     f:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", function(self) self.dragging = true stack:StartMoving() end)
+    f:SetScript("OnDragStop", function(self)
+        stack:StopMovingOrSizing()
+        self.dragging = false
+        self.dragged = GetTime()
+        local a, _, b, x, y = stack:GetPoint(1)
+        if WFD.S then WFD.S.toastPos = { a, b, x, y } end
+    end)
+    f:EnableMouseWheel(true)
+    f:SetScript("OnMouseWheel", function(_, delta) setSize(sizeFactor() + (delta > 0 and 0.1 or -0.1)) end)
     f:SetScript("OnClick", function(self, button)
-        local ev = self.ev
         GameTooltip:Hide()
         if self.dragged and GetTime() - self.dragged < 0.3 then return end     -- the end of a drag is no click
-        if button == "RightButton" then
-            self.phase, self.t = "out", 0
-            return
-        end
-        self.phase, self.t = "out", 0
-        if ev then UI:OpenAt(TARGET[ev.k] or ev.day) end
+        closeCard(self)
+        if button == "RightButton" then return end
+        if self.go then self.go() end
     end)
     f:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:SetText(L["Right-click to close."], 0.5, 0.8, 1)
-        GameTooltip:AddLine(L["Drag to move."], 0.5, 0.8, 1)
-        GameTooltip:AddLine(L["Mouse wheel changes the size."], 0.5, 0.8, 1)
-        GameTooltip:Show()
+        K.ShowTip(self, L["Right-click to close."], { L["Drag to move."], L["Mouse wheel changes the size."] }, "ANCHOR_BOTTOM")
     end)
     f:SetScript("OnLeave", function() GameTooltip:Hide() end)
     f:SetScript("OnUpdate", function(self, dt)
         self.t = self.t + dt
         self.life = (self.life or 0) + dt
-        -- sheen runs once, the glow breathes
-        local sx = 4 + (self.life - 0.3) * 360
-        local inside = sx >= 4 and sx <= TW - 124
-        self.sheen:SetShown(inside)
-        self.sheen2:SetShown(inside)
-        if inside then
-            self.sheen:ClearAllPoints()
-            self.sheen:SetPoint("TOPLEFT", self, "TOPLEFT", sx, -4)
-        end
-        self.glow:SetAlpha(0.18 + 0.12 * math.sin(self.life * 3))
-        -- while it is being dragged it stays as it is
-        if self.dragging then
-            self.t = 0
-            self:SetAlpha(1)
-            return
-        end
+        self.glow:SetAlpha(0.16 + 0.10 * math.sin(self.life * 3))
+        if self.dragging then self.t = 0 self:SetAlpha(1) return end
         if self.phase == "in" then
             local a = min(1, self.t / IN)
             self:SetAlpha(a)
-            place(self, (1 - a) * 28)
-            if a >= 1 then self.phase, self.t = "hold", 0 end
+            self.lift = (1 - a) * 24
+            layout()
+            if a >= 1 then self.phase, self.t, self.lift = "hold", 0, 0 end
         elseif self.phase == "hold" then
             if self:IsMouseOver() then self.t = 0 end
             if self.t >= HOLD then self.phase, self.t = "out", 0 end
@@ -314,13 +243,85 @@ local function build()
             self:SetAlpha(a)
             if a <= 0 then
                 self:Hide()
+                for i, g in ipairs(shown) do if g == self then table.remove(shown, i) break end end
+                spare[#spare + 1] = self
+                layout()
                 UI:NextToast()
             end
         end
     end)
-    f:Hide()
     return f
 end
+
+local function fill(f, ev)
+    local d = UI.DescribeMoment(ev)
+    f.plaque:Set(d.icon, d.col)
+    f.glow:SetVertexColor(d.col[1], d.col[2], d.col[3], 1)
+    f.kicker:SetText(UI.Upper(d.kicker or ""))
+    f.name:SetText(d.name or "")
+    UI.FitText(f.name, NAME_W, UI.FS(16), UI.FS(12))
+    f.metal:SetText(UI.Upper(d.metal or ""))
+    if d.metalCol then f.metal:SetTextColor(d.metalCol[1], d.metalCol[2], d.metalCol[3], 1) else K.Recolor(f.metal, "railGold") end
+    local mw = (d.metal and d.metal ~= "") and (f.metal:GetStringWidth() + 10) or 0
+    for i = 1, 5 do
+        local p = f.pips[i]
+        if d.n and i <= d.n then
+            p:ClearAllPoints()
+            p:SetPoint("LEFT", f.metal, "LEFT", mw + (i - 1) * 11, 0)
+            local got = i <= d.pips
+            local mc = got and (d.pipCol or WFD:MetalOf(i, d.n).col) or { 0.45, 0.32, 0.18, 1 }
+            p:SetVertexColor(mc[1], mc[2], mc[3], 1)
+            p:SetSize(got and 8 or 6, got and 8 or 6)
+            p:Show()
+        else
+            p:Hide()
+        end
+    end
+    f.hint:ClearAllPoints()
+    f.hint:SetPoint("TOPLEFT", (d.metal and d.metal ~= "") and f.metal or f.name, "BOTTOMLEFT", 0, -5)
+    f.hint:SetText(d.hint or "")
+    f.points:SetText(d.points and ("+" .. d.points) or "")
+    f.go = d.go
+end
+
+function UI:NextToast()
+    if #shown >= MAX_SHOWN or #queue == 0 then return end
+    local ev = table.remove(queue, 1)
+    -- many at once (a dungeon, a big fight): one card for all of them that leads to everything new on Start
+    if #queue >= MAX_SHOWN then
+        ev = { k = "summary", n = #queue + 1, t = time() }
+        queue = {}
+    end
+    if not stack then buildStack() end
+    local f = table.remove(spare) or buildCard()
+    fill(f, ev)
+    f.ev = ev
+    f.phase, f.t, f.life, f.lift = "in", 0, 0, 24
+    f:SetAlpha(0)
+    table.insert(shown, 1, f)
+    f:Show()
+    layout()
+    if not ev.quiet then
+        UI.Sound(ev.k == "honour" and "IG_QUEST_LIST_COMPLETE" or "IG_ABILITY_PAGE_TURN", ev.k == "honour" and 878 or 836)
+    end
+    -- room for one more: the next waiting card comes right after
+    if #queue > 0 and #shown < MAX_SHOWN then C_Timer.After(0.4, function() UI:NextToast() end) end
+end
+
+-- force: shown even with the notes switched off (asked for with /wfd memory); every note asks the setting of the
+-- notifications (everything, only what matters, nothing)
+function UI:Toast(ev, force)
+    if not ev then return end
+    if not force then
+        if WFD.S and WFD.S.toasts == false then return end
+        if ev.k ~= "memory" and ev.k ~= "recap" and WFD.ShouldNotify and not WFD:ShouldNotify(ev.k) then return end
+    end
+    queue[#queue + 1] = ev
+    self:NextToast()
+end
+
+-- the cards on the screen and those waiting (the load test reads it)
+function UI.ToastCount() return #shown, #queue end
 
 local HONOUR_FLAVOUR = {
     combat = "Steel sharpened, name written down.", explore = "The road is longer, and so is the map.",
@@ -329,7 +330,7 @@ local HONOUR_FLAVOUR = {
 }
 
 -- what to show for a milestone: icon, frame colour, kicker, name, metal line, pips, hint, points
-local function describe(ev)
+function UI.DescribeMoment(ev)
     local subject = (ev.k ~= "level" and ev.s and ev.s:match(":%s*(.+)$")) or ev.s or ""
     local icon, col = UI.MomentIcon(ev)
     local d = {
@@ -400,7 +401,7 @@ local function describe(ev)
         d.icon, d.col = UI.Icon("journal"), c.gold
         d.kicker = L["Diary"]
         d.name = format(L["%d new moments"], ev.n or 0)
-        d.hint = L["Click to open the diary."]
+        d.hint = L["Click to see them all on Start."]
     elseif ev.k == "memory" then
         d.icon, d.col = UI.Icon(ev.jubilee and "honour" or "time"), c.gold
         d.kicker = ev.when or L["A memory"]
@@ -410,61 +411,17 @@ local function describe(ev)
         d.kicker = L["Time capsule"]
         d.name = L["A letter from the past has opened."]
         d.hint = L["Click to read the letter."]
+    elseif ev.k == "recap" then
+        d.icon, d.col = UI.Icon("records"), c.gold
+        d.kicker = L["The week in review"]
+        d.name = ev.title or ""
+        d.hint = L["Click to read the week."]
+        d.go = function() UI:OpenShell({ view = "recap" }) end
     else
         d.hint = L["Click to read this day."]
     end
+    d.go = d.go or function() UI:OpenAt(TARGET[ev.k] or ev.day) end
     return d
-end
-
-function UI:NextToast()
-    local ev = table.remove(queue, 1)
-    if not ev then return end
-    -- many at once (a dungeon, a big fight): one note for all of them instead of a long line of notes
-    if #queue >= 2 then
-        ev = { k = "summary", n = #queue + 1, t = time() }
-        queue = {}
-    end
-    toast = toast or build()
-    local d = describe(ev)
-    toast.plaque:Set(d.icon, d.col)
-    toast.glow:SetVertexColor(d.col[1], d.col[2], d.col[3], 1)
-    toast.kicker:SetText(d.kicker:upper())
-    toast.name:SetText(d.name)
-    UI.FitText(toast.name, NAME_W, 20, 14)
-    toast.metal:SetText((d.metal or ""):upper())
-    toast.metal:SetTextColor(UI.col4(d.metalCol or c.gold))
-    -- tier diamonds after the metal name
-    local mw = (d.metal and d.metal ~= "") and (toast.metal:GetStringWidth() + 10) or 0
-    for i = 1, 5 do
-        local p = toast.pips[i]
-        if d.n and i <= d.n then
-            p:ClearAllPoints()
-            p:SetPoint("LEFT", toast.metal, "LEFT", mw + (i - 1) * 11, 0)
-            local got = i <= d.pips
-            local mc = got and (d.pipCol or WFD:MetalOf(i, d.n).col) or { 0.45, 0.32, 0.18, 1 }
-            p:SetVertexColor(mc[1], mc[2], mc[3], 1)
-            p:SetSize(got and 8 or 6, got and 8 or 6)
-            p:Show()
-        else
-            p:Hide()
-        end
-    end
-    toast.hint:SetText(d.hint or "")
-    toast.points:SetText(d.points and ("+" .. d.points) or "")
-    toast.pointsLabel:SetText(d.points and L["Honour points"]:upper() or "")
-    toast.ev = ev
-    toast.phase, toast.t, toast.life = "in", 0, 0
-    toast:SetAlpha(0)
-    toast:Show()
-    if ev.quiet then return end
-    UI.Sound(ev.k == "honour" and "IG_QUEST_LIST_COMPLETE" or "IG_ABILITY_PAGE_TURN", ev.k == "honour" and 878 or 836)
-end
-
--- force: shown even with the notes switched off (asked for with /wfd memory)
-function UI:Toast(ev, force)
-    if not ev or (WFD.S and WFD.S.toasts == false and not force) then return end
-    queue[#queue + 1] = ev
-    if not (toast and toast:IsShown()) then self:NextToast() end
 end
 
 -- a death is written into the diary, but no note pops up for it
@@ -507,14 +464,25 @@ end
 WFD:OnInit(function()
     if not (C_Timer and C_Timer.After) then return end
     C_Timer.After(12, function()
+        if UI.recapToday then return end         -- one card at login is enough: the look back came first
         local ok, err = pcall(UI.ShowMemory, UI, false)
         if not ok then WFD:Error("memory", err) end
     end)
 end)
 
 ------------------------------------------------------------------------
--- The week in review
+-- The week in review: a calendar week (Monday to Sunday) as a page of the chronicle. At login, once a week, a
+-- card says that last week's look back is ready.
 ------------------------------------------------------------------------
+-- the days of a calendar week: offset 0 is this week, 1 the week before ...
+function WFD:WeekRange(offset)
+    local today = self:DayIndex()
+    local wday = tonumber(date("%w", self:DayTime(today))) or 1      -- 0 = Sunday
+    local sinceMonday = (wday + 6) % 7
+    local from = today - sinceMonday - 7 * (offset or 0)
+    return max(1, from), min(today, from + 6)
+end
+
 local function weekStats(from, to)
     local C = WFD.C
     local s = { kills = 0, quests = 0, km = 0, deaths = 0, places = 0, levels = {}, days = 0, best = nil, bestK = 0 }
@@ -538,6 +506,7 @@ local function weekStats(from, to)
             if d >= from and d <= to then s.places = s.places + 1 end
         end
     end
+    table.sort(zones)
     for _, ev in ipairs(C.events) do
         if ev.day and ev.day >= from and ev.day <= to then
             if ev.k == "landmark" then marks[#marks + 1] = ev.s:match(":%s*(.+)$") or ev.s end
@@ -548,147 +517,23 @@ local function weekStats(from, to)
     return s
 end
 
-local function list3(t)
-    local out = {}
-    for i = 1, min(3, #t) do out[#out + 1] = t[i] end
-    local txt = table.concat(out, ", ")
-    if #t > 3 then txt = txt .. format(" (+%d)", #t - 3) end
-    return txt
+local function weekTitle(from, to)
+    return date(WFD.loc.date, WFD:DayTime(from)) .. "  -  " .. date(WFD.loc.date, WFD:DayTime(to))
 end
 
-local recap
-local RW, RH = 400, 430
+-- (for the page of the look back in the chronicle: UI/Views/Chronicle.lua)
+UI.WeekStats, UI.WeekTitle = weekStats, weekTitle
 
-local function buildRecap()
-    local f = UI.Frame(UIParent, RW, RH)
-    f:SetPoint("CENTER", 0, 40)
-    f:SetFrameStrata("DIALOG")
-    f:EnableMouse(true)
-    f:SetMovable(true)
-    f:RegisterForDrag("LeftButton")
-    f:SetScript("OnDragStart", f.StartMoving)
-    f:SetScript("OnDragStop", f.StopMovingOrSizing)
-    _G.WoWForeverDiaryRecap = f
-    tinsert(UISpecialFrames, "WoWForeverDiaryRecap")
-    local shadow = UI.Fill(f, { 0, 0, 0 }, "BACKGROUND", -8, 0.45)
-    shadow:SetPoint("TOPLEFT", 8, -10)
-    shadow:SetPoint("BOTTOMRIGHT", 8, -10)
-    local paper = UI.Page(f, RW, RH)
-    paper:SetPoint("TOPLEFT")
-    paper:SetFrameLevel(f:GetFrameLevel() + 1)
-    local edge = UI.Frame(f)
-    edge:SetAllPoints()
-    edge:SetFrameLevel(f:GetFrameLevel() + 2)
-    UI.Backdrop(edge, "gold", 16, 4, { 0, 0, 0, 0 }, { 1, 0.92, 0.75, 1 })
-    local canvas = CreateFrame("Frame", nil, f)
-    canvas:SetAllPoints()
-    canvas:SetFrameLevel(f:GetFrameLevel() + 5)
-    f.canvas = canvas
-    f.pool = UI.NewPool(canvas)
-    local open = UI.InkButton(canvas, L["Open the diary"], function()
-        f:Hide()
-        UI:OpenAt("diary")
-    end, 15, c.redInk)
-    open:SetPoint("BOTTOM", 0, 52)
-    local close = UI.InkButton(canvas, L["Close"], function() f:Hide() end, 13, c.inkSoft)
-    close:SetPoint("BOTTOMLEFT", 30, 20)
-    -- the look back can be switched off right here (it is also in the options)
-    local never = UI.InkButton(canvas, L["Do not show again"], function()
-        if WFD.S then WFD.S.recap = false end
-        f:Hide()
-    end, 13, c.inkFaint)
-    never:SetPoint("BOTTOM", 0, 20)
-    -- the week as one line in the chat's input field: it is only sent when you press Enter yourself
-    local share = UI.InkButton(canvas, L["Into the chat"], function()
-        local s = f.stats
-        if not s or not ChatFrame_OpenChat then return end
-        ChatFrame_OpenChat(format(L["My week: %d kills, %d quests, %s km, %d levels, %d new places."],
-            s.kills, s.quests, WFD:Dec(s.km), #s.levels, s.places))
-    end, 13, c.inkSoft)
-    share:SetPoint("BOTTOMRIGHT", -30, 20)
-    f:Hide()
-    return f
-end
-
--- force: show the last seven days even if this week's look back was already shown
+-- force: open the look back at once (/wfd recap)
 function UI:ShowRecap(force)
-    local C = WFD.C
-    if not C then return end
-    local today = WFD:DayIndex()
-    local from, to = max(1, today - 7), force and today or (today - 1)
-    if to < from then return end
-    local s = weekStats(from, to)
-    if s.days == 0 and not force then return end
-    recap = recap or buildRecap()
-    recap.stats = s
-    local pool, canvas = recap.pool, recap.canvas
-    pool:Begin()
-    local W = RW - 64
-
-    local t = pool:Text(26, c.ink, UI.HEAD, "CENTER")
-    t:SetText(L["The week in review"])
-    UI.FitText(t, RW - 70, 26, 16)
-    t:SetPoint("TOP", canvas, "TOP", 0, -26)
-    local sub = pool:Text(9, c.redInk, UI.FONT, "CENTER")
-    sub:SetText((date(WFD.loc.date, WFD:DayTime(from)) .. "  -  " .. date(WFD.loc.date, WFD:DayTime(to))):upper())
-    sub:SetPoint("TOP", canvas, "TOP", 0, -60)
-    UI.PageDivider(pool, canvas, RW / 2, -78, 200)
-
-    -- six figures in two rows
-    local figs = {
-        { s.kills, L["Creatures slain"] }, { s.quests, L["Quests"] }, { #s.levels > 0 and ("+" .. #s.levels) or "0", L["Levels"] },
-        { WFD:Dec(s.km), L["Kilometres"] }, { s.places, L["New places"] }, { s.deaths, L["Deaths"] },
-    }
-    local tw = (W - 16) / 3
-    for i, fg in ipairs(figs) do
-        local col = (i - 1) % 3
-        local row = floor((i - 1) / 3)
-        local x = 32 + col * (tw + 8)
-        local y = -94 - row * 56
-        local bg = pool:Rect(c.paperDk, 0.45)
-        bg:SetSize(tw, 48)
-        bg:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, y)
-        local v = pool:Text(18, (i == 6 and s.deaths > 0) and c.redInk or c.ink, UI.HEAD, "CENTER")
-        v:SetText(tostring(fg[1]))
-        v:SetWidth(tw)
-        v:SetPoint("TOP", bg, "TOP", 0, -4)
-        local l = pool:Text(9, c.inkSoft, UI.FONT, "CENTER")
-        l:SetText(fg[2]:upper())
-        l:SetWidth(tw - 6)
-        l:SetWordWrap(true)
-        if l.SetMaxLines then l:SetMaxLines(2) end        -- a long label takes a second line instead of being cut off
-        l:SetPoint("TOP", bg, "TOP", 0, -25)
-    end
-
-    -- the highlights
-    local lines = {}
-    if #s.zones > 0 then lines[#lines + 1] = { L["New regions"], list3(s.zones) } end
-    if #s.marks > 0 then lines[#lines + 1] = { L["Landmarks"], list3(s.marks) } end
-    if #s.honours > 0 then lines[#lines + 1] = { L["Honours"], list3(s.honours) } end
-    if s.best then lines[#lines + 1] = { L["Best day"], format(L["Day %d"], s.best) .. "  -  " .. WFD:Count("%d kills", s.bestK) } end
-    if #lines == 0 then lines[1] = { L["A quiet week"], L["The book waits for new stories."] } end
-    local y = -218
-    for i = 1, min(4, #lines) do
-        local k = pool:Text(10, c.redInk, UI.FONT)
-        k:SetText(lines[i][1]:upper())
-        k:SetPoint("TOPLEFT", canvas, "TOPLEFT", 32, y)
-        local v = pool:Text(12, c.ink, UI.FONT)
-        v:SetText(lines[i][2])
-        v:SetWidth(W)
-        v:SetWordWrap(false)
-        v:SetPoint("TOPLEFT", canvas, "TOPLEFT", 32, y - 12)
-        -- a long list is cut off at the edge: the hover shows all of it
-        local hot = pool:Hot({ lines[i][1], lines[i][2] }, nil)
-        hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", 30, y + 2)
-        hot:SetSize(W + 4, 30)
-        y = y - 34
-    end
-    pool:End()
-    recap:Show()
-    UI.Sound("IG_SPELLBOOK_OPEN", 829)
+    if force then self:OpenShell({ view = "recap", week = 0 }) return end
+    local from, to = WFD:WeekRange(1)
+    if to < from or weekStats(from, to).days == 0 then return false end
+    self:Toast({ k = "recap", title = weekTitle(from, to), t = time(), quiet = true })
+    return true
 end
 
--- once a calendar week, a few seconds after logging in
+-- once a calendar week, a few seconds after logging in; the memory of the day waits for another login then
 WFD:OnInit(function()
     if not (C_Timer and C_Timer.After) then return end
     C_Timer.After(8, function()
@@ -696,9 +541,8 @@ WFD:OnInit(function()
         if not C or WFD.paused or (S and S.recap == false) then return end
         local week = date("%Y-%W")
         if C.recapWeek == week then return end
-        local today = WFD:DayIndex()
-        if today <= 1 then return end
+        if WFD:DayIndex() <= 1 then return end
         C.recapWeek = week
-        UI:ShowRecap(false)
+        if UI:ShowRecap(false) then UI.recapToday = true end
     end)
 end)

@@ -451,3 +451,48 @@ UI.CollectionView({
         return L["Nothing matches this choice."]
     end,
 })
+
+------------------------------------------------------------------------
+-- The week in review: a calendar week, with the week before and after
+------------------------------------------------------------------------
+UI.ReportView({
+    key = "recap", label = "The week in review", group = "chronicle",
+    fill = function(rp, v)
+        local R = UI.Router
+        local week = v.route and v.route.week or 1
+        if week < 0 then week = 0 end
+        local from, to = WFD:WeekRange(week)
+        local s = UI.WeekStats(from, to)
+        rp:Kicker(L["Chronicle"])
+        rp:Title(L["The week in review"], "display")
+        rp:Text(UI.WeekTitle(from, to), "soft", "small", 10)
+        rp:Tiles({
+            { s.kills, L["Creatures slain"] }, { s.quests, L["Quests"] },
+            { #s.levels > 0 and ("+" .. #s.levels) or "0", L["Levels"] },
+            { WFD:Dec(s.km), L["Kilometres"] }, { s.places, L["New places"] },
+            { s.deaths, L["Deaths"], nil, s.deaths > 0 and "neg" or nil },
+        }, 3)
+        if s.days == 0 then rp:Text(L["The book waits for new stories."], "soft", "body") end
+        if s.best then
+            rp:Line({ name = L["Best day"], sub = format(L["Day %d"], s.best) .. "  -  " .. WFD:Count("%d kills", s.bestK),
+                icon = UI.Icon("bestiary"), col = { 0.62, 0.10, 0.06 }, go = UI.DayGo(s.best) })
+        end
+        -- every one of them, nothing is cut off
+        if #s.zones > 0 then rp:Head(L["New regions"], tostring(#s.zones)) rp:Bullets(s.zones) end
+        if #s.marks > 0 then rp:Head(L["Landmarks"], tostring(#s.marks)) rp:Bullets(s.marks) end
+        if #s.honours > 0 then rp:Head(L["Honours"], tostring(#s.honours)) rp:Bullets(s.honours) end
+        rp:Gap(10)
+        rp:Button(L["Week before"], function() R.Go({ view = "recap", week = week + 1 }, { noHistory = true }) end, "ghost")
+        if week > 0 then
+            rp:Button(L["Week after"], function() R.Go({ view = "recap", week = week - 1 }, { noHistory = true }) end, "ghost")
+        end
+        -- the week as one line in the chat's input field: it is only sent when you press Enter yourself
+        if ChatFrame_OpenChat then
+            rp:Button(L["Into the chat"], function()
+                ChatFrame_OpenChat(format(L["My week: %d kills, %d quests, %s km, %d levels, %d new places."],
+                    s.kills, s.quests, WFD:Dec(s.km), #s.levels, s.places))
+            end, "ghost")
+        end
+    end,
+})
+

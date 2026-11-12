@@ -14,7 +14,7 @@ UI.NAV = {
     { key = "start", label = "Start", icon = "time", route = { view = "start" } },
     { key = "diary", label = "Diary", icon = "quill", parts = { "diary", "quests", "memoriam" } },
     { key = "chronicle", label = "Chronicle", icon = "records", old = "grp_chronicle",
-        parts = { "milestones", "firsts", "records", "levels", "yearbook", "gallery" } },
+        parts = { "milestones", "firsts", "records", "levels", "yearbook", "recap", "gallery" } },
     { key = "goals", label = "Goals and honour", icon = "album", old = "grp_goals", parts = { "tasks", "collection", "honour" } },
     { key = "world", label = "The world", icon = "atlas", old = "grp_world", parts = { "atlas", "landmarks", "runs" } },
     { key = "hunt", label = "Hunt and loot", icon = "beast", old = "grp_hunt", parts = { "bestiary", "fishbook", "fishwaters", "treasures", "fates" } },

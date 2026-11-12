@@ -942,3 +942,77 @@ function K.Corners(f, size, inset)
     end)
     return f
 end
+
+------------------------------------------------------------------------
+-- A floating window beside the game, in the style of the travel desk: the panel of the style with a gold edge,
+-- a title that can be dragged, a close button. Its place is kept (WFD.S.floatPos[name]); Escape closes it.
+-- f.body is the frame to fill (below the title).
+------------------------------------------------------------------------
+function K.Floating(name, w, h, title)
+    local gname = "WoWForeverDiary" .. name
+    local f = K.Box(UIParent, "panel", "gold")
+    _G[gname] = f
+    tinsert(UISpecialFrames, gname)
+    f:SetSize(w, h)
+    f:SetFrameStrata("DIALOG")
+    f:SetClampedToScreen(true)
+    f:EnableMouse(true)
+    f:SetMovable(true)
+    K.Material(f, "dark")
+    K.Corners(f)
+    -- a soft shadow below and to the right
+    local sh = UI.Fill(f, { 0, 0, 0 }, "BACKGROUND", -8, 0.35)
+    sh:SetPoint("TOPLEFT", 4, -6)
+    sh:SetPoint("BOTTOMRIGHT", 4, -6)
+    f.title = K.Text(f, "heading", "railTitle")
+    f.title:SetPoint("TOPLEFT", 16, -14)
+    f.title:SetPoint("RIGHT", f, "RIGHT", -46, 0)
+    f.title:SetWordWrap(false)
+    f.title:SetText(title or "")
+    f.close = K.IconButton(f, "close", nil, function() f:Hide() end, 26)
+    f.close:SetFlat(true)
+    f.close:SetPoint("TOPRIGHT", -10, -9)
+    f.rule = K.GoldRule(f, false)
+    f.rule:SetPoint("TOPLEFT", 12, -42)
+    f.rule:SetPoint("TOPRIGHT", -12, -42)
+    f.body = CreateFrame("Frame", nil, f)
+    f.body:SetPoint("TOPLEFT", 16, -54)
+    f.body:SetPoint("BOTTOMRIGHT", -16, 14)
+    -- dragged by its title
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", function(s) s:StartMoving() end)
+    f:SetScript("OnDragStop", function(s)
+        s:StopMovingOrSizing()
+        local p, _, rp, x, y = s:GetPoint(1)
+        if WFD.S and p then
+            WFD.S.floatPos = WFD.S.floatPos or {}
+            WFD.S.floatPos[name] = { p, rp, x, y }
+        end
+    end)
+    function f:Place(dx, dy)
+        local p = WFD.S and WFD.S.floatPos and WFD.S.floatPos[name]
+        self:ClearAllPoints()
+        if p then self:SetPoint(p[1], UIParent, p[2], p[3], p[4])
+        else self:SetPoint("CENTER", UIParent, "CENTER", dx or 0, dy or 0) end
+    end
+    f:Place()
+    f:Hide()
+    return f
+end
+
+-- an edit field in the style of the desk (one line)
+function K.Edit(parent, w)
+    local e = K.Box(parent, "inset", "line", "EditBox")
+    e:SetSize(w or 200, 30)
+    e:SetAutoFocus(false)
+    e:SetTextInsets(8, 8, 0, 0)
+    e:SetFontObject(ChatFontNormal)
+    Skin.Add(e, function(s)
+        local font, size = UI.TypeFont("body")
+        s:SetFont(font, size, "")
+        s:SetTextColor(Tok("ink"))
+    end)
+    e:SetScript("OnEditFocusGained", function(s) s:SetSurface("inset", "gold") end)
+    e:SetScript("OnEditFocusLost", function(s) s:SetSurface("inset", "line") end)
+    return e
+end
