@@ -85,16 +85,6 @@ local function collection()
     return arr
 end
 
--- The album itself is a view of the travel desk now (UI/Views/Albums.lua). The book keeps the waters and the
--- tackle on a page of their own.
-UI:RegisterSection({
-    key = "fishwaters", label = "Waters and tackle", icon = "fish", order = 33,
-    enabled = function() local C = WFD.C return next(C.catchZone or {}) ~= nil or next(C.tackle or {}) ~= nil end,
-    build = function(book)
-        book.fishWaters = book:Add({ kind = "fishwaters", numbered = true, head = L["Waters and tackle"] }).index
-    end,
-})
-
 -- for the album on the travel desk
 UI.CatchCollection = collection
 UI.CATCH_CARD_W, UI.CATCH_CARD_H = CARD_W, CARD_H
@@ -189,82 +179,6 @@ local function drawCard(pool, canvas, x, y, a)
 end
 
 UI.DrawCatchCard = drawCard
-
-------------------------------------------------------------------------
-UI:RegisterRenderer("fishwaters", function(pool, page, side, canvas)
-    local C = WFD.C
-    local tx, tw = UI.TextX(side), UI.TextW()
-    local y = UI.PageTitle(pool, canvas, side, L["Waters and tackle"], L["Where it bites, and what you fished with"], -56)
-
-    local waters = {}
-    for map, z in pairs(C.catchZone or {}) do
-        if (z.casts or 0) > 0 then waters[#waters + 1] = { map = map, z = z } end
-    end
-    table.sort(waters, function(a, b) return a.z.casts > b.z.casts end)
-    UI.SectionHead(pool, canvas, tx, tw, y + 18, 32, L["Waters"], tostring(#waters))
-    y = y - 22
-    for i = 1, min(5, #waters) do
-        local w = waters[i]
-        local nm = pool:Text(12, c.ink, UI.FONT)
-        nm:SetText(WFD:MapName(w.map) or "?")
-        nm:SetWordWrap(false)
-        nm:SetWidth(tw * 0.42)
-        nm:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 2, y - 2)
-        local rate = min(1, (w.z.loot or 0) / max(1, w.z.casts))
-        local cnt = pool:Text(10, c.inkSoft, UI.FONT, "RIGHT")
-        cnt:SetText(WFD:Count("%d caught in %d casts", w.z.loot or 0, w.z.casts))
-        cnt:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 2)
-        local bx = tx + tw * 0.42 + 8
-        local bw = tx + tw - max(90, cnt:GetStringWidth() + 8) - bx - 6
-        if bw > 12 then UI.ProgressBar(pool, canvas, bx, y - 6, bw, 5, rate, c.redInk) end
-        local hot = pool:Hot({ WFD:MapName(w.map) or "?", WFD:Count("%d caught in %d casts", w.z.loot or 0, w.z.casts) })
-        hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 1)
-        hot:SetSize(tw, 20)
-        y = y - 22
-    end
-    if #waters == 0 then
-        local e = pool:Text(13, c.inkFaint, UI.FONT, "CENTER")
-        e:SetText(L["Nothing has bitten yet."])
-        e:SetWidth(tw)
-        e:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y - 6)
-        y = y - 30
-    end
-
-    y = y - 14
-    local rods = {}
-    for id, r in pairs(C.tackle or {}) do rods[#rods + 1] = { id = id, r = r } end
-    table.sort(rods, function(a, b) return (a.r.n or 0) > (b.r.n or 0) end)
-    UI.SectionHead(pool, canvas, tx, tw, y + 18, 32, L["Tackle"], tostring(#rods))
-    y = y - 22
-    for i = 1, min(6, #rods) do
-        local r = rods[i].r
-        local fallback = TACKLE_ICONS[r.kind or "rod"] or TACKLE_ICONS.rod
-        local ic = pool:Icon(instantIcon(rods[i].id) or (r.link and WFD:ItemIcon(r.link)) or UI.IconPath(fallback, "loot"), 18)
-        ic:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 1, y)
-        local cnt = pool:Text(10, c.inkSoft, UI.FONT, "RIGHT")
-        cnt:SetText(L[TACKLE_LABEL[r.kind or "rod"] or "Fishing pole"] .. "  -  " .. WFD:Count("%d casts", r.n or 0))
-        cnt:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw, y - 3)
-        -- the name takes what the kind and the casts leave free
-        local nm = pool:Text(12, c.ink, UI.FONT)
-        nm:SetText(r.name or "?")
-        nm:SetWordWrap(false)
-        nm:SetWidth(max(60, tw - 26 - cnt:GetStringWidth() - 10))
-        nm:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 26, y - 2)
-        local hot = pool:Hot(nil, nil, r.link)
-        hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y + 1)
-        hot:SetSize(tw, 22)
-        y = y - 24
-    end
-    if #rods == 0 then
-        local e = pool:Text(12, c.inkFaint, UI.FONT)
-        e:SetText(L["No fishing pole seen yet."])
-        e:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 2, y - 2)
-        y = y - 22
-    end
-    y = y - 8
-    UI.LeaderLine(pool, canvas, tx, y, tw, L["Casts with a lure"], tostring(C.catchLured or 0), 13, c.inkSoft)
-    UI.LeaderLine(pool, canvas, tx, y - 20, tw, L["Casts in all"], tostring(C.catchCasts or 0), 13, c.inkSoft)
-end)
 
 -- the picture and the kind of a piece of tackle (the waters and tackle on the travel desk)
 function UI.TackleLook(id, r)

@@ -30,7 +30,7 @@ end
 -- fn: a page of the book (a function that finds it), or a route of the travel desk ({ view = "honour" })
 local function openAt(fn)
     if type(fn) == "table" then UI:OpenShell(fn) return end
-    UI:OpenBook(fn)
+    UI:OpenShell({ view = "diary" })
 end
 
 ------------------------------------------------------------------------

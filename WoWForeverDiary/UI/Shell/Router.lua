@@ -43,16 +43,14 @@ function UI.PartLabel(key)
     return s and WFD.L[s.label] or key
 end
 
--- the parts of a group that are in the book now
+-- the parts of a group that are there (a part that only shows when it has something asks PART_ENABLED)
 function UI.PartsOf(g)
     local out = {}
-    local book = UI.book
     for _, key in ipairs(g.parts or {}) do
-        local s = UI.SectionOf(key)
-        local there = key == "diary" or (UI.PART_VIEW and UI.PART_VIEW[key]) or (book and book.sectionStart[key])
+        local there = UI.PART_VIEW and UI.PART_VIEW[key] ~= nil
         local en = UI.PART_ENABLED and UI.PART_ENABLED[key]
-        if en then there = there and en() end
-        if there and (key == "diary" or not s or not s.enabled or s.enabled()) then out[#out + 1] = key end
+        if there and en then there = en() and true or false end
+        if there then out[#out + 1] = key end
     end
     return out
 end
@@ -74,17 +72,10 @@ local MAX = 40
 
 local function same(a, b)
     if not a or not b or a.view ~= b.view then return false end
-    if a.view == "legacy" then return a.page == b.page end
     return a.section == b.section and a.group == b.group and a.key == b.key and a.map == b.map and a.cont == b.cont and a.day == b.day
 end
 
--- the place of the book that is open right now, so the way back leads to the very spread
-local function snapshot(route)
-    if route and route.view == "legacy" and UI.spread and UI.spread > 0 then
-        return { view = "legacy", page = UI.spread * 2 - 1, part = route.part }
-    end
-    return route
-end
+local function snapshot(route) return route end
 
 local listeners = {}
 function R.OnChange(fn) listeners[#listeners + 1] = fn end
@@ -105,18 +96,10 @@ function R.Go(route, opts)
     changed()
 end
 
-function R.CanBack()
-    return #R.back > 0 or (R.cur and R.cur.view == "legacy" and UI.history and #UI.history > 0)
-end
+function R.CanBack() return #R.back > 0 end
 function R.CanForward() return #R.fwd > 0 end
 
--- inside the book, back first turns back the pages that were opened by links; then the views
 function R.Back()
-    if R.cur and R.cur.view == "legacy" and UI.history and #UI.history > 0 then
-        UI:Back()
-        changed()
-        return
-    end
     local to = table.remove(R.back)
     if not to then return end
     R.fwd[#R.fwd + 1] = snapshot(R.cur)
@@ -152,8 +135,7 @@ function UI.PartRoute(key)
         return r
     end
     if pv then return { view = pv } end
-    if key == "diary" then return { view = "legacy", part = "diary", page = function() return UI:TodayPage() end } end
-    return { view = "legacy", part = key, page = function(book) return book.sectionStart[key] end }
+    return { view = "start" }
 end
 
 -- the route of a group: Start for Start, the days of the diary, else the overview of the group on the desk

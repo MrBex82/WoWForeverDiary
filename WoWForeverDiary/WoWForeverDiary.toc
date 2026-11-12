@@ -80,9 +80,6 @@ UI\PagesFishing.lua
 UI\PagesExtra.lua
 UI\PagesExplore.lua
 UI\PagesChronicle.lua
-UI\PagesKeepsakes.lua
-UI\PagesLibrary.lua
-UI\PagesYearbook.lua
 UI\Cards.lua
 UI\Toast.lua
 UI\Export.lua
@@ -92,7 +89,6 @@ UI\Moving.lua
 UI\Companion.lua
 UI\Shell\Router.lua
 UI\Shell\Shell.lua
-UI\Views\Legacy.lua
 UI\Views\Start.lua
 UI\Views\Diary.lua
 UI\Views\Settings.lua

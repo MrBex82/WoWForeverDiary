@@ -155,8 +155,7 @@ local function openPlace()
     if cur.view == "group" then return cur.group end
     local place = UI.VIEW_PLACE and UI.VIEW_PLACE[cur.view]
     if place then return place[1], place[2] end
-    if cur.view ~= "legacy" then return nil end
-    return S.bookGroup, S.bookPart
+    return nil
 end
 
 function UI:RefreshRail()
@@ -309,7 +308,6 @@ end
 local function showResults()
     local res = S.results
     local text = S.search:GetText() or ""
-    if not UI.book then UI:Paginate() end
     local hits, q = UI.Search.Find(text, res.kind)
     local typed = #text >= 2 or #hits > 0
     if not typed then res:Hide() return end
@@ -657,10 +655,9 @@ function UI:BuildShell()
         acc = acc + dt
         if acc < 10 then return end
         acc = 0
-        if UI.bookFrame:IsShown() or not WFD.dirty or h:IsMouseOver() or UI.noteFocus then return end
+        if not WFD.dirty or h:IsMouseOver() or UI.noteFocus then return end
         WFD.dirty = false
-        UI.storyCache[WFD:NumDays()] = nil
-        UI:Paginate()
+        if UI.storyCache then UI.storyCache[WFD:NumDays()] = nil end
         local v = R.cur and views[R.cur.view]
         if v and v.Refresh then v:Refresh(true) end      -- true: keep the place the reader scrolled to
         UI:RefreshRail()
@@ -712,21 +709,6 @@ function UI:ShowRoute(route)
     self:RefreshHead()
 end
 
--- the book tells which part it shows; the register and the head bar follow
-function UI:OnSpreadShown(s)
-    if not S or not self.inShell then return end
-    local page = self.book and self.book.pages[s * 2 - 1]
-    local key = page and page.section
-    if key == "toc" or not key then
-        local right = self.book and self.book.pages[s * 2]
-        key = right and right.section or key
-    end
-    S.bookPart = key
-    S.bookGroup = key and (UI.NAV_OF_PART[key] or (key == "diary" and "diary")) or nil
-    self:RefreshRail()
-    self:RefreshHead()
-end
-
 -- the view object of a key, once it was built (for the load test)
 function UI.ViewInstance(key) return views[key] end
 
@@ -754,11 +736,8 @@ function UI:OpenShell(route)
         self:SetHolderMode("shell")
         self.holder:Show()
         UI.Sound("IG_SPELLBOOK_OPEN", 829)
-        -- Start and the search need the book laid out (the book itself lays itself out when it is opened)
-        if (WFD.dirty or not self.book) and not (route and route.view == "legacy") then
-            WFD.dirty = false
-            self:Paginate()
-        end
+        WFD.dirty = false
+        if self.storyCache then self.storyCache[WFD:NumDays()] = nil end
         self.history = {}
         R.Reset()
         R.cur = nil
@@ -769,8 +748,8 @@ end
 
 function UI:OpenStart() self:OpenShell({ view = "start" }) end
 
--- the old ways into the book lead onto the desk
-function UI:OpenBook(page) self:OpenShell({ view = "legacy", page = page }) end
+-- the old ways into the book lead to the diary
+function UI:OpenBook() self:OpenShell({ view = "diary" }) end
 function UI:OpenSettings() self:OpenShell({ view = "settings" }) end
 
 local show0 = UI.Show
@@ -792,19 +771,11 @@ function UI:Toggle()
     end
 end
 
--- a link on a page of the book that is not on the desk yet: the book is laid open first
-local goto0 = UI.GoToPage
-function UI:GoToPage(index)
-    if self.inShell and not (R.cur and R.cur.view == "legacy") then
-        R.Go({ view = "legacy", page = index })
-        return
-    end
-    goto0(self, index)
-end
+function UI:GoToPage() self:OpenShell({ view = "diary" }) end
 
 function UI:OnDataSwitched()
     if not S or not self.inShell then return end
-    if not self.bookFrame:IsShown() then self:Paginate() end
+    self.storyCache = {}
     local v = R.cur and views[R.cur.view]
     if v and v.Refresh then v:Refresh() end
     self:RefreshRail()

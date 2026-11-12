@@ -29,34 +29,25 @@ end
 ------------------------------------------------------------------------
 -- The index, built when the panel opens (and again after the book changed)
 ------------------------------------------------------------------------
-local index, indexBook
+local index, indexAt
 
 local function buildIndex()
-    local book, C = UI.book, WFD.C
+    local C = WFD.C
     local out = {}
     local function add(kind, text, icon, go, hay, rank)
         if not text or text == "" then return end
         out[#out + 1] = { kind = kind, text = text, icon = icon, go = go, hay = lower(hay or text), rank = rank or 5 }
     end
-    local function toPage(p) return p and function() UI:GoToPage(p) end end
     -- the card beside its album or register on the travel desk
     local VIEW_OF = { creature = "bestiary", catch = "fishbook", person = "people" }
     local function toCard(kind, key)
         return function() UI:OpenShell({ view = VIEW_OF[kind], key = key }) end
     end
     local function toView(view) return function() UI:OpenShell({ view = view }) end end
-    -- parts of the book and chapters, as in the contents
-    for _, p in ipairs(book.pages) do
-        if p.kind == "toc" then
-            for _, e in ipairs(p.entries or {}) do
-                if not e.header and e.page then add("part", e.text, e.icon and UI.Icon(e.icon) or UI.Icon("journal"), toPage(e.page), nil, 1) end
-            end
-        end
-    end
-    -- the parts that are views of the travel desk
+    -- the parts of the travel desk
     for _, g in ipairs(UI.NAV or {}) do
-        for _, key in ipairs(g.parts or {}) do
-            if UI.PART_VIEW and UI.PART_VIEW[key] and not book.sectionStart[key] then
+        for _, key in ipairs(UI.PartsOf(g)) do
+            if UI.PART_VIEW and UI.PART_VIEW[key] then
                 add("part", UI.PartLabel(key), UI.Icon(g.icon or "journal"), function() UI:OpenShell(UI.PartRoute(key)) end, nil, 1)
             end
         end
@@ -127,7 +118,7 @@ local function buildIndex()
                 zone = zone, zoneLow = zone and lower(zone) or "", level = WFD:LevelAt(WFD:DayTime(d) + 43000) }
         end
     end
-    index, indexBook = out, book
+    index, indexAt = out, time()
 end
 
 -- a few words around the match, cut at word ends and never inside a letter
@@ -170,7 +161,8 @@ local function find(q, kind)
     filters, q = parseFilters(q)
     if not filters and #q < 2 then return {} end
     if filters then kind = "day" end
-    if not index or indexBook ~= UI.book then buildIndex() end
+    -- built again when it is older than half a minute (the diary grows while you play)
+    if not index or not indexAt or time() - indexAt > 30 then buildIndex() end
     local hits = {}
     local today = WFD:NumDays()
     for _, e in ipairs(index) do

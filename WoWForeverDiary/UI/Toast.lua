@@ -19,15 +19,7 @@ function UI:OpenAt(target)
     if type(target) == "number" then
         return self:OpenShell({ view = "diary", day = UI.DayGo(target) and target or nil })
     end
-    self:OpenBook(function(b)
-        local page
-        if type(target) == "number" then
-            page = b.dayPage[target]
-        elseif target then
-            page = b.sectionStart[target]
-        end
-        return page or self:TodayPage()
-    end)
+    self:OpenShell({ view = "start" })
 end
 
 -- the words that open a part with "/wfd <word>": the key of the part, in English and German
