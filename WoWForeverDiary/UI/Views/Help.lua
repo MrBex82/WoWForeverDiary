@@ -9,19 +9,18 @@ local max, min = math.max, math.min
 local function sections()
     return {
         { L["Keys while the mouse is over the window"], {
-            { L["Arrow keys, Page up / down"], L["turn the page"] },
+            { L["Arrow keys, Page up / down"], L["turn the days of the diary"] },
             { L["Backspace"], L["back"] },
             { L["Home"], L["Start"] },
             { L["End"], L["today's entry"] },
-            { L["Ctrl + F"], L["search the book"] },
+            { L["Ctrl + F"], L["search the diary"] },
             { L["Escape"], L["closes what lies on top, then the window"] },
         } },
         { L["Mouse"], {
-            { L["Mouse wheel on the book"], L["turn the page"] },
             { L["Ctrl + mouse wheel"], L["size of the window"] },
             { L["Corner at the bottom right"], L["drag to change the size of the window"] },
             { L["Head bar"], L["drag to move the window"] },
-            { L["Click the folded corner"], L["bookmark"] },
+            { L["Button below a day"], L["bookmark"] },
             { L["Right-click a bookmark in the register"], L["removes it"] },
         } },
         { L["Commands"], {

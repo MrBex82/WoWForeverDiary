@@ -11,13 +11,6 @@ local TEAL = { 0.30, 0.66, 0.62, 1 }
 local GREEN = UI.c.good
 local GOLD = { 0.86, 0.62, 0.18, 1 }
 
-local function goTo(key)
-    return function()
-        local p = UI.book and UI.book.sectionStart[key]
-        if p then UI:GoToPage(p) end
-    end
-end
-
 ------------------------------------------------------------------------
 -- Everything worth collecting, counted once per build of the book
 ------------------------------------------------------------------------
