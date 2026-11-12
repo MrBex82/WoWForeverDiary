@@ -71,6 +71,9 @@ local function refreshZone()
     WFD.subName = sub
     local C = WFD.C
     if not C or WFD.paused or not zone or zone == "" then return end
+    -- flying over a land on a flight path is no visit: nothing is discovered or recorded until you land
+    -- (the flight tracking checks the zone again as soon as the flight ends)
+    if UnitOnTaxi and UnitOnTaxi("player") then return end
 
     if not C.startZone then C.startZone = zone end
     local same = knownAs(C, zone)
@@ -117,6 +120,8 @@ local function refreshZone()
     end
     WFD.dirty = true
 end
+
+WFD.RefreshZone = refreshZone
 
 for _, ev in ipairs({ "ZONE_CHANGED", "ZONE_CHANGED_INDOORS", "ZONE_CHANGED_NEW_AREA" }) do
     WFD:On(ev, refreshZone)

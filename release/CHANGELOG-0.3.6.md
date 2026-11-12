@@ -11,6 +11,8 @@
   lumber mill in Warsong Gulch). Such entries are moved back to their instance once when you log in.
 - In some dungeons the game keeps secret what creatures look like, even for addons. Their bestiary cards now say
   "No portrait" clearly instead of looking empty, and the card tells you why.
+- Flying over a region on a flight path no longer counts as discovering it. Regions are recorded only on the
+  ground, and the region you land in is checked right away.
 - The atlas also knows a region by its map now, so Stormwind is ticked off too (the map of the German client
   names it in English).
 
@@ -25,5 +27,7 @@
   das Sägewerk in der Warsongschlucht). Solche Einträge werden beim Einloggen einmal in ihre Instanz zurückgeführt.
 - In manchen Dungeons hält das Spiel geheim, wie Kreaturen aussehen, auch vor Addons. Ihre Karten im Bestiarium
   zeigen jetzt deutlich „Kein Porträt“, statt leer zu wirken, und die Karte erklärt den Grund.
+- Wer auf einer Flugroute über ein Gebiet fliegt, entdeckt es nicht mehr. Gebiete werden nur am Boden erfasst,
+  und das Gebiet, in dem du landest, wird sofort geprüft.
 - Der Atlas erkennt ein Gebiet jetzt auch über seine Karte. So wird auch Sturmwind abgehakt (die Karte des
   deutschen Spiels nennt es auf Englisch).
