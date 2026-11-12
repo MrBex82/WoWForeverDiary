@@ -3,7 +3,6 @@ local ADDON, WFD = ...
 local L, loc = WFD:NewLocale("enUS")
 
 L["Distance travelled"] = "Distance traveled"
-L["The tabs on the right lead to the parts of the book, one colour for each group. Point at them to read their names. A red dot shows how much is new since you last read."] = "The tabs on the right lead to the parts of the book, one color for each group. Point at them to read their names. A red dot shows how much is new since you last read."
 L["%d more, then in colour"] = "%d more, then in color"
 
 -- the remaining diary templates fall back to the English defaults in Narrator.lua
@@ -16,7 +15,6 @@ loc.narrator = {
     },
 }
 L["Book of honour"] = "Book of honor"
-L["%d of %d honour tiers reached"] = "%d of %d honor tiers reached"
 L["Walk %d kilometres."] = "Walk %d kilometers."
 L["Honour points"] = "Honor points"
 L["A secret honour. Keep exploring!"] = "A secret honor. Keep exploring!"
@@ -37,4 +35,3 @@ L["First honour"] = "First honor"
 L["Walk one kilometre today."] = "Walk one kilometer today."
 L["A sketch: %d more and it is in colour."] = "A sketch: %d more and it is in color."
 L["Scales like armour. Mind the tail."] = "Scales like armor. Mind the tail."
-L["Right-click an earned honour in the book of honour to show it here."] = "Right-click an earned honor in the book of honor to show it here."
