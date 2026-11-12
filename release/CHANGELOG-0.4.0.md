@@ -38,6 +38,8 @@ changed since 0.3, in short.
   ground, and the region you land in is checked right away.
 - Maps that name a region in another language than the game (for example "Stormwind" on a German client) now use
   the name the game gave the region, so region pages find their districts and visits again.
+- The first time you discover a place inside a region you know, a small note shows it, with the region below
+  (only with all notes switched on, without a screenshot, not while flying).
 - Long notes no longer run out of their box: the notes card grows with your text, and the page follows the cursor
   while you write.
 - Screenshots at milestones are now off by default. Switch them on in the settings or with "/wfd shot".
@@ -81,6 +83,8 @@ changed since 0.3, in short.
   und das Gebiet, in dem du landest, wird sofort geprüft.
 - Karten, die ein Gebiet in einer anderen Sprache nennen als das Spiel („Stormwind“ im deutschen Spiel), nehmen
   jetzt den Namen, den das Spiel dem Gebiet gab. So finden Gebietsseiten ihre Bezirke und Besuche wieder.
+- Entdeckst du zum ersten Mal einen Ort in einem bekannten Gebiet, zeigt eine kleine Meldung den Ort und darunter
+  das Gebiet (nur wenn alle Meldungen an sind, ohne Screenshot, nicht im Flug).
 - Lange Notizen laufen nicht mehr aus ihrem Feld: Die Notizkarte wächst mit deinem Text, und die Seite folgt beim
   Schreiben dem Cursor.
 - Screenshots bei Meilensteinen sind jetzt standardmäßig aus. In den Einstellungen oder mit „/wfd shot“ lassen sie

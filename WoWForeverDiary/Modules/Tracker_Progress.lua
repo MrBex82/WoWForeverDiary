@@ -88,6 +88,7 @@ local function refreshZone()
     local z = C.zones[zone]
     -- a land already on record counts as announced, whatever the list says
     if z then C.announced = C.announced or {} C.announced[zone] = true end
+    local freshLand = not z
     if not z then
         z = { first = time(), day = WFD:DayIndex(), sub = {}, visits = 0 }
         C.zones[zone] = z
@@ -117,6 +118,9 @@ local function refreshZone()
         z.sub[sub] = time()
         C.subCount = (C.subCount or 0) + 1
         WFD:Log("sub", format(L["Discovered: %s (%s)"], sub, zone))
+        -- a small note for the new place; not when the whole land is new (that note says enough), and not for a
+        -- spot that carries the land's own name
+        if not freshLand and sub ~= zone then WFD:Signal("place", sub, zone) end
     end
     WFD.dirty = true
 end
