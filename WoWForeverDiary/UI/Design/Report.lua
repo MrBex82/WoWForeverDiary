@@ -497,3 +497,52 @@ function K.Report(parent)
     end
     return rp
 end
+
+------------------------------------------------------------------------
+-- A view that is one report on a sheet in the middle of the desk (records, the level timeline, the year book)
+-- def = { key, label (English key), group, part, width, fill = function(report, view) }
+------------------------------------------------------------------------
+function UI.ReportView(def)
+    UI.PART_VIEW[def.part or def.key] = def.key
+    UI.VIEW_PLACE[def.key] = { def.group, def.part or def.key }
+    UI.PART_LABEL[def.part or def.key] = def.label
+    UI:RegisterView({
+        key = def.key,
+        build = function(host)
+            local v = {}
+            v.sheet = K.Card(host)
+            v.report = K.Report(v.sheet)
+            v.report:SetPoint("TOPLEFT", v.sheet, "TOPLEFT", 12, -6)
+            v.report:SetPoint("BOTTOMRIGHT", v.sheet, "BOTTOMRIGHT", -12, 6)
+            function v:Fill()
+                local rp = self.report
+                rp:Begin()
+                local ok, err = pcall(def.fill, rp, self)
+                if not ok then WFD:Error("view " .. def.key, err) end
+                rp:End()
+            end
+            v.report.fill = function() v:Fill() end
+            function v:Arrange()
+                local W, H = self.w or host:GetWidth() or 0, self.h or host:GetHeight() or 0
+                if W <= 0 or H <= 0 then return end
+                local sw = min(W - 24, floor((def.width or 760) * max(1, UI.FONT_SCALE or 1)))
+                self.sheet:ClearAllPoints()
+                self.sheet:SetPoint("TOP", host, "TOP", 0, -12)
+                self.sheet:SetSize(sw, H - 24)
+            end
+            function v:Refresh() self:Arrange() self:Fill() end
+            function v:Show(route)
+                self.route = route
+                self:Refresh()
+                self.report.scroll:ScrollTo(0)
+            end
+            function v:Layout(w, h) self.w, self.h = w, h self:Arrange() end
+            UI.OnRestyle(function() if host:IsShown() then v:Refresh() end end)
+            function v:Head()
+                local g = UI.NAV_GROUP[def.group]
+                return L[def.label], g and L[g.label], g and UI.GroupRoute(g)
+            end
+            return v
+        end,
+    })
+end

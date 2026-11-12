@@ -104,4 +104,5 @@ UI\Views\Goals.lua
 UI\Views\World.lua
 UI\Views\Reports.lua
 UI\Views\People.lua
+UI\Views\Chronicle.lua
 UI\Views\Group.lua

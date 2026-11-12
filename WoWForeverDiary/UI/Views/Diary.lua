@@ -130,6 +130,7 @@ function UI.DayGo(day)
     return function() UI:OpenShell({ view = "diary", day = day }) end
 end
 function UI:OpenDay(day) local go = UI.DayGo(day) if go then go() end end
+function UI:GoToDay(day) self:OpenDay(day) end
 
 ------------------------------------------------------------------------
 -- The view
