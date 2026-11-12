@@ -78,6 +78,7 @@ local function build()
     _G.WoWForeverDiaryCompanion = f
     f:SetSize(W, 100)
     f:SetFrameStrata("MEDIUM")
+    f:SetFrameLevel(400)              -- above the quest trackers of other addons, below the window of the diary
     f:SetClampedToScreen(true)
     f:SetMovable(true)
     f:EnableMouse(true)

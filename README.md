@@ -19,7 +19,7 @@ Den Ordner `WoWForeverDiary` nach `World of Warcraft\_classic_era_\Interface\Add
 | `/wfd demo` | Beispieldaten nur im Speicher, zum Anschauen der Oberfläche |
 | `/wfd shot` | Screenshots bei Meilensteinen an oder aus |
 | `/wfd minimap` | Minimap-Button ein- oder ausblenden |
-| `/wfd recap` | Wochenrückblick anzeigen |
+| `/wfd recap` | Wochenrückblick öffnen (die Kalenderwoche, mit Woche davor und danach) |
 | `/wfd help` | Befehle im Chat auflisten |
 | `/wfd companion` | Begleitfenster neben dem Spiel ein- oder ausblenden |
 | `/wfd erinnerung` (oder `memory`) | Die Erinnerung von heute noch einmal als Notiz zeigen |
@@ -30,7 +30,7 @@ Den Ordner `WoWForeverDiary` nach `World of Warcraft\_classic_era_\Interface\Add
 
 Das Tagebuch öffnet sich in einem Fenster, dessen Größe du an der Ecke unten rechts ziehen kannst (Strg + Mausrad ändert die Größe von allem). Oben stehen Zurück und Vor, wo du gerade bist, die Suche, das „?“ mit allen Tasten und Befehlen und das Zahnrad für die Einstellungen. Links steht das Register mit den Gruppen; ein Klick zeigt ihre Teile, Neues hat eine kleine Zahl. Darunter stehen deine Lesezeichen. Ist das Fenster schmal, zeigt das Register nur die Symbole.
 
-- **Start:** der Tag bis jetzt in Zahlen und ein paar Zeilen, die Aufgaben, Neues seit dem letzten Lesen, eine Erinnerung an diesen Tag in einem früheren Jahr, das Reiseziel des Tages, die Ehrung, die du fast hast, und wie weit deine Sammlungen sind
+- **Start:** beim ersten Mal die Karte „Erste Schritte“ (Tag lesen, Lesezeichen setzen, suchen, Stil wählen, Begleiter zeigen), der Tag bis jetzt in Zahlen und ein paar Zeilen, die Aufgaben, Neues seit dem letzten Lesen, eine Erinnerung an diesen Tag in einem früheren Jahr, das Reiseziel des Tages, die Ehrung, die du fast hast, und wie weit deine Sammlungen sind
 - **Tagebuch:** ein Tag auf einer Seite zum Lesen, mit Kapitel und Datum, den Zahlen des Tages, der Erzählung, deiner eigenen Notiz, einem gemalten Moment, den Andenken und den Aufgaben; links Kapitel und Tage, „Gehe zu Tag“; Questbuch (offen, erledigt, abgebrochen; nach Gebiet oder neueste zuerst)
 - **Chronik:** Meilensteine als Zeitstrahl nach Tagen (mit Filtern), Premieren, Rekorde, Stufen-Zeitstrahl, Jahrbuch, Galerie als Bilderraster
 - **Ziele & Ruhm:** Aufgaben (Tag, Woche, Monat, eigene Ziele zum Abhaken), Sammlung, Ehrenbuch (Titel und Vitrine über eigene Knöpfe)
@@ -40,7 +40,7 @@ Das Tagebuch öffnet sich in einem Fenster, dessen Größe du an der Ecke unten 
 - **Andenken:** Bibliothek (Bücher, Notizen, Tafeln; der Text öffnet sich rechts daneben), Familienbuch, Zeitkapsel (Brief schreiben, versiegeln, später öffnen)
 - **Einstellungen** (Zahnrad): Allgemein, Aussehen, Bedienung, Daten. Stil und Schriftgröße wechseln sofort; das Fenster lässt sich sperren.
 
-Die Suche oben (oder Strg + F) durchsucht alles, mit Filtern nach Art (Tage, Personen, Kreaturen, Orte ...). Tage lassen sich zusätzlich eingrenzen: `z:Elwynn` (Gebiet), `lv:20-30` (Stufe), `d:30` (die letzten 30 Tage), auch zusammen mit Suchtext. Im Wochenrückblick schreibt „In den Chat“ eine Zeile ins Eingabefeld, abgeschickt wird sie erst mit Enter. Der Knopf „Lesezeichen setzen“ unter einem Tag merkt ihn dir (bis zu zwölf Lesezeichen, sie stehen im Register). Solange die Maus über dem Fenster ist, blättern die Pfeiltasten im Tagebuch von Tag zu Tag; Pos1 führt zu Start, Ende zum heutigen Eintrag, die Rücktaste zurück.
+Die Suche oben (oder Strg + F) durchsucht alles, mit Filtern nach Art (Tage, Personen, Kreaturen, Orte ...). Tage lassen sich zusätzlich eingrenzen: `z:Elwynn` (Gebiet), `lv:20-30` (Stufe), `d:30` (die letzten 30 Tage), auch zusammen mit Suchtext. Der Wochenrückblick steht in der Chronik; einmal pro Woche meldet ein Hinweis beim Einloggen, dass er bereit ist. „In den Chat“ schreibt eine Zeile ins Eingabefeld, abgeschickt wird sie erst mit Enter. Meldungen erscheinen als kleine Karten (bis zu drei übereinander, mit X zum Schließen); kommen viele auf einmal, fasst eine Karte sie zusammen und führt zu Start. Das Begleitfenster zeigt den Tag in Kacheln wie Start; das Mausrad über seinem Titel ändert die Größe, in den Einstellungen lässt es sich festsetzen, ebenso der Minimap-Knopf. Der Knopf „Lesezeichen setzen“ unter einem Tag merkt ihn dir (bis zu zwölf Lesezeichen, sie stehen im Register). Solange die Maus über dem Fenster ist, blättern die Pfeiltasten im Tagebuch von Tag zu Tag; Pos1 führt zu Start, Ende zum heutigen Eintrag, die Rücktaste zurück.
 
 Stile: Leder und Gold, Pergament, Modern, Starker Kontrast. Sprachen: Deutsch, Englisch, Französisch, Spanisch, Portugiesisch, Russisch, Koreanisch und Traditionelles Chinesisch.
 
