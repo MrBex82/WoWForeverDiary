@@ -528,7 +528,7 @@ UI:RegisterView({
                 self.goalValue:SetText(UI.CoinIcons(min(have, goal), 11) .. "  /  " .. UI.CoinIcons(goal, 11))
                 self.goalBar:SetValue(have / goal)
                 self.goalBar:SetFill(done and "pos" or "gold")
-                self.setGoal:SetLabel(L["Click to change the goal."])
+                self.setGoal:SetLabel(L["Change the goal"])
             else
                 self.setGoal:SetLabel(L["Set a savings goal"])
             end

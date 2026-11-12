@@ -14,7 +14,7 @@ local OLD_KEY = { keep = "back" }
 local VIEW_ICON = { bestiary = "beast", fishbook = "fish", treasures = "loot", honour = "honour", tasks = "task",
     collection = "album", people = "people", quests = "quests", atlas = "atlas", runs = "runs", fates = "skull",
     companions = "party", stable = "mount", standing = "banner", ledger = "stats", milestones = "level", firsts = "first",
-    records = "records", levels = "level", yearbook = "records", gallery = "gallery", landmarks = "sight", fishwaters = "fish",
+    records = "records", levels = "level", yearbook = "journal", recap = "time", gallery = "gallery", landmarks = "sight", fishwaters = "fish",
     library = "journal", family = "kin", capsule = "capsule", memoriam = "skull", diary = "quill" }
 local VIEW_SUB = { bestiary = "A collector's album of every creature slain",
     fishbook = "A collector's album of everything the line brought up" }

@@ -1,10 +1,10 @@
 # ENGLISH
 
-> **Work in progress:** I'm still building this. Things change between versions and now and then something may break. Your diary survives updates; before the first start of a new version the addon keeps a copy of the old state for 30 days ("/wfd backup" brings it back). If you notice something, a comment helps a lot.
+> **Version 1.0:** the diary got a new home - a travel desk with a register, a search and pages for every part, instead of one long book. Your diary survives updates; before the first start of a new version the addon keeps a copy of the old state for 30 days ("/wfd backup" brings it back). If you notice something, a comment helps a lot.
 
 **WoW Forever Diary** keeps a diary for your character. You log in, you play, it writes things down. At the end of the day there's an entry in plain sentences, like "Today I helped three people in Elwynn Forest, lost 40 copper to a vendor and died once to a Defias Pillager", instead of a table of numbers.
 
-I made it because I never remember where I first met someone, which quest dragged on forever, or how long I've actually been playing a character. Now it's all in a book I can flip through.
+I made it because I never remember where I first met someone, which quest dragged on forever, or how long I've actually been playing a character. Now it's all in one place I can look things up in.
 
 ## What it records
 
@@ -17,34 +17,33 @@ I made it because I never remember where I first met someone, which quest dragge
 - Your footsteps on the world map, which you can replay day by day
 - Distance walked, time online, group members and trade partners
 
-## What's in the book
+## What's in it
 
-- **Today:** the book opens here. Your figures so far, what kind of day it is, what happened on this date in an earlier year, what's new since you last read
-- **Diary:** one double page per day, written as a short story
-- **Maps and atlas:** where you've been, with a time slider. A play button lets your journey grow day by day
-- **Bestiary and people:** a card for every creature and NPC. Creature cards start as sketches and turn to colour as your kill count grows; rares and bosses are in colour from the start
-- **Fate:** every death on the map, where and to whom you fall most
-- **Angler's log and treasures:** everything the line brings up, and your best find for every equipment slot
-- **Honours:** bronze to legend, some secret. Pick one as your title. Daily, weekly and monthly tasks, plus a page for your own goals
-- **Ledger, quest book, first times, year book:** the gold flow (with a savings goal), every quest, every first, a page of figures per year
-- **Mounts and reputation:** when you first rode what, and when each faction came round to you
-- **Library, time capsules, family book:** books and notes you read in the world, letters to your future self, and an overview of all your characters
+- **Start:** the diary opens here. Your figures so far, the tasks of the day, what's new since you last read, what happened on this date in an earlier year, a place to visit today. On your first visit a "First steps" card shows you around
+- **Diary:** one day per page, written as a short story, with a painted moment and what you kept. Chapters and days beside it, "Go to day", bookmarks
+- **Chronicle:** milestones as a timeline, first times, records, how long each level took, a year book, the week in review and a gallery of painted moments
+- **The world:** one map for the whole journey. Pick a continent, open a region, switch on layers: route, kill sites, people, graves, resting places, gathering spots, creatures. A play button lets your journey grow day by day. Beside it, the chronicle of the region. Dungeon reports with the whole group, every boss and all the loot
+- **Hunt and loot:** the bestiary and the angler's log as card albums. Creature cards start as sketches and turn to colour as your kill count grows; rares and bosses are in colour from the start. Treasures by slot and quality, and fate: every death, and the nemeses that keep getting you
+- **Goals and honour:** daily, weekly and monthly tasks, your own goals, your collections, and honours from bronze to legend, some secret. Pick one as your title
+- **People and money:** everyone you talked to, companions and trade partners, mounts, reputation, and a ledger with a savings goal and a chart of your purse
+- **Keepsakes:** a library of the books and notes you read in the world, a family book of all your characters, and a time capsule for letters to your future self
 - **Search** (Ctrl + F) across everything. For days you can narrow it down: `z:Elwynn` for a region, `lv:20-30` for levels, `d:30` for the last 30 days
 - **Export** as text or JSON, and a **moving code** to take a diary to another computer ("/wfd export", "/wfd import")
 
-Parts are grouped by theme, one coloured tab per group. Small notes slide in when something worth remembering happens, once a week there's a look back, and on login you may get a note about this day in an earlier year or an anniversary (the diary's birthday, 100 hours, a year since level 20, a year since a death). An optional companion window beside the game shows today's figures and tasks.
+The window can be any size you like. On the left a register with every part, on top back and forward and the search. Every list scrolls and can be filtered and sorted. Small cards slide in when something worth remembering happens (up to three at once, each with an X), once a week the look back at the week is ready, and on login you may get a note about this day in an earlier year or an anniversary. An optional companion window beside the game shows today's figures and tasks.
 
-Four styles (leather and gold, parchment, modern, strong contrast), adjustable text size.
+Four styles (leather and gold, parchment, modern, strong contrast) and text up to 120 percent, all switching at once without reloading.
 
 ## Usage
 
-"/wfd" (or "/diary", or the minimap button) opens and closes the book. A key can be set under key bindings.
+"/wfd" (or "/diary", or the minimap button) opens and closes the diary. A key can be set under key bindings.
 
-- "/wfd bestiary", "/wfd honour", "/wfd ledger", "/wfd settings" and so on open the book at that part, "/wfd 12" at day 12
-- "/wfd demo" fills the book with sample data (in memory only) so you can look around first
+- "/wfd bestiary", "/wfd honour", "/wfd ledger", "/wfd settings" and so on open that part, "/wfd 12" day 12
+- "/wfd demo" fills the diary with sample data (in memory only) so you can look around first
+- "/wfd help" lists every command
 - "/wfd shot" turns screenshots at milestones on or off, "/wfd minimap" shows or hides the minimap button
 - "/wfd restore" brings back a diary that was put aside, "/wfd backup" the copy from before the last update
-- Arrow keys turn pages while the mouse is over the book, a click on the folded corner sets a bookmark, Ctrl + mouse wheel resizes the book
+- Arrow keys turn the days of the diary while the mouse is over the window, "Set a bookmark" below a day keeps it, Ctrl + mouse wheel resizes everything
 
 The diary never writes into your chat on its own.
 
@@ -53,17 +52,17 @@ The diary never writes into your chat on its own.
 - Made for **WoW Forever**. It should also run on Classic Era, but it has been played there much less. Data is stored per character in your SavedVariables, nothing leaves your computer.
 - Characters you already play start their diary on the day you install it. A few "firsts" are filled in from what can still be worked out, but the addon can't know your past.
 - Available in English, German, French, Spanish, Portuguese, Russian, Korean and Traditional Chinese. The diary entries are written in your game language too.
-- It's an early version. If something looks wrong or you have an idea, leave a comment or open a ticket. Translation fixes are welcome, I'm not a native speaker in most of these languages.
+- If something looks wrong or you have an idea, leave a comment or open a ticket. Translation fixes are welcome, I'm not a native speaker in most of these languages.
 
 ---
 
 # DEUTSCH
 
-> **Work in Progress:** Ich baue daran noch. Zwischen den Versionen ändert sich einiges, und hin und wieder geht etwas kaputt. Dein Tagebuch übersteht Updates; vor dem ersten Start einer neuen Version legt das Addon 30 Tage lang eine Kopie des alten Stands an („/wfd backup“ holt sie zurück). Wenn dir etwas auffällt, hilft ein Kommentar sehr.
+> **Version 1.0:** Das Tagebuch hat ein neues Zuhause bekommen - einen Reisetisch mit Register, Suche und einer eigenen Seite für jeden Teil, statt eines langen Buches. Dein Tagebuch übersteht Updates; vor dem ersten Start einer neuen Version legt das Addon 30 Tage lang eine Kopie des alten Stands an („/wfd backup“ holt sie zurück). Wenn dir etwas auffällt, hilft ein Kommentar sehr.
 
 **WoW Forever Diary** führt ein Tagebuch für deinen Charakter. Du loggst dich ein, spielst, und es schreibt mit. Am Ende des Tages steht ein Eintrag in ganz normalen Sätzen da, zum Beispiel „Heute habe ich drei Leuten im Wald von Elwynn geholfen, 40 Kupfer an einen Händler verloren und bin einmal an einem Defias-Räuber gestorben“, statt einer Tabelle voller Zahlen.
 
-Ich habe es gebaut, weil ich mir nie merke, wo ich jemanden zum ersten Mal getroffen habe, welche Quest ewig gedauert hat oder wie lange ich einen Charakter schon spiele. Jetzt steht das alles in einem Buch, in dem man blättern kann.
+Ich habe es gebaut, weil ich mir nie merke, wo ich jemanden zum ersten Mal getroffen habe, welche Quest ewig gedauert hat oder wie lange ich einen Charakter schon spiele. Jetzt steht das alles an einem Ort, an dem man nachschlagen kann.
 
 ## Was aufgezeichnet wird
 
@@ -76,34 +75,33 @@ Ich habe es gebaut, weil ich mir nie merke, wo ich jemanden zum ersten Mal getro
 - Deine Fußspuren auf der Weltkarte, die du Tag für Tag abspielen kannst
 - Strecke, Online-Zeit, Gruppenmitglieder und Handelspartner
 
-## Was im Buch steht
+## Was drin ist
 
-- **Heute:** hier öffnet das Buch. Deine Zahlen bis jetzt, was für ein Tag es ist, was an diesem Datum in einem früheren Jahr war, was seit dem letzten Lesen neu ist
-- **Tagebuch:** pro Tag eine Doppelseite, als kleine Geschichte geschrieben
-- **Karten und Atlas:** wo du schon warst, mit Zeitregler. Ein Abspielknopf lässt deine Reise Tag für Tag wachsen
-- **Bestiarium und Personen:** eine Karte für jede Kreatur und jeden NPC. Kreaturenkarten beginnen als Skizze und werden mit den Kills farbig; Seltene und Bosse sind von Anfang an farbig
-- **Schicksal:** jeder Tod auf der Karte, wo und gegen wen du am häufigsten fällst
-- **Anglerbuch und Schätze:** alles, was die Angel heraufholt, und dein bester Fund für jeden Ausrüstungsplatz
-- **Ehrungen:** von Bronze bis Legende, einige geheim. Eine davon kannst du zum Titel machen. Tages-, Wochen- und Monatsaufgaben, dazu eine Seite für eigene Ziele
-- **Kassenbuch, Questbuch, Premieren, Jahrbuch:** der Goldfluss (mit Sparziel), jede Quest, jedes erste Mal, pro Jahr eine Seite mit Zahlen
-- **Reittiere und Ruf:** wann du was zum ersten Mal geritten bist und wann eine Fraktion dich besser leiden mochte
-- **Bibliothek, Zeitkapseln, Familienbuch:** Bücher und Notizen, die du in der Welt liest, Briefe an dein späteres Ich und ein Überblick über alle Charaktere
+- **Start:** hier öffnet das Tagebuch. Deine Zahlen bis jetzt, die Aufgaben des Tages, was seit dem letzten Lesen neu ist, was an diesem Datum in einem früheren Jahr war, ein Reiseziel für heute. Beim ersten Mal zeigt eine Karte „Erste Schritte“, wie alles geht
+- **Tagebuch:** pro Tag eine Seite, als kleine Geschichte geschrieben, mit einem gemalten Moment und deinen Andenken. Daneben Kapitel und Tage, „Gehe zu Tag“, Lesezeichen
+- **Chronik:** Meilensteine als Zeitstrahl, Premieren, Rekorde, wie lange jede Stufe gedauert hat, ein Jahrbuch, der Wochenrückblick und eine Galerie gemalter Momente
+- **Die Welt:** eine Karte für die ganze Reise. Kontinent wählen, Gebiet öffnen, Ebenen zuschalten: Route, Kampfplätze, Personen, Gräber, Rastplätze, Fundorte, Kreaturen. Ein Abspielknopf lässt deine Reise Tag für Tag wachsen. Daneben die Chronik des Gebiets. Dungeon-Berichte mit der ganzen Gruppe, jedem Boss und der ganzen Beute
+- **Jagd und Beute:** Bestiarium und Anglerbuch als Sammelkarten-Alben. Kreaturenkarten beginnen als Skizze und werden mit den Kills farbig; Seltene und Bosse sind von Anfang an farbig. Schätze nach Platz und Qualität, und das Schicksal: jeder Tod und die Erzfeinde, die dich immer wieder erwischen
+- **Ziele und Ruhm:** Tages-, Wochen- und Monatsaufgaben, eigene Ziele, deine Sammlungen und Ehrungen von Bronze bis Legende, einige geheim. Eine davon kannst du zum Titel machen
+- **Leute und Geld:** alle, mit denen du gesprochen hast, Gefährten und Handelspartner, Reittiere, Ruf und ein Kassenbuch mit Sparziel und Kurve deines Geldbeutels
+- **Andenken:** eine Bibliothek der Bücher und Notizen, die du in der Welt liest, ein Familienbuch aller Charaktere und eine Zeitkapsel für Briefe an dein späteres Ich
 - **Suche** (Strg + F) durch alles. Bei Tagen kannst du eingrenzen: `z:Elwynn` für ein Gebiet, `lv:20-30` für Stufen, `d:30` für die letzten 30 Tage
 - **Export** als Text oder JSON und ein **Umzugs-Code**, der ein Tagebuch auf einen anderen Rechner mitnimmt („/wfd export“, „/wfd import“)
 
-Die Teile sind nach Themen gruppiert, jede Gruppe hat einen Reiter in eigener Farbe. Wenn etwas Erinnerungswürdiges passiert, rutscht eine kleine Notiz ins Bild, einmal pro Woche gibt es einen Rückblick, und beim Einloggen erinnert dich vielleicht eine Notiz an diesen Tag in einem früheren Jahr oder an ein Jubiläum (der Geburtstag des Tagebuchs, 100 Stunden, ein Jahr seit Stufe 20, ein Jahr seit einem Tod). Ein Begleitfenster neben dem Spiel, wenn du magst, zeigt die Zahlen von heute und deine Aufgaben.
+Das Fenster lässt sich beliebig groß ziehen. Links ein Register mit allen Teilen, oben Zurück, Vor und die Suche. Jede Liste scrollt und lässt sich filtern und sortieren. Wenn etwas Erinnerungswürdiges passiert, rutscht eine kleine Karte ins Bild (bis zu drei auf einmal, jede mit einem X), einmal pro Woche ist der Wochenrückblick bereit, und beim Einloggen erinnert dich vielleicht eine Notiz an diesen Tag in einem früheren Jahr oder an ein Jubiläum. Ein Begleitfenster neben dem Spiel, wenn du magst, zeigt die Zahlen von heute und deine Aufgaben.
 
-Vier Stile (Leder und Gold, Pergament, Modern, starker Kontrast), die Schrift lässt sich vergrößern.
+Vier Stile (Leder und Gold, Pergament, Modern, Starker Kontrast) und Schrift bis 120 Prozent, alles wechselt sofort, ohne Neuladen.
 
 ## Bedienung
 
-„/wfd“ (oder „/tagebuch“, „/diary“ oder der Minimap-Button) öffnet und schließt das Buch. Eine Taste dafür kannst du in der Tastaturbelegung festlegen.
+„/wfd“ (oder „/tagebuch“, „/diary“ oder der Minimap-Button) öffnet und schließt das Tagebuch. Eine Taste dafür kannst du in der Tastaturbelegung festlegen.
 
-- „/wfd bestiarium“, „/wfd ehrenbuch“, „/wfd kassenbuch“, „/wfd einstellungen“ und so weiter öffnen das Buch gleich an dem Teil, „/wfd 12“ am Tag 12
-- „/wfd demo“ füllt das Buch mit Beispieldaten (nur im Speicher), damit du dich vorher umsehen kannst
+- „/wfd bestiarium“, „/wfd ehrenbuch“, „/wfd kassenbuch“, „/wfd einstellungen“ und so weiter öffnen gleich diesen Teil, „/wfd 12“ den Tag 12
+- „/wfd demo“ füllt das Tagebuch mit Beispieldaten (nur im Speicher), damit du dich vorher umsehen kannst
+- „/wfd help“ zeigt alle Befehle
 - „/wfd shot“ schaltet Screenshots bei Meilensteinen an oder aus, „/wfd minimap“ blendet den Minimap-Button ein oder aus
 - „/wfd restore“ holt ein beiseitegelegtes Tagebuch zurück, „/wfd backup“ die Kopie von vor dem letzten Update
-- Pfeiltasten blättern, solange die Maus über dem Buch ist, ein Klick auf das Eselsohr setzt ein Lesezeichen, Strg + Mausrad ändert die Größe des Buches
+- Pfeiltasten blättern die Tage des Tagebuchs, solange die Maus über dem Fenster ist, „Lesezeichen setzen“ unter einem Tag merkt ihn dir, Strg + Mausrad ändert die Größe von allem
 
 Das Tagebuch schreibt von sich aus nichts in deinen Chat.
 
@@ -112,17 +110,17 @@ Das Tagebuch schreibt von sich aus nichts in deinen Chat.
 - Gemacht für **WoW Forever**. Unter Classic Era sollte es auch laufen, wurde dort aber deutlich weniger gespielt. Die Daten liegen pro Charakter in den SavedVariables, nichts verlässt deinen Rechner.
 - Bei Charakteren, die du schon spielst, beginnt das Tagebuch am Tag der Installation. Ein paar „Premieren“ werden aus dem nachgetragen, was sich noch herausfinden lässt, deine Vergangenheit kennt das Addon aber nicht.
 - Verfügbar auf Deutsch, Englisch, Französisch, Spanisch, Portugiesisch, Russisch, Koreanisch und Traditionell Chinesisch. Auch die Tagebucheinträge erscheinen in deiner Spielsprache.
-- Es ist eine frühe Version. Wenn etwas komisch aussieht oder du eine Idee hast, schreib einen Kommentar oder ein Ticket. Korrekturen an den Übersetzungen sind willkommen, in den meisten dieser Sprachen bin ich kein Muttersprachler.
+- Wenn etwas komisch aussieht oder du eine Idee hast, schreib einen Kommentar oder ein Ticket. Korrekturen an den Übersetzungen sind willkommen, in den meisten dieser Sprachen bin ich kein Muttersprachler.
 
 ---
 
 # TEASER (EN)
 
-**WoW Forever Diary** writes a diary for your character while you play. Every NPC, quest, kill, coin and footstep is noted, and each day becomes a short entry in plain sentences. You flip through it as a book: a world map you can replay day by day, a bestiary, honours to collect, a library that fills as you read, and letters to your future self. Made for WoW Forever. Everything stays on your computer. "/wfd" opens it.
+**WoW Forever Diary** writes a diary for your character while you play. Every NPC, quest, kill, coin and footstep is noted, and each day becomes a short entry in plain sentences. You look it up on a travel desk: a world map you can replay day by day, a bestiary, honours to collect, a library that fills as you read, and letters to your future self. Made for WoW Forever. Everything stays on your computer. "/wfd" opens it.
 
 # TEASER (DE)
 
-**WoW Forever Diary** schreibt ein Tagebuch für deinen Charakter, während du spielst. Jeder NPC, jede Quest, jeder Kill, jede Münze und jeder Schritt wird festgehalten, und aus jedem Tag wird ein kurzer Eintrag in normalen Sätzen. Du blätterst darin wie in einem Buch: Weltkarte zum Abspielen Tag für Tag, Bestiarium, Ehrungen zum Sammeln, eine Bibliothek, die sich beim Lesen füllt, und Briefe an dein späteres Ich. Gemacht für WoW Forever. Alles bleibt auf deinem Rechner. Mit „/wfd“ öffnest du es.
+**WoW Forever Diary** schreibt ein Tagebuch für deinen Charakter, während du spielst. Jeder NPC, jede Quest, jeder Kill, jede Münze und jeder Schritt wird festgehalten, und aus jedem Tag wird ein kurzer Eintrag in normalen Sätzen. Du schlägst darin nach wie an einem Reisetisch: Weltkarte zum Abspielen Tag für Tag, Bestiarium, Ehrungen zum Sammeln, eine Bibliothek, die sich beim Lesen füllt, und Briefe an dein späteres Ich. Gemacht für WoW Forever. Alles bleibt auf deinem Rechner. Mit „/wfd“ öffnest du es.
 
 ---
 

@@ -48,6 +48,10 @@ local function areaName(a)
     if fn then ok, name = pcall(fn, a[1]) end
     return (ok and type(name) == "string" and name ~= "") and name or a[2]
 end
+local function className(file, fallback)
+    local names = _G.LOCALIZED_CLASS_NAMES_MALE
+    return names and names[file] or fallback
+end
 local function itemName(it)
     local ok, name = pcall(GetItemInfo, it[1])
     if not (ok and name) and C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID, it[1]) end
@@ -263,9 +267,9 @@ local function build()
     honourEvent("naturalist", 1, OFF + 8, 16)
     -- companions, trading partners and resting places
     C.companions = {
-        Brannok = { name = "Brannok", class = "Paladin", classFile = "PALADIN", level = 7, first = WFD:DayTime(OFF + 2), last = now,
+        Brannok = { name = "Brannok", class = className("PALADIN", "Paladin"), classFile = "PALADIN", level = 7, first = WFD:DayTime(OFF + 2), last = now,
             days = { [OFF + 2] = true, [OFF + 3] = true, [OFF + 5] = true }, kills = 64, groups = 3, zone = WFD:MapName(MAPS[1]) },
-        Lyssa = { name = "Lyssa", class = "Mage", classFile = "MAGE", level = 9, first = WFD:DayTime(OFF + 4), last = now,
+        Lyssa = { name = "Lyssa", class = className("MAGE", "Mage"), classFile = "MAGE", level = 9, first = WFD:DayTime(OFF + 4), last = now,
             days = { [OFF + 4] = true }, kills = 21, groups = 1, zone = WFD:MapName(MAPS[2]) },
     }
     C.traders = { Brannok = { first = WFD:DayTime(OFF + 2) + 3600, count = 2, got = 1500, gave = 0, zone = WFD:MapName(MAPS[1]) } }
@@ -290,22 +294,23 @@ local function build()
     for _, it in ipairs(ITEMS) do
         if it[3] >= 2 then loot[#loot + 1] = "|cff1eff00|Hitem:" .. it[1] .. "::::::::1:::::::|h[" .. itemName(it) .. "]|h|r" end
     end
+    local deadmines = areaName({ 1581, "The Deadmines" })
     local runStart = WFD:DayTime(OFF + 6) - 43200 + 19 * 3600
     local bosses = { "Rhahk'Zor", "Sneed", "Gilnid", "Mr. Smite", "Captain Greenskin", "Edwin VanCleef" }
     C.runs = { {
-        name = "The Deadmines", t0 = runStart, t1 = runStart + 5400, day = OFF + 6, level = level, kills = 142,
+        name = deadmines, t0 = runStart, t1 = runStart + 5400, day = OFF + 6, level = level, kills = 142,
         party = {
-            Brannok = { classFile = "PALADIN", class = "Paladin", level = 17 },
-            Lyssa = { classFile = "MAGE", class = "Mage", level = 18 },
-            Thorgar = { classFile = "WARRIOR", class = "Warrior", level = 18 },
-            Elandra = { classFile = "PRIEST", class = "Priest", level = 17 },
+            Brannok = { classFile = "PALADIN", class = className("PALADIN", "Paladin"), level = 17 },
+            Lyssa = { classFile = "MAGE", class = className("MAGE", "Mage"), level = 18 },
+            Thorgar = { classFile = "WARRIOR", class = className("WARRIOR", "Warrior"), level = 18 },
+            Elandra = { classFile = "PRIEST", class = className("PRIEST", "Priest"), level = 17 },
         },
         bosses = bosses,
         deaths = { { who = "Lyssa" }, { who = C.name, me = true, by = "Mr. Smite" } },
         loot = loot,
         last = { name = "Edwin VanCleef", gear = WFD:CaptureGear(), npc = 639, t = runStart + 5300 },
     } }
-    C.instances = { ["The Deadmines"] = runStart }
+    C.instances = { [deadmines] = runStart }
     C.encounters = {}
     for _, b in ipairs(bosses) do C.encounters[b] = 1 end
     C.challenges = {}

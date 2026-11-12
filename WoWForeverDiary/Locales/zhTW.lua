@@ -1309,3 +1309,5 @@ L["Type /wfd cleanup yes to remove them."] = "輸入 /wfd cleanup yes 以移除�
 L["find strangers from battlegrounds among the companions"] = "在同伴中找出戰場上的陌生人"
 L["list what the game blocked"] = "列出遊戲封鎖的項目"
 L["open the look back at the week"] = "開啟一週回顧"
+L["Change the goal"] = "更改目標"
+L["A week of travel in figures"] = "以數字回顧旅程的一週"

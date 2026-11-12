@@ -1313,3 +1313,5 @@ L["Type /wfd cleanup yes to remove them."] = "Tapez /wfd cleanup yes pour les re
 L["find strangers from battlegrounds among the companions"] = "trouver les inconnus des champs de bataille parmi les compagnons"
 L["list what the game blocked"] = "afficher ce que le jeu a bloqué"
 L["open the look back at the week"] = "ouvrir le bilan de la semaine"
+L["Change the goal"] = "Changer l'objectif"
+L["A week of travel in figures"] = "Une semaine de voyage en chiffres"

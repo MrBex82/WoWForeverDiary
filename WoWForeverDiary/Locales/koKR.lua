@@ -1306,3 +1306,5 @@ L["Type /wfd cleanup yes to remove them."] = "/wfd cleanup yes 로 제거합니�
 L["find strangers from battlegrounds among the companions"] = "동료 중 전장의 낯선 이 찾기"
 L["list what the game blocked"] = "게임이 차단한 항목 보기"
 L["open the look back at the week"] = "주간 회고 열기"
+L["Change the goal"] = "목표 바꾸기"
+L["A week of travel in figures"] = "숫자로 보는 여행의 한 주"
