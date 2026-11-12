@@ -1295,3 +1295,4 @@ L["Show a note to move it"] = "Показать заметку, чтобы её 
 L["Put the notes back at the top"] = "Вернуть заметки наверх"
 L["Pop-up notes"] = "Всплывающие заметки"
 L["Mouse wheel changes the size."] = "Колесо мыши меняет размер."
+L["In this place the game keeps secret what the creatures look like."] = "Здесь игра скрывает, как выглядят существа."

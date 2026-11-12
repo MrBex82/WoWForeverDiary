@@ -869,6 +869,10 @@ local function newCard(parent)
     f.sil = UI.Text(f.window, 34, { 0.55, 0.45, 0.30, 0.55 }, "CENTER", UI.HEAD)
     f.sil:SetPoint("CENTER", 0, 0)
     f.sil:SetText("?")
+    f.silNote = UI.Text(f.window, 9, { 0.85, 0.74, 0.52, 1 }, "CENTER", UI.FONT, true)
+    f.silNote:SetPoint("TOP", 0, -5)
+    f.silNote:SetText(L["No portrait"])
+    f.silNote:Hide()
     f.q = UI.Text(f, 40, { 0.55, 0.45, 0.30, 0.6 }, "CENTER", UI.HEAD)
     f.q:SetPoint("CENTER", 0, 8)
     f.qsub = UI.Text(f, 10, { 0.88, 0.76, 0.54, 1 }, "CENTER", UI.FONT, true)
@@ -1014,6 +1018,7 @@ local function newCard(parent)
             self.new:SetText("")
             self.model:ClearModel()
             self.modelId = nil
+            self.silNote:Hide()
             return
         end
         local filled = e ~= nil
@@ -1038,6 +1043,7 @@ local function newCard(parent)
             self.new:SetText("")
             self.model:ClearModel()
             self.modelId = nil
+            self.silNote:Hide()
             return
         end
         local m = e.m
@@ -1081,8 +1087,18 @@ local function newCard(parent)
         self.badge:SetCount(UI.ShortCount(m.kills), UI.BADGE_COLOURS[rarityOf(m)] or UI.BADGE_COLOURS.normal)
         local isNew = m.first and WFD:DayIndex(m.first) == WFD:NumDays()
         self.new:SetText(isNew and L["NEW"] or "")
-        if self.modelId ~= e.id then
+        if type(e.id) ~= "number" then
+            -- known only by its name: the game kept its ID secret (in some dungeons), so there is no model
+            self.modelId = nil
+            self.model.wantId = nil
+            self.model:ClearModel()
+            self.sil:SetTextColor(0.85, 0.72, 0.48, 0.9)
+            self.sil:Show()
+            self.silNote:Show()
+        elseif self.modelId ~= e.id then
             self.modelId = e.id
+            self.sil:SetTextColor(0.55, 0.45, 0.30, 0.55)
+            self.silNote:Hide()
             UI.LoadCreature(self.model, e.id, 0.65, self.sil)
         end
     end

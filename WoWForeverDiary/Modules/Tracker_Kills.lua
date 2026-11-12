@@ -87,6 +87,43 @@ WFD:On("NAME_PLATE_UNIT_ADDED", function(_, unit) cacheUnit(unit) end)
 
 function WFD:LastKill() return lastKill end
 
+-- /wfd idtest: what the game tells about your target (creature ID, secret values, a 3D model of it).
+-- A test aid for instances, where the game may keep these details secret.
+local testModel
+function WFD:IdTest()
+    local function out(label, ok, v)
+        local secret = issecretvalue and issecretvalue(v)
+        print("|cff88ccffWFD id|r", label, ok and "ok" or "error", secret and "SECRET" or tostring(v))
+    end
+    if not UnitExists("target") then print("|cff88ccffWFD id|r no target") return end
+    out("in instance", true, (IsInInstance()))
+    local okG, guid = pcall(UnitGUID, "target")
+    out("UnitGUID", okG, guid)
+    if UnitCreatureID then out("UnitCreatureID", pcall(UnitCreatureID, "target")) end
+    if C_CreatureInfo and C_CreatureInfo.GetCreatureID and okG then
+        out("GetCreatureID(guid)", pcall(C_CreatureInfo.GetCreatureID, guid))
+    end
+    if C_Secrets and C_Secrets.ShouldUnitIdentityBeSecret then
+        out("ShouldUnitIdentityBeSecret", pcall(C_Secrets.ShouldUnitIdentityBeSecret, "target"))
+    end
+    out("UnitName", pcall(UnitName, "target"))
+    out("UnitCreatureType", pcall(UnitCreatureType, "target"))
+    -- a model straight from the unit, shown for ten seconds in the middle of the screen
+    if not testModel then
+        testModel = CreateFrame("PlayerModel", nil, UIParent)
+        testModel:SetSize(220, 260)
+        testModel:SetPoint("CENTER", 0, 120)
+        testModel:SetFrameStrata("DIALOG")
+    end
+    testModel:Show()
+    testModel:ClearModel()
+    local okU, errU = pcall(testModel.SetUnit, testModel, "target")
+    out("model:SetUnit", okU, errU)
+    local okF, file = pcall(testModel.GetModelFileID, testModel)
+    out("model file", okF, file)
+    C_Timer.After(10, function() testModel:Hide() end)
+end
+
 -- a raid boss is reported by its kill and by the end of the encounter: only the first report counts
 local bossNoted = {}
 function WFD:FirstBossNoted(name)

@@ -571,7 +571,15 @@ function UI.ModelBox(parent, w, h)
     box.none:SetPoint("CENTER")
     box.none:SetText(L["No portrait"])
     box.none:Hide()
-    function box:Show3D(npcId)
+    box.why = UI.Text(box, 11, { 0.80, 0.68, 0.48, 1 }, "CENTER", UI.FONT)
+    box.why:SetPoint("TOP", box.none, "BOTTOM", 0, -8)
+    box.why:SetWidth(w - 40)
+    box.why:SetWordWrap(true)
+    box.why:Hide()
+    -- why: a sentence under "no portrait" that tells why there is none
+    function box:Show3D(npcId, why)
+        self.why:SetText(why or "")
+        self.why:SetShown(why ~= nil and type(npcId) ~= "number")
         if npcId ~= nil and npcId == self.current then return end
         self.current = npcId
         self.model:ClearModel()

@@ -9,6 +9,8 @@
   their region once when you log in.
 - Inside dungeons and battlegrounds the place is now the instance itself, not a building in it (for example the
   lumber mill in Warsong Gulch). Such entries are moved back to their instance once when you log in.
+- In some dungeons the game keeps secret what creatures look like, even for addons. Their bestiary cards now say
+  "No portrait" clearly instead of looking empty, and the card tells you why.
 - The atlas also knows a region by its map now, so Stormwind is ticked off too (the map of the German client
   names it in English).
 
@@ -21,5 +23,7 @@
   einem Gebäudenamen gespeichert sind, werden beim Einloggen einmal in ihr Gebiet zurückgeführt.
 - In Dungeons und Schlachtfeldern ist der Ort jetzt die Instanz selbst, nicht ein Gebäude darin (zum Beispiel
   das Sägewerk in der Warsongschlucht). Solche Einträge werden beim Einloggen einmal in ihre Instanz zurückgeführt.
+- In manchen Dungeons hält das Spiel geheim, wie Kreaturen aussehen, auch vor Addons. Ihre Karten im Bestiarium
+  zeigen jetzt deutlich „Kein Porträt“, statt leer zu wirken, und die Karte erklärt den Grund.
 - Der Atlas erkennt ein Gebiet jetzt auch über seine Karte. So wird auch Sturmwind abgehakt (die Karte des
   deutschen Spiels nennt es auf Englisch).

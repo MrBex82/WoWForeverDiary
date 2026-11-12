@@ -749,6 +749,8 @@ SlashCmdList["WOWFOREVERDIARY"] = function(msg)
         WFD.UI:ShowMovingImport()
     elseif msg == "killdebug" and WFD.KillDebug then
         WFD:KillDebug()
+    elseif msg == "idtest" and WFD.IdTest then
+        WFD:IdTest()
     elseif msg == "cleanup" or msg == "cleanup yes" then
         local doIt = msg == "cleanup yes"
         local n, list = WFD:CleanCompanions(doIt)
