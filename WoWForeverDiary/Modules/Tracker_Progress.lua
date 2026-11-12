@@ -34,8 +34,34 @@ local function zoneNow()
     return real
 end
 
+-- the map of the zone you are in (a map of type zone, also from inside an inn or a cave)
+local function zoneMapOf(id)
+    if not (C_Map and C_Map.GetMapInfo) then return nil end
+    local info = id and C_Map.GetMapInfo(id)
+    for _ = 1, 5 do
+        if not info then return nil end
+        if info.mapType == 3 then return info.mapID end
+        if (info.mapType or 0) < 3 or not info.parentMapID then return nil end
+        info = C_Map.GetMapInfo(info.parentMapID)
+    end
+end
+
+-- a land on record under another name with the same map: the same land (the map may name it otherwise than
+-- the game, or in another language)
+local function knownAs(C, zone)
+    if C.zones[zone] or IsInInstance() or not (C_Map and C_Map.GetBestMapForUnit) then return nil end
+    local here = zoneMapOf(C_Map.GetBestMapForUnit("player"))
+    if not here then return nil end
+    for name, map in pairs(C.zoneMaps or {}) do
+        if name ~= zone and C.zones[name] and zoneMapOf(map) == here then return name end
+    end
+end
+
 local function refreshZone()
     local zone = zoneNow()
+    -- a name the map gives for a land that is on record under the game's name (seen inside inns and caves)
+    local alias = WFD.C and WFD.C.zoneAlias and zone and WFD.C.zoneAlias[zone]
+    if alias then zone = alias end
     local sub = GetSubZoneText()
     if zone and zone ~= "" then WFD.zoneName = zone end
     WFD.subName = sub
@@ -43,12 +69,27 @@ local function refreshZone()
     if not C or WFD.paused or not zone or zone == "" then return end
 
     if not C.startZone then C.startZone = zone end
+    local same = knownAs(C, zone)
+    if same then
+        C.zoneAlias = C.zoneAlias or {}
+        C.zoneAlias[zone] = same
+        C.announced = C.announced or {}
+        C.announced[zone] = true
+        zone = same
+        WFD.zoneName = zone
+    end
     local z = C.zones[zone]
     -- a land already on record counts as announced, whatever the list says
     if z then C.announced = C.announced or {} C.announced[zone] = true end
     if not z then
         z = { first = time(), day = WFD:DayIndex(), sub = {}, visits = 0 }
         C.zones[zone] = z
+        -- a land you have walked in on an earlier day is no new land, whatever name it carries now
+        local walked = false
+        for idx, d in pairs(C.days or {}) do
+            if idx ~= WFD:DayIndex() and d.zones and d.zones[zone] then walked = true break end
+        end
+        if walked then C.announced = C.announced or {} C.announced[zone] = true end
         if zone ~= C.startZone then
             -- the same land is announced only once, even when its record was moved or renamed in between
             -- (a start building and the valley around it may carry different names for the same zone)

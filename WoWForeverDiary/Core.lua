@@ -5,7 +5,7 @@ _G.WoWForeverDiary = WFD
 local floor, min, format = math.floor, math.min, string.format
 local time, date = time, date
 
-WFD.version = "0.3.3"
+WFD.version = "0.3.4"
 WFD.gameLocale = GetLocale()
 WFD.locale = WFD.gameLocale
 WFD.isDE = (WFD.locale == "deDE")
@@ -159,7 +159,12 @@ WFD:On("ADDON_LOADED", function(_, name)
     if name ~= ADDON then return end
     WFDiaryDB = WFDiaryDB or {}
     local S = WFDiaryDB
-    if S.screenshots == nil then S.screenshots = true end
+    -- screenshots at milestones are off unless switched on; the old default (on) is turned off once
+    if not S.shotsOffByDefault then
+        S.screenshots = false
+        S.shotsOffByDefault = true
+    end
+    if S.screenshots == nil then S.screenshots = false end
     S.chat = nil            -- the old switch for milestones in the chat is gone: the diary no longer writes there
     if S.minimap == nil then S.minimap = true end
     if S.toasts == nil then S.toasts = true end
