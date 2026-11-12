@@ -479,8 +479,8 @@ UI:RegisterView({
             for i = ch.found + 1, #ch.subs do
                 local it = ch.subs[i]
                 rp:Line({ name = it.name, nameKey = "muted",
-                    tip = it.name .. "\n" .. L["Not yet discovered"]
-                        .. (it.who and ("\n" .. format(L["%s already found this place."], it.who)) or "") })
+                    tip = { it.name, L["Not yet discovered"],
+                        it.who and format(L["%s already found this place."], it.who) or nil } })
             end
         end
 
