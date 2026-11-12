@@ -3,7 +3,7 @@
 ## English
 
 **Fixed**
-- Inside some inns and town halls the game names the building instead of the region ("Lakeshire Inn"). The diary
+- Inside some inns and town halls the game names the building instead of the region. The diary
   then sometimes renamed the whole region after the building, so Redridge Mountains or Duskwood were missing from
   the atlas. The region now always comes from the map, and lands stored under a building's name are moved back to
   their region once when you log in.
