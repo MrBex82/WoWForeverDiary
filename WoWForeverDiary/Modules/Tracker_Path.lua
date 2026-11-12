@@ -64,15 +64,24 @@ local function Tick(el)
         C.zoneMaps[zone] = C.zoneMaps[zone] or map
     end
 
-    local p = d.path[map]
+    -- footsteps on the ground and the line of a flight are kept apart: a flight draws on the map,
+    -- but the lands below it get no time and no visit
+    local cells
+    if onTaxi then
+        d.fpath = d.fpath or {}
+        cells = d.fpath
+    else
+        cells = d.path
+    end
+    local p = cells[map]
     if type(p) == "string" then         -- a packed day walked again: back to a table
         local t = {}
         for k, v in pairs(WFD:PathCells(p)) do t[k] = v end
         p = t
-        d.path[map] = p
+        cells[map] = p
     elseif not p then
         p = {}
-        d.path[map] = p
+        cells[map] = p
     end
     local key = WFD:CellKey(x, y)
     p[key] = (p[key] or 0) + 1

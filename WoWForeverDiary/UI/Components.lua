@@ -844,25 +844,32 @@ function UI.MapSketch(parent, w, h)
             if getRect then ok, x1, x2, y1, y2 = pcall(getRect, z.id, contID) end
             if ok and x1 and x2 and x2 > x1 then
                 -- route: the zone's footstep cells moved onto the continent
-                local steps = {}
+                -- (flights paler and smaller, below the footsteps)
+                local steps, flown = {}, {}
                 for _, d in pairs(C.days) do
                     local p = WFD:PathCells(d.path[z.id])
                     if p then for k, v in pairs(p) do steps[k] = (steps[k] or 0) + v end end
+                    local fp = d.fpath and WFD:PathCells(d.fpath[z.id])
+                    if fp then for k, v in pairs(fp) do flown[k] = (flown[k] or 0) + v end end
                 end
                 local zw, zh = (x2 - x1) * mw, (y2 - y1) * mh
                 local cs = max(2, zw / 100 * 1.4)
-                for key, v in pairs(steps) do
-                    if used >= 5000 then break end
-                    used = used + 1
-                    local t = cell(used)
-                    local cx, cy = floor(key / 100), key % 100
-                    t:ClearAllPoints()
-                    t:SetPoint("CENTER", mf, "TOPLEFT", x1 * mw + (cx + 0.5) * zw / 100, -(y1 * mh + (cy + 0.5) * zh / 100))
-                    t:SetSize(cs, cs)
-                    t:SetRotation(pi / 4)
-                    t:SetVertexColor(0.55, 0.08, 0.05, min(1, 0.55 + 0.06 * sqrt(v)))
-                    t:Show()
+                local function paintCells(tbl, size, aBase, aScale)
+                    for key, v in pairs(tbl) do
+                        if used >= 5000 then return end
+                        used = used + 1
+                        local t = cell(used)
+                        local cx, cy = floor(key / 100), key % 100
+                        t:ClearAllPoints()
+                        t:SetPoint("CENTER", mf, "TOPLEFT", x1 * mw + (cx + 0.5) * zw / 100, -(y1 * mh + (cy + 0.5) * zh / 100))
+                        t:SetSize(size, size)
+                        t:SetRotation(pi / 4)
+                        t:SetVertexColor(0.55, 0.08, 0.05, min(1, aBase + aScale * sqrt(v)))
+                        t:Show()
+                    end
                 end
+                paintCells(flown, max(1.5, cs * 0.6), 0.22, 0.02)
+                paintCells(steps, cs, 0.55, 0.06)
                 -- a pin in the middle of the region
                 np = np + 1
                 local p = pin(np)
@@ -976,10 +983,12 @@ function UI.MapSketch(parent, w, h)
         local o = opts or {}
         local mw, mh = drawArt(self, mapID)
         local C = WFD.C
-        local steps, kills = {}, {}
+        local steps, kills, flown = {}, {}, {}
         for _, d in pairs(C.days) do
             local p = WFD:PathCells(d.path[mapID])
             if p then for k, v in pairs(p) do steps[k] = (steps[k] or 0) + v end end
+            local fp = d.fpath and WFD:PathCells(d.fpath[mapID])
+            if fp then for k, v in pairs(fp) do flown[k] = (flown[k] or 0) + v end end
             local kc = WFD:PathCells(d.kcells[mapID])
             if kc then for k, v in pairs(kc) do kills[k] = (kills[k] or 0) + v end end
         end
@@ -999,7 +1008,10 @@ function UI.MapSketch(parent, w, h)
                 t:Show()
             end
         end
-        if o.route ~= false then paint(steps, { 0.55, 0.08, 0.05 }, 0.45, 0.08, 0.8, pi / 4) end
+        if o.route ~= false then
+            paint(flown, { 0.55, 0.08, 0.05 }, 0.20, 0.02, 0.45, pi / 4)       -- flights: paler, below the steps
+            paint(steps, { 0.55, 0.08, 0.05 }, 0.45, 0.08, 0.8, pi / 4)
+        end
         if o.kills ~= false then paint(kills, { 0.16, 0.24, 0.62 }, 0.60, 0.12, 1.3, pi / 4) end
 
         -- pins: the most important places get a number that matches the legend on the page

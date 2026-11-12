@@ -386,8 +386,8 @@ function WFD:PackOldDays()
     for idx, d in pairs(C.days) do
         d.log = nil
         if idx < today then
-            -- footsteps and the places of the kills: both cell -> count
-            for _, cells in ipairs({ d.path or {}, d.kcells or {} }) do
+            -- footsteps, flights and the places of the kills: all cell -> count
+            for _, cells in ipairs({ d.path or {}, d.fpath or {}, d.kcells or {} }) do
                 for map, p in pairs(cells) do
                     if type(p) == "table" then cells[map] = self:PackCells(p) end
                 end

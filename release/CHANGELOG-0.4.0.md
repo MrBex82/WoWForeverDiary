@@ -27,6 +27,9 @@ changed since 0.3.4, in short.
 
 **Fixed**
 - Everything fixed in 0.3.4 is in this version too.
+- Flying over a region no longer gives it time or a first visit in its region chronicle. Flights are now kept
+  apart from your footsteps and show paler on the world map. Flights from before this version still count as
+  footsteps.
 
 **Good to know**
 - Your diary is kept as it was. Bookmarks from the old book still work.
@@ -56,6 +59,9 @@ changed since 0.3.4, in short.
 
 **Behoben**
 - Alle Fehlerbehebungen aus 0.3.4 sind auch in dieser Version enthalten.
+- Wer über ein Gebiet fliegt, bekommt dort in der Gebietschronik keine Zeit und keinen ersten Besuch mehr. Flüge
+  werden jetzt getrennt von deinen Fußwegen gespeichert und erscheinen auf der Weltkarte blasser. Flüge von vor
+  dieser Version zählen weiter als Fußwege.
 
 **Gut zu wissen**
 - Dein Tagebuch bleibt, wie es war. Lesezeichen aus dem alten Buch funktionieren weiter.

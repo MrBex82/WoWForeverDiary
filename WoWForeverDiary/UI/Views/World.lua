@@ -212,10 +212,11 @@ UI:RegisterView({
         v.legend = CreateFrame("Frame", nil, host)
         v.legend:SetHeight(16)
         v.legend.items = {}
-        for i, it in ipairs({ { "Route", { 0.62, 0.10, 0.06 }, true }, { "Explored", { 0.90, 0.66, 0.16 } },
-            { "Not yet explored", { 0.58, 0.52, 0.44 } } }) do
+        -- (L["Route"] L["Flights"] L["Explored"] L["Not yet explored"])
+        for i, it in ipairs({ { "Route", { 0.62, 0.10, 0.06 }, true }, { "Flights", { 0.62, 0.10, 0.06 }, true, 0.4, 6 },
+            { "Explored", { 0.90, 0.66, 0.16 } }, { "Not yet explored", { 0.58, 0.52, 0.44 } } }) do
             local e = {}
-            e.dot = it[3] and UI.Diamond(v.legend, 8, { it[2][1], it[2][2], it[2][3], 1 }, "ARTWORK", 1)
+            e.dot = it[3] and UI.Diamond(v.legend, it[5] or 8, { it[2][1], it[2][2], it[2][3], it[4] or 1 }, "ARTWORK", 1)
                 or UI.Circle(v.legend, 10, { it[2][1], it[2][2], it[2][3], 1 }, "ARTWORK", 1)
             e.text = K.Text(v.legend, "small", "soft")
             e.text:SetText(L[it[1]])
