@@ -1,7 +1,7 @@
 # 0.4.0
 
 The big rework: from a book you leafed through to a travel desk you can find your way around. This is what
-changed since 0.3, in short.
+changed since 0.3.4, in short.
 
 ## English
 
@@ -26,27 +26,7 @@ changed since 0.3, in short.
 - Colours always come with a sign or a mark, and every style was checked for good contrast.
 
 **Fixed**
-- "New land discovered" no longer comes up again for regions you have been to (inside inns and caves the game
-  sometimes names a region differently).
-- A region is no longer renamed after an inn or town hall inside it (the game names the building there). Regions
-  stored that way are moved back once when you log in, and the atlas knows a region by its map too.
-- Inside dungeons and battlegrounds the place is now the instance itself, not a building in it (for example the
-  lumber mill in Warsong Gulch). Such entries are moved back to their instance once when you log in.
-- In some dungeons the game keeps secret what creatures look like, even for addons. Their bestiary cards now say
-  "No portrait" clearly instead of looking empty, and the card tells you why.
-- Flying over a region on a flight path no longer counts as discovering it. Regions are recorded only on the
-  ground, and the region you land in is checked right away.
-- Maps that name a region in another language than the game (for example "Stormwind" on a German client) now use
-  the name the game gave the region, so region pages find their districts and visits again.
-- The first time you discover a place inside a region you know, a small note shows it, with the region below
-  (only with all notes switched on, without a screenshot, not while flying).
-- Landmarks and creatures seen from a flight path are no longer recorded as discovered or sighted. The landmark
-  where you land is checked right away.
-- The region chronicle lists every place of a region: the ones you found, then the ones still to find in grey (from
-  the game's own data and from what your other characters found there).
-- Long notes no longer run out of their box: the notes card grows with your text, and the page follows the cursor
-  while you write.
-- Screenshots at milestones are now off by default. Switch them on in the settings or with "/wfd shot".
+- Everything fixed in 0.3.4 is in this version too.
 
 **Good to know**
 - Your diary is kept as it was. Bookmarks from the old book still work.
@@ -75,28 +55,7 @@ changed since 0.3, in short.
 - Farben stehen immer zusammen mit einem Zeichen, und jeder Stil wurde auf guten Kontrast geprüft.
 
 **Behoben**
-- „Neues Land entdeckt“ kommt nicht mehr erneut für Gebiete, in denen du schon warst (in Gasthäusern und Höhlen
-  nennt das Spiel ein Gebiet manchmal anders).
-- Ein Gebiet wird nicht mehr nach einem Gasthaus oder Rathaus darin umbenannt (dort nennt das Spiel das Gebäude).
-  So gespeicherte Gebiete werden beim Einloggen einmal zurückgeführt, und der Atlas erkennt Gebiete auch über die Karte.
-- In Dungeons und Schlachtfeldern ist der Ort jetzt die Instanz selbst, nicht ein Gebäude darin (zum Beispiel
-  das Sägewerk in der Warsongschlucht). Solche Einträge werden beim Einloggen einmal in ihre Instanz zurückgeführt.
-- In manchen Dungeons hält das Spiel geheim, wie Kreaturen aussehen, auch vor Addons. Ihre Karten im Bestiarium
-  zeigen jetzt deutlich „Kein Porträt“, statt leer zu wirken, und die Karte erklärt den Grund.
-- Wer auf einer Flugroute über ein Gebiet fliegt, entdeckt es nicht mehr. Gebiete werden nur am Boden erfasst,
-  und das Gebiet, in dem du landest, wird sofort geprüft.
-- Karten, die ein Gebiet in einer anderen Sprache nennen als das Spiel („Stormwind“ im deutschen Spiel), nehmen
-  jetzt den Namen, den das Spiel dem Gebiet gab. So finden Gebietsseiten ihre Bezirke und Besuche wieder.
-- Entdeckst du zum ersten Mal einen Ort in einem bekannten Gebiet, zeigt eine kleine Meldung den Ort und darunter
-  das Gebiet (nur wenn alle Meldungen an sind, ohne Screenshot, nicht im Flug).
-- Sehenswürdigkeiten und Kreaturen, die du nur vom Greifen aus siehst, gelten nicht mehr als entdeckt oder
-  gesichtet. Die Sehenswürdigkeit, an der du landest, wird sofort geprüft.
-- Die Gebietschronik zeigt alle Orte eines Gebiets: erst die gefundenen, darunter grau die noch zu entdeckenden (aus
-  den Daten des Spiels und aus dem, was deine anderen Charaktere dort gefunden haben).
-- Lange Notizen laufen nicht mehr aus ihrem Feld: Die Notizkarte wächst mit deinem Text, und die Seite folgt beim
-  Schreiben dem Cursor.
-- Screenshots bei Meilensteinen sind jetzt standardmäßig aus. In den Einstellungen oder mit „/wfd shot“ lassen sie
-  sich einschalten.
+- Alle Fehlerbehebungen aus 0.3.4 sind auch in dieser Version enthalten.
 
 **Gut zu wissen**
 - Dein Tagebuch bleibt, wie es war. Lesezeichen aus dem alten Buch funktionieren weiter.
