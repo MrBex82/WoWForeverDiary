@@ -378,6 +378,34 @@ function WFD:RepairZoneNames()
             if real ~= name and C.zones[name] and remember(name, real) then found = true end
         end
     end
+    -- a building inside a dungeon or battleground ("Sägewerk der Warsong" in Warsongschlucht): a stored land that
+    -- is no instance, no land of the atlas and has no map of a zone, and that shares a sub-area with an instance
+    -- (the same named spot was recorded under both), belongs to that instance
+    local atlas = {}
+    for _, cont in ipairs(self.CONTINENTS or {}) do
+        local ok, kids = pcall(C_Map.GetMapChildrenInfo, cont, 3, false)
+        for _, k in ipairs(ok and kids or {}) do
+            if k.name then atlas[k.name] = true atlas[fix[k.name] or k.name] = true end
+        end
+    end
+    for name, z in pairs(C.zones) do
+        local id = C.zoneMaps and C.zoneMaps[name]
+        local info = type(id) == "number" and C_Map.GetMapInfo(id)
+        local zoneMap = info and info.mapType and info.mapType >= 3
+        if type(z) == "table" and type(z.sub) == "table" and not zoneMap and not atlas[name]
+            and not (C.instances and C.instances[name]) and not renames[name] then
+            local only, n = nil, 0
+            for inst in pairs(C.instances or {}) do
+                local iz = C.zones[inst]
+                if inst ~= name and type(iz) == "table" and type(iz.sub) == "table" then
+                    for sub in pairs(z.sub) do
+                        if iz.sub[sub] then only, n = inst, n + 1 break end
+                    end
+                end
+            end
+            if n == 1 and remember(name, only) then found = true end
+        end
+    end
     if not found then return end
     local ok, err = pcall(applyAll, C)
     if not ok then self:Error("rename", err) end

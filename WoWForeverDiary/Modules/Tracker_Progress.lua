@@ -14,7 +14,11 @@ local lastZone
 -- a small map inside a zone belongs to that zone. Dungeons keep the name the game gives them.
 local function zoneNow()
     local real = GetRealZoneText()
-    if not (C_Map and C_Map.GetBestMapForUnit and C_Map.GetMapInfo) or IsInInstance() then return real end
+    if IsInInstance() then
+        local name = GetInstanceInfo and GetInstanceInfo()
+        return (type(name) == "string" and name ~= "") and name or real
+    end
+    if not (C_Map and C_Map.GetBestMapForUnit and C_Map.GetMapInfo) then return real end
     local info = C_Map.GetMapInfo(C_Map.GetBestMapForUnit("player") or 0)
     -- standing in a zone: the map names it. Inside inns and town halls the game's text is the building
     -- ("Gasthaus Seenhain"), which is no land of its own. Map names this client gives in another language
