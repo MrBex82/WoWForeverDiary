@@ -34,9 +34,12 @@ local function Tick(el)
     end
 
     -- landed: the land you are in now is checked at once (it may be new)
-    if inAir and not onTaxi and WFD.RefreshZone then
-        local ok, err = pcall(WFD.RefreshZone)
-        if not ok then WFD:Error("zone", err) end
+    if inAir and not onTaxi then
+        if WFD.RefreshZone then
+            local ok, err = pcall(WFD.RefreshZone)
+            if not ok then WFD:Error("zone", err) end
+        end
+        WFD:Signal("landed")
     end
 
     -- a flight is counted when it begins, not when a destination was clicked

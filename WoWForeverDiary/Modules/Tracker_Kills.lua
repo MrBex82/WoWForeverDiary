@@ -71,7 +71,9 @@ local function cacheUnit(unit)
     -- a creature seen but not yet slain: the bestiary shows it as a covered card with the place it was seen
     local C = WFD.C
     local canAttack = UnitCanAttack("player", unit)
-    if C and not WFD.paused and not C.mobs[id] and name and canAttack and not (isSecret and isSecret(canAttack)) then
+    -- (not from a flight path: what you see below a flight is not met)
+    local flying = UnitOnTaxi and UnitOnTaxi("player")
+    if C and not WFD.paused and not flying and not C.mobs[id] and name and canAttack and not (isSecret and isSecret(canAttack)) then
         C.sighted = C.sighted or {}
         if not C.sighted[id] then
             local map, x, y = WFD:PlayerPos()
