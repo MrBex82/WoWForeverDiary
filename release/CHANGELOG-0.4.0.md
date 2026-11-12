@@ -28,6 +28,8 @@ changed since 0.3, in short.
 **Fixed**
 - "New land discovered" no longer comes up again for regions you have been to (inside inns and caves the game
   sometimes names a region differently).
+- A region is no longer renamed after an inn or town hall inside it (the game names the building there). Regions
+  stored that way are moved back once when you log in, and the atlas knows a region by its map too.
 - Long notes no longer run out of their box: the notes card grows with your text, and the page follows the cursor
   while you write.
 - Screenshots at milestones are now off by default. Switch them on in the settings or with "/wfd shot".
@@ -61,6 +63,8 @@ changed since 0.3, in short.
 **Behoben**
 - „Neues Land entdeckt“ kommt nicht mehr erneut für Gebiete, in denen du schon warst (in Gasthäusern und Höhlen
   nennt das Spiel ein Gebiet manchmal anders).
+- Ein Gebiet wird nicht mehr nach einem Gasthaus oder Rathaus darin umbenannt (dort nennt das Spiel das Gebäude).
+  So gespeicherte Gebiete werden beim Einloggen einmal zurückgeführt, und der Atlas erkennt Gebiete auch über die Karte.
 - Lange Notizen laufen nicht mehr aus ihrem Feld: Die Notizkarte wächst mit deinem Text, und die Seite folgt beim
   Schreiben dem Cursor.
 - Screenshots bei Meilensteinen sind jetzt standardmäßig aus. In den Einstellungen oder mit „/wfd shot“ lassen sie

@@ -189,16 +189,24 @@ function WFD:AtlasState()
     for _, d in pairs(C.days) do
         for z, t in pairs(d.zones or {}) do secs[z] = (secs[z] or 0) + t end
     end
+    -- lands on record by their map: a land counts as seen even when its stored name differs from the map's
+    local fix = self.loc and self.loc.zoneFix or {}
+    local byMap = {}
+    for name, id in pairs(C.zoneMaps or {}) do
+        if C.zones[name] and type(id) == "number" then byMap[id] = byMap[id] or name end
+    end
     for _, cont in ipairs(self.CONTINENTS) do
         local ok, kids = pcall(get, cont, zoneType, false)
         if ok and type(kids) == "table" and #kids > 0 then
             local e = { id = cont, name = self:MapName(cont), zones = {}, visited = 0, secs = 0 }
             local seen = {}
             for _, k in ipairs(kids) do
-                if k.name and not seen[k.name] then
-                    seen[k.name] = true
-                    local z = C.zones[k.name]
-                    local it = { id = k.mapID, name = k.name, visited = z ~= nil, day = z and z.day, secs = secs[k.name] or 0 }
+                local name = k.name and (fix[k.name] or k.name)
+                if name and not seen[name] then
+                    seen[name] = true
+                    local stored = C.zones[name] and name or byMap[k.mapID]
+                    local z = stored and C.zones[stored]
+                    local it = { id = k.mapID, name = name, visited = z ~= nil, day = z and z.day, secs = secs[stored or name] or 0 }
                     e.zones[#e.zones + 1] = it
                     if it.visited then e.visited = e.visited + 1 end
                     e.secs = e.secs + it.secs

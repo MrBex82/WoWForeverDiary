@@ -361,11 +361,37 @@ function WFD:FixZoneName(old, new)
     if self.UI and self.UI.ClearCaches then self.UI.ClearCaches() end
 end
 
+-- Lands stored under the name of a building (an inn, a town hall: the game names the building as the zone
+-- inside it) are moved back to the zone the map puts them in. Names that point the wrong way are forgotten.
+function WFD:RepairZoneNames()
+    local C = self.C
+    if not C or self.demo or not (C_Map and C_Map.GetMapInfo) or not C.zones then return end
+    local fix = self.loc and self.loc.zoneFix or {}
+    for old, new in pairs(C.zoneAlias or {}) do
+        if fix[old] ~= new then C.zoneAlias[old] = nil end
+    end
+    local found = false
+    for name, id in pairs(C.zoneMaps or {}) do
+        local info = type(id) == "number" and C_Map.GetMapInfo(id)
+        if info and info.mapType == 3 and type(info.name) == "string" and info.name ~= "" then
+            local real = fix[info.name] or info.name
+            if real ~= name and C.zones[name] and remember(name, real) then found = true end
+        end
+    end
+    if not found then return end
+    local ok, err = pcall(applyAll, C)
+    if not ok then self:Error("rename", err) end
+    self.dirty = true
+    if self.UI and self.UI.ClearCaches then self.UI.ClearCaches() end
+end
+
 WFD:OnInit(function()
     if C_Timer and C_Timer.After then
         C_Timer.After(8, function() pcall(start) end)
         C_Timer.After(10, function()
             for old, new in pairs(WFD.loc and WFD.loc.zoneFix or {}) do WFD:FixZoneName(old, new) end
+            local ok, err = pcall(WFD.RepairZoneNames, WFD)
+            if not ok then WFD:Error("rename", err) end
         end)
     end
 end)
