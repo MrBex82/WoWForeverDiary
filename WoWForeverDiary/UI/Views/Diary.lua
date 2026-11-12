@@ -179,6 +179,7 @@ UI:RegisterView({
         v.nextB:AddArrow("right")
         v.mark = K.Button(v.foot, L["Bookmark"], "ghost", function() v:ToggleMark() end)
         v.where = K.Text(v.foot, "small", "muted", "CENTER")
+        v.where:SetWordWrap(false)
 
         function v:Days()
             self.days = self.days or dayList()
@@ -223,8 +224,7 @@ UI:RegisterView({
             self.prev:SetEnabled(at ~= nil and at > 1)
             self.nextB:SetEnabled(at ~= nil and at < #days)
             self.mark:SetLabel(self:Marked() and L["Remove the bookmark"] or L["Set a bookmark"])
-            self.where:SetText(self.day and (format(L["Day %d of %d"], self.day, days[#days] or self.day) .. "  -  "
-                .. L["Arrow keys turn the days"]) or "")
+            self.where:SetText(self.day and format(L["Day %d of %d"], self.day, days[#days] or self.day) or "")
         end
 
         ------------------------------------------------------------------------

@@ -92,8 +92,6 @@ function UI.SettingsSchema()
                 set = function(v) UI:SetScale(floor(v * 100 + 0.5) / 100) if UI.LayoutShell then UI.LayoutShell() end end,
                 fmt = function(v) return floor(v * 100 + 0.5) .. "%" end,
                 hint = L["Also with Ctrl + mouse wheel. Drag the corner at the bottom right for a wider or taller window."] },
-            { type = "toggle", label = L["Turn the leaves visibly"],
-                get = function() return S().turnAnim ~= false end, set = function(v) S().turnAnim = (not v) and false or nil end },
             { type = "toggle", label = L["Show the companion beside the game"],
                 get = function() return S().companion and true or false end, set = function(v) UI:ShowCompanion(v) end,
                 hint = L["A small window with today's figures, the tasks and the honours closest to their next tier. Drag it by its title, fold it with the minus."] },

@@ -220,11 +220,15 @@ function K.Report(parent)
         return w - 2 * PAD - 4          -- room for the scroll bar
     end
 
+    -- (the width first: asking for it can make the game lay the window out at once, and a report that is
+    -- written while it lays out would be written twice)
     function rp:Begin()
+        self.busy = true
+        local w = self:Width()
         for _, s in pairs(st) do s.n = 0 end
         for _, p in pairs(pictures) do p:Hide() end
         self.y = PAD
-        self.w = self:Width()
+        self.w = w
         return self.w
     end
 
@@ -486,11 +490,12 @@ function K.Report(parent)
     function rp:End()
         for _, s in pairs(st) do s:Done() end
         self.scroll:SetContentHeight(self.y + PAD)
+        self.busy = false
     end
 
     -- the report is written again when its width changes (fill: the function that writes it)
     rp.scroll.onResize = function()
-        if rp.fill and rp:IsShown() then
+        if rp.fill and rp:IsShown() and not rp.busy then
             local w = rp:Width()
             if not rp.w or math.abs(w - rp.w) > 1 then rp.fill() end
         end

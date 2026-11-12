@@ -88,20 +88,38 @@ local function closeLayer()
     return false
 end
 
+-- The window takes keys only while the mouse is over it: some game clients do not let a frame hand a key on to
+-- the game, and then Enter (the chat) and walking would be lost while the window is open. Escape closes what lies
+-- on top, then the window itself.
 local function setupKeys(holder)
     if not holder.EnableKeyboard then return end
-    holder:EnableKeyboard(true)
+    holder:EnableKeyboard(false)
     propagate(holder, true)
+    local watch = CreateFrame("Frame", nil, holder)
+    local acc = 0
+    watch:SetScript("OnUpdate", function(_, dt)
+        acc = acc + dt
+        if acc < 0.1 then return end
+        acc = 0
+        if InCombatLockdown and InCombatLockdown() then
+            if holder:IsKeyboardEnabled() then pcall(holder.EnableKeyboard, holder, false) end
+            return
+        end
+        local want = UI.inShell and holder:IsMouseOver() or false
+        if holder:IsKeyboardEnabled() ~= want then pcall(holder.EnableKeyboard, holder, want) end
+    end)
+    holder:HookScript("OnHide", function() pcall(holder.EnableKeyboard, holder, false) end)
     holder:SetScript("OnKeyDown", function(self, key)
         local fn = (IsControlKeyDown() and KEYS["CTRL-" .. key]) or KEYS[key]
         local typing = GetCurrentKeyBoardFocus and GetCurrentKeyBoardFocus()
         if key == "ESCAPE" then
-            if not typing and not (InCombatLockdown and InCombatLockdown()) and closeLayer() then
-                propagate(self, false)
-                C_Timer.After(0, function() propagate(self, true) end)
-            else
+            if typing or (InCombatLockdown and InCombatLockdown()) then
                 propagate(self, true)
+                return
             end
+            propagate(self, false)
+            if not closeLayer() then UI:Hide() end
+            C_Timer.After(0, function() propagate(self, true) end)
             return
         end
         if fn and not typing and UI.inShell and self:IsMouseOver() and not (InCombatLockdown and InCombatLockdown()) then

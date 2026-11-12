@@ -328,7 +328,7 @@ UI.ReportView({
         local draft = C.capsuleDraft
         if draft and draft:find("%S") then
             rp:Paragraph(draft, "soft", false, true)
-            rp:Button(L["edit note"], writeLetter, "ghost")
+            rp:Button(L["Change the letter"], writeLetter, "ghost")
             rp:Kicker(L["Seal the letter and open it ..."])
             rp:Button(L["in a week"], function() seal("days", 7) end, "primary")
             rp:Button(L["in a month"], function() seal("days", 30) end, "primary")
@@ -339,7 +339,7 @@ UI.ReportView({
             end
             rp:Text(L["Until then the letter stays sealed. Not even you can read it."], "muted", "small")
         else
-            rp:Button(L["+ note"], writeLetter, "primary")
+            rp:Button(L["Write a letter"], writeLetter, "primary")
         end
         rp:Gap(8)
         -- the letters: sealed ones first (soonest to open on top), then the opened ones, newest first
