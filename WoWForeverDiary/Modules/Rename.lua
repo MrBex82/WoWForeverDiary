@@ -152,7 +152,11 @@ local function applyAll(C)
         return a
     end)
     rekey(C.zoneMaps)
-    rekey(C.announced)
+    -- announced lands keep their old name too: inside an inn or a cave the map may still give it
+    C.announced = C.announced or {}
+    for old, new in pairs(renames) do
+        if C.announced[old] then C.announced[new] = true end
+    end
     rekey(C.instances, earlier)
     rekey(C.encounters, sum)
     rekey(C.nemesis, function(a, b) a.n = (a.n or 0) + (b.n or 0) return a end)
@@ -347,6 +351,10 @@ function WFD:FixZoneName(old, new)
         end
     end
     if not stored or not remember(old, new) then return end
+    C.zoneAlias = C.zoneAlias or {}
+    C.zoneAlias[old] = new
+    C.announced = C.announced or {}
+    if C.announced[old] or C.announced[new] then C.announced[old], C.announced[new] = true, true end
     local ok, err = pcall(applyAll, C)
     if not ok then self:Error("rename", err) end
     self.dirty = true

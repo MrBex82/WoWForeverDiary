@@ -25,6 +25,11 @@ changed since 0.3, in short.
 - Notes, the companion, the week in review and every small window share the same look.
 - Colours always come with a sign or a mark, and every style was checked for good contrast.
 
+**Fixed**
+- "New land discovered" no longer comes up again for regions you have been to (inside inns and caves the game
+  sometimes names a region differently).
+- Screenshots at milestones are now off by default. Switch them on in the settings or with "/wfd shot".
+
 **Good to know**
 - Your diary is kept as it was. Bookmarks from the old book still work.
 - The first start of a new version keeps a copy for 30 days ("/wfd backup").
@@ -50,6 +55,12 @@ changed since 0.3, in short.
 - Vier Stile, die sofort wechseln: Leder und Gold, Pergament, Modern, Starker Kontrast. Schrift bis 120 Prozent.
 - Meldungen, Begleiter, Wochenrückblick und jedes kleine Fenster haben denselben Stil.
 - Farben stehen immer zusammen mit einem Zeichen, und jeder Stil wurde auf guten Kontrast geprüft.
+
+**Behoben**
+- „Neues Land entdeckt“ kommt nicht mehr erneut für Gebiete, in denen du schon warst (in Gasthäusern und Höhlen
+  nennt das Spiel ein Gebiet manchmal anders).
+- Screenshots bei Meilensteinen sind jetzt standardmäßig aus. In den Einstellungen oder mit „/wfd shot“ lassen sie
+  sich einschalten.
 
 **Gut zu wissen**
 - Dein Tagebuch bleibt, wie es war. Lesezeichen aus dem alten Buch funktionieren weiter.
