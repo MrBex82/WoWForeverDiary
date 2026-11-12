@@ -14,6 +14,9 @@
 - The first time you discover a place inside a region you know (for example a district of a capital), a small
   note now shows it, with the region below. It comes only with all notes switched on, without a
   screenshot, and not while flying.
+- The region pages of the maps now list every place of a region: the ones you found, then the ones still to find
+  in grey. The list comes from the game's own data (names in your language) and from what your other characters
+  found there; the tooltip tells you who already knows a place.
 
 ## Deutsch
 
@@ -29,3 +32,6 @@
 - Entdeckst du zum ersten Mal einen Ort in einem Gebiet, das du schon kennst (zum Beispiel „Der Waldrand“ im Wald
   von Elwynn), zeigt eine kleine Meldung den Ort und darunter das Gebiet. Sie kommt nur, wenn alle Meldungen an
   sind, ohne Screenshot und nicht während eines Flugs.
+- Die Gebietsseiten bei den Karten zeigen jetzt alle Orte eines Gebiets: erst die gefundenen, darunter grau die noch
+  zu entdeckenden. Die Liste stammt aus den Daten des Spiels (Namen in deiner Sprache) und aus dem, was deine
+  anderen Charaktere dort gefunden haben; der Tooltip sagt, wer einen Ort schon kennt.

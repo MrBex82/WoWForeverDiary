@@ -406,14 +406,12 @@ UI:RegisterRenderer("mapinfo", function(pool, page, side, canvas)
         y = y - rowH
     end
 
-    -- places discovered
+    -- places: the ones found in ink, the ones still to find in grey (from the game's list of places and from what
+    -- other characters of the account found here)
     y = y - 10
-    local subs = {}
-    if z and z.sub then
-        for name, t in pairs(z.sub) do subs[#subs + 1] = { name = name, t = t } end
-        table.sort(subs, function(a, b) return a.t < b.t end)
-    end
-    UI.SectionHead(pool, canvas, tx, tw, y + 18, 32, L["Places discovered"], tostring(#subs))
+    local subs, found = WFD:ZonePlaces(e.zone, e.id)
+    UI.SectionHead(pool, canvas, tx, tw, y + 18, 32, L["Places discovered"],
+        #subs > found and (found .. " / " .. #subs) or tostring(found))
     y = y - 22
     if #subs == 0 then
         local n = pool:Text(12, c.inkFaint, UI.FONT)
@@ -428,17 +426,24 @@ UI:RegisterRenderer("mapinfo", function(pool, page, side, canvas)
     local cap3 = rowsFit * 2
     local shown = #subs <= cap3 and #subs or (cap3 - 1)
     for i = 1, shown do
+        local it = subs[i]
+        local done = it.t ~= nil
         local col = (i - 1) % 2
         local row = floor((i - 1) / 2)
         local x = tx + col * (colW + 16)
         local ry = y - row * ROW
-        local dm = pool:Diamond(5, c.redInk)
+        local dm = pool:Diamond(5, done and c.redInk or { 0.50, 0.45, 0.38, 0.6 })
         dm:SetPoint("CENTER", canvas, "TOPLEFT", x + 4, ry - 7)
-        local t = pool:Text(12, c.ink, UI.FONT)
-        t:SetText(subs[i].name)
+        local t = pool:Text(12, done and c.ink or c.inkFaint, UI.FONT)
+        t:SetText(it.name)
         t:SetWordWrap(false)
         t:SetWidth(colW - 14)
         t:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 13, ry - 1)
+        if not done then
+            local hot = pool:Hot({ it.name, L["Not yet discovered"], it.who and format(L["%s already found this place."], it.who) or nil })
+            hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, ry + 1)
+            hot:SetSize(colW, ROW - 2)
+        end
     end
     if shown < #subs then
         local i = shown + 1

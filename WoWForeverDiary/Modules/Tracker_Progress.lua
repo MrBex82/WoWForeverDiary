@@ -118,6 +118,7 @@ local function refreshZone()
         z.sub[sub] = time()
         C.subCount = (C.subCount or 0) + 1
         WFD:Log("sub", format(L["Discovered: %s (%s)"], sub, zone))
+        WFD:NotePlace(zone, sub)
         -- a small note for the new place; not when the whole land is new (that note says enough), and not for a
         -- spot that carries the land's own name
         if not freshLand and sub ~= zone then WFD:Signal("place", sub, zone) end
@@ -126,6 +127,64 @@ local function refreshZone()
 end
 
 WFD.RefreshZone = refreshZone
+
+-- The places any character of the account found, by land: another character's album page shows them as places
+-- still to find, with who found them.
+function WFD:NotePlace(zone, sub)
+    if self.paused or self.demo or not self.S or type(zone) ~= "string" or type(sub) ~= "string" then return end
+    self.S.places = self.S.places or {}
+    local z = self.S.places[zone]
+    if not z then
+        z = {}
+        self.S.places[zone] = z
+    end
+    if not z[sub] then z[sub] = (self.C and self.C.name) or true end
+end
+
+-- the places this character found before the account knew about places
+WFD:OnInit(function()
+    local C = WFD.C
+    if not C or C.placesShared or WFD.demo then return end
+    for zone, z in pairs(C.zones or {}) do
+        for sub in pairs(z.sub or {}) do WFD:NotePlace(zone, sub) end
+    end
+    C.placesShared = true
+end)
+
+-- Every place of a land: the ones found (with the time), then the ones still to find - from the area table of the
+-- game (names in the client's language) and from what other characters of the account found there.
+-- Returns a list of { name, t (found at) or nil, who (another character who knows it) or nil }.
+function WFD:ZonePlaces(zone, mapID)
+    local C = self.C
+    local out, seen = {}, {}
+    local z = C and C.zones and C.zones[zone]
+    for name, t in pairs(z and z.sub or {}) do
+        out[#out + 1] = { name = name, t = t }
+        seen[name] = true
+    end
+    table.sort(out, function(a, b) return a.t < b.t end)
+    local open = {}
+    local mine = C and C.name
+    local others = self.S and self.S.places and self.S.places[zone] or {}
+    local function add(name, who)
+        if type(name) ~= "string" or name == "" or name == zone or seen[name] then return end
+        seen[name] = true
+        open[#open + 1] = { name = name, who = (type(who) == "string" and who ~= mine) and who or nil }
+    end
+    for name, who in pairs(others) do add(name, who) end
+    local ids = mapID and self.ZONE_PLACES and self.ZONE_PLACES[mapID]
+    if ids and C_Map and C_Map.GetAreaInfo then
+        for _, id in ipairs(ids) do add(C_Map.GetAreaInfo(id), nil) end
+    end
+    -- known by another character first, then by name
+    table.sort(open, function(a, b)
+        if (a.who ~= nil) ~= (b.who ~= nil) then return a.who ~= nil end
+        return a.name < b.name
+    end)
+    local found = #out
+    for _, e in ipairs(open) do out[#out + 1] = e end
+    return out, found
+end
 
 for _, ev in ipairs({ "ZONE_CHANGED", "ZONE_CHANGED_INDOORS", "ZONE_CHANGED_NEW_AREA" }) do
     WFD:On(ev, refreshZone)

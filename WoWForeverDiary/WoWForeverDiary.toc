@@ -35,6 +35,7 @@ Locales\ptBR.lua
 Locales\ruRU.lua
 Locales\zhTW.lua
 
+Modules\PlaceData.lua
 Modules\Retell.lua
 Modules\Rename.lua
 Modules\Tracker_Path.lua
