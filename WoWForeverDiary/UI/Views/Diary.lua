@@ -225,6 +225,9 @@ UI:RegisterView({
             self.nextB:SetEnabled(at ~= nil and at < #days)
             self.mark:SetLabel(self:Marked() and L["Remove the bookmark"] or L["Set a bookmark"])
             self.where:SetText(self.day and format(L["Day %d of %d"], self.day, days[#days] or self.day) or "")
+            -- shown only where it fits whole between the buttons (larger writing, a narrow window)
+            local room = (self.foot:GetWidth() or 0) - self.prev:GetWidth() - self.nextB:GetWidth() - self.mark:GetWidth() - 36
+            self.where:SetShown(self.where:GetStringWidth() <= room)
         end
 
         ------------------------------------------------------------------------
@@ -402,7 +405,7 @@ UI:RegisterView({
             self.where:ClearAllPoints()
             self.where:SetPoint("LEFT", self.prev, "RIGHT", 8, 0)
             self.where:SetPoint("RIGHT", self.mark, "LEFT", -8, 0)
-            self.where:SetShown(pw >= 520)
+            self:PaintFoot()
         end
 
         function v:Refresh()

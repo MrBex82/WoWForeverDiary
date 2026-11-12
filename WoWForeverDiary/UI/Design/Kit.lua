@@ -473,6 +473,13 @@ end
 function K.Dropdown(parent, items, get, set, width)
     local b = K.Button(parent, "", "secondary", nil, width or 220)
     b:AddArrow("down")
+    -- one line, as wide as the writing needs it (it grows with the size of the writing)
+    b.label:SetWordWrap(false)
+    b.baseW = width or 220
+    Skin.Add(b, function(s)
+        s.fixedW = floor(s.baseW * max(1, UI.FONT_SCALE or 1) + 0.5)
+        s:SetWidth(s.fixedW)
+    end)
     function b:Refresh()
         local cur = get()
         for _, it in ipairs(items) do if it[1] == cur then self:SetLabel(it[2]) end end

@@ -239,7 +239,6 @@ local CAT_ICONS = {
     flight = { "Ability_Mount_Gryphon_01", "Ability_Mount_Wyvern_01", "Spell_Nature_Swiftness" },
     bank = { "INV_Misc_Bag_10" }, other = { "INV_Misc_QuestionMark" },
 }
-local GOLD_C, RED_C = { 0.95, 0.76, 0.36 }, { 0.90, 0.40, 0.30 }
 local PAD, GAP = 16, 14
 local DAYS_SHOWN = 14
 
@@ -307,6 +306,10 @@ local function makeChart(parent)
 
     function f:Draw(days, w, h)
         self:SetSize(w, h)
+        -- the gold and the red of the style: they read on dark leather and on light parchment alike
+        local gr, gg, gb = UI.Tok("gold")
+        local rr, rg, rb = UI.Tok("neg")
+        local GOLD_C, RED_C = { gr, gg, gb }, { rr, rg, rb }
         local nt, nl, nh, nx = 0, 0, 0, 0
         local n = #days
         if n > 0 then
