@@ -42,6 +42,8 @@ changed since 0.3, in short.
   (only with all notes switched on, without a screenshot, not while flying).
 - Landmarks and creatures seen from a flight path are no longer recorded as discovered or sighted. The landmark
   where you land is checked right away.
+- The region chronicle lists every place of a region: the ones you found, then the ones still to find in grey (from
+  the game's own data and from what your other characters found there).
 - Long notes no longer run out of their box: the notes card grows with your text, and the page follows the cursor
   while you write.
 - Screenshots at milestones are now off by default. Switch them on in the settings or with "/wfd shot".
@@ -89,6 +91,8 @@ changed since 0.3, in short.
   das Gebiet (nur wenn alle Meldungen an sind, ohne Screenshot, nicht im Flug).
 - Sehenswürdigkeiten und Kreaturen, die du nur vom Greifen aus siehst, gelten nicht mehr als entdeckt oder
   gesichtet. Die Sehenswürdigkeit, an der du landest, wird sofort geprüft.
+- Die Gebietschronik zeigt alle Orte eines Gebiets: erst die gefundenen, darunter grau die noch zu entdeckenden (aus
+  den Daten des Spiels und aus dem, was deine anderen Charaktere dort gefunden haben).
 - Lange Notizen laufen nicht mehr aus ihrem Feld: Die Notizkarte wächst mit deinem Text, und die Seite folgt beim
   Schreiben dem Cursor.
 - Screenshots bei Meilensteinen sind jetzt standardmäßig aus. In den Einstellungen oder mit „/wfd shot“ lassen sie

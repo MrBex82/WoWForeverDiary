@@ -140,9 +140,8 @@ local function chronicle(id, stat)
         if m.zone == name and (m.kills or 0) > 0 then mobs[#mobs + 1] = { id = mid, m = m } end
     end
     table.sort(mobs, function(a, b) return a.m.kills > b.m.kills end)
-    local subs = {}
-    for sub, t in pairs(z and z.sub or {}) do subs[#subs + 1] = { name = sub, t = t } end
-    table.sort(subs, function(a, b) return a.t < b.t end)
+    -- every place of the region: the ones found first, then the ones still to find
+    local subs, found = WFD:ZonePlaces(name, id)
     local finds, kinds = {}, {}
     for _, s in ipairs(C.gather and C.gather[id] or {}) do
         kinds[s.k] = (kinds[s.k] or 0) + 1
@@ -153,7 +152,7 @@ local function chronicle(id, stat)
     table.sort(top, function(a, b) return a.n > b.n end)
     return {
         name = name, stat = stat, visits = z and z.visits, deaths = deaths, quests = quests, people = people,
-        rests = rests, mobs = mobs, subs = subs, kinds = kinds, finds = top,
+        rests = rests, mobs = mobs, subs = subs, found = found, kinds = kinds, finds = top,
     }
 end
 
@@ -470,12 +469,19 @@ UI:RegisterView({
                 rp:Gap(10)
             end
 
-            -- places discovered: all of them
-            rp:Head(L["Places discovered"], tostring(#ch.subs))
-            if #ch.subs == 0 then rp:Text(L["No places discovered here yet."], "muted", "body") end
+            -- places: the ones found, then the ones still to find in grey (the game's list of places and what other
+            -- characters of the account found here)
+            rp:Head(L["Places discovered"], #ch.subs > ch.found and (ch.found .. " / " .. #ch.subs) or tostring(ch.found))
+            if ch.found == 0 then rp:Text(L["No places discovered here yet."], "muted", "body") end
             local names = {}
-            for _, sub in ipairs(ch.subs) do names[#names + 1] = sub.name end
+            for i = 1, ch.found do names[#names + 1] = ch.subs[i].name end
             rp:Bullets(names)
+            for i = ch.found + 1, #ch.subs do
+                local it = ch.subs[i]
+                rp:Line({ name = it.name, nameKey = "muted",
+                    tip = it.name .. "\n" .. L["Not yet discovered"]
+                        .. (it.who and ("\n" .. format(L["%s already found this place."], it.who)) or "") })
+            end
         end
 
         function v:FillContinent(rp)
