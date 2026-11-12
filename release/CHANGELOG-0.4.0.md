@@ -30,6 +30,8 @@ changed since 0.3, in short.
   sometimes names a region differently).
 - A region is no longer renamed after an inn or town hall inside it (the game names the building there). Regions
   stored that way are moved back once when you log in, and the atlas knows a region by its map too.
+- Inside dungeons and battlegrounds the place is now the instance itself, not a building in it (for example the
+  lumber mill in Warsong Gulch). Such entries are moved back to their instance once when you log in.
 - Long notes no longer run out of their box: the notes card grows with your text, and the page follows the cursor
   while you write.
 - Screenshots at milestones are now off by default. Switch them on in the settings or with "/wfd shot".
@@ -65,6 +67,8 @@ changed since 0.3, in short.
   nennt das Spiel ein Gebiet manchmal anders).
 - Ein Gebiet wird nicht mehr nach einem Gasthaus oder Rathaus darin umbenannt (dort nennt das Spiel das Gebäude).
   So gespeicherte Gebiete werden beim Einloggen einmal zurückgeführt, und der Atlas erkennt Gebiete auch über die Karte.
+- In Dungeons und Schlachtfeldern ist der Ort jetzt die Instanz selbst, nicht ein Gebäude darin (zum Beispiel
+  das Sägewerk in der Warsongschlucht). Solche Einträge werden beim Einloggen einmal in ihre Instanz zurückgeführt.
 - Lange Notizen laufen nicht mehr aus ihrem Feld: Die Notizkarte wächst mit deinem Text, und die Seite folgt beim
   Schreiben dem Cursor.
 - Screenshots bei Meilensteinen sind jetzt standardmäßig aus. In den Einstellungen oder mit „/wfd shot“ lassen sie
