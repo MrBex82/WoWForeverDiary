@@ -759,11 +759,12 @@ SlashCmdList["WOWFOREVERDIARY"] = function(msg)
         local doIt = msg == "cleanup yes"
         local n, list = WFD:CleanCompanions(doIt)
         local p = "|cffffd100WoW Forever Diary:|r "
-        if n == 0 then print(p .. "Keine Gefaehrten zum Entfernen gefunden.")
-        elseif doIt then print(p .. n .. " Gefaehrten entfernt.")
+        if n == 0 then print(p .. L["No companions to remove."])
+        elseif doIt then print(p .. format(L["%d companions removed."], n))
         else
-            print(p .. n .. " Gefaehrten wuerden entfernt (Fremde aus Schlachtfeldern): " .. table.concat(list, ", ", 1, math.min(#list, 15)) .. (#list > 15 and ", ..." or ""))
-            print(p .. "Mit /wfd cleanup yes werden sie entfernt.")
+            print(p .. format(L["%d companions would be removed (strangers from battlegrounds): %s"], n,
+                table.concat(list, ", ", 1, math.min(#list, 15)) .. (#list > 15 and ", ..." or "")))
+            print(p .. L["Type /wfd cleanup yes to remove them."])
         end
     elseif msg == "restore" then
         WFD:RestorePrevious()
@@ -773,6 +774,8 @@ SlashCmdList["WOWFOREVERDIARY"] = function(msg)
     elseif msg == "restore backup" or msg == "backup" then
         WFD:RestoreBackup()
     elseif msg == "help" then
+        -- (L["open the look back at the week"] L["find strangers from battlegrounds among the companions"]
+        -- L["list what the game blocked"] L["list the commands in the chat"])
         for _, h in ipairs({ { "/wfd", "open or close the diary" }, { "/wfd demo", "explore with invented data" },
             { "/wfd shot", "screenshots on or off" }, { "/wfd minimap", "minimap button on or off" },
             { "/wfd export", "moving code of this character" }, { "/wfd import", "read a moving code" },
@@ -780,6 +783,10 @@ SlashCmdList["WOWFOREVERDIARY"] = function(msg)
             { "/wfd memory", "show today's memory again" }, { "/wfd restore", "bring back the diary put aside" },
             { "/wfd backup", "bring back the copy from before the last update" },
             { "/wfd resettoast", "put the notes back at the top of the screen" },
+            { "/wfd recap", "open the look back at the week" },
+            { "/wfd cleanup", "find strangers from battlegrounds among the companions" },
+            { "/wfd blocked", "list what the game blocked" },
+            { "/wfd help", "list the commands in the chat" },
             { "/wfd bestiary", "open a part: today, bestiary, honour, ledger, atlas, settings ... or a day number" } }) do
             print("|cffffd100" .. h[1] .. "|r - " .. L[h[2]])
         end

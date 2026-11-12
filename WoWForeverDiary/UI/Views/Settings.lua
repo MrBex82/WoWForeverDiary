@@ -75,6 +75,7 @@ function UI.SettingsSchema()
             { type = "toggle", label = L["Show when an item was first found in its tooltip"], flag = "itemTip" },
             { type = "toggle", label = L["Take a screenshot at milestones"], flag = "screenshots" },
             { type = "toggle", label = L["Show minimap button"], flag = "minimap", after = function() UI:UpdateMinimapButton() end },
+            { type = "toggle", label = L["Lock the minimap button"], flag = "minimapLocked" },
             { type = "toggle", label = L["Show the cover when the book is first opened"], flag = "cover" },
         },
     },
@@ -95,6 +96,8 @@ function UI.SettingsSchema()
             { type = "toggle", label = L["Show the companion beside the game"],
                 get = function() return S().companion and true or false end, set = function(v) UI:ShowCompanion(v) end,
                 hint = L["A small window with today's figures, the tasks and the honours closest to their next tier. Drag it by its title, fold it with the minus."] },
+            { type = "toggle", label = L["Lock the companion in place"], flag = "compLocked",
+                hint = L["The mouse wheel over its title changes its size."] },
         },
     },
     {
@@ -183,6 +186,7 @@ local function themeCards(parent)
         b.name = K.Text(b, "strong", "ink")
         b.name:SetText(themeName(key))
         b:SetScript("OnClick", function(self)
+            WFD.S.styleChosen = true
             if (UI.THEME or "codex") ~= self.key then UI.SetTheme(self.key) end
         end)
         b:SetScript("OnEnter", function(self) self.hover = true f:Refresh() end)

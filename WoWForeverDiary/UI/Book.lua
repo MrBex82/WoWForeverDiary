@@ -725,6 +725,7 @@ WFD:OnInit(function()
         if button == "RightButton" and UI.OpenSettings then UI:OpenSettings() else UI:Toggle() end
     end)
     mm:SetScript("OnDragStart", function(self)
+        if WFD.S.minimapLocked then return end            -- the button stays where it is
         self:SetScript("OnUpdate", function()
             local mx, my = Minimap:GetCenter()
             local px, py = GetCursorPosition()
@@ -747,7 +748,7 @@ WFD:OnInit(function()
         end
         GameTooltip:AddLine(L["Click to open the diary."], 0.5, 0.8, 1)
         GameTooltip:AddLine(L["Right-click for the settings."], 0.5, 0.8, 1)
-        GameTooltip:AddLine(L["Drag to move this button."], 0.5, 0.8, 1)
+        if not WFD.S.minimapLocked then GameTooltip:AddLine(L["Drag to move this button."], 0.5, 0.8, 1) end
         GameTooltip:Show()
     end)
     mm:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -755,6 +756,15 @@ WFD:OnInit(function()
     Minimap:HookScript("OnSizeChanged", placeMinimap)
     C_Timer.After(1, placeMinimap)      -- other addons may resize the map after login
     UI:UpdateMinimapButton()
+    -- the drawer of addons beside the minimap, where the client has one
+    if AddonCompartmentFrame and AddonCompartmentFrame.RegisterAddon then
+        pcall(AddonCompartmentFrame.RegisterAddon, AddonCompartmentFrame, {
+            text = "WoW Forever Diary", icon = "Interface\\Icons\\INV_Misc_Book_09", notCheckable = true,
+            func = function(_, _, _, _, button)
+                if button == "RightButton" and UI.OpenSettings then UI:OpenSettings() else UI:Toggle() end
+            end,
+        })
+    end
 end)
 
 ------------------------------------------------------------------------

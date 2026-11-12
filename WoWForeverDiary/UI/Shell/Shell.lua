@@ -310,6 +310,7 @@ local function showResults()
     local hits, q = UI.Search.Find(text, res.kind)
     local typed = #text >= 2 or #hits > 0
     if not typed then res:Hide() return end
+    if WFD.S then WFD.S.searched = true end
     res:Show()
     paintChips()
     local y = res.chipsBottom or -44

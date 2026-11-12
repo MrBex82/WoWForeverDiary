@@ -550,6 +550,83 @@ function cards.progress(parent)
     return c
 end
 
+-- First steps: five small things that show what the diary can do; ticked off as they are done, gone when all are
+-- done or the card is put away
+local FIRST_STEPS = {
+    { "Read a day in the diary", function(C) return C.readDay ~= nil end, function() R.Go({ view = "diary" }) end },
+    { "Set a bookmark below a day", function(C) return #(C.marks or {}) > 0 end, function() R.Go({ view = "diary" }) end },
+    { "Search the diary (Ctrl + F)", function(C, S) return S.searched end, function() if UI.FocusSearch then UI:FocusSearch() end end },
+    { "Choose a style that suits you", function(C, S) return S.styleChosen end, function() R.Go({ view = "settings", section = 2 }) end },
+    { "Show the companion beside the game", function(C, S) return S.companion == true end, function() UI:ShowCompanion(true) end },
+}
+-- (L["Read a day in the diary"] L["Set a bookmark below a day"] L["Search the diary (Ctrl + F)"]
+-- L["Choose a style that suits you"] L["Show the companion beside the game"])
+
+local function stepRow(parent)
+    local r = K.Box(parent, nil, nil, "Button")
+    r.box = K.Box(r, nil, "muted")
+    r.box:SetSize(16, 16)
+    r.box:SetPoint("LEFT", 6, 0)
+    r.box:EnableMouse(false)
+    r.tick = K.Glyph(r.box, "check", 14, "pos")
+    r.tick:SetPoint("CENTER")
+    r.arrow = K.Glyph(r, "right", 10, "muted")
+    r.arrow:SetPoint("RIGHT", -6, 0)
+    r.text = K.Text(r, "body", "ink")
+    r.text:SetPoint("LEFT", r.box, "RIGHT", 10, 0)
+    r.text:SetPoint("RIGHT", r.arrow, "LEFT", -8, 0)
+    r.text:SetWordWrap(false)
+    r:SetHeight(30)
+    r:SetScript("OnEnter", function(self) self:SetSurface("hover") end)
+    r:SetScript("OnLeave", function(self) self:SetSurface(nil) end)
+    r:SetScript("OnClick", function(self) if self.go then self.go() end end)
+    return r
+end
+
+function cards.first(parent)
+    local c = K.Card(parent)
+    head(c, L["First steps"])
+    c.rows = {}
+    for i = 1, #FIRST_STEPS do c.rows[i] = stepRow(c) end
+    c.hide = K.Button(c, L["Put the card away"], "ghost", function()
+        WFD.S.firstStepsHidden = true
+        local v = UI.ViewInstance("start")
+        if v then v:Refresh() end
+    end)
+    function c:Fill()
+        local C, S = WFD.C, WFD.S
+        local doneN = 0
+        for i, st in ipairs(FIRST_STEPS) do
+            local done = st[2](C, S) and true or false
+            if done then doneN = doneN + 1 end
+            local r = self.rows[i]
+            r.text:SetText(L[st[1]])
+            K.Recolor(r.text, done and "soft" or "ink")
+            r.tick:SetShown(done)
+            r.box.borderKey = done and "pos" or "muted"
+            K.Repaint(r.box)
+            r.go = st[3]
+        end
+        self.head:Set(L["First steps"], doneN .. " / " .. #FIRST_STEPS)
+        self.off = S.firstStepsHidden or doneN == #FIRST_STEPS or WFD.demo
+    end
+    function c:Measure(w)
+        self:SetWidth(w)
+        local y = PAD + 18 + 8
+        for _, r in ipairs(self.rows) do
+            r:ClearAllPoints()
+            r:SetPoint("TOPLEFT", self, "TOPLEFT", PAD - 6, -y)
+            r:SetPoint("RIGHT", self, "RIGHT", -PAD + 6, 0)
+            y = y + 30
+        end
+        y = y + 6
+        self.hide:ClearAllPoints()
+        self.hide:SetPoint("TOPLEFT", self, "TOPLEFT", PAD - 8, -y)
+        return y + self.hide:GetHeight() + PAD - 6
+    end
+    return c
+end
+
 ------------------------------------------------------------------------
 -- The view: the cards in two or three columns, scrolling when they do not fit
 ------------------------------------------------------------------------
@@ -562,7 +639,7 @@ UI:RegisterView({
         scroll:SetPoint("BOTTOMRIGHT", 0, 0)
         local area = scroll.content
         local C = {}
-        for _, key in ipairs({ "today", "tasks", "new", "memory", "destination", "almost", "progress" }) do
+        for _, key in ipairs({ "first", "today", "tasks", "new", "memory", "destination", "almost", "progress" }) do
             C[key] = cards[key](area)
         end
         v.cards = C
@@ -575,6 +652,7 @@ UI:RegisterView({
             end
             C.memory.off = WFD.S.memoryPage == false
             C.memory:SetShown(not C.memory.off)
+            C.first:SetShown(not C.first.off)
             self:Arrange()
         end
 
@@ -588,12 +666,14 @@ UI:RegisterView({
             local mem = (not C.memory.off) and C.memory or nil
             if cols == 3 then
                 rows = {
+                    C.first.off and {} or { { C.first, 3 } },
                     { { C.today, 2 }, { C.tasks, 1 } },
                     { { C.new, 1 }, { mem or C.destination, 1 }, { mem and { C.destination, C.almost } or C.almost, 1 } },
                     { { C.progress, 3 } },
                 }
             else
                 rows = {
+                    C.first.off and {} or { { C.first, 2 } },
                     { { C.today, 2 } },
                     { { C.tasks, 1 }, { C.new, 1 } },
                     { { mem or C.destination, 1 }, { mem and { C.destination, C.almost } or C.almost, 1 } },
@@ -638,7 +718,7 @@ UI:RegisterView({
                         item[2]:Show()
                     end
                 end
-                y = y + rowH + GAP
+                if #row > 0 then y = y + rowH + GAP end
             end
             scroll:SetContentHeight(y + 6)
         end
