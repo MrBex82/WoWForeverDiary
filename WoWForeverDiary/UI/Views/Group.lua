@@ -5,7 +5,7 @@ local UI = WFD.UI
 local L = WFD.L
 local K = UI.Kit
 local R = UI.Router
-local floor, max, min, format = math.floor, math.max, math.min, string.format
+local floor, max, min, abs, format = math.floor, math.max, math.min, math.abs, string.format
 
 local PAD, GAP = 18, 14
 -- the old key of a group (for its notes, kept in the book as "group:<key>")
@@ -118,8 +118,9 @@ UI:RegisterView({
         eb:SetMultiLine(true)
         eb:SetAutoFocus(false)
         eb:SetMaxLetters(4000)
+        -- only the top is fixed: the box grows with the text, and the card and the page grow with it
         eb:SetPoint("TOPLEFT", PAD, -PAD - 30)
-        eb:SetPoint("BOTTOMRIGHT", -PAD, PAD)
+        eb:SetPoint("TOPRIGHT", -PAD, -PAD - 30)
         UI.Skin.Add(eb, function(e)
             local font, size = UI.TypeFont("body")
             e:SetFont(font, size, "")
@@ -140,9 +141,36 @@ UI:RegisterView({
                 WFD.C.notes[v.noteKey] = (t ~= "") and t or nil
             end
         end)
+        -- a longer note makes the card taller (checked each frame while the box is shown, as the box grows a
+        -- frame after the text), and the page follows the cursor while writing
+        eb:SetScript("OnSizeChanged", function()
+            if abs(v:NotesHeight() - (v.notesH or 0)) >= 1 then v:Arrange() end
+        end)
+        eb:SetScript("OnCursorChanged", function(e, _, y, _, h)
+            if not e:HasFocus() then return end
+            v.cursorY, v.cursorH = y, h
+            C_Timer.After(0, function() v:KeepCursor() end)
+        end)
         v.notes:EnableMouse(true)
         v.notes:SetScript("OnMouseUp", function() eb:SetFocus() end)
         v.edit = eb
+
+        function v:NotesHeight()
+            return max(170, (self.edit:GetHeight() or 0) + PAD * 2 + 30 + 10)
+        end
+        -- the line with the cursor stays in sight of the scrolling page
+        function v:KeepCursor()
+            local cy = self.cursorY
+            if not cy or not self.notesY then return end
+            local top = self.notesY + PAD + 30 - cy
+            local bottom = top + (self.cursorH or 16) + 8
+            local cur, vh = scroll:GetVerticalScroll(), scroll:GetHeight() or 0
+            if top < cur then
+                scroll:ScrollTo(top - 8)
+            elseif bottom > cur + vh then
+                scroll:ScrollTo(bottom - vh)
+            end
+        end
 
         function v:Fill()
             local g = UI.NAV_GROUP[self.group]
@@ -209,8 +237,10 @@ UI:RegisterView({
             y = y + 6
             self.notes:ClearAllPoints()
             self.notes:SetPoint("TOPLEFT", area, "TOPLEFT", x0, -y)
-            self.notes:SetSize(W, 170)
-            y = y + 170 + 20
+            self.notesY = y
+            self.notesH = self:NotesHeight()
+            self.notes:SetSize(W, self.notesH)
+            y = y + self.notesH + 20
             scroll:SetContentHeight(y)
         end
 

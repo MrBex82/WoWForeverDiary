@@ -28,6 +28,8 @@ changed since 0.3, in short.
 **Fixed**
 - "New land discovered" no longer comes up again for regions you have been to (inside inns and caves the game
   sometimes names a region differently).
+- Long notes no longer run out of their box: the notes card grows with your text, and the page follows the cursor
+  while you write.
 - Screenshots at milestones are now off by default. Switch them on in the settings or with "/wfd shot".
 
 **Good to know**
@@ -59,6 +61,8 @@ changed since 0.3, in short.
 **Behoben**
 - „Neues Land entdeckt“ kommt nicht mehr erneut für Gebiete, in denen du schon warst (in Gasthäusern und Höhlen
   nennt das Spiel ein Gebiet manchmal anders).
+- Lange Notizen laufen nicht mehr aus ihrem Feld: Die Notizkarte wächst mit deinem Text, und die Seite folgt beim
+  Schreiben dem Cursor.
 - Screenshots bei Meilensteinen sind jetzt standardmäßig aus. In den Einstellungen oder mit „/wfd shot“ lassen sie
   sich einschalten.
 
