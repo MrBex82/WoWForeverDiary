@@ -265,3 +265,10 @@ UI:RegisterRenderer("fishwaters", function(pool, page, side, canvas)
     UI.LeaderLine(pool, canvas, tx, y, tw, L["Casts with a lure"], tostring(C.catchLured or 0), 13, c.inkSoft)
     UI.LeaderLine(pool, canvas, tx, y - 20, tw, L["Casts in all"], tostring(C.catchCasts or 0), 13, c.inkSoft)
 end)
+
+-- the picture and the kind of a piece of tackle (the waters and tackle on the travel desk)
+function UI.TackleLook(id, r)
+    local fallback = TACKLE_ICONS[r.kind or "rod"] or TACKLE_ICONS.rod
+    return instantIcon(id) or (r.link and WFD:ItemIcon(r.link)) or UI.IconPath(fallback, "loot"),
+        L[TACKLE_LABEL[r.kind or "rod"] or "Fishing pole"]
+end

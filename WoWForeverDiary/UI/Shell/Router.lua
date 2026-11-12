@@ -50,6 +50,8 @@ function UI.PartsOf(g)
     for _, key in ipairs(g.parts or {}) do
         local s = UI.SectionOf(key)
         local there = key == "diary" or (UI.PART_VIEW and UI.PART_VIEW[key]) or (book and book.sectionStart[key])
+        local en = UI.PART_ENABLED and UI.PART_ENABLED[key]
+        if en then there = there and en() end
         if there and (key == "diary" or not s or not s.enabled or s.enabled()) then out[#out + 1] = key end
     end
     return out

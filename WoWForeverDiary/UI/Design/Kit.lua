@@ -658,11 +658,23 @@ local function buildDialog()
         e:SetFont(font, size, "")
         e:SetTextColor(Tok("ink"))
     end)
+    -- a longer text: several lines, Enter makes a new line
+    d.multi = K.Box(d.box, "inset", "line", "EditBox")
+    d.multi:SetMultiLine(true)
+    d.multi:SetAutoFocus(false)
+    d.multi:SetTextInsets(8, 8, 8, 8)
+    d.multi:SetFontObject(ChatFontNormal)
+    Skin.Add(d.multi, function(e)
+        local font, size = UI.TypeFont("body")
+        e:SetFont(font, size, "")
+        e:SetTextColor(Tok("ink"))
+    end)
+    d.multi:SetScript("OnEscapePressed", function() d:Hide() end)
     d.ok = K.Button(d.box, "", "primary")
     d.cancel = K.Button(d.box, L["Cancel"], "secondary", function() d:Hide() end)
     d.input:SetScript("OnEnterPressed", function() d.ok:Click() end)
     d.input:SetScript("OnEscapePressed", function() d:Hide() end)
-    d:SetScript("OnHide", function(self) self.input:ClearFocus() end)
+    d:SetScript("OnHide", function(self) self.input:ClearFocus() self.multi:ClearFocus() end)
     d:Hide()
     return d
 end
@@ -689,7 +701,8 @@ local function secureReload(d)
     return b
 end
 
--- opt = { title, text, ok, danger, onOk, input = { value, numeric, max }, cancel, reload }
+-- opt = { title, text, ok, danger, onOk, input = { value, numeric, max, lines }, cancel, reload }
+-- (input.lines: a text of several lines, that many lines high)
 -- reload = true: OK reloads the interface (after onOk)
 local function openDialog(opt)
     dlg = dlg or buildDialog()
@@ -704,19 +717,34 @@ local function openDialog(opt)
     d.ok.style = opt.danger and "danger" or "primary"
     d.ok:SetLabel(opt.ok or OKAY or "OK")
     d.cancel:SetLabel(opt.cancel or L["Cancel"])
+    local multi = opt.input and opt.input.lines
     d.ok.onClick = function()
-        local v = opt.input and d.input:GetText()
+        local v = opt.input and (multi and d.multi or d.input):GetText()
         d:Hide()
         if opt.onOk then opt.onOk(v) end
     end
-    d.title:SetWidth(380 - 36)
+    local bw = multi and 460 or 380
+    d.title:SetWidth(bw - 36)
     local y = 16 + d.title:GetStringHeight() + 10
     if d.text:IsShown() then
-        d.text:SetWidth(380 - 36)
+        d.text:SetWidth(bw - 36)
         y = y + d.text:GetStringHeight() + 14
     end
     d.input:ClearAllPoints()
-    if opt.input then
+    d.multi:ClearAllPoints()
+    d.multi:Hide()
+    if multi then
+        local _, size = UI.TypeFont("body")
+        local h = floor(multi * (size + 4) + 16)
+        d.multi:SetPoint("TOPLEFT", d.box, "TOPLEFT", 18, -y)
+        d.multi:SetPoint("RIGHT", d.box, "RIGHT", -18, 0)
+        d.multi:SetHeight(h)
+        d.multi:SetMaxLetters(opt.input.max or 2000)
+        d.multi:SetText(opt.input.value or "")
+        d.multi:Show()
+        d.input:Hide()
+        y = y + h + 14
+    elseif opt.input then
         d.input:SetPoint("TOPLEFT", d.box, "TOPLEFT", 18, -y)
         d.input:SetPoint("RIGHT", d.box, "RIGHT", -18, 0)
         d.input:SetNumeric(opt.input.numeric and true or false)
@@ -751,8 +779,11 @@ local function openDialog(opt)
             print("|cffffd100WoW Forever Diary:|r " .. L["Type /reload to finish."])
         end
     end
+    d.box:SetWidth(multi and 460 or 380)
     d:Show()
-    if opt.input then
+    if multi then
+        d.multi:SetFocus()
+    elseif opt.input then
         d.input:SetFocus()
         d.input:HighlightText()
     end
