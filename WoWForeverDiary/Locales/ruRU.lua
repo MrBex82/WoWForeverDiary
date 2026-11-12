@@ -1322,3 +1322,4 @@ L["list what the game blocked"] = "показать, что заблокиров
 L["open the look back at the week"] = "открыть обзор недели"
 L["Change the goal"] = "Изменить цель"
 L["A week of travel in figures"] = "Неделя путешествий в цифрах"
+L["In this place the game keeps secret what the creatures look like."] = "Здесь игра скрывает, как выглядят существа."
