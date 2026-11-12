@@ -21,10 +21,7 @@ local function matches(q, ...)
     return false
 end
 
-local function openDay(day)
-    local p = day and UI.book and UI.book.dayPage[day]
-    if p then UI:OpenBook(p) end
-end
+local function openDay(day) UI:OpenDay(day) end
 
 ------------------------------------------------------------------------
 -- Treasures

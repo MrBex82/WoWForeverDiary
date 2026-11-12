@@ -15,6 +15,10 @@ function UI:OpenAt(target)
     if type(target) == "string" and UI.PART_VIEW and UI.PART_VIEW[target] then
         return self:OpenShell(UI.PartRoute(target))
     end
+    -- a day: the diary
+    if type(target) == "number" then
+        return self:OpenShell({ view = "diary", day = UI.DayGo(target) and target or nil })
+    end
     self:OpenBook(function(b)
         local page
         if type(target) == "number" then
@@ -56,7 +60,7 @@ function UI:OpenPart(word)
     local key = PART_WORDS[word]
     if not key then return false end
     -- "diary" leads to today's entry, as the tab of the diary does; "today" to the page called Today
-    if key == "diary" then self:OpenBook(function() return UI:TodayPage() end) return true end
+    if key == "diary" then self:OpenShell({ view = "diary", day = WFD:NumDays() }) return true end
     self:OpenAt(key)
     return true
 end

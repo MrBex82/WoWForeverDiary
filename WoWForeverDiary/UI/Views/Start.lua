@@ -141,11 +141,13 @@ function cards.today(parent)
             if p ~= "" and #paras < 2 then paras[#paras + 1] = p end
         end
         self.story:SetText(table.concat(paras, " "))
-        local rp, rlabel = UI.ResumePlace(UI.book)
-        self.resume:SetShown(rp ~= nil)
-        if rp then
-            self.resume:SetLabel(format(L["Continue reading: %s"], rlabel))
-            self.resume.onClick = function() UI:OpenBook(rp) end
+        -- the day last read in the diary, when it is not the newest
+        local rd = WFD.C.readDay
+        local resume = rd and rd ~= day and WFD.C.days[rd]
+        self.resume:SetShown(resume and true or false)
+        if resume then
+            self.resume:SetLabel(format(L["Continue reading: %s"], L["Diary"] .. ", " .. format(L["Day %d"], rd)))
+            self.resume.onClick = function() UI:OpenShell({ view = "diary", day = rd }) end
         end
     end
 
@@ -351,8 +353,7 @@ function cards.memory(parent)
         if mem then
             self.link:SetLabel(format(L["Read that day (day %d)"], mem.idx))
             self.link.onClick = function()
-                local p = UI.book and UI.book.dayPage[mem.idx]
-                if p then UI:OpenBook(p) end
+                UI:OpenDay(mem.idx)
             end
         end
     end

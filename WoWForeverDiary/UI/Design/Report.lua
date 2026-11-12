@@ -170,6 +170,40 @@ function K.Report(parent)
             UI.Skin.Add(f, function(s) s.dia:SetVertexColor(UI.Tok("gold")) end)
             return f
         end),
+        chip = stock(function(p)
+            local b = K.Box(p, "inset", "line", "Button")
+            b.text = K.Text(b, "small", "ink")
+            b.text:SetPoint("CENTER", 0, 0)
+            b:SetScript("OnEnter", function(s)
+                if s.tip then K.ShowTip(s, s.tip[1], { select(2, unpack(s.tip)) }) end
+            end)
+            b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+            return b
+        end),
+        cap = stock(function(p)
+            local t = K.Text(p, "display", "gold")
+            t:SetShadowColor(0, 0, 0, 0.6)
+            t:SetShadowOffset(1, -1)
+            return t
+        end),
+        para = stock(function(p) return K.Text(p, "body", "ink") end),
+        bar2 = stock(function(p) return K.Fill(p, "gold", "ARTWORK", 1, 0.5) end),
+        bprimary = stock(function(p) return K.Button(p, "", "primary") end),
+        bghost = stock(function(p) return K.Button(p, "", "ghost") end),
+        flourish = stock(function(p)
+            local f = CreateFrame("Frame", nil, p)
+            f:SetSize(40, 12)
+            f.d = {}
+            for i = -1, 1 do
+                local d = UI.Diamond(f, i == 0 and 7 or 4, { 1, 1, 1, 1 }, "ARTWORK", 1)
+                d:SetPoint("CENTER", f, "CENTER", i * 14, 0)
+                f.d[#f.d + 1] = d
+            end
+            UI.Skin.Add(f, function(s)
+                for i, d in ipairs(s.d) do d:SetVertexColor(UI.Tok(i == 2 and "gold" or "muted")) end
+            end)
+            return f
+        end),
     }
     local pictures = {}
 
@@ -194,8 +228,10 @@ function K.Report(parent)
         return self.w
     end
 
-    function rp:Title(text)
+    -- role: "title" (the default) or "display" (the big letters of a day or a chapter)
+    function rp:Title(text, role, key)
         local t = st.title:Take(area)
+        K.Recolor(t, key or "title", role or "title")
         t:SetWidth(self.w)
         t:SetText(text or "")
         place(t, t:GetStringHeight() + 4)
@@ -324,6 +360,128 @@ function K.Report(parent)
     end
 
     function rp:Gap(n) self.y = self.y + (n or 12) end
+
+    ------------------------------------------------------------------------
+    -- Pieces for reading (the diary and the chronicle)
+    ------------------------------------------------------------------------
+    -- a small line in capitals above a title ("CHAPTER III")
+    function rp:Kicker(text, key)
+        local t = st.text:Take(area)
+        K.Recolor(t, key or "gold", "section")
+        t:SetWidth(self.w)
+        t:SetText(UI.Upper(text or ""))
+        place(t, t:GetStringHeight() + 6)
+        return t
+    end
+
+    -- small boxes in a row that breaks where the room ends: { { text, key } }
+    function rp:Chips(list)
+        local x, rowH = 0, 0
+        for _, it in ipairs(list) do
+            local b = st.chip:Take(area)
+            b.text:SetText(it[1])
+            K.Recolor(b.text, it[2] or "ink", "small")
+            local bw, bh = b.text:GetStringWidth() + 18, b.text:GetStringHeight() + 10
+            b:SetSize(bw, bh)
+            if x > 0 and x + bw > self.w then x, self.y, rowH = 0, self.y + rowH + 6, 0 end
+            b:ClearAllPoints()
+            b:SetPoint("TOPLEFT", area, "TOPLEFT", PAD + x, -self.y)
+            b.tip = it[3]
+            x = x + bw + 6
+            rowH = max(rowH, bh)
+        end
+        if #list > 0 then self.y = self.y + rowH + 12 end
+    end
+
+    -- the words of a text: by spaces, or by characters for languages written without them
+    local function words(text)
+        local list = {}
+        local sep = (WFD.loc and WFD.loc.sentenceSep == "") and "" or " "
+        local pat = sep == "" and "[%z\1-\127\194-\244][\128-\191]*" or "%S+"
+        for w in text:gmatch(pat) do list[#list + 1] = w end
+        return list, sep
+    end
+    local measure = K.Text(rp, "body", "ink")
+    measure:Hide()
+
+    -- a paragraph of reading text; cap = true: an illuminated initial, the first two lines beside it
+    function rp:Paragraph(text, key, cap, bar)
+        local spacing = 3
+        if cap then
+            local list, sep = words(text)
+            local letter = list[1] and list[1]:match("^[%z\1-\127\194-\244][\128-\191]*")
+            if letter and (#letter > 1 or letter:find("%w")) then
+                local c = st.cap:Take(area)
+                c:SetText(letter)
+                local capW = c:GetStringWidth() + 4
+                local inner = self.w - capW
+                measure:SetSpacing(spacing)
+                measure:SetWidth(inner)
+                measure:SetText("Ag")
+                local lineH = measure:GetStringHeight()
+                local limit = lineH * 2 + spacing + 2
+                local first = { list[1]:sub(#letter + 1) }
+                local n = 1
+                for k = 2, #list do
+                    first[#first + 1] = list[k]
+                    measure:SetText(table.concat(first, sep))
+                    if measure:GetStringHeight() > limit then first[#first] = nil break end
+                    n = k
+                end
+                c:ClearAllPoints()
+                c:SetPoint("TOPLEFT", area, "TOPLEFT", PAD - 1, -self.y + 4)
+                local t = st.para:Take(area)
+                K.Recolor(t, key or "ink", "body")
+                t:SetSpacing(spacing)
+                t:SetWidth(inner)
+                t:SetText((table.concat(first, sep):gsub("^ ", "")))
+                t:ClearAllPoints()
+                t:SetPoint("TOPLEFT", area, "TOPLEFT", PAD + capW, -self.y)
+                local capH = max(c:GetStringHeight() - 6, t:GetStringHeight())
+                if n >= #list then
+                    self.y = self.y + capH + 10
+                    return
+                end
+                self.y = self.y + max(t:GetStringHeight(), lineH * 2 + spacing) + spacing
+                text = table.concat(list, sep, n + 1)
+            end
+        end
+        local t = st.para:Take(area)
+        K.Recolor(t, key or "ink", "body")
+        t:SetSpacing(spacing)
+        t:SetWidth(bar and (self.w - 12) or self.w)
+        t:SetText(text or "")
+        t:ClearAllPoints()
+        t:SetPoint("TOPLEFT", area, "TOPLEFT", PAD + (bar and 12 or 0), -self.y)
+        local h = t:GetStringHeight()
+        if bar then
+            local b = st.bar2:Take(area)
+            b:ClearAllPoints()
+            b:SetPoint("TOPLEFT", area, "TOPLEFT", PAD, -self.y)
+            b:SetSize(2, h)
+        end
+        self.y = self.y + h + 10
+        return t
+    end
+
+    -- a button in the flow of the report
+    function rp:Button(label, onClick, style)
+        local b = st[style == "primary" and "bprimary" or "bghost"]:Take(area)
+        b:SetLabel(label)
+        b.onClick = function() onClick() end
+        b:ClearAllPoints()
+        b:SetPoint("TOPLEFT", area, "TOPLEFT", PAD - (style == "primary" and 0 or 8), -self.y)
+        self.y = self.y + b:GetHeight() + 8
+        return b
+    end
+
+    -- a few small diamonds in the middle: the end of an entry
+    function rp:Flourish()
+        local f = st.flourish:Take(area)
+        f:ClearAllPoints()
+        f:SetPoint("TOP", area, "TOPLEFT", PAD + self.w / 2, -self.y)
+        self.y = self.y + 28
+    end
 
     function rp:End()
         for _, s in pairs(st) do s:Done() end

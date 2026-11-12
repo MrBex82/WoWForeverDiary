@@ -38,10 +38,7 @@ end
 
 -- the day of a moment, and its page in the diary
 local function dayOf(t) return t and WFD:DayIndex(t) end
-local function openDay(day)
-    local p = day and UI.book and UI.book.dayPage[day]
-    if p then UI:OpenBook(p) end
-end
+local function openDay(day) UI:OpenDay(day) end
 
 -- one line: an icon in a ring, a name, a line below it, two figures on the right
 local function makeRow(parent)

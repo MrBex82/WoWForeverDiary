@@ -737,6 +737,8 @@ function UI:EditDayNote(day)
             C.dayNotes[pop.day] = text:find("%S") and text or nil
             pop:Hide()
             UI:Reflow()
+            local v = UI.ViewInstance and UI.ViewInstance("diary")
+            if v and v.host:IsShown() then v:Refresh() end
         end, 16, c.redInk)
         save:SetPoint("BOTTOMRIGHT", -40, 24)
         local cancel = UI.InkButton(pop, L["Cancel"], function() pop:Hide() end, 16, c.inkSoft)

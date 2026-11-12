@@ -276,7 +276,12 @@ function UI.MarkList()
     local out = {}
     for i, m in ipairs(WFD.C and WFD.C.marks or {}) do
         out[#out + 1] = { i = i, title = markTitle(m), col = MARK_COLS[((i - 1) % #MARK_COLS) + 1],
-            go = function() local to = resolveMark(m) if to then UI:OpenBook(to) end end }
+            go = function()
+                if m.day then UI:OpenShell({ view = "diary", day = m.day }) return end
+                if m.route then UI:OpenShell(m.route) return end
+                local to = resolveMark(m)
+                if to then UI:OpenBook(to) elseif m.section then UI:OpenShell(UI.PartRoute(m.section)) end
+            end }
     end
     return out
 end
@@ -441,14 +446,25 @@ end
 -- Keys, while the mouse is over the open book (so walking and fighting stay untouched)
 ------------------------------------------------------------------------
 -- turning pages only while the book is open on the desk; the rest works everywhere in the window
-local function flip(dir) return function() if UI.bookFrame:IsShown() then UI:Flip(dir) end end end
+-- (a view of the desk that can be leafed through, the diary, turns its days)
+local function flip(dir)
+    return function()
+        if UI.bookFrame:IsShown() then UI:Flip(dir) return end
+        local cur = UI.Router and UI.Router.cur
+        local v = cur and UI.ViewInstance and UI.ViewInstance(cur.view)
+        if v and v.Turn and v.host and v.host:IsShown() then v:Turn(dir) end
+    end
+end
 local KEYS = {
     LEFT = flip(-1), PAGEUP = flip(-1), RIGHT = flip(1), PAGEDOWN = flip(1),
     HOME = function()
         if UI.inShell and UI.OpenStart then UI:OpenStart() return end
         if UI.book and UI.book.sectionStart.toc then UI:GoToPage(UI.book.sectionStart.toc) end
     end,
-    END = function() UI:GoToPage(UI:TodayPage()) end,
+    END = function()
+        if UI.inShell then UI:OpenShell({ view = "diary", day = WFD:NumDays() }) return end
+        UI:GoToPage(UI:TodayPage())
+    end,
     BACKSPACE = function() if UI.ShellBack then UI:ShellBack() else UI:Back() end end,
     ["CTRL-F"] = function()
         if UI.FocusSearch then UI:FocusSearch() elseif UI.ToggleSearch then UI:ToggleSearch() end

@@ -266,11 +266,11 @@ end
 local function dayLink(t)
     if not t then return "-", nil end
     local day = WFD:DayIndex(t)
-    local p = UI.book and UI.book.dayPage[day]
-    local txt = date(WFD.loc.date, t) .. (p and ("  (" .. format(L["p. %d"], UI.PageNumber(p)) .. ")") or "")
-    return txt, p and function()
+    local go = UI.DayGo(day)
+    local txt = date(WFD.loc.date, t) .. "  (" .. format(L["Day %d"], day) .. ")"
+    return txt, go and function()
         UI.card:Hide()
-        UI:GoToPage(p)
+        go()
     end
 end
 

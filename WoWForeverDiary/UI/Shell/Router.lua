@@ -73,7 +73,7 @@ local MAX = 40
 local function same(a, b)
     if not a or not b or a.view ~= b.view then return false end
     if a.view == "legacy" then return a.page == b.page end
-    return a.section == b.section and a.group == b.group and a.key == b.key and a.map == b.map and a.cont == b.cont
+    return a.section == b.section and a.group == b.group and a.key == b.key and a.map == b.map and a.cont == b.cont and a.day == b.day
 end
 
 -- the place of the book that is open right now, so the way back leads to the very spread

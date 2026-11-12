@@ -63,18 +63,19 @@ local function buildIndex()
     end
     -- regions and the places within them: their map page, else the day you first came there
     local placed = {}
-    local function dayOf(t) local d = t and WFD:DayIndex(t) return d and book.dayPage[d] end
+    local function dayOf(t) return t and WFD:DayIndex(t) end
+    local function toDay(d) return d and UI.DayGo(d) end
     for name, z in pairs(C.zones or {}) do
         if not placed[name] then
             placed[name] = true
             local map = z.map
             add("place", name, UI.Icon("map"), map and function() UI:OpenShell({ view = "world", map = map }) end
-                or toPage(book.dayPage[z.day or 0] or dayOf(z.first)), nil, 4)
+                or toDay(z.day or dayOf(z.first)), nil, 4)
         end
         for sub, t in pairs(z.sub or {}) do
             if not placed[sub] then
                 placed[sub] = true
-                add("place", sub, UI.Icon("sight"), toPage(dayOf(type(t) == "number" and t or nil)), sub .. " " .. name, 5)
+                add("place", sub, UI.Icon("sight"), toDay(dayOf(type(t) == "number" and t or nil)), sub .. " " .. name, 5)
             end
         end
     end
@@ -92,7 +93,7 @@ local function buildIndex()
         if q.title then
             local t = q.done or q.acc
             local d = t and WFD:DayIndex(t)
-            add("quest", q.title, UI.Icon("quests"), toPage(d and book.dayPage[d]) or toView("quests"), q.title .. " " .. (q.quote or ""), 3)
+            add("quest", q.title, UI.Icon("quests"), toDay(d) or toView("quests"), q.title .. " " .. (q.quote or ""), 3)
         end
     end
     -- treasures: every notable find, leading to the day it was first found
@@ -106,7 +107,7 @@ local function buildIndex()
     end
     for _, f in pairs(firstDay) do
         add("treasure", WFD:ItemName(f.link), WFD:ItemIcon(f.link) or UI.Icon("loot"),
-            toPage(book.dayPage[f.day]) or toView("treasures"), nil, 4)
+            toDay(f.day) or toView("treasures"), nil, 4)
     end
     for _, h in ipairs(WFD.HONOURS or {}) do
         local tiers = C.honourTiers and C.honourTiers[h.key] or 0
@@ -116,13 +117,13 @@ local function buildIndex()
     end
     -- every day: the told story and your own notes
     for d = 1, WFD:NumDays() do
-        local p = book.dayPage[d]
+        local p = UI.DayGo(d)
         if p and C.days[d] then
             local story = UI.storyCache[d] or WFD:Narrate(d)
             local own = C.dayNotes and C.dayNotes[d] or ""
             local zone = WFD:MainZone(C.days[d])
             out[#out + 1] = { kind = "day", day = d, text = format(L["Day %d"], d), full = story .. " " .. own,
-                hay = lower(story .. " " .. own), icon = UI.Icon("journal"), go = toPage(p), rank = 6,
+                hay = lower(story .. " " .. own), icon = UI.Icon("journal"), go = p, rank = 6,
                 zone = zone, zoneLow = zone and lower(zone) or "", level = WFD:LevelAt(WFD:DayTime(d) + 43000) }
         end
     end

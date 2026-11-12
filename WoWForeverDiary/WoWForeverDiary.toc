@@ -94,6 +94,7 @@ UI\Shell\Router.lua
 UI\Shell\Shell.lua
 UI\Views\Legacy.lua
 UI\Views\Start.lua
+UI\Views\Diary.lua
 UI\Views\Settings.lua
 UI\Views\Help.lua
 UI\Views\Albums.lua
