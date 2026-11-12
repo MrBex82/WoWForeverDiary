@@ -23,11 +23,36 @@ local NPCS = {
     { 823, "Deputy Willem" }, { 197, "Marshal McBride" }, { 54, "Gryan Stoutmantle" },
     { 951, "Brother Neals" }, { 233, "Innkeeper Farley" }, { 1241, "Morgg Rotnose" },
 }
+-- quests with their number: the game names them in its own language where it knows them
 local QUESTS = {
-    "A Threat Within", "Kobold Camp Cleanup", "Wolves Across the Border", "Princess Must Die!",
-    "The Fargodeep Mine", "Bounty on Garrick Padfoot", "Brotherhood of Thieves", "Lost Necklace",
-    "Report to Goldshire", "Gold Dust Exchange", "Stolen Supplies", "Shipment to Stormwind",
+    { 783, "A Threat Within" }, { 7, "Kobold Camp Cleanup" }, { 33, "Wolves Across the Border" }, { 88, "Princess Must Die!" },
+    { 62, "The Fargodeep Mine" }, { 6, "Bounty on Garrick Padfoot" }, { 18, "Brotherhood of Thieves" }, { 85, "Lost Necklace" },
+    { 54, "Report to Goldshire" }, { 47, "Gold Dust Exchange" }, { 61, "Shipment to Stormwind" },
 }
+-- places within the regions, by their area number (named by the game), for the region chronicle and the search
+local PLACES = {
+    { 9, "Northshire Valley" }, { 87, "Goldshire" }, { 108, "Sentinel Hill" }, { 20, "Moonbrook" },
+    { 42, "Darkshire" }, { 94, "Raven Hill" },
+}
+local PLACE_MAP = { [9] = 1, [87] = 1, [108] = 2, [20] = 2, [42] = 3, [94] = 3 }
+
+local function questTitle(q)
+    local fn = C_QuestLog and C_QuestLog.GetTitleForQuestID
+    local ok, title = false, nil
+    if fn then ok, title = pcall(fn, q[1]) end
+    return (ok and title and title ~= "") and title or q[2]
+end
+local function areaName(a)
+    local fn = C_Map and C_Map.GetAreaInfo
+    local ok, name = false, nil
+    if fn then ok, name = pcall(fn, a[1]) end
+    return (ok and type(name) == "string" and name ~= "") and name or a[2]
+end
+local function itemName(it)
+    local ok, name = pcall(GetItemInfo, it[1])
+    if not (ok and name) and C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID, it[1]) end
+    return (ok and name) or it[2]
+end
 local ITEMS = {
     { 2092, "Worn Dagger", 1 }, { 1181, "Scroll of Strength", 2 }, { 1179, "Ice Cold Milk", 1 },
     { 1195, "Kobold Excavation Pick", 2 }, { 2071, "Medium Quiver", 3 },
@@ -59,6 +84,11 @@ local function build()
         if i == 1 then C.startZone = name end
         local first = i == 1 and 1 or OFF + 1 + (i - 1) * 3
         C.zones[name] = { first = WFD:DayTime(first), day = first, sub = {}, visits = 2 }
+    end
+    -- the places discovered in each region, a few hours after the region itself
+    for i, a in ipairs(PLACES) do
+        local z = C.zones[WFD:MapName(MAPS[PLACE_MAP[a[1]]])]
+        if z then z.sub[areaName(a)] = z.first + 3600 * i end
     end
 
     -- the first day and the same date a year ago
@@ -145,7 +175,7 @@ local function build()
         -- quests
         for _ = 1, rnd(2, 4) do
             qid = qid + 1
-            local title = QUESTS[((qid - 1001) % #QUESTS) + 1]
+            local title = questTitle(QUESTS[((qid - 1001) % #QUESTS) + 1])
             local npc = NPCS[rnd(1, #NPCS)]
             local acc = base + rnd(30000, 40000)
             C.quests[qid] = {
@@ -191,7 +221,7 @@ local function build()
         -- loot
         for _, it in ipairs(ITEMS) do
             if rnd() < 0.6 then
-                d.loot[it[1]] = { link = "|cffffffff|Hitem:" .. it[1] .. "::::::::1:::::::|h[" .. it[2] .. "]|h|r", n = rnd(1, 4), q = it[3] }
+                d.loot[it[1]] = { link = "|cffffffff|Hitem:" .. it[1] .. "::::::::1:::::::|h[" .. itemName(it) .. "]|h|r", n = rnd(1, 4), q = it[3] }
             end
         end
 
@@ -252,13 +282,13 @@ local function build()
         Ironforge = { first = WFD:DayTime(OFF + 5), day = OFF + 5, st0 = 4, st = 4, reached = {} },
     }
     C.rests = {
-        { t = WFD:DayTime(OFF + 1) + 20000, map = MAPS[1], x = 0.42, y = 0.65, zone = WFD:MapName(MAPS[1]), sub = "Goldshire", dur = 30000 },
-        { t = WFD:DayTime(OFF + 5) + 20000, map = MAPS[2], x = 0.56, y = 0.47, zone = WFD:MapName(MAPS[2]), sub = "Sentinel Hill", dur = 50000 },
+        { t = WFD:DayTime(OFF + 1) + 20000, map = MAPS[1], x = 0.42, y = 0.65, zone = WFD:MapName(MAPS[1]), sub = areaName(PLACES[2]), dur = 30000 },
+        { t = WFD:DayTime(OFF + 5) + 20000, map = MAPS[2], x = 0.56, y = 0.47, zone = WFD:MapName(MAPS[2]), sub = areaName(PLACES[3]), dur = 50000 },
     }
     -- a dungeon run and tasks of the day, so the newer pages have something to show
     local loot = {}
     for _, it in ipairs(ITEMS) do
-        if it[3] >= 2 then loot[#loot + 1] = "|cff1eff00|Hitem:" .. it[1] .. "::::::::1:::::::|h[" .. it[2] .. "]|h|r" end
+        if it[3] >= 2 then loot[#loot + 1] = "|cff1eff00|Hitem:" .. it[1] .. "::::::::1:::::::|h[" .. itemName(it) .. "]|h|r" end
     end
     local runStart = WFD:DayTime(OFF + 6) - 43200 + 19 * 3600
     local bosses = { "Rhahk'Zor", "Sneed", "Gilnid", "Mr. Smite", "Captain Greenskin", "Edwin VanCleef" }
@@ -291,13 +321,13 @@ local function build()
     local function first(h) return WFD:DayTime(1) - 43200 + h * 3600 end
     C.firsts = {
         kill = { t = first(10), day = 1, zone = WFD:MapName(MAPS[1]), s = "Kobold Vermin" },
-        quest = { t = first(11), day = 1, zone = WFD:MapName(MAPS[1]), s = QUESTS[1] },
+        quest = { t = first(11), day = 1, zone = WFD:MapName(MAPS[1]), s = questTitle(QUESTS[1]) },
         level = { t = first(12), day = 1, zone = WFD:MapName(MAPS[1]), s = format(L["Level %d reached!"], 2) },
         green = { t = at(2, 14), day = OFF + 2, zone = WFD:MapName(MAPS[1]), s = "Medium Quiver" },
         death = { t = at(2, 16), day = OFF + 2, zone = WFD:MapName(MAPS[1]), s = "Kobold Vermin" },
         group = { t = at(2, 18), day = OFF + 2, zone = WFD:MapName(MAPS[1]), s = "Brannok" },
         trade = { t = at(2, 19), day = OFF + 2, zone = WFD:MapName(MAPS[1]), s = "Brannok" },
-        flight = { t = at(5, 20), day = OFF + 5, zone = WFD:MapName(MAPS[2]), s = "Stormwind" },
+        flight = { t = at(5, 20), day = OFF + 5, zone = WFD:MapName(MAPS[2]), s = areaName({ 1519, "Stormwind" }) },
         dungeon = { t = runStart, day = OFF + 6, zone = WFD:MapName(MAPS[2]), s = "The Deadmines" },
         boss = { t = runStart + 600, day = OFF + 6, zone = WFD:MapName(MAPS[2]), s = "Rhahk'Zor" },
     }
