@@ -1,61 +1,58 @@
 # 0.4.0
 
-The diary got a new window around the book: a start page, a menu on the left and settings that work right away.
+The big rework: from a book you leafed through to a travel desk you can find your way around. This is what
+changed since 0.3, in short.
 
 ## English
 
-**New window**
-- The book now lies in a window you can resize. Drag the corner at the bottom right.
-- On the left is a menu with all parts of the diary, with names instead of only icons. Click a group to see its parts. New things show a small number.
-- Your bookmarks are listed at the bottom of that menu.
-- At the top: back and forward, where you are, the search, help and settings.
-- If the window is narrow, the menu shows only the icons. You can also fold it yourself.
+**Find everything quickly**
+- A window you can make as large as you like. On the left a register with every part, on top back and forward,
+  where you are, and a search for everything (Ctrl + F).
+- Start shows today at a glance and leads on to everything new.
+- Every list scrolls and can be filtered and sorted. Nothing is cut off any more.
 
-**Start page**
-- The diary now opens on Start: today in numbers, your tasks, what is new, a memory, the place to visit today, the honour you are closest to, and how far your collections are.
-- Every card takes you further with one click.
+**Read your days**
+- The diary shows one day on one page, with the chapters beside it, "Go to day" and bookmarks.
+- The chronicle: milestones as a timeline, records, the level timeline, the year book, the week in review and the
+  gallery.
 
-**Settings**
-- One page with four tabs: General, Appearance, Handling, Data.
-- Style and size of the writing change right away. No reload needed.
-- New: lock the window, so you cannot move or resize it by accident.
-- Changing the language asks first, because it reloads the interface.
-- The game's own options (Interface > AddOns) show the same switches.
+**See your world**
+- One world map with layers instead of the atlas, the maps, the gathering map and the hunting grounds.
+- Dungeon reports with the whole group, fate with your nemeses, a ledger with a chart of your purse.
 
-**Help**
-- The "?" at the top shows every key, mouse action and command.
+**One look everywhere**
+- Four styles that switch at once: leather and gold, parchment, modern, strong contrast. Writing up to 120 percent.
+- Notes, the companion, the week in review and every small window share the same look.
+- Colours always come with a sign or a mark, and every style was checked for good contrast.
 
 **Good to know**
-- The other parts still look like the book you know. They get their own pages in the next versions.
-- Pop-up notes and the companion window take a new style after a reload. That comes in a later version.
-- The short tour at the first start is gone for now. A better one comes later.
-- Your diary is not changed. The first start of this version keeps a copy for 30 days ("/wfd backup").
+- Your diary is kept as it was. Bookmarks from the old book still work.
+- The first start of a new version keeps a copy for 30 days ("/wfd backup").
+- "/wfd demo" shows the diary with invented data, in the language of your game where the game can name things.
 
 ## Deutsch
 
-**Neues Fenster**
-- Das Buch liegt jetzt in einem Fenster, dessen Größe du ändern kannst. Zieh einfach an der Ecke unten rechts.
-- Links ist ein Menü mit allen Teilen des Tagebuchs, mit Namen statt nur Symbolen. Klick auf eine Gruppe zeigt ihre Teile. Neues hat eine kleine Zahl.
-- Deine Lesezeichen stehen unten in diesem Menü.
-- Oben: Zurück und Vor, wo du gerade bist, die Suche, Hilfe und Einstellungen.
-- Ist das Fenster schmal, zeigt das Menü nur noch die Symbole. Du kannst es auch selbst einklappen.
+**Alles schnell finden**
+- Ein Fenster, so groß du willst. Links ein Register mit allen Teilen, oben Zurück und Vor, wo du bist, und eine
+  Suche über alles (Strg + F).
+- Start zeigt den Tag auf einen Blick und führt zu allem Neuen.
+- Jede Liste scrollt und lässt sich filtern und sortieren. Nichts wird mehr abgeschnitten.
 
-**Startseite**
-- Das Tagebuch öffnet jetzt auf Start: der Tag in Zahlen, deine Aufgaben, was neu ist, eine Erinnerung, das Reiseziel des Tages, die Ehrung, die du fast hast, und wie weit deine Sammlungen sind.
-- Jede Karte führt mit einem Klick weiter.
+**Deine Tage lesen**
+- Das Tagebuch zeigt einen Tag auf einer Seite, mit den Kapiteln daneben, "Gehe zu Tag" und Lesezeichen.
+- Die Chronik: Meilensteine als Zeitstrahl, Rekorde, Stufen-Zeitstrahl, Jahrbuch, Wochenrückblick und Galerie.
 
-**Einstellungen**
-- Eine Seite mit vier Reitern: Allgemein, Aussehen, Bedienung, Daten.
-- Stil und Schriftgröße wechseln sofort. Kein Neuladen mehr nötig.
-- Neu: Fenster sperren, damit man es nicht aus Versehen verschiebt oder in der Größe ändert.
-- Beim Wechsel der Sprache kommt erst eine Rückfrage, weil das Interface neu lädt.
-- Die Optionen des Spiels (Interface > AddOns) zeigen dieselben Schalter.
+**Deine Welt sehen**
+- Eine Weltkarte mit Ebenen statt Atlas, Karten, Fundorten und Jagdgründen.
+- Dungeon-Berichte mit der ganzen Gruppe, Schicksal mit deinen Erzfeinden, ein Kassenbuch mit Kurve des Geldbeutels.
 
-**Hilfe**
-- Das "?" oben zeigt alle Tasten, Mausaktionen und Befehle.
+**Überall ein Gesicht**
+- Vier Stile, die sofort wechseln: Leder und Gold, Pergament, Modern, Starker Kontrast. Schrift bis 120 Prozent.
+- Meldungen, Begleiter, Wochenrückblick und jedes kleine Fenster haben denselben Stil.
+- Farben stehen immer zusammen mit einem Zeichen, und jeder Stil wurde auf guten Kontrast geprüft.
 
 **Gut zu wissen**
-- Die übrigen Teile sehen noch aus wie das bekannte Buch. Sie bekommen in den nächsten Versionen eigene Seiten.
-- Meldungen und das Begleitfenster übernehmen einen neuen Stil erst nach einem Neuladen. Das kommt in einer späteren Version.
-- Die kurze Einführung beim ersten Start ist vorerst weg. Eine bessere kommt später.
-- Dein Tagebuch wird nicht verändert. Der erste Start dieser Version legt für 30 Tage eine Kopie an ("/wfd backup").
+- Dein Tagebuch bleibt, wie es war. Lesezeichen aus dem alten Buch funktionieren weiter.
+- Der erste Start einer neuen Version legt für 30 Tage eine Kopie an ("/wfd backup").
+- "/wfd demo" zeigt das Tagebuch mit erfundenen Daten, in der Sprache deines Spiels, wo das Spiel die Dinge benennen
+  kann.

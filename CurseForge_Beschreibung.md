@@ -1,6 +1,6 @@
 # ENGLISH
 
-> **Version 1.0:** the diary got a new home - a travel desk with a register, a search and pages for every part, instead of one long book. Your diary survives updates; before the first start of a new version the addon keeps a copy of the old state for 30 days ("/wfd backup" brings it back). If you notice something, a comment helps a lot.
+> **Version 0.4:** the diary got a new home - a travel desk with a register, a search and pages for every part, instead of one long book. Your diary survives updates; before the first start of a new version the addon keeps a copy of the old state for 30 days ("/wfd backup" brings it back). If you notice something, a comment helps a lot.
 
 **WoW Forever Diary** keeps a diary for your character. You log in, you play, it writes things down. At the end of the day there's an entry in plain sentences, like "Today I helped three people in Elwynn Forest, lost 40 copper to a vendor and died once to a Defias Pillager", instead of a table of numbers.
 
@@ -58,7 +58,7 @@ The diary never writes into your chat on its own.
 
 # DEUTSCH
 
-> **Version 1.0:** Das Tagebuch hat ein neues Zuhause bekommen - einen Reisetisch mit Register, Suche und einer eigenen Seite für jeden Teil, statt eines langen Buches. Dein Tagebuch übersteht Updates; vor dem ersten Start einer neuen Version legt das Addon 30 Tage lang eine Kopie des alten Stands an („/wfd backup“ holt sie zurück). Wenn dir etwas auffällt, hilft ein Kommentar sehr.
+> **Version 0.4:** Das Tagebuch hat ein neues Zuhause bekommen - einen Reisetisch mit Register, Suche und einer eigenen Seite für jeden Teil, statt eines langen Buches. Dein Tagebuch übersteht Updates; vor dem ersten Start einer neuen Version legt das Addon 30 Tage lang eine Kopie des alten Stands an („/wfd backup“ holt sie zurück). Wenn dir etwas auffällt, hilft ein Kommentar sehr.
 
 **WoW Forever Diary** führt ein Tagebuch für deinen Charakter. Du loggst dich ein, spielst, und es schreibt mit. Am Ende des Tages steht ein Eintrag in ganz normalen Sätzen da, zum Beispiel „Heute habe ich drei Leuten im Wald von Elwynn geholfen, 40 Kupfer an einen Händler verloren und bin einmal an einem Defias-Räuber gestorben“, statt einer Tabelle voller Zahlen.
 
