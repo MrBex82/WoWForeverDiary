@@ -163,6 +163,32 @@ function K.ShowTip(owner, title, lines, anchor)
     GameTooltip:Show()
 end
 
+-- When one of the texts of a row is cut short (it ends in "..."), the whole row is shown as a tooltip: the first
+-- text as its title, the others below. Returns true when a tooltip was shown.
+function K.ShowFull(owner, anchor, ...)
+    local texts, cut = {}, false
+    for i = 1, select("#", ...) do
+        local fs = select(i, ...)
+        if fs and fs:IsShown() then
+            local t = fs:GetText()
+            if t and t ~= "" then
+                texts[#texts + 1] = t
+                if fs:IsTruncated() then cut = true end
+            end
+        end
+    end
+    if not cut then return false end
+    K.ShowTip(owner, texts[1], { unpack(texts, 2) }, anchor)
+    return true
+end
+
+-- the same for one frame: while the mouse is on it, its texts in full when one is cut short
+function K.FullTip(frame, anchor, ...)
+    local list = { ... }
+    frame:HookScript("OnEnter", function(self) K.ShowFull(self, anchor, unpack(list)) end)
+    frame:HookScript("OnLeave", function() GameTooltip:Hide() end)
+end
+
 -- frame shows a tooltip while the mouse is on it (title and lines may be functions)
 function K.Tip(frame, title, lines, anchor)
     frame:HookScript("OnEnter", function(self)

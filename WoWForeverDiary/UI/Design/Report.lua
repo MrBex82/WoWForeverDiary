@@ -62,6 +62,8 @@ local function makeLine(parent)
             local lines = {}
             for i = 2, #self.tip do lines[#lines + 1] = self.tip[i] end
             K.ShowTip(self, self.tip[1], lines, "ANCHOR_LEFT")
+        else
+            K.ShowFull(self, "ANCHOR_LEFT", self.name, self.sub, self.right)
         end
     end)
     r:SetScript("OnLeave", function(self) self.hl:Hide() GameTooltip:Hide() end)

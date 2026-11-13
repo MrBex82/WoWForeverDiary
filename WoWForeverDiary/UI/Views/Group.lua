@@ -53,8 +53,10 @@ local function newCard(parent)
         self.hl:Show()
         self.borderKey = "gold"
         K.Repaint(self)
+        K.ShowFull(self, "ANCHOR_RIGHT", self.name, self.sub)
     end)
     c:SetScript("OnLeave", function(self)
+        GameTooltip:Hide()
         self.hl:Hide()
         self.borderKey = "line"
         K.Repaint(self)

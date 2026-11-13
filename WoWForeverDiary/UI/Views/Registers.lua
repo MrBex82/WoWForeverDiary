@@ -64,7 +64,7 @@ local function makeRow(parent)
     r.sub:SetWordWrap(false)
     r:SetScript("OnEnter", function(self)
         self:SetSurface("hover")
-        if self.tip then self.tip(self) end
+        if self.tip then self.tip(self) else K.ShowFull(self, "ANCHOR_RIGHT", self.name, self.sub) end
     end)
     r:SetScript("OnLeave", function(self) self:SetSurface(nil) GameTooltip:Hide() end)
     r:SetScript("OnClick", function(self, button) if self.go then self.go(button) end end)

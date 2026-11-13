@@ -81,7 +81,8 @@ local function newItem(parent)
     b:SetScript("OnEnter", function(self)
         self.hover = true
         self:Paint()
-        if S.narrow then K.ShowTip(self, self.label, self.tip, "ANCHOR_RIGHT") end
+        -- narrow: the name; wide: the name when it is cut short or there is news to tell
+        if S.narrow or self.tip or self.text:IsTruncated() then K.ShowTip(self, self.label, self.tip, "ANCHOR_RIGHT") end
     end)
     b:SetScript("OnLeave", function(self) self.hover = nil self:Paint() GameTooltip:Hide() end)
     function b:Paint()
@@ -513,7 +514,11 @@ local function buildSearch(top)
         row.text:SetPoint("LEFT", row.icon, "RIGHT", 8, 0)
         row.text:SetPoint("RIGHT", row.kind, "LEFT", -8, 0)
         row.text:SetWordWrap(false)
-        row:SetScript("OnEnter", function(self) chooseRow(i) end)
+        row:SetScript("OnEnter", function(self)
+            chooseRow(i)
+            K.ShowFull(self, "ANCHOR_RIGHT", self.text)
+        end)
+        row:SetScript("OnLeave", function() GameTooltip:Hide() end)
         row:SetScript("OnClick", function(self) openRow(self) end)
         res.rows[i] = row
     end

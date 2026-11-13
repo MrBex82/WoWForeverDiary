@@ -283,6 +283,7 @@ UI:RegisterView({
                     r.del:SetFlat(true)
                     r.del:SetPoint("RIGHT", 0, 0)
                     r:SetHeight(28)
+                    K.FullTip(r, "ANCHOR_RIGHT", r.text)
                     r:SetScript("OnClick", function(b)
                         local gg = WFD.C.myGoals[b.index]
                         if gg then gg.done = not gg.done or nil end

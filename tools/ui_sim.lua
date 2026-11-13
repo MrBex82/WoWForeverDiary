@@ -659,6 +659,16 @@ step("escape layer closed", function()
         error("the window is not closed by Escape again: " .. table.concat(env.UISpecialFrames, ","))
     end
 end)
+-- a text cut short shows the whole row as a tooltip, a whole one shows none
+step("full text", function()
+    local K = UI.Kit
+    local a, b = K.Text(UI.holder, "body"), K.Text(UI.holder, "small")
+    a:SetText("Ein sehr langer Name")
+    b:SetText("Zeile darunter")
+    if K.ShowFull(UI.holder, nil, a, b) then error("a whole text showed a tooltip") end
+    a.IsTruncated = function() return true end
+    if not K.ShowFull(UI.holder, nil, a, b) then error("a text cut short showed no tooltip") end
+end)
 step("dialog", function()
     UI:Confirm({ title = "Frage", text = "Text", ok = "Ja", onOk = function() end })
     UI.Kit.CloseDialog()
