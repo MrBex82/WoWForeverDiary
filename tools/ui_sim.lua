@@ -659,6 +659,27 @@ step("escape layer closed", function()
         error("the window is not closed by Escape again: " .. table.concat(env.UISpecialFrames, ","))
     end
 end)
+-- a chip, an order and the filter chosen in a list come back with Back, and do not make places of their own
+step("route keeps the state", function()
+    local Rt = UI.Router
+    UI:OpenShell({ view = "fates" })
+    local v = UI.ViewInstance("fates")
+    local depth = #Rt.back
+    v.chips[2]:Click()
+    v.search:SetText("ab")
+    if #Rt.back ~= depth then error("choosing a chip made a new place in the history") end
+    if Rt.cur.chip ~= v.chips[2].key or Rt.cur.q ~= "ab" then error("the route did not take the chip and the filter") end
+    Rt.Go({ view = "start" })
+    Rt.Back()
+    if v.state.chip ~= v.chips[2].key or v.search:GetText() ~= "ab" then error("Back did not bring the chip and the filter back") end
+    Rt.Go({ view = "fates" })
+    if v.state.chip ~= v.chips[1].key or v.search:GetText() ~= "" then error("a route without a chip kept the old one") end
+    -- a bookmark's route is not changed by what is chosen after it was opened
+    local mark = { view = "fates" }
+    Rt.Go(mark)
+    v.chips[2]:Click()
+    if mark.chip then error("the route given was changed") end
+end)
 -- a text cut short shows the whole row as a tooltip, a whole one shows none
 step("full text", function()
     local K = UI.Kit

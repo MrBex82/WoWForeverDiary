@@ -144,7 +144,16 @@ function UI.CollectionView(def)
     UI:RegisterView({
         key = def.key,
         build = function(host)
-            local V = { state = { chip = def.chips and def.chips[1][1], sort = def.sorts and def.sorts[1][1], q = "" } }
+            local CHIP0, SORT0 = def.chips and def.chips[1][1], def.sorts and def.sorts[1][1]
+            local V = { state = { chip = CHIP0, sort = SORT0, q = "" } }
+            -- what is chosen here is written into the place in the history (nothing while a route is laid out)
+            local function note(k, v, default)
+                local cur = UI.Router.cur
+                if V.restoring or not cur or cur.view ~= def.key then return end
+                if v == default or v == "" then v = nil end
+                UI.Router.Note(k, v)
+            end
+            V.note = note
 
             -- the summary: a row of figures
             V.tiles = {}
@@ -157,6 +166,7 @@ function UI.CollectionView(def)
             for _, ch in ipairs(def.chips or {}) do
                 local b = K.Button(V.top, L[ch[2]], "secondary", function(self)
                     V.state.chip = self.key
+                    note("chip", self.key, CHIP0)
                     V:Refresh()
                 end)
                 b.key, b.minH = ch[1], 28
@@ -181,6 +191,7 @@ function UI.CollectionView(def)
                     local q = (s:GetText() or ""):lower()
                     if q ~= V.state.q then
                         V.state.q = q
+                        note("q", q, "")
                         V:Refresh()
                     end
                 end)
@@ -200,6 +211,7 @@ function UI.CollectionView(def)
                 for _, so in ipairs(def.sorts) do V.sortKeys[#V.sortKeys + 1] = so[1] end
                 V.sort = K.Dropdown(V.top, sorts, function() return V.state.sort end, function(v)
                     V.state.sort = v
+                    note("sort", v, SORT0)
                     V:Refresh()
                 end, 190)
             end
@@ -275,6 +287,7 @@ function UI.CollectionView(def)
             end
             function V:CloseDetail()
                 self.selected = nil
+                note("key", nil)
                 self.detail:Hide()
                 if UI.card and UI.card.docked then UI.card:Hide() end
                 self:Arrange()
@@ -291,6 +304,7 @@ function UI.CollectionView(def)
                 if def.detail then self:Select(key) else UI:ShowCard(def.cardKind, key) end
             end
             function V:ShowingCard(key)
+                note("key", key)
                 local at
                 for i, k in ipairs(self.order) do if k == key then at = i break end end
                 self.pos:SetText(at and (at .. " / " .. #self.order) or "")
@@ -446,11 +460,22 @@ function UI.CollectionView(def)
                     if kind ~= def.cardKind then return nil end
                     return V:OpenDetail(), V
                 end
-                if route.chip then self.state.chip = route.chip end
-                if route.sort then self.state.sort = route.sort end
+                -- the route says everything: what it does not name is back at its start
+                self.restoring = true
+                self.state.chip = route.chip or CHIP0
+                self.state.sort = route.sort or SORT0
+                self.state.q = route.q or ""
+                if self.search and (self.search:GetText() or "") ~= self.state.q then
+                    self.search:SetText(self.state.q)
+                    self.search.hint:SetShown(self.state.q == "" and not self.search:HasFocus())
+                end
+                self.selected = nil
+                self.detail:Hide()
+                if UI.card and UI.card.docked then UI.card:Hide() end
                 self:Refresh()
                 if route.key ~= nil and def.detail then self:Select(route.key)
                 elseif route.key ~= nil and def.cardKind then UI:ShowCard(def.cardKind, route.key) end
+                self.restoring = nil
             end
             function V:Hide()
                 if UI.cardDockProvider then UI.cardDockProvider = nil end

@@ -297,7 +297,7 @@ local function fateReport(rp, key)
             local nkey = "n:" .. f.by
             rp:Line({ name = f.by, sub = WFD:Count("Killed you %d times", n.n or 0), icon = UI.Icon("nemesis"),
                 col = { 0.62, 0.06, 0.04 }, nameKey = "neg",
-                go = function() local v = view("fates") if v then v.state.chip = "nemesis" v:Refresh() v:Select(nkey) end end })
+                go = function() R.Go({ view = "fates", chip = "nemesis", key = nkey }) end })
         elseif id then
             rp:Line({ name = f.by, sub = L["Click for the wanted poster."], icon = UI.Icon("bestiary"), col = { 0.62, 0.10, 0.06 },
                 go = function() R.Go({ view = "bestiary", key = id }) end })

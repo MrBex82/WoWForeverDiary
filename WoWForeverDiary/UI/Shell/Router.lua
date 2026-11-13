@@ -64,14 +64,33 @@ local R = { back = {}, fwd = {}, cur = nil }
 UI.Router = R
 local MAX = 40
 
+-- a route also carries what was chosen inside its view: the chip (chip), the order (sort), the words of the filter
+-- (q) and the entry open on the right (key); two routes are the same place only when all of it agrees
 local function same(a, b)
     if not a or not b or a.view ~= b.view then return false end
-    return a.section == b.section and a.group == b.group and a.key == b.key and a.map == b.map and a.cont == b.cont and a.day == b.day
+    return a.section == b.section and a.group == b.group and a.key == b.key and a.map == b.map and a.cont == b.cont
+        and a.day == b.day and a.chip == b.chip and a.sort == b.sort and (a.q or "") == (b.q or "") and a.layer == b.layer
+end
+R.Same = same
+
+local function copy(route)
+    local r = {}
+    for k, v in pairs(route) do r[k] = v end
+    return r
+end
+
+-- A view tells what was chosen inside it (a chip, an order, the filter, an entry): the place in the history is
+-- changed, no new one is made, so Back leads to the view before and the view comes back as it was left.
+-- v = nil takes the value away.
+function R.Note(k, v)
+    if R.cur then R.cur[k] = v end
 end
 
 function R.Go(route, opts)
     opts = opts or {}
     if not route then return end
+    -- a copy: the history writes into its places (R.Note), the route given may be a bookmark's
+    route = copy(route)
     if R.cur and not opts.noHistory and not same(R.cur, route) then
         R.back[#R.back + 1] = R.cur
         if #R.back > MAX then table.remove(R.back, 1) end
