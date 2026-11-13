@@ -635,6 +635,30 @@ step("press", function()
     menu.rows[2]:Click()
     if val ~= 2 or menu:IsShown() then error("picking an entry: " .. tostring(val)) end
 end)
+-- the keys of the window: scrolling the open view, back and forward
+step("keys", function()
+    UI:OpenShell({ view = "help" })
+    for _, k in ipairs({ "DOWN", "PAGEDOWN", "UP", "PAGEUP", "ALT-LEFT", "ALT-RIGHT", "LEFT", "RIGHT" }) do UI.KEYS[k]() end
+end)
+-- Escape with a question open: the game may close the question only, the window stays
+local function special(name)
+    for _, n in ipairs(env.UISpecialFrames) do if n == name then return true end end
+    return false
+end
+step("escape layer open", function()
+    UI:Confirm({ title = "Frage", text = "Text", ok = "Ja" })
+end)
+step("escape layer check", function()
+    if special("WoWForeverDiaryFrame") or not special("WoWForeverDiaryDialog") then
+        error("with a question open, Escape would close the window: " .. table.concat(env.UISpecialFrames, ","))
+    end
+    UI.Kit.CloseDialog()
+end)
+step("escape layer closed", function()
+    if not special("WoWForeverDiaryFrame") or special("WoWForeverDiaryDialog") then
+        error("the window is not closed by Escape again: " .. table.concat(env.UISpecialFrames, ","))
+    end
+end)
 step("dialog", function()
     UI:Confirm({ title = "Frage", text = "Text", ok = "Ja", onOk = function() end })
     UI.Kit.CloseDialog()

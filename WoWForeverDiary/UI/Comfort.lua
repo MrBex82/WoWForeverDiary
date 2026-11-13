@@ -67,13 +67,29 @@ local function flip(dir)
         if v and v.Turn and v.host and v.host:IsShown() then v:Turn(dir) end
     end
 end
+-- the open view scrolls: by a few lines, or by what is in sight (page)
+local function scroll(dir, page)
+    return function()
+        local cur = UI.Router and UI.Router.cur
+        local v = cur and UI.ViewInstance and UI.ViewInstance(cur.view)
+        local sf = v and v.host and UI.Kit.MainScroll(v.host)
+        if not sf then return end
+        local by = page and max(48, (sf:GetHeight() or 0) - 40) or 48
+        sf:ScrollTo(sf:GetVerticalScroll() + dir * by)
+    end
+end
+local function back() if UI.Router then UI.Router.Back() end end
+local function forward() if UI.Router then UI.Router.Forward() end end
 local KEYS = {
-    LEFT = flip(-1), PAGEUP = flip(-1), RIGHT = flip(1), PAGEDOWN = flip(1),
+    LEFT = flip(-1), RIGHT = flip(1),
+    UP = scroll(-1), DOWN = scroll(1), PAGEUP = scroll(-1, true), PAGEDOWN = scroll(1, true),
     HOME = function() UI:OpenStart() end,
     END = function() UI:OpenShell({ view = "diary", day = WFD:NumDays() }) end,
-    BACKSPACE = function() if UI.ShellBack then UI:ShellBack() end end,
+    BACKSPACE = back,
+    ["ALT-LEFT"] = back, ["ALT-RIGHT"] = forward,
     ["CTRL-F"] = function() if UI.FocusSearch then UI:FocusSearch() end end,
 }
+UI.KEYS = KEYS          -- for the load test
 local function propagate(frame, v)
     if frame.SetPropagateKeyboardInput and not (InCombatLockdown and InCombatLockdown()) then
         pcall(frame.SetPropagateKeyboardInput, frame, v)
@@ -108,9 +124,21 @@ local function setupKeys(holder)
         local want = UI.inShell and holder:IsMouseOver() or false
         if holder:IsKeyboardEnabled() ~= want then pcall(holder.EnableKeyboard, holder, want) end
     end)
+    -- the side buttons of the mouse (4: back, 5: forward) anywhere on the window, out of a fight
+    local sideDown = {}
+    local mouse = CreateFrame("Frame", nil, holder)
+    mouse:SetScript("OnUpdate", function()
+        if not (IsMouseButtonDown and UI.inShell) then return end
+        for btn, fn in pairs({ Button4 = back, Button5 = forward }) do
+            local down = IsMouseButtonDown(btn) and true or false
+            if down and not sideDown[btn] and holder:IsMouseOver() and not (InCombatLockdown and InCombatLockdown()) then fn() end
+            sideDown[btn] = down
+        end
+    end)
     holder:HookScript("OnHide", function() pcall(holder.EnableKeyboard, holder, false) end)
     holder:SetScript("OnKeyDown", function(self, key)
-        local fn = (IsControlKeyDown() and KEYS["CTRL-" .. key]) or KEYS[key]
+        local mod = (IsControlKeyDown() and "CTRL-") or (IsAltKeyDown() and "ALT-") or ""
+        local fn = KEYS[mod .. key]
         local typing = GetCurrentKeyBoardFocus and GetCurrentKeyBoardFocus()
         if key == "ESCAPE" then
             if typing or (InCombatLockdown and InCombatLockdown()) then

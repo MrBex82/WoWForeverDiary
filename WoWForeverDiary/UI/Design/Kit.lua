@@ -493,6 +493,34 @@ function K.CloseOnClickAway(frame, keep)
     return frame
 end
 
+-- Escape closes what lies on top first. The game closes the frames named in UISpecialFrames all at once when
+-- Escape reaches it (the mouse is not on the window, so the window does not take the key): while a layer (a list,
+-- a question, the results of the search) is open, only the layer is named there, and the window again after it.
+local HOLDER = "WoWForeverDiaryFrame"
+local layers = {}
+local function setSpecial(name, on)
+    for i = #UISpecialFrames, 1, -1 do
+        if UISpecialFrames[i] == name then table.remove(UISpecialFrames, i) end
+    end
+    if on then tinsert(UISpecialFrames, name) end
+end
+local function syncLayers()
+    local any = false
+    for f, name in pairs(layers) do
+        setSpecial(name, f:IsShown())
+        any = any or f:IsShown()
+    end
+    if _G[HOLDER] then setSpecial(HOLDER, not any) end
+end
+function K.EscapeLayer(frame, gname)
+    _G[gname] = frame
+    layers[frame] = gname
+    -- a frame later: the game may be going through the list right now
+    frame:HookScript("OnShow", function() C_Timer.After(0, syncLayers) end)
+    frame:HookScript("OnHide", function() C_Timer.After(0, syncLayers) end)
+    return frame
+end
+
 local menu
 local function closeMenu()
     if menu and menu:IsShown() then menu:Hide() return true end
@@ -547,6 +575,7 @@ local function openMenu(owner, items, cur, onPick)
         menu.thumb:SetWidth(3)
         menu.rows = {}
         K.CloseOnClickAway(menu, function() return { menu.owner } end)
+        K.EscapeLayer(menu, "WoWForeverDiaryMenu")
         menu:Hide()
     end
     if menu:IsShown() and menu.owner == owner then menu:Hide() return end
@@ -693,8 +722,28 @@ end
 ------------------------------------------------------------------------
 -- A scrolling area: content is the frame to fill, SetContentHeight tells how tall it is
 ------------------------------------------------------------------------
+local scrolls = setmetatable({}, { __mode = "k" })
+
+-- the scrolling area the keys move: the innermost one under the mouse, else the biggest one in sight inside host
+function K.MainScroll(host)
+    local best, area, under, underArea
+    for sf in pairs(scrolls) do
+        if sf:IsVisible() and (sf.contentH or 0) > (sf:GetHeight() or 0) + 1 then
+            local p = sf
+            while p and p ~= host do p = p:GetParent() end
+            if p then
+                local a = (sf:GetWidth() or 0) * (sf:GetHeight() or 0)
+                if sf:IsMouseOver() and (not underArea or a < underArea) then under, underArea = sf, a end
+                if not area or a > area then best, area = sf, a end
+            end
+        end
+    end
+    return under or best
+end
+
 function K.Scroll(parent)
     local sf = CreateFrame("ScrollFrame", nil, parent)
+    scrolls[sf] = true
     local content = CreateFrame("Frame", nil, sf)
     content:SetSize(10, 10)
     sf:SetScrollChild(content)
@@ -826,6 +875,7 @@ local function buildDialog()
     d.input:SetScript("OnEnterPressed", function() d.ok:Click() end)
     d.input:SetScript("OnEscapePressed", function() d:Hide() end)
     d:SetScript("OnHide", function(self) self.input:ClearFocus() self.multi:ClearFocus() end)
+    K.EscapeLayer(d, "WoWForeverDiaryDialog")
     d:Hide()
     return d
 end
