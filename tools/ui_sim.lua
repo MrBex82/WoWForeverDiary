@@ -603,6 +603,20 @@ step("press", function()
         if x.pressed then error("a button that cannot be used is pressed") end
         x:Enable()
     end
+    -- a long list: it opens with the chosen entry in sight, scrolls, and a pick closes it
+    local items, val = {}, 25
+    for n = 1, 40 do items[n] = { n, "Eintrag " .. n } end
+    local dd = K.Dropdown(UI.holder, items, function() return val end, function(v) val = v end)
+    dd:Click()
+    local menu = dd.menuFrame and dd.menuFrame()
+    if not (menu and menu:IsShown()) then error("the list did not open") end
+    if menu.visible >= 40 then error("a long list is not limited in height") end
+    if menu.first > 25 or menu.first + menu.visible - 1 < 25 then error("the chosen entry is not in sight") end
+    menu:GetScript("OnMouseWheel")(menu, -1)
+    menu:GetScript("OnMouseWheel")(menu, 50)
+    if menu.first ~= 1 then error("scrolling to the top did not stop at the first entry") end
+    menu.rows[2]:Click()
+    if val ~= 2 or menu:IsShown() then error("picking an entry: " .. tostring(val)) end
 end)
 step("dialog", function()
     UI:Confirm({ title = "Frage", text = "Text", ok = "Ja", onOk = function() end })

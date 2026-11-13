@@ -472,6 +472,27 @@ end
 ------------------------------------------------------------------------
 -- A choice from a list: a button that opens a small menu
 ------------------------------------------------------------------------
+-- A frame that lies over everything (a list, the results of the search) closes when a mouse button goes down
+-- anywhere else: not on the frame and not on what it belongs to (keep(): further frames that count as its own).
+-- The click itself goes on to what lies there. Watched only while the frame is shown.
+function K.CloseOnClickAway(frame, keep)
+    local watch = CreateFrame("Frame", nil, frame)
+    local wasDown = true          -- the click that opened the frame is still held
+    watch:SetScript("OnShow", function() wasDown = true end)
+    watch:SetScript("OnUpdate", function()
+        local down = IsMouseButtonDown and (IsMouseButtonDown("LeftButton") or IsMouseButtonDown("RightButton"))
+        if down and not wasDown then
+            local inside = frame:IsMouseOver()
+            for _, f in ipairs(keep and keep() or {}) do
+                if f and f.IsShown and f:IsShown() and f:IsMouseOver() then inside = true end
+            end
+            if not inside then frame:Hide() end
+        end
+        wasDown = down
+    end)
+    return frame
+end
+
 local menu
 local function closeMenu()
     if menu and menu:IsShown() then menu:Hide() return true end
@@ -479,46 +500,94 @@ local function closeMenu()
 end
 K.CloseMenu = closeMenu
 
+local MENU_MAX = 320          -- the list is at most this high (before the size of the writing), then it scrolls
+
+-- the rows of the list from menu.first on, as many as fit
+local function placeMenuRows()
+    local m = menu
+    local n, rows = #m.items, m.visible
+    m.first = max(1, min(m.first or 1, n - rows + 1))
+    for i = 1, max(rows, #m.rows) do
+        local r = m.rows[i]
+        local it = m.items[m.first + i - 1]
+        if i <= rows and it then
+            r.value, r.chosen = it[1], it[1] == m.cur
+            r.text:SetText(it[2])
+            K.Recolor(r.text, r.chosen and "title" or "ink")
+            r:SetSurface(r.chosen and "inset" or (r:IsMouseOver() and "hover" or nil))
+            r:Show()
+        elseif r then
+            r:Hide()
+        end
+    end
+    -- a thin bar on the right shows where in the list you are
+    local more = n > rows
+    m.thumb:SetShown(more)
+    if more then
+        local h = rows * m.rowH
+        local th = max(16, h * rows / n)
+        m.thumb:SetHeight(th)
+        m.thumb:ClearAllPoints()
+        m.thumb:SetPoint("TOPRIGHT", m, "TOPRIGHT", -2, -4 - (h - th) * (m.first - 1) / (n - rows))
+    end
+end
+
 local function openMenu(owner, items, cur, onPick)
     if not menu then
         menu = K.Box(UIParent, "panel", "gold")
         menu:SetFrameStrata("FULLSCREEN_DIALOG")
+        menu:SetClampedToScreen(true)
         menu:EnableMouse(true)
+        menu:EnableMouseWheel(true)
+        menu:SetScript("OnMouseWheel", function(self, delta)
+            self.first = (self.first or 1) - delta * 3
+            placeMenuRows()
+        end)
+        menu.thumb = K.Fill(menu, "gold", "OVERLAY", 2, 0.8)
+        menu.thumb:SetWidth(3)
         menu.rows = {}
+        K.CloseOnClickAway(menu, function() return { menu.owner } end)
         menu:Hide()
     end
     if menu:IsShown() and menu.owner == owner then menu:Hide() return end
-    menu.owner = owner
+    menu.owner, menu.items, menu.cur, menu.onPick = owner, items, cur, onPick
     menu:SetScale(owner:GetEffectiveScale() / UIParent:GetEffectiveScale())
     local w = max(owner:GetWidth(), 160)
-    for i, it in ipairs(items) do
+    -- a row is as high as the writing needs; the list as high as it may be, then it scrolls
+    local _, size = UI.TypeFont("body")
+    local rowH = max(26, floor(size + 13))
+    local maxH = floor(MENU_MAX * max(1, UI.FONT_SCALE or 1))
+    local visible = max(1, min(#items, floor((maxH - 8) / rowH)))
+    menu.rowH, menu.visible = rowH, visible
+    for i = 1, visible do
         local r = menu.rows[i]
         if not r then
             r = K.Box(menu, nil, nil, "Button")
-            r:SetHeight(26)
             r.text = K.Text(r, "body", "ink")
             r.text:SetPoint("LEFT", 10, 0)
             r.text:SetPoint("RIGHT", -10, 0)
-            r:SetScript("OnEnter", function(self) self:SetSurface("hover") end)
-            r:SetScript("OnLeave", function(self) self:SetSurface(self.chosen and "inset" or nil) end)
+            r.text:SetWordWrap(false)
+            r:SetScript("OnEnter", function(self)
+                self:SetSurface("hover")
+                if self.text:IsTruncated() then K.ShowTip(self, self.text:GetText(), nil, "ANCHOR_RIGHT") end
+            end)
+            r:SetScript("OnLeave", function(self) self:SetSurface(self.chosen and "inset" or nil) GameTooltip:Hide() end)
             r:SetScript("OnClick", function(self)
                 menu:Hide()
                 if menu.onPick then menu.onPick(self.value) end
             end)
             menu.rows[i] = r
         end
-        r.value, r.chosen = it[1], it[1] == cur
-        r.text:SetText(it[2])
-        K.Recolor(r.text, r.chosen and "title" or "ink")
-        r:SetSurface(r.chosen and "inset" or nil)
+        r:SetHeight(rowH)
         r:ClearAllPoints()
-        r:SetPoint("TOPLEFT", menu, "TOPLEFT", 4, -4 - (i - 1) * 26)
-        r:SetWidth(w - 8)
-        r:Show()
+        r:SetPoint("TOPLEFT", menu, "TOPLEFT", 4, -4 - (i - 1) * rowH)
+        r:SetWidth(w - (#items > visible and 14 or 8))
     end
-    for i = #items + 1, #menu.rows do menu.rows[i]:Hide() end
-    menu.onPick = onPick
-    menu:SetSize(w, #items * 26 + 8)
+    -- the chosen entry is in sight when the list opens
+    menu.first = 1
+    for i, it in ipairs(items) do if it[1] == cur then menu.first = i - floor(visible / 2) end end
+    placeMenuRows()
+    menu:SetSize(w, visible * rowH + 8)
     menu:ClearAllPoints()
     menu:SetPoint("TOPLEFT", owner, "BOTTOMLEFT", 0, -2)
     menu:Show()
@@ -545,6 +614,7 @@ function K.Dropdown(parent, items, get, set, width)
         end)
     end
     b:HookScript("OnHide", function() if menu and menu.owner == b then menu:Hide() end end)
+    b.menuFrame = function() return menu end          -- for the load test
     b:Refresh()
     return b
 end
