@@ -53,17 +53,47 @@ local function makeItemRow(parent)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             if not pcall(GameTooltip.SetHyperlink, GameTooltip, self.link) then GameTooltip:SetText(self.name:GetText() or "?") end
             GameTooltip:AddLine(" ")
-            GameTooltip:AddLine(L["Click to read that day."], 0.5, 0.8, 1)
-            if self.mob then GameTooltip:AddLine(L["Right-click for the wanted poster."], 0.5, 0.8, 1) end
+            GameTooltip:AddLine(L["Click: the report. Right-click: the day."], 0.5, 0.8, 1)
             GameTooltip:Show()
         end
     end)
     r:SetScript("OnLeave", function(self) self:SetSurface(nil) GameTooltip:Hide() end)
     r:SetScript("OnClick", function(self, button)
-        if button == "RightButton" and self.mob then UI:OpenShell({ view = "bestiary", key = self.mob }) return end
-        openDay(self.day)
+        if button == "RightButton" then openDay(self.day) return end
+        local v = UI.ViewInstance("treasures")
+        if v then v:Select(self.id) end
     end)
     return r
+end
+
+-- the report of one treasure: the item, how often and where it was found, and who dropped it
+local function treasureReport(rp, id)
+    local a
+    for _, x in ipairs(UI.TreasureList()) do if x.id == id then a = x break end end
+    if not a then return end
+    local q = min(5, a.q)
+    local ink = UI.TreasureInk(q) or { 1, 1, 1 }
+    rp:Kicker(UI.QualityName(q) .. (a.gname and ("  -  " .. a.gname) or ""))
+    rp:Title("|cff" .. UI.Hex(ink) .. WFD:ItemName(a.link) .. "|r")
+    rp:Icons({ { WFD:ItemIcon(a.link) or UI.Icon("loot"), ink, a.link } })
+    if UI.WornNow()[a.id] then rp:Text(L["worn right now"], "pos", "body") end
+    -- every day it was found
+    local C, days = WFD.C, {}
+    for d = 1, WFD:NumDays() do
+        local e = C.days[d] and C.days[d].loot and C.days[d].loot[id]
+        if e then days[#days + 1] = { d = d, n = e.n or 1, src = e.src } end
+    end
+    rp:Tiles({ { a.n, L["Found"] }, { #days, L["Days"] } })
+    local mob = a.src and UI.MobByName(a.src)
+    if mob then
+        rp:Head(L["Bestiary"])
+        rp:Link(a.src, nil, function() UI.Router.Go({ view = "bestiary", key = mob }) end, L["Click for the wanted poster."], UI.Icon("bestiary"))
+    end
+    rp:Head(L["Days"], tostring(#days))
+    for i, e in ipairs(days) do
+        if i > 12 then rp:Text(format(L["%d more"], #days - 12), "muted", "small") break end
+        rp:DayLink(e.d, nil, (e.n > 1 and ("x" .. e.n .. "  ") or "") .. (e.src or format(L["Day %d"], e.d)))
+    end
 end
 
 local function treasureData(state)
@@ -162,10 +192,11 @@ UI.CollectionView({
             local ink = UI.TreasureInk(q) or { 1, 1, 1 }
             r.name:SetText("|cff" .. UI.Hex(ink) .. WFD:ItemName(a.link) .. "|r")
             r.sub:SetText(format(L["Day %d"], a.day) .. (a.src and ("  -  " .. a.src) or "") .. (a.worn and ("  -  " .. L["worn right now"]) or ""))
-            r.link, r.day = a.link, a.day
-            r.mob = a.src and UI.MobByName(a.src)
+            r.link, r.day, r.id = a.link, a.day, a.id
         end,
     },
+    detail = treasureReport,
+    keyOf = function(a) return a.id end,
     empty = function()
         if #UI.TreasureList() == 0 then return L["No treasures found yet."] end
         return L["Nothing matches this choice."]

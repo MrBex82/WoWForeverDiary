@@ -6,7 +6,7 @@ local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
 local K = UI.Kit
-local floor, max, min = math.floor, math.max, math.min
+local floor, max, min, format = math.floor, math.max, math.min, string.format
 
 local PAD = 16
 
@@ -479,6 +479,22 @@ function K.Report(parent)
         b:SetPoint("TOPLEFT", area, "TOPLEFT", PAD - (style == "primary" and 0 or 8), -self.y)
         self.y = self.y + b:GetHeight() + 8
         return b
+    end
+
+    -- a line that leads somewhere: name, a line below, where to go (go), what the click does (hint, a whole
+    -- sentence). The same look in every report, so a link is always recognised.
+    function rp:Link(name, sub, go, hint, icon)
+        return self:Line({ name = name, sub = sub, icon = icon, mark = (not icon) and "right" or nil, markKey = "white",
+            col = { 0.55, 0.40, 0.16 }, go = go, tip = go and hint and { name, { hint, 0.5, 0.8, 1 } } or nil })
+    end
+
+    -- the day a thing happened, as a link to that page of the diary
+    function rp:DayLink(day, t, label)
+        if not day then return end
+        local go = UI.DayGo(day)
+        local when = format(L["Day %d"], day) .. (t and ("  -  " .. date(WFD.loc.date, t)) or "")
+        if label then return self:Link(label, when, go, go and L["Click to read this day."]) end
+        return self:Link(when, nil, go, go and L["Click to read this day."])
     end
 
     -- a few small diamonds in the middle: the end of an entry

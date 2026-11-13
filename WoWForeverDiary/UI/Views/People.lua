@@ -44,6 +44,35 @@ local function companionData(state)
     return { { items = list } }
 end
 
+-- the report of a companion ("key") or a trading partner ("t:name")
+local function companionReport(rp, key)
+    local C = WFD.C
+    local tname = type(key) == "string" and key:match("^t:(.+)$")
+    if tname then
+        local t = C.traders and C.traders[tname]
+        if not t then return end
+        rp:Kicker(L["Trading partners"])
+        rp:Title(tname)
+        rp:Tiles({ { t.count or 0, L["Trades"] }, { UI.CoinIcons(t.got or 0, 12), L["Received"] }, { UI.CoinIcons(t.gave or 0, 12), L["Given"] } })
+        if t.first then rp:DayLink(WFD:DayIndex(t.first), t.first, L["First trade"]) end
+        if t.last and t.last ~= t.first then rp:DayLink(WFD:DayIndex(t.last), t.last, L["Last trade"]) end
+        return
+    end
+    local e = C.companions and C.companions[key]
+    if not e then return end
+    rp:Kicker(e.class or L["Companions"])
+    rp:Title(e.name or key)
+    local days = {}
+    for d in pairs(e.days or {}) do if type(d) == "number" then days[#days + 1] = d end end
+    table.sort(days)
+    rp:Tiles({ { e.groups or 0, L["Grouped"] }, { WFD:Int(e.kills or 0), L["Kills"] }, { #days, L["Days"] } })
+    if e.level then rp:Text(format(L["Level %d"], e.level), "soft", "body") end
+    if e.zone then rp:Text(e.zone, "soft", "body") end
+    rp:Head(L["Days together"], tostring(#days))
+    for i = #days, max(1, #days - 11), -1 do rp:DayLink(days[i]) end
+    if #days > 12 then rp:Text(format(L["%d more"], #days - 12), "muted", "small") end
+end
+
 UI.CollectionView({
     key = "companions", label = "Companions", group = "people",
     chips = { { "group", "Companions" }, { "traders", "Trading partners" } },
@@ -73,7 +102,8 @@ UI.CollectionView({
                 if (t.gave or 0) > 0 then money[#money + 1] = "-" .. UI.CoinIcons(t.gave, 11) end
                 row:Set({ icon = UI.IconPath({ "INV_Misc_Coin_02" }, "coin"), ring = { 0.86, 0.66, 0.22 },
                     name = x.name, sub = format(L["%dx traded"], t.count or 0),
-                    right = money[1] or "-", right2 = money[2] })
+                    right = money[1] or "-", right2 = money[2],
+                    go = function() UI.SelectIn("companions", "t:" .. x.name) end })
                 return
             end
             local e = x.e
@@ -88,15 +118,20 @@ UI.CollectionView({
             row:Set({ icon = path, ring = { col[1], col[2], col[3] }, name = e.name or x.key,
                 sub = table.concat(bits, "  -  "),
                 right = WFD:Count("%d kills together", e.kills or 0), right2 = WFD:Count("%d times grouped", e.groups or 0),
-                go = e.first and function() readDay(WFD:DayIndex(e.first)) end,
+                go = function(button)
+                    if button == "RightButton" and e.first then readDay(WFD:DayIndex(e.first)) return end
+                    UI.SelectIn("companions", x.key)
+                end,
                 tip = function(r)
                     K.ShowTip(r, e.name or x.key, { table.concat(bits, "  -  "), WFD:Count("%d times grouped", e.groups or 0),
-                        WFD:Count("%d kills together", e.kills or 0), L["Click to read this day."] }, "ANCHOR_RIGHT")
+                        WFD:Count("%d kills together", e.kills or 0), { L["Click: the report. Right-click: the day."], 0.5, 0.8, 1 } }, "ANCHOR_RIGHT")
                 end })
             if coords then row.icon:SetTexCoord(coords[1], coords[2], coords[3], coords[4]) end
             row.coords = coords ~= nil
         end,
     },
+    detail = companionReport,
+    keyOf = function(x) return x.trader and ("t:" .. x.name) or x.key end,
     empty = function(state)
         if state.chip == "traders" then
             if next(WFD.C.traders or {}) == nil then return L["No trades yet."] end
@@ -146,12 +181,27 @@ UI.CollectionView({
             row:Set({ icon = e.icon or UI.Icon("mount"), ring = { 0.86, 0.62, 0.18 }, name = e.name or "?",
                 sub = (e.zone and (e.zone .. "  -  ") or "") .. WFD:Count("%d rides", e.rides or 0),
                 right = format(L["Day %d"], e.day or 1), right2 = e.first and date(WFD.loc.date, e.first) or nil,
-                go = function() readDay(e.day) end,
+                go = function(button)
+                    if button == "RightButton" then readDay(e.day) return end
+                    UI.SelectIn("stable", item.entry.id)
+                end,
                 tip = function(r)
-                    K.ShowTip(r, e.name or "?", { format(L["First ridden on day %d"], e.day or 1), L["Click to read this day."] }, "ANCHOR_RIGHT")
+                    K.ShowTip(r, e.name or "?", { format(L["First ridden on day %d"], e.day or 1),
+                        { L["Click: the report. Right-click: the day."], 0.5, 0.8, 1 } }, "ANCHOR_RIGHT")
                 end })
         end,
     },
+    detail = function(rp, id)
+        local e = WFD.C.mounts and WFD.C.mounts[id]
+        if not e then return end
+        rp:Kicker(L["Mounts"])
+        rp:Title(e.name or "?")
+        if e.icon then rp:Icons({ { e.icon } }) end
+        rp:Tiles({ { WFD:Int(e.rides or 0), L["Rides"] }, { format(L["Day %d"], e.day or 1), L["First ride"] } })
+        rp:DayLink(e.day, e.first, L["First ride"])
+        if e.zone then rp:Text(e.zone, "soft", "body") end
+    end,
+    keyOf = function(m) return m.id end,
     empty = function()
         if #WFD:Mounts() == 0 then return L["The first ride is still to come."] end
         return L["Nothing matches this choice."]
@@ -214,9 +264,33 @@ UI.CollectionView({
             local col = ST_COL[f.e.st or 4] or ST_COL[4]
             row:Set({ icon = UI.Icon("banner"), ring = col, name = f.name, sub = stepsText(f.e),
                 right = WFD:StandingName(f.e.st),
+                go = function() UI.SelectIn("standing", f.name) end,
                 tip = function(r) K.ShowTip(r, f.name, { WFD:StandingName(f.e.st), stepsText(f.e) }, "ANCHOR_RIGHT") end })
         end,
     },
+    -- the report of a faction: every step reached, each leading to its day
+    detail = function(rp, name)
+        local e = WFD.C.rep and WFD.C.rep[name]
+        if not e then return end
+        rp:Kicker(L["Reputation"])
+        rp:Title(name)
+        local col = ST_COL[e.st or 4] or ST_COL[4]
+        rp:Text("|cff" .. UI.Hex(col) .. WFD:StandingName(e.st) .. "|r", "ink", "strong")
+        rp:Head(L["Steps"])
+        local any = false
+        for st = 1, 8 do
+            local t = e.reached and e.reached[st]
+            if t then
+                any = true
+                rp:DayLink(WFD:DayIndex(t), t, WFD:StandingName(st))
+            end
+        end
+        if not any then
+            local t = e.first
+            rp:DayLink(t and WFD:DayIndex(t) or e.day, t, WFD:StandingName(e.st0 or e.st))
+        end
+    end,
+    keyOf = function(f) return f.name end,
     empty = function()
         if #WFD:Factions() == 0 then return L["Fills as soon as there is something to tell."] end
         return L["Nothing matches this choice."]

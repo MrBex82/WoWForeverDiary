@@ -53,9 +53,35 @@ UI.CollectionView({
             end
             row:Set({ icon = UI.IconPath({ it.icon }, "sight"), ring = WFD.METALS and WFD.METALS[3].col or { 0.86, 0.62, 0.18 },
                 name = it.name, sub = it.t and date(WFD.loc.date .. " %H:%M", it.t) or nil,
-                right = it.day and format(L["Day %d"], it.day) or nil, go = UI.DayGo(it.day) })
+                right = it.day and format(L["Day %d"], it.day) or nil,
+                go = function(button)
+                    if button == "RightButton" then UI:OpenDay(it.day) return end
+                    UI.SelectIn("landmarks", it.id)
+                end })
         end,
     },
+    -- the report of a landmark found: when, the moment it is kept as, and where on the map
+    detail = function(rp, id)
+        local found, group
+        for _, g in ipairs((WFD:LandmarkState())) do
+            for _, it in ipairs(g.items) do if it.id == id and it.found then found, group = it, g end end
+        end
+        if not found then return end
+        rp:Kicker(L[group.def.label])
+        rp:Title(found.name)
+        rp:Icons({ { UI.IconPath({ found.icon }, "sight") } })
+        rp:DayLink(found.day, found.t)
+        for _, ev in ipairs(WFD.C.events or {}) do
+            if ev.k == "landmark" and ev.landmark == id then
+                if ev.gear and next(ev.gear) then rp:Picture(ev, 140) end
+                if ev.map then
+                    rp:Link(L["Show on the world map"], nil, function() UI.Router.Go({ view = "world", map = ev.map }) end)
+                end
+                break
+            end
+        end
+    end,
+    keyOf = function(it) return it.id end,
     empty = function()
         local _, _, total = WFD:LandmarkState()
         if total == 0 then return L["This game client knows none of the landmarks."] end

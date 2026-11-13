@@ -230,6 +230,51 @@ local function questData(state)
     return out
 end
 
+-- a person of the register as a link to their card
+local function personLink(rp, key, label)
+    local n = key and WFD.C.npcs and WFD.C.npcs[key]
+    if not n or n.obj or not n.name then return end
+    rp:Link(n.name, label, function() UI.Router.Go({ view = "people", key = key }) end, L["Click for the calling card."], UI.Icon("people"))
+end
+UI.PersonLink = personLink
+
+-- the report of one quest in the column beside the book
+local function questReport(rp, id)
+    local C = WFD.C
+    local q = C.quests and C.quests[id]
+    if not q then return end
+    local st = questState(q)
+    rp:Kicker(st == "done" and L["Done"] or (st == "open" and L["Open"] or L["Given up"]),
+        st == "done" and "pos" or (st == "open" and "gold" or "neg"))
+    rp:Title(q.title or ("#" .. tostring(id)))
+    if q.zone then rp:Text(q.zone, "soft", "body") end
+    if q.quote and q.quote ~= "" then rp:Paragraph('"' .. q.quote .. '"', "soft", false, true) end
+    local tiles = {}
+    if q.xp and q.xp > 0 then tiles[#tiles + 1] = { WFD:Int(q.xp), L["Experience"] } end
+    if q.money and q.money > 0 then tiles[#tiles + 1] = { WFD:CoinText(q.money), L["Gold"] } end
+    if q.done and q.acc and q.done >= q.acc then tiles[#tiles + 1] = { WFD:DurationText(q.done - q.acc), L["Took"] } end
+    if #tiles > 0 then rp:Tiles(tiles) end
+    if q.reward then
+        rp:Head(L["Reward"])
+        rp:Icons({ { WFD:ItemIcon(q.reward) or UI.Icon("loot"), nil, q.reward } })
+    end
+    rp:Head(L["Days"])
+    if q.acc then rp:DayLink(dayOf(q.acc), q.acc, L["Accepted"]) end
+    if q.done then rp:DayLink(dayOf(q.done), q.done, L["Handed in"]) end
+    if not q.acc and not q.done then rp:Text(L["Before the diary"], "muted", "body") end
+    local giver, turnin = q.giver, q.turnin
+    if (giver and C.npcs[giver]) or (turnin and C.npcs[turnin]) then
+        rp:Head(L["People"])
+        personLink(rp, giver, L["Received from"])
+        if turnin ~= giver then personLink(rp, turnin, L["Handed in to"]) end
+    end
+    local map = q.dmap or q.map
+    if map then
+        rp:Gap(4)
+        rp:Link(L["Show on the world map"], q.zone, function() UI.Router.Go({ view = "world", map = map }) end)
+    end
+end
+
 local STATE_LOOK = {
     done = { mark = "check", key = "pos", name = "ink" },
     open = { mark = "right", key = "gold", name = "ink" },
@@ -262,7 +307,12 @@ UI.CollectionView({
                 mark = look.mark, markKey = look.key, name = q.title or ("#" .. tostring(e.id)), nameKey = look.name,
                 sub = sub, right = day and format(L["Day %d"], day) or nil,
                 right2 = (q.xp and q.xp > 0) and ("+" .. WFD:Int(q.xp) .. " XP") or nil,
-                go = function() openDay(day) end,
+                -- a click opens the report beside the list, a right-click the day straight away
+                go = function(button)
+                    if button == "RightButton" and day then openDay(day) return end
+                    local v = UI.ViewInstance("quests")
+                    if v then v:Select(e.id) end
+                end,
                 tip = function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                     if q.reward and pcall(GameTooltip.SetHyperlink, GameTooltip, q.reward) then
@@ -274,12 +324,14 @@ UI.CollectionView({
                     if q.done and q.acc and q.done >= q.acc then
                         GameTooltip:AddLine(L["Took"] .. ": " .. WFD:DurationText(q.done - q.acc), 0.9, 0.9, 0.9)
                     end
-                    if day then GameTooltip:AddLine(L["Click to read that day."], 0.5, 0.8, 1) end
+                    GameTooltip:AddLine(L["Click: the report. Right-click: the day."], 0.5, 0.8, 1)
                     GameTooltip:Show()
                 end,
             })
         end,
     },
+    detail = questReport,
+    keyOf = function(e) return e.id end,
     empty = function()
         if next(WFD.C.quests or {}) == nil then return L["No quests recorded yet."] end
         return L["Nothing matches this choice."]

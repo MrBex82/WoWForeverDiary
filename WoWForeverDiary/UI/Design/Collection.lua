@@ -134,6 +134,12 @@ end
 -- and the place in the register a view lights up
 UI.PART_VIEW, UI.PART_LABEL, UI.VIEW_PLACE = UI.PART_VIEW or {}, UI.PART_LABEL or {}, UI.VIEW_PLACE or {}
 
+-- a click on a line of a list: its report opens in the column beside it
+function UI.SelectIn(view, key)
+    local v = UI.ViewInstance(view)
+    if v and v.Select then v:Select(key) end
+end
+
 local PAD = 20
 local DETAIL_MIN, DETAIL_MAX = 300, 420
 

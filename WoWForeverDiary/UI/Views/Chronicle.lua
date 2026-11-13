@@ -48,6 +48,45 @@ local function milestoneData(state)
     return out
 end
 
+-- a moment is known by its time and kind
+local function momentKey(ev) return tostring(ev.t) .. ":" .. tostring(ev.k) end
+local function momentBy(key)
+    for _, ev in ipairs(WFD.C.events or {}) do if momentKey(ev) == key then return ev end end
+end
+
+-- where a moment can be read further: its card, its part, its map
+local function momentLinks(rp, ev)
+    local R = UI.Router
+    if ev.npc and (ev.k == "boss" or ev.k == "rare") then
+        rp:Link(L["Bestiary"], nil, function() R.Go({ view = "bestiary", key = ev.npc }) end, L["Click for the wanted poster."], UI.Icon("bestiary"))
+    end
+    local PART = { level = "levels", dungeon = "runs", landmark = "landmarks", honour = "honour", first = "firsts",
+        capsule = "capsule", weekly = "tasks", challenge = "tasks", catch = "fishbook" }
+    local part = PART[ev.k]
+    if part and UI.PART_VIEW[part] then
+        local route = UI.PartRoute(part)
+        if ev.k == "catch" and ev.item then route.key = ev.item end
+        rp:Link(UI.PartLabel(part), nil, function() R.Go(route) end, L["Click to open."])
+    end
+    if ev.map then
+        rp:Link(L["Show on the world map"], nil, function() R.Go({ view = "world", map = ev.map }) end)
+    end
+end
+
+local function momentReport(rp, key)
+    local ev = momentBy(key)
+    if not ev then return end
+    rp:Kicker(L[UI.SEAL_LABEL[ev.k] or "Moment"])
+    rp:Title(ev.s or "?")
+    if ev.gear and next(ev.gear) then rp:Picture(ev, 140) end
+    rp:DayLink(ev.day or WFD:DayIndex(ev.t), ev.t)
+    rp:Text(date("%H:%M", ev.t), "muted", "small")
+    if ev.shot then rp:Text(L["Screenshot:"] .. " " .. ev.shot, "muted", "small") end
+    rp:Gap(4)
+    momentLinks(rp, ev)
+end
+UI.MomentLinks = momentLinks
+
 UI.CollectionView({
     key = "milestones", label = "Milestones", group = "chronicle",
     chips = { { "all", "All" }, { "level", "Levels" }, { "fight", "Bosses and rares" }, { "find", "Finds" },
@@ -73,13 +112,19 @@ UI.CollectionView({
             local path, col = UI.MomentIcon(ev)
             local lines = { ev.s, date(WFD.loc.date .. " %H:%M", ev.t) }
             if ev.shot then lines[#lines + 1] = L["Screenshot:"] .. " " .. ev.shot end
-            lines[#lines + 1] = L["Click to read this day."]
+            lines[#lines + 1] = { L["Click: the report. Right-click: the day."], 0.5, 0.8, 1 }
+            local day = dayGo(ev.day)
             row:Set({ icon = path, ring = { col[1], col[2], col[3] }, name = ev.s or "?",
                 sub = UI.Upper(L[UI.SEAL_LABEL[ev.k] or "Moment"]), right = date("%H:%M", ev.t),
-                go = dayGo(ev.day),
+                go = function(button)
+                    if button == "RightButton" then if day then day() end return end
+                    UI.SelectIn("milestones", momentKey(ev))
+                end,
                 tip = function(r) K.ShowTip(r, lines[1], { select(2, unpack(lines)) }, "ANCHOR_RIGHT") end })
         end,
     },
+    detail = momentReport,
+    keyOf = momentKey,
     empty = function()
         if #(WFD.C.events or {}) == 0 then return L["No milestones yet."] end
         return L["Nothing matches this choice."]
@@ -120,7 +165,8 @@ UI.CollectionView({
         fill = function(row, item)
             local e = item.entry
             if not e.f then
-                row:Set({ icon = QUESTION, ring = { 0.46, 0.39, 0.30 }, name = L[e.def.label], nameKey = "muted" })
+                row:Set({ icon = QUESTION, ring = { 0.46, 0.39, 0.30 }, name = L[e.def.label], nameKey = "muted",
+                    go = function() UI.SelectIn("firsts", e.def.key) end })
                 return
             end
             local f = e.f
@@ -129,9 +175,37 @@ UI.CollectionView({
             if f.zone and f.zone ~= f.s then parts[#parts + 1] = f.zone end
             row:Set({ icon = UI.IconPath(e.def.icon, "first"), ring = { 0.86, 0.62, 0.18 }, name = L[e.def.label],
                 sub = table.concat(parts, "  -  "), right = format(L["Day %d"], f.day or 1),
-                right2 = f.t and date(WFD.loc.date, f.t) or nil, go = dayGo(f.day) })
+                right2 = f.t and date(WFD.loc.date, f.t) or nil, go = function(button)
+                    if button == "RightButton" then local g = dayGo(f.day) if g then g() end return end
+                    UI.SelectIn("firsts", e.def.key)
+                end })
         end,
     },
+    -- the report of a first time: when and where, and the moment it is kept as
+    detail = function(rp, key)
+        local def
+        for _, d in ipairs(WFD.FIRSTS or {}) do if d.key == key then def = d break end end
+        if not def then return end
+        local f = WFD.C.firsts and WFD.C.firsts[key]
+        rp:Kicker(f and L["Experienced"] or L["Still to come"], f and "pos" or "muted")
+        rp:Title(L[def.label])
+        rp:Icons({ { UI.IconPath(def.icon, "first") } })
+        if not f then
+            rp:Text(L["It is written down by itself the first time it happens."], "soft", "body")
+            return
+        end
+        if f.s and f.s ~= "" then rp:Text(f.s, "ink", "body") end
+        if f.zone then rp:Text(f.zone, "soft", "body") end
+        rp:DayLink(f.day, f.t)
+        for _, ev in ipairs(WFD.C.events or {}) do
+            if ev.k == "first" and ev.first == key then
+                if ev.gear and next(ev.gear) then rp:Picture(ev, 140) end
+                momentLinks(rp, ev)
+                break
+            end
+        end
+    end,
+    keyOf = function(e) return e.def.key end,
     empty = function(state)
         if state.chip == "done" and state.q == "" and next(WFD.C.firsts or {}) == nil then
             return L["No first time yet. They come by themselves while you play."]
