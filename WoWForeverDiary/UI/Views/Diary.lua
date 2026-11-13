@@ -42,19 +42,54 @@ local function icon(key, size) return "|T" .. UI.Icon(key) .. ":" .. (size or 13
 local SKULL = "|TInterface\\TargetingFrame\\UI-TargetingFrame-Skull:13:13:0:0|t "
 
 -- the figures of a day as small boxes; money and death carry a sign or a skull, never only a colour
+-- every chip leads to where its figure is kept (the newest first, so this day's part is on top)
 local function factChips(f)
     local d = f.d
     local list = {}
-    for _, lv in ipairs(d.levels or {}) do list[#list + 1] = { icon("level") .. format(L["Level %d!"], lv), "gold" } end
-    if (d.killTotal or 0) > 0 then list[#list + 1] = { icon("bestiary") .. WFD:Count("%d kills", d.killTotal), "ink" } end
-    if #(d.qd or {}) > 0 then list[#list + 1] = { icon("quests") .. WFD:Count("%d quests", #d.qd), "ink" } end
-    if f.km >= 0.5 then list[#list + 1] = { icon("map") .. WFD:Dec(f.km) .. " km", "ink" } end
-    if f.net ~= 0 then
-        list[#list + 1] = { (f.net > 0 and "+" or "-") .. UI.CoinIcons(f.net, 12), f.net > 0 and "pos" or "neg",
-            { L["Gold today"], "+" .. UI.CoinIcons(f.income, 11), "-" .. UI.CoinIcons(f.spend, 11) } }
+    local function chip(text, key, route, title, lines)
+        local tip = { title or text, unpack(lines or {}) }
+        tip[#tip + 1] = { L["Click to open."], 0.5, 0.8, 1 }
+        list[#list + 1] = { text, key, tip, function() R.Go(route) end }
     end
-    if (d.deaths or 0) > 0 then list[#list + 1] = { SKULL .. d.deaths .. "x", "neg" } end
+    -- the region of the day: its map
+    local map = f.mainZone and WFD.C.zoneMaps and WFD.C.zoneMaps[f.mainZone]
+    if type(map) == "number" then
+        chip(icon("map") .. f.mainZone, "ink", { view = "world", map = map }, L["Show on the world map"])
+    end
+    for _, lv in ipairs(d.levels or {}) do chip(icon("level") .. format(L["Level %d!"], lv), "gold", UI.PartRoute("levels")) end
+    if (d.killTotal or 0) > 0 then
+        chip(icon("bestiary") .. WFD:Count("%d kills", d.killTotal), "ink", { view = "bestiary", sort = "last" }, L["Bestiary"])
+    end
+    if #(d.qd or {}) > 0 then
+        chip(icon("quests") .. WFD:Count("%d quests", #d.qd), "ink", { view = "quests", sort = "new" }, L["Quest Book"])
+    end
+    if f.km >= 0.5 then
+        chip(icon("map") .. WFD:Dec(f.km) .. " km", "ink", type(map) == "number" and { view = "world", map = map } or UI.PartRoute("atlas"))
+    end
+    if f.net ~= 0 then
+        chip((f.net > 0 and "+" or "-") .. UI.CoinIcons(f.net, 12), f.net > 0 and "pos" or "neg", UI.PartRoute("ledger"),
+            L["Gold today"], { "+" .. UI.CoinIcons(f.income, 11), "-" .. UI.CoinIcons(f.spend, 11) })
+    end
+    if (d.deaths or 0) > 0 then chip(SKULL .. d.deaths .. "x", "neg", UI.PartRoute("fates"), L["Fate"]) end
     return list
+end
+
+-- where a moment of the day is read further: the wanted poster, the report of the dungeon, its part
+local function momentGo(ev, day)
+    if (ev.k == "boss" or ev.k == "rare") and ev.npc then return function() R.Go({ view = "bestiary", key = ev.npc }) end end
+    if ev.k == "dungeon" then
+        for i, r in ipairs(WFD.C.runs or {}) do
+            if r.day == day and r.name and ev.s and ev.s:find(r.name, 1, true) then
+                return function() R.Go({ view = "runs", key = i }) end
+            end
+        end
+        return function() R.Go(UI.PartRoute("runs")) end
+    end
+    if ev.k == "first" and ev.first then return function() R.Go({ view = "firsts", key = ev.first }) end end
+    if ev.k == "catch" and ev.item then return function() R.Go({ view = "fishbook", key = ev.item }) end end
+    local PART = { honour = "honour", landmark = "landmarks", level = "levels", capsule = "capsule", weekly = "tasks", challenge = "tasks" }
+    if PART[ev.k] then return function() R.Go(UI.PartRoute(PART[ev.k])) end end
+    return function() R.Go({ view = "milestones", key = tostring(ev.t) .. ":" .. tostring(ev.k) }) end
 end
 
 -- "on this day": a look back from the newest entry
@@ -346,12 +381,12 @@ UI:RegisterView({
                 rp:Icons(items)
                 for _, ev in ipairs(moments) do
                     local path, col = UI.MomentIcon(ev)
-                    local go
-                    if ev.k == "honour" then go = function() R.Go(UI.PartRoute("honour")) end
-                    elseif ev.k == "landmark" then go = function() R.Go(UI.PartRoute("landmarks")) end end
+                    local tip = { ev.s, date("%H:%M", ev.t) }
+                    if ev.shot then tip[#tip + 1] = L["Screenshot:"] .. " " .. ev.shot end
+                    tip[#tip + 1] = { L["Click to open."], 0.5, 0.8, 1 }
                     rp:Line({ name = momentSubject(ev), wrap = true, icon = path, col = { col[1], col[2], col[3] },
                         sub = UI.Upper(L[UI.SEAL_LABEL[ev.k] or "Moment"]), subKey = "gold", right = date("%H:%M", ev.t),
-                        go = go, tip = { ev.s, date("%H:%M", ev.t), ev.shot and (L["Screenshot:"] .. " " .. ev.shot) or nil } })
+                        go = momentGo(ev, day), tip = tip })
                 end
                 rp:Gap(6)
             end

@@ -176,10 +176,13 @@ function K.Report(parent)
             local b = K.Box(p, "inset", "line", "Button")
             b.text = K.Text(b, "small", "ink")
             b.text:SetPoint("CENTER", 0, 0)
+            -- a chip that leads somewhere lights up like a button
             b:SetScript("OnEnter", function(s)
+                if s.go then s:SetSurface("hover", "gold") end
                 if s.tip then K.ShowTip(s, s.tip[1], { select(2, unpack(s.tip)) }) end
             end)
-            b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+            b:SetScript("OnLeave", function(s) s:SetSurface("inset", "line") GameTooltip:Hide() end)
+            b:SetScript("OnClick", function(s) if s.go then s.go() end end)
             return b
         end),
         cap = stock(function(p)
@@ -380,7 +383,7 @@ function K.Report(parent)
         return t
     end
 
-    -- small boxes in a row that breaks where the room ends: { { text, key } }
+    -- small boxes in a row that breaks where the room ends: { { text, key, tip, go } } (go: where a click leads)
     function rp:Chips(list)
         local x, rowH = 0, 0
         for _, it in ipairs(list) do
@@ -392,7 +395,7 @@ function K.Report(parent)
             if x > 0 and x + bw > self.w then x, self.y, rowH = 0, self.y + rowH + 6, 0 end
             b:ClearAllPoints()
             b:SetPoint("TOPLEFT", area, "TOPLEFT", PAD + x, -self.y)
-            b.tip = it[3]
+            b.tip, b.go = it[3], it[4]
             x = x + bw + 6
             rowH = max(rowH, bh)
         end
