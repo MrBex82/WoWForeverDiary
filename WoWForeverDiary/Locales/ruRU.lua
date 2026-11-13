@@ -744,7 +744,6 @@ L["Week by Week"] = "Неделя за неделей"
 L["Complete %d tasks of the week."] = "Выполните задачи недели (раз: %d)."
 
 L["Search the diary"] = "Поиск по дневнику"
-L["Nothing found."] = "Ничего не найдено."
 L["%d more results, type a little more"] = "Ещё результатов: %d, уточните запрос"
 
 L["The binding"] = "Переплёт"
@@ -1325,3 +1324,8 @@ L["A week of travel in figures"] = "Неделя путешествий в ци�
 L["In this place the game keeps secret what the creatures look like."] = "Здесь игра скрывает, как выглядят существа."
 L["Place discovered"] = "Место открыто"
 L["%s already found this place."] = "%s уже нашёл это место."
+L["Parts"] = "Разделы"
+L["Nothing found under %s."] = "В разделе «%s» ничего не найдено."
+L["Search everywhere (%d)"] = "Искать везде (%d)"
+L["No day fits these filters."] = "Ни один день не подходит под эти фильтры."
+L["Nothing found. Try a shorter word, or a name the way the diary writes it."] = "Ничего не найдено. Попробуйте слово покороче или имя так, как его пишет дневник."

@@ -285,7 +285,7 @@ end
 ------------------------------------------------------------------------
 -- The search in the head bar
 ------------------------------------------------------------------------
-local CHIPS = { { nil, "All" }, { "day", "Diary" }, { "person", "Acquaintance" }, { "creature", "Bestiary" },
+local CHIPS = { { nil, "All" }, { "part", "Parts" }, { "day", "Diary" }, { "person", "Acquaintance" }, { "creature", "Bestiary" },
     { "place", "Maps" }, { "quest", "Quest" }, { "treasure", "Treasures" }, { "catch", "Angler's log" }, { "honour", "Honour" } }
 local MAX_ROWS = 10
 local paintChips          -- below
@@ -303,21 +303,53 @@ local function chooseRow(i)
     for k, r in ipairs(res.rows) do r:SetSurface(k == res.sel and "hover" or nil) end
 end
 
+-- a line between the groups of the results: the kind of what follows
+local function groupHead(i)
+    local res = S.results
+    local fs = res.heads[i]
+    if not fs then
+        fs = K.Text(res, "section", "gold")
+        res.heads[i] = fs
+    end
+    return fs
+end
+
 local function showResults()
     local res = S.results
     local text = S.search:GetText() or ""
-    local hits, q = UI.Search.Find(text, res.kind)
+    -- filters for days (z:, lv:, d:) search the days only: the chip of the diary is chosen while they are typed,
+    -- and the chip chosen before comes back when they are gone
+    local hits, q, filtered = UI.Search.Find(text, res.kind)
+    if filtered and res.kind ~= "day" then
+        res.before, res.kind = res.kind or false, "day"
+    elseif not filtered and res.before ~= nil then
+        res.kind, res.before = res.before or nil, nil
+        hits, q = UI.Search.Find(text, res.kind)
+    end
     local typed = #text >= 2 or #hits > 0
     if not typed then res:Hide() return end
     if WFD.S then WFD.S.searched = true end
     res:Show()
     paintChips()
     local y = res.chipsBottom or -44
+    -- with all kinds, the results come in groups, each below a line with its kind
+    local grouped = res.kind == nil
+    local lastKind, hi = nil, 0
     for i = 1, MAX_ROWS do
         local row = res.rows[i]
         local h = hits[i]
         if h then
             local e = h.e
+            if grouped and e.kind ~= lastKind then
+                lastKind, hi = e.kind, hi + 1
+                local head = groupHead(hi)
+                head:SetText(UI.Upper(UI.Search.KindLabel(e.kind)))
+                head:ClearAllPoints()
+                head:SetPoint("TOPLEFT", res, "TOPLEFT", 14, y - (hi > 1 and 6 or 0))
+                head:Show()
+                y = y - (hi > 1 and 6 or 0) - head:GetStringHeight() - 4
+            end
+            row.kind:SetShown(not grouped)
             row.icon:SetTexture(e.icon)
             if e.kind == "day" and q == "" then
                 row.text:SetText("|cffe8c26a" .. e.text .. "|r  " .. (e.zone or "") .. (e.level and ("  -  " .. format(L["Level %d"], e.level)) or ""))
@@ -337,11 +369,28 @@ local function showResults()
             row:Hide()
         end
     end
+    for i = hi + 1, #res.heads do res.heads[i]:Hide() end
+    -- nothing found: what to try instead, and when other kinds have it, a button that searches them all
     res.none:SetShown(#hits == 0)
+    res.widen:Hide()
     if #hits == 0 then
+        local all = (res.kind and not filtered) and #UI.Search.Find(text, nil) or 0
+        if all > 0 then
+            res.none:SetText(format(L["Nothing found under %s."], UI.Search.KindLabel(res.kind)))
+            res.widen:SetLabel(format(L["Search everywhere (%d)"], all))
+        else
+            res.none:SetText(filtered and L["No day fits these filters."]
+                or L["Nothing found. Try a shorter word, or a name the way the diary writes it."])
+        end
         res.none:ClearAllPoints()
         res.none:SetPoint("TOPLEFT", res, "TOPLEFT", 14, y - 4)
-        y = y - 26
+        y = y - 4 - res.none:GetStringHeight() - 8
+        if all > 0 then
+            res.widen:ClearAllPoints()
+            res.widen:SetPoint("TOPLEFT", res, "TOPLEFT", 10, y)
+            res.widen:Show()
+            y = y - res.widen:GetHeight() - 4
+        end
     end
     res.more:SetShown(#hits > MAX_ROWS)
     if #hits > MAX_ROWS then
@@ -404,7 +453,12 @@ local function buildSearch(top)
     box.hint:SetPoint("RIGHT", -8, 0)
     box.hint:SetWordWrap(false)
     box.hint:SetText(L["Search the diary"] .. "  (" .. L["Ctrl + F"] .. ")")
-    box:SetScript("OnEditFocusGained", function(s) s.hint:Hide() s:SetSurface("inset", "gold") end)
+    box:SetScript("OnEditFocusGained", function(s)
+        s.hint:Hide()
+        s:SetSurface("inset", "gold")
+        -- back in the field with words in it: the results are there again
+        if (s:GetText() or "") ~= "" and not S.results:IsShown() then showResults() end
+    end)
     box:SetScript("OnEditFocusLost", function(s)
         s.hint:SetShown((s:GetText() or "") == "")
         s:SetSurface("inset", "line")
@@ -436,7 +490,7 @@ local function buildSearch(top)
     res.chips = {}
     for _, ch in ipairs(CHIPS) do
         local b = K.Button(res, L[ch[2]], "secondary", function(self)
-            res.kind = self.kind
+            res.kind, res.before = self.kind, nil
             paintChips()
             showResults()
             box:SetFocus()
@@ -463,12 +517,20 @@ local function buildSearch(top)
         row:SetScript("OnClick", function(self) openRow(self) end)
         res.rows[i] = row
     end
+    res.heads = {}
     res.none = K.Text(res, "body", "soft")
-    res.none:SetText(L["Nothing found."])
+    res.none:SetWidth(460 - 28)
+    res.widen = K.Button(res, "", "ghost", function()
+        res.kind, res.before = nil, nil
+        showResults()
+        box:SetFocus()
+    end)
+    res.widen.minH = 26
     res.more = K.Text(res, "small", "soft")
     res.hint = K.Text(res, "small", "muted")
     res.hint:SetWidth(460 - 28)
     res.hint:SetText(L["Narrow down the days: z:region  lv:20-30  d:30 (the last 30 days)"])
+    K.CloseOnClickAway(res, function() return { box } end)
     res:Hide()
     res:SetScript("OnShow", function(self)
         self:SetScale(box:GetEffectiveScale() / UIParent:GetEffectiveScale())

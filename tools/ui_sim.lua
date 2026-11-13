@@ -544,9 +544,26 @@ local function everywhere(label)
     step(label .. " search", function()
         UI:OpenStart()
         UI:FocusSearch()
-        UI.shell.search:SetText("wolf")
-        UI.shell.search:SetText("z:Elwynn")
-        UI.shell.search:SetText("")
+        local box, res = UI.shell.search, UI.shell.results
+        box:SetText("wolf")
+        -- a filter for days chooses the chip of the diary, and gives the chip back when it is gone
+        res.chips[4]:Click()
+        local chosen = res.kind
+        box:SetText("z:Elwynn")
+        if res.kind ~= "day" then error("a filter for days did not choose the diary") end
+        box:SetText("wolf")
+        if res.kind ~= chosen then error("the chip chosen before did not come back") end
+        -- nothing under one kind: the button searches everywhere
+        res.chips[2]:Click()
+        box:SetText("zzqx")
+        res.widen:Click()
+        if res.kind ~= nil then error("searching everywhere kept the chip") end
+        -- out of the field and back in: the results are there again
+        res:Hide()
+        box:ClearFocus()
+        box:SetFocus()
+        if not res:IsShown() then error("the results did not come back with the focus") end
+        box:SetText("")
     end)
 end
 

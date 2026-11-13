@@ -177,24 +177,27 @@ local function find(q, kind)
             if ok then hits[#hits + 1] = { e = e, starts = (pos == 1) } end
         end
     end
+    -- by rank, and within a rank by kind (the results are shown in groups of one kind)
     table.sort(hits, function(a, b)
         if a.e.rank ~= b.e.rank then return a.e.rank < b.e.rank end
+        if a.e.kind ~= b.e.kind then return a.e.kind < b.e.kind end
         if a.starts ~= b.starts then return a.starts end
         if a.e.day and b.e.day then return a.e.day > b.e.day end
         return a.e.text < b.e.text
     end)
-    return hits, q
+    return hits, q, filters ~= nil
 end
 
 ------------------------------------------------------------------------
 -- What the results are called
 ------------------------------------------------------------------------
 local KIND_LABEL = {
-    part = "Contents", person = "Acquaintance", creature = "Bestiary", quest = "Quest", place = "Maps",
+    part = "Parts", person = "Acquaintance", creature = "Bestiary", quest = "Quest", place = "Maps",
     honour = "Honour", day = "Diary", treasure = "Treasures", catch = "Angler's log",
 }
 
 -- for the search field in the head bar of the travel desk: the same index, the same ranking, the same marks
+-- (Find gives the hits, the words searched for, and whether filters for days were typed)
 UI.Search = {
     Find = function(q, kind) return find(q or "", kind) end,
     Snippet = snippet,
