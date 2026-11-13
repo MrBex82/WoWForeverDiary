@@ -5,8 +5,7 @@ local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
 local K = UI.Kit
-local R = UI.Router
-local floor, max, min, format = math.floor, math.max, math.min, string.format
+local max, min, format = math.max, math.min, string.format
 
 -- (labels are keys, translated when the view is built:
 -- L["Uncommon"] L["Rare"] L["Epic"] L["Legendary"] L["Best per slot"] L["Worn now"] L["By slot"] L["Best first"]

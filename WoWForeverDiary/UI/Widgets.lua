@@ -197,12 +197,6 @@ function UI.Tex(parent, layer, sub)
     return t
 end
 
-function UI.Rect(parent, r, g, b, a, layer, sub)
-    local t = UI.Tex(parent, layer, sub)
-    t:SetVertexColor(r, g, b, a or 1)
-    return t
-end
-
 function UI.Fill(parent, col, layer, sub, a)
     local t = UI.Tex(parent, layer, sub)
     t:SetVertexColor(col4(col, a))
@@ -678,57 +672,6 @@ function UI.ShortCount(n)
     return floor(n / 1000) .. "k"
 end
 
--- Wax seal / medallion with an embossed icon or a number
-function UI.Seal(parent, size, col, iconKey, emboss)
-    local f = CreateFrame("Button", nil, parent)
-    f:SetSize(size, size)
-    f.rim = UI.Circle(f, size, { col[1] * 0.45, col[2] * 0.45, col[3] * 0.45, 1 }, "ARTWORK", 0)
-    f.rim:SetPoint("CENTER")
-    f.body = UI.Circle(f, size - 4, col, "ARTWORK", 1)
-    f.body:SetPoint("CENTER")
-    f.shine = UI.Circle(f, size * 0.5, { 1, 1, 1, 0.16 }, "ARTWORK", 2)
-    f.shine:SetPoint("CENTER", -size * 0.13, size * 0.13)
-    f.icon = f:CreateTexture(nil, "ARTWORK", nil, 3)
-    f.icon:SetSize(size * 0.62, size * 0.62)
-    f.icon:SetPoint("CENTER")
-    f.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    UI.Round(f.icon, f)
-    f.label = UI.Text(f, max(8, floor(size * 0.45)), { 1, 0.95, 0.82, 1 }, "CENTER", UI.HEAD, true)
-    f.label:SetPoint("CENTER", 0, 0)
-
-    function f:SetSealSize(s)
-        local k = UI.CanRound() and 1 or 0.74
-        self:SetSize(s, s)
-        self.rim:SetSize(s * k, s * k)
-        self.body:SetSize((s - 4) * k, (s - 4) * k)
-        self.shine:SetSize(s * 0.5 * k, s * 0.5 * k)
-        self.shine:SetPoint("CENTER", -s * 0.13, s * 0.13)
-        self.icon:SetSize(s * 0.62, s * 0.62)
-    end
-
-    function f:SetSeal(color, key, embossed, text)
-        self.rim:SetVertexColor(color[1] * 0.45, color[2] * 0.45, color[3] * 0.45, 1)
-        self.body:SetVertexColor(col4(color))
-        local path = key and UI.Icon(key)
-        if path and not text then
-            self.icon:SetTexture(path)
-            self.icon:Show()
-            if embossed then
-                self.icon:SetDesaturated(true)
-                self.icon:SetVertexColor(min(1, color[1] * 1.9 + 0.15), min(1, color[2] * 1.9 + 0.15), min(1, color[3] * 1.9 + 0.15), 0.9)
-            else
-                self.icon:SetDesaturated(false)
-                self.icon:SetVertexColor(1, 1, 1, 1)
-            end
-        else
-            self.icon:Hide()
-        end
-        self.label:SetText(text or "")
-    end
-    f:SetSeal(col, iconKey, emboss)
-    return f
-end
-
 ------------------------------------------------------------------------
 -- Buttons
 ------------------------------------------------------------------------
@@ -764,27 +707,6 @@ function UI.Button(parent, text, w, h, onClick, style)
     return b
 end
 
--- Text written in ink on the page that behaves like a link
-function UI.InkButton(parent, text, onClick, size, color)
-    local b = CreateFrame("Button", nil, parent)
-    local base = color or c.inkSoft
-    b.text = UI.Text(b, size or 14, base, "CENTER", UI.HEAD)
-    b.text:SetPoint("CENTER", 0, 1)
-    local function paint(self, hover)
-        self.text:SetTextColor(col4(hover and c.redInk or base))
-    end
-    function b:SetLabel(t)
-        self.text:SetText(t)
-        self:SetSize(self.text:GetStringWidth() + 8, (size or 14) + 10)
-    end
-    b:SetScript("OnEnter", function(self) paint(self, true) end)
-    b:SetScript("OnLeave", function(self) paint(self, false) end)
-    b:SetScript("OnClick", function(self, ...) if onClick then onClick(self, ...) end end)
-    b:SetLabel(text or "")
-    paint(b, false)
-    return b
-end
-
 -- Spell-book page turn arrows
 function UI.PageArrow(parent, kind, onClick)
     local b = CreateFrame("Button", nil, parent)
@@ -802,15 +724,6 @@ function UI.ClassColor(classFile)
     local col = classFile and RAID_CLASS_COLORS and RAID_CLASS_COLORS[classFile]
     if col then return { col.r, col.g, col.b, 1 } end
     return c.gold
-end
-
--- the colour of a metal or a rarity as a hex code for written text; on the light parchment it is darkened,
--- else gold and silver would vanish on the paper
-function UI.InkHex(col)
-    if UI.THEME == "parchment" then
-        return string.format("%02x%02x%02x", floor(col[1] * 140), floor(col[2] * 140), floor(col[3] * 140))
-    end
-    return string.format("%02x%02x%02x", floor(col[1] * 255), floor(col[2] * 255), floor(col[3] * 255))
 end
 
 function UI.Hex(col)

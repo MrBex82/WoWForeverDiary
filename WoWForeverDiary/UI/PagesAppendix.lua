@@ -3,11 +3,8 @@
 local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
-local c = UI.c
 local col4 = UI.col4
-local floor, max, min, format = math.floor, math.max, math.min, string.format
-
-local GREEN = UI.c.good
+local max, format = math.max, string.format
 
 -- (the milestones are a view of the travel desk now: UI/Views/Chronicle.lua)
 
@@ -34,7 +31,7 @@ local function rarityOf(m)
     if m.cls == "elite" then return "elite" end
     return "normal"
 end
-UI.BESTIARY_RARITY, UI.RarityOf, UI.LevelText = RARITY, rarityOf, levelText
+UI.RarityOf, UI.LevelText = rarityOf, levelText
 local RARITY_TAG = { elite = "Elite", rare = "Rare", boss = "Boss" }
 local SKULL = "Interface\\TargetingFrame\\UI-TargetingFrame-Skull"
 
@@ -44,8 +41,7 @@ local TIERS = {           -- collector ranks of the bestiary (also shown on the 
     { 200, "Legend", { 0.62, 0.22, 0.70, 1 } },
 }
 UI.BESTIARY_TIERS = TIERS
-local CARD_W, CARD_H, CARD_GAP, ROW_GAP = 108, 136, 12, 10
-local PER_PAGE = 9
+local CARD_W, CARD_H = 108, 136
 
 -- collection order: first kill first, numbered like an album
 local function collection()
@@ -61,73 +57,12 @@ end
 
 -- every footstep on a map, all days added up. Days gone by do not change any more,
 -- so their sum is kept for the session; only today is added each time.
-local pastCells, pastFor, pastDay = {}, nil, nil
-local function walkedCells(map)
-    local C, today = WFD.C, WFD:DayIndex()
-    if pastFor ~= C or pastDay ~= today then pastCells, pastFor, pastDay = {}, C, today end
-    local past = pastCells[map]
-    if not past then
-        past = {}
-        for idx, d in pairs(C.days) do
-            local path = idx < today and d.path and WFD:PathCells(d.path[map])
-            if path then
-                for key, v in pairs(path) do past[key] = (past[key] or 0) + v end
-            end
-        end
-        pastCells[map] = past
-    end
-    local cells = {}
-    for key, v in pairs(past) do cells[key] = v end
-    local now = C.days[today]
-    local path = now and now.path and WFD:PathCells(now.path[map])
-    if path then
-        for key, v in pairs(path) do cells[key] = (cells[key] or 0) + v end
-    end
-    return cells
-end
-
--- the parts of an area you walked least (but did walk: the sea is no hint), least first
-local function quietCorners(map)
-    if not map then return nil end
-    local cells = walkedCells(map)
-    local per = {}
-    for key, v in pairs(cells) do
-        local x, y = (floor(key / 100) + 0.5) / 100, (key % 100 + 0.5) / 100
-        local dir = WFD:Direction(x, y)
-        if dir then
-            local e = per[dir] or { dir = dir, v = 0, sx = 0, sy = 0, n = 0 }
-            per[dir] = e
-            e.v, e.sx, e.sy, e.n = e.v + v, e.sx + x, e.sy + y, e.n + 1
-        end
-    end
-    local list = {}
-    for _, e in pairs(per) do list[#list + 1] = e end
-    if #list < 2 then return nil end
-    table.sort(list, function(a, b) return a.v < b.v end)
-    local out = {}
-    for i = 1, math.min(3, #list) do
-        local e = list[i]
-        out[i] = { dir = e.dir, map = map, x = e.sx / e.n, y = e.sy / e.n }
-    end
-    return out
-end
-
--- the map an area of the album lies on
-local function mapOfZone(z, list)
-    local C = WFD.C
-    if C.zoneMaps and C.zoneMaps[z] then return C.zoneMaps[z] end
-    for _, e in ipairs(list) do
-        local m = (e.m and e.m.map) or (e.h and e.h.m)
-        if m then return m end
-    end
-end
 
 -- (the album is a view of the travel desk now: UI/Views/Albums.lua; the hunting grounds are a layer of the
 -- world map: UI/Views/World.lua)
 
--- for the album on the travel desk: the creatures in album order, and the places worth a second look
+-- for the album on the travel desk: the creatures in album order
 UI.BestiaryCollection = collection
-UI.QuietCorners = function(z, list) return quietCorners(mapOfZone(z, list or {})) end
 
 -- Where a long word may be broken: between syllables, as Latin writing does it - before a single consonant
 -- between vowels, and before the letters a syllable can start with ("Wald-schreiter", "Mondpirscher-patriarch").
@@ -549,12 +484,6 @@ local ROLE_ICONS = {
     quest = { "INV_Scroll_03" }, petition = { "INV_Letter_15" }, talk = { "INV_Misc_Note_01" },
 }
 UI.ROLE_ORDER, UI.ROLE_ICONS = ROLE_ORDER, ROLE_ICONS      -- the person cards use them too
-local function mainRole(n)
-    for _, r in ipairs(ROLE_ORDER) do
-        if n.roles and n.roles[r] then return r end
-    end
-    return "talk"
-end
 
 -- (the register of people is a view of the travel desk now: UI/Views/Registers.lua)
 

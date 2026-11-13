@@ -281,7 +281,6 @@ function UI:RefreshHead()
     S.gear:SetActive(cur and cur.view == "settings")
     S.help:SetActive(cur and cur.view == "help")
 end
-function UI:OnHistoryChanged() self:RefreshHead() end
 
 ------------------------------------------------------------------------
 -- The search in the head bar
@@ -655,7 +654,7 @@ function UI:BuildShell()
         acc = acc + dt
         if acc < 10 then return end
         acc = 0
-        if not WFD.dirty or h:IsMouseOver() or UI.noteFocus then return end
+        if not WFD.dirty or h:IsMouseOver() then return end
         WFD.dirty = false
         if UI.storyCache then UI.storyCache[WFD:NumDays()] = nil end
         local v = R.cur and views[R.cur.view]
@@ -738,7 +737,6 @@ function UI:OpenShell(route)
         UI.Sound("IG_SPELLBOOK_OPEN", 829)
         WFD.dirty = false
         if self.storyCache then self.storyCache[WFD:NumDays()] = nil end
-        self.history = {}
         R.Reset()
         R.cur = nil
         layout()
@@ -748,8 +746,7 @@ end
 
 function UI:OpenStart() self:OpenShell({ view = "start" }) end
 
--- the old ways into the book lead to the diary
-function UI:OpenBook() self:OpenShell({ view = "diary" }) end
+-- the settings, from the minimap button
 function UI:OpenSettings() self:OpenShell({ view = "settings" }) end
 
 local show0 = UI.Show
@@ -770,8 +767,6 @@ function UI:Toggle()
         self:OpenShell()
     end
 end
-
-function UI:GoToPage() self:OpenShell({ view = "diary" }) end
 
 function UI:OnDataSwitched()
     if not S or not self.inShell then return end

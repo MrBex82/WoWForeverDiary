@@ -2,7 +2,6 @@
 local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
-local c = UI.c
 local format, concat = string.format, table.concat
 
 ------------------------------------------------------------------------

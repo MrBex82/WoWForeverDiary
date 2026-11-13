@@ -8,7 +8,6 @@ local time, date = time, date
 WFD.version = "0.4.0"
 WFD.gameLocale = GetLocale()
 WFD.locale = WFD.gameLocale
-WFD.isDE = (WFD.locale == "deDE")
 
 -- Localisation: English phrases are the keys. Each Locales\*.lua fills its own tables via WFD:NewLocale();
 -- the chosen language (WFDiaryDB.language, default: game language) is copied into L and WFD.loc at ADDON_LOADED.
@@ -57,7 +56,7 @@ function WFD:ApplyLanguage(code)
         for k, v in pairs(def.extra) do L[k] = v end
         for k, v in pairs(def.loc) do loc[k] = v end
     end
-    self.locale, self.isDE = code, (code == "deDE")
+    self.locale = code
     if self.UI and self.UI.ApplyScriptFonts then self.UI.ApplyScriptFonts(code) end
 end
 

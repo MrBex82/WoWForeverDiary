@@ -5,7 +5,7 @@ local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
 local R = UI.Router
-local max, min, format = math.max, math.min, string.format
+local format = string.format
 
 -- (the labels of chips, orders and buttons are keys, translated when the view is built:
 -- L["Rare and bosses"] L["Connoisseurs"] L["Sketches"] L["Nemeses"] L["Still to find"] L["By area"] L["By kind"]
@@ -53,7 +53,6 @@ local function nemesisOf(m)
 end
 
 local function bestiaryData(state)
-    local C = WFD.C
     local arr = UI.BestiaryCollection()
     local hintsByZone = WFD.CreatureHints and WFD:CreatureHints() or {}
     local chip, q = state.chip, state.q

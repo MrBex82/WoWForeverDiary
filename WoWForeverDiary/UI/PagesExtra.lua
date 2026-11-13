@@ -2,34 +2,19 @@
 local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
-local c = UI.c
-local floor, max, min, format = math.floor, math.max, math.min, string.format
-
-local GREEN = UI.c.good
-
-local function emptyText(pool, canvas, tx, tw, y, text)
-    local e = pool:Text(14, c.inkFaint, UI.FONT, "CENTER")
-    e:SetText(text)
-    e:SetWidth(tw)
-    e:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-end
+local floor = math.floor
 
 -- (in memoriam is a view of the travel desk now: UI/Views/Keepsakes.lua)
 
 ------------------------------------------------------------------------
 -- Book of honour: achievements Classic never had, climbing from bronze to legend
 ------------------------------------------------------------------------
-local QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
-local LOCKED = { 0.46, 0.39, 0.30, 1 }
 
 local function progressText(e)
     local v = e.value
     if e.def.m == "km" then v = WFD:Dec(floor(v * 10) / 10) end
     return tostring(v) .. " / " .. tostring(e.next or e.def.tiers[e.n])
 end
-
--- red caps heading with a diamond, an optional count on the right and a fading rule
-local function sectionHead(...) return UI.SectionHead(...) end
 
 local function honourTip(e)
     local h = e.def
@@ -121,15 +106,6 @@ local function treasureGroup(link)
     return "other", L["Other"], 999
 end
 
--- the doll: one place per slot, with the game's empty-slot picture; some kinds share a place
-local DOLL = {
-    { "head", "INVTYPE_HEAD", "Head" }, { "neck", "INVTYPE_NECK", "Neck" }, { "shoulder", "INVTYPE_SHOULDER", "Shoulder" },
-    { "back", "INVTYPE_CLOAK", "Chest" }, { "chest", "INVTYPE_CHEST", "Chest" }, { "wrist", "INVTYPE_WRIST", "Wrists" },
-    { "hand", "INVTYPE_HAND", "Hands" }, { "waist", "INVTYPE_WAIST", "Waist" },
-    { "legs", "INVTYPE_LEGS", "Legs" }, { "feet", "INVTYPE_FEET", "Feet" }, { "finger", "INVTYPE_FINGER", "Finger" },
-    { "trinket", "INVTYPE_TRINKET", "Trinket" }, { "main", "INVTYPE_WEAPONMAINHAND", "MainHand" },
-    { "off", "INVTYPE_SHIELD", "SecondaryHand" }, { "ranged", "INVTYPE_RANGED", "Ranged" },
-}
 local DOLL_OF = {
     INVTYPE_HEAD = "head", INVTYPE_NECK = "neck", INVTYPE_SHOULDER = "shoulder", INVTYPE_CLOAK = "back",
     INVTYPE_CHEST = "chest", INVTYPE_WRIST = "wrist", INVTYPE_HAND = "hand", INVTYPE_WAIST = "waist",

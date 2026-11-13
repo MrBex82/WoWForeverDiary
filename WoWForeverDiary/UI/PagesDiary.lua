@@ -2,16 +2,7 @@
 local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
-local c = UI.c
-local floor, max, format, concat = math.floor, math.max, string.format, table.concat
-
-local NOTE_W = 66                    -- margin column for notes
-local FONT_SIZE, SPACING = 13, 3
-local H_CHAPTER, H_DAY, H_FLOURISH, GAP = 196, 58, 30, 8
-local CAP_SIZE, CAP_LINES = 40, 2    -- illuminated initial at the start of every day
-local ITEM_SLOT, MOMENT_H = 80, 34  -- width of a taped item card, height of a moment card (with its gap)
-
-local function textColW() return UI.TextW() - NOTE_W end
+local format = string.format
 
 ------------------------------------------------------------------------
 -- Chapters

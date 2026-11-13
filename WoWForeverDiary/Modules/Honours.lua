@@ -370,7 +370,7 @@ function WFD:HonourMetrics()
         kills = 0, quests = 0, km = 0, jumps = 0, days = 0, hours = 0, flights = 0, deaths = 0,
         kinds = 0, bosses = 0, rares = 0, elites = 0, maxKind = 0,
         zones = count(C.zones), subzones = 0, dungeons = count(C.instances), rareItems = count(C.rares),
-        people = 0, flightmasters = 0, merchants = 0, trainers = 0, maxTalks = 0,
+        people = 0, merchants = 0, trainers = 0, maxTalks = 0,
         companions = count(C.companions), traders = count(C.traders), rests = #(C.rests or {}),
         hearth = C.hearthCount or 0, items = C.itemTotal or 0, gold = floor((C.wealth or 0) / 10000),
         level = UnitLevel and UnitLevel("player") or 1, skillMax = 0, epics = 0,
@@ -402,7 +402,6 @@ function WFD:HonourMetrics()
     for _, n in pairs(C.npcs or {}) do
         m.people = m.people + 1
         local r = n.roles or {}
-        if r.flight then m.flightmasters = m.flightmasters + 1 end
         if r.merchant then m.merchants = m.merchants + 1 end
         if r.trainer then m.trainers = m.trainers + 1 end
         if (n.talks or 0) > m.maxTalks then m.maxTalks = n.talks end

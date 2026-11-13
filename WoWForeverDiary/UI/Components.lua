@@ -157,40 +157,10 @@ function Pool:Grad(orient, from, to, layer, sub)
     return t
 end
 
--- a straight line between two points of the canvas (nil on clients without line regions)
-function Pool:Line(x1, y1, x2, y2, col, a, thick)
-    local canvas = self.parent
-    if not canvas.CreateLine then return nil end
-    local l = self:Get("line", function(p) return p:CreateLine(nil, "ARTWORK") end)
-    l:SetDrawLayer("ARTWORK", 3)
-    l:SetColorTexture(col[1], col[2], col[3], a or 1)
-    l:SetThickness(thick or 2)
-    l:SetStartPoint("TOPLEFT", canvas, x1, y1)
-    l:SetEndPoint("TOPLEFT", canvas, x2, y2)
-    return l
-end
-
 function Pool:Diamond(size, col, layer, sub)
     local t = self:Rect(col, nil, layer, sub)
     t:SetSize(size, size)
     t:SetRotation(pi / 4)
-    return t
-end
-
-function Pool:Circle(size, col, layer, sub)
-    local t = self:Get("circle", function(p)
-        local tex = p:CreateTexture(nil, "ARTWORK")
-        tex:SetTexture(UI.WHITE)
-        tex.round = UI.Round(tex, p)
-        return tex
-    end)
-    t:SetDrawLayer(layer or "ARTWORK", sub or 0)
-    -- alpha goes on the texture itself: vertex alpha is not honoured on masked textures by every client
-    t:SetVertexColor(col[1], col[2], col[3], 1)
-    t:SetAlpha(col[4] or 1)
-    local k = t.round and 1 or 0.74
-    t:SetSize(size * k, size * k)
-    t:SetRotation(t.round and 0 or pi / 4)
     return t
 end
 
@@ -253,18 +223,6 @@ function Pool:Plaque(cx, cy, size, path, col, earned, count, coords)
         if not earned then n:SetAlpha(0.7) end
     end
     return fr
-end
-
-function Pool:Seal(size, col, iconKey, text)
-    local s = self:Get("seal", function(p) return UI.Seal(p, 20, c.red, nil, true) end)
-    s:SetSealSize(size)
-    s:SetAlpha(1)
-    s:SetSeal(col, iconKey, true, text)
-    s.label:SetFont(UI.HEAD, max(9, floor(size * 0.42)), "")
-    s:SetScript("OnEnter", nil)
-    s:SetScript("OnLeave", nil)
-    s:SetScript("OnClick", nil)
-    return s
 end
 
 -- Invisible hot spot for tooltips, item links and clicks.
@@ -393,74 +351,6 @@ function Pool:Check(label, getter, setter)
     return b
 end
 
--- Multi-line handwriting field for notes, saved on every keystroke
-function Pool:NoteEdit(w, h, lineH, text, onSave, hint)
-    local eb = self:Get("noteedit", function(p)
-        local e = CreateFrame("EditBox", nil, p)
-        e:SetMultiLine(true)
-        e:SetAutoFocus(false)
-        e:SetMaxLetters(4000)
-        e:SetShadowOffset(0, 0)
-        e:SetTextColor(UI.THEME == "parchment" and 0.10 or 0.74, UI.THEME == "parchment" and 0.17 or 0.84, UI.THEME == "parchment" and 0.36 or 0.98, 1)
-        e.hint = e:CreateFontString(nil, "OVERLAY")
-        e.hint:SetPoint("TOPLEFT", 0, 0)
-        e.hint:SetJustifyH("LEFT")
-        local function updHint(s)
-            s.hint:SetShown(s:GetText() == "" and not s:HasFocus())
-            UI.noteFocus = s:HasFocus() and true or false
-        end
-        e:SetScript("OnEscapePressed", function(s) s:ClearFocus() end)
-        e:SetScript("OnEditFocusGained", updHint)
-        e:SetScript("OnEditFocusLost", updHint)
-        e:SetScript("OnTextChanged", function(s, user)
-            if user and s.onSave then s.onSave(s:GetText()) end
-            updHint(s)
-        end)
-        return e
-    end)
-    eb:SetFont(UI.FONT, 14, "")
-    if eb.SetSpacing then eb:SetSpacing(max(0, lineH - 14)) end
-    eb:SetSize(w, h)
-    eb.onSave = nil
-    eb:SetText(text or "")
-    eb.onSave = onSave
-    eb.hint:SetFont(UI.FONT, 13, "")
-    if UI.THEME == "parchment" then eb.hint:SetTextColor(0.40, 0.30, 0.18, 0.85) else eb.hint:SetTextColor(0.58, 0.64, 0.78, 0.8) end
-    eb.hint:SetWidth(w)
-    eb.hint:SetText(hint or "")
-    eb.hint:SetShown((text or "") == "")
-    return eb
-end
-
--- One line of text that can be selected and copied, but not changed
-function Pool:CopyField(w, text, col)
-    local eb = self:Get("copyfield", function(p)
-        local e = CreateFrame("EditBox", nil, p)
-        e:SetAutoFocus(false)
-        e:SetShadowOffset(0, 0)
-        e:SetScript("OnEscapePressed", function(s) s:ClearFocus() end)
-        e:SetScript("OnEnterPressed", function(s) s:ClearFocus() end)
-        e:SetScript("OnEditFocusGained", function(s) s:HighlightText() end)
-        e:SetScript("OnEditFocusLost", function(s) s:HighlightText(0, 0) end)
-        e:SetScript("OnTextChanged", function(s, user)
-            if user then s:SetText(s.fixed or ""); s:HighlightText() end
-        end)
-        return e
-    end)
-    eb:SetFont(UI.FONT, UI.FS and UI.FS(12) or 12, "")
-    eb:SetTextColor(col[1], col[2], col[3], 1)
-    eb:SetSize(w, 18)
-    eb.fixed = text
-    eb:SetText(text)
-    eb:SetCursorPosition(0)
-    return eb
-end
-
-function Pool:Map(w, h)
-    local m = self:Get("map", function(p) return UI.MapSketch(p, w, h) end)
-    return m
-end
-
 ------------------------------------------------------------------------
 -- Creature models load lazily when the client has not seen the creature yet:
 -- try again a few times and show a placeholder if it never appears.
@@ -563,7 +453,6 @@ function UI.MapSketch(parent, w, h)
     if canClip then canvas:SetClipsChildren(true) end
     local mf = CreateFrame("Frame", nil, canvas)
     mf:SetPoint("CENTER")
-    box.mapFrame = mf
     box.tiles, box.cells, box.pins = {}, {}, {}
     local over = CreateFrame("Frame", nil, canvas)
     over:SetAllPoints()
@@ -1467,16 +1356,6 @@ function UI.MomentIcon(ev)
     return icon, col
 end
 
--- trophy icons for the five metals (bronze, silver, gold, mithril, legend)
-UI.METAL_ICONS = {
-    { "INV_Ingot_Bronze", "INV_Ingot_02", "INV_Misc_Coin_05" },
-    { "INV_Ingot_01", "INV_Misc_Coin_03" },
-    { "INV_Ingot_03", "INV_Misc_Coin_01" },
-    { "INV_Ingot_06", "INV_Misc_Gem_Sapphire_01" },
-    { "INV_Misc_Head_Dragon_01", "INV_Misc_Gem_Pearl_05" },
-}
-
-
 -- short caption for each kind of milestone (translated through L)
 UI.SEAL_LABEL = {
     level = "Level up", boss = "Boss", rare = "Rare", epic = "Epic find", rareitem = "Rare find",
@@ -1567,11 +1446,4 @@ function UI.Painting(parent, w, h)
         self.plaqueText:SetWidth(pw - 12)
     end
     return f
-end
-
--- paintings are built for one size: every size gets its own pool kind
-function Pool:Painting(w, h)
-    local p = self:Get("painting" .. floor(w) .. "x" .. floor(h), function(parent) return UI.Painting(parent, w, h) end)
-    p.plaque:Show()          -- a page that writes the name below the picture hides it again
-    return p
 end

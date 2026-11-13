@@ -1,11 +1,6 @@
 -- Which parts are still empty, and the figure of each part (Start, the register and the group overviews show them).
 local ADDON, WFD = ...
 local UI = WFD.UI
-local L = WFD.L
-local c = UI.c
-local min, max, format = math.min, math.max, string.format
-
-local LOCKED = { 0.46, 0.39, 0.30, 1 }
 
 ------------------------------------------------------------------------
 -- Parts with nothing in them yet: dimmed in the contents and on the overview pages

@@ -5,7 +5,6 @@ local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
 local K = UI.Kit
-local R = UI.Router
 local floor, max, min, format = math.floor, math.max, math.min, string.format
 
 -- (labels are keys, translated when the view is built:
@@ -679,7 +678,6 @@ UI:RegisterView({
                 worst and { signed(worst.n), format(L["Worst day: day %d"], worst.day), worst.n >= 0 and "pos" or "neg", worst.day },
                 { signed(#days > 0 and net / #days or 0), L["Per day"], net >= 0 and "pos" or "neg" },
             }
-            self.nFacts = 0
             for i, t in ipairs(self.facts) do
                 local f = facts[i]
                 t:SetShown(f ~= nil and #days > 0)
@@ -778,7 +776,6 @@ UI:RegisterView({
             return y + PAD
         end
 
-        local cards = { purse, chart, came, went, dayCard }
         function v:Arrange()
             local W = self.w or scroll:GetWidth() or 0
             if W <= 0 then return end

@@ -94,12 +94,8 @@ end
 -- a card on the desk: its own surface with a soft sheen, a fine gold edge and gold corner pieces
 function K.Card(parent)
     local c = K.Box(parent, nil, "line")
-    if K.Material then
-        K.Material(c, "card")
-        K.Corners(c, 5, 6)
-    else
-        c:SetSurface("card", "line")
-    end
+    K.Material(c, "card")
+    K.Corners(c, 5, 6)
     return c
 end
 

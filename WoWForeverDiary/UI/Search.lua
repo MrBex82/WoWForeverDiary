@@ -3,11 +3,7 @@
 local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
-local c = UI.c
-local col4 = UI.col4
 local max, min, format = math.max, math.min, string.format
-
-local PANEL_W, ROW_H, MAX_ROWS = 380, 24, 12
 
 -- lower case, including the common accented capitals (string.lower only knows A-Z)
 local UPPER = {

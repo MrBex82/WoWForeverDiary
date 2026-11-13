@@ -67,7 +67,6 @@ local function refreshZone()
     if alias then zone = alias end
     local sub = GetSubZoneText()
     if zone and zone ~= "" then WFD.zoneName = zone end
-    WFD.subName = sub
     local C = WFD.C
     if not C or WFD.paused or not zone or zone == "" then return end
     -- flying over a land on a flight path is no visit: nothing is discovered or recorded until you land

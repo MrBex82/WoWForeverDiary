@@ -112,7 +112,6 @@ local NOTES = {
     critter    = { "It never stood a chance.", "Small, harmless and now a footnote." },
     other      = { "A strange creature. I made a note, just in case.", "Worth remembering, or at least worth writing down." },
 }
-WFD.CREATURE_NOTES = NOTES
 function WFD:MarginNote(id, m)
     local list = NOTES[self:CreatureTypeKey(m and m.ctype)] or NOTES.other
     local h = tonumber(id)

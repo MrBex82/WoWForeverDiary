@@ -5,7 +5,6 @@ local ADDON, WFD = ...
 local UI = WFD.UI
 local c = UI.c
 
-UI.THEMES = { "codex", "parchment", "modern", "contrast" }
 local PALETTES = {
     modern = {
         ink = { 0.94, 0.95, 0.97 }, inkSoft = { 0.74, 0.77, 0.82 }, inkFaint = { 0.56, 0.60, 0.66 },
@@ -44,19 +43,6 @@ function UI.ApplyTheme(name)
         local t = c[key]
         if t then t[1], t[2], t[3] = col[1], col[2], col[3] end
     end
-end
-
--- Colours made for dark leather (pale, lifted toward cream) are deepened on the light parchment, where they
--- would hardly show: k = how much of the colour is kept.
-function UI.Deep(col, k)
-    if UI.THEME ~= "parchment" then return col end
-    k = k or 0.5
-    return { col[1] * k, col[2] * k, col[3] * k, col[4] or 1 }
-end
--- the ink of the reader's own writing: pale blue on the dark pages, dark blue on parchment
-function UI.NoteInk()
-    if UI.THEME == "parchment" then return { 0.10, 0.17, 0.36, 1 } end
-    return { 0.74, 0.84, 0.98, 1 }
 end
 
 -- a size in points, scaled by the chosen size of the writing. Nothing is set smaller than 11 points:

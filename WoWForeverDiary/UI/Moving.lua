@@ -2,8 +2,6 @@
 local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
-local c = UI.c
-local col4 = UI.col4
 local format, max = string.format, math.max
 
 local pop

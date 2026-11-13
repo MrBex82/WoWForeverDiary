@@ -5,7 +5,7 @@ local UI = WFD.UI
 local L = WFD.L
 local K = UI.Kit
 local R = UI.Router
-local floor, max, min, format = math.floor, math.max, math.min, string.format
+local max, min, format = math.max, math.min, string.format
 
 local PAD, GAP = 16, 14
 local MAX_GOALS = 10

@@ -4,8 +4,7 @@ local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
 local K = UI.Kit
-local R = UI.Router
-local max, min, format = math.max, math.min, string.format
+local max, format = math.max, string.format
 
 -- (labels are keys, translated when the view is built:
 -- L["Trainers"] L["Merchants"] L["Flight masters"] L["Quest givers"] L["Regulars"] L["A to Z"] L["By area"]
@@ -151,7 +150,6 @@ UI.CollectionView({
     sorts = { { "name", "A to Z" }, { "zone", "By area" }, { "talks", "Most spoken to" }, { "new", "Met last" } },
     summary = function()
         local total, regulars, talks = 0, 0, 0
-        local roles = {}
         for _, n in pairs(WFD.C.npcs or {}) do
             if not n.obj then
                 total = total + 1

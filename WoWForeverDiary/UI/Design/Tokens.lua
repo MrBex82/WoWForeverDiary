@@ -95,7 +95,6 @@ end
 -- Sizes
 ------------------------------------------------------------------------
 -- distances: 4, 8, 12, 16, 24, 32
-UI.SP = { xs = 4, s = 8, m = 12, l = 16, xl = 24, xxl = 32 }
 -- type roles: size in points (before the size of the writing is applied) and the font
 -- (head = the book's display font, body = the text font). Nothing readable is smaller than 11.
 UI.TYPE = {

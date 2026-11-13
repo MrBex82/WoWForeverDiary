@@ -4,8 +4,7 @@ local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
 local K = UI.Kit
-local R = UI.Router
-local floor, max, min, format = math.floor, math.max, math.min, string.format
+local max, format = math.max, string.format
 
 -- (labels are keys, translated when the view is built:
 -- L["All"] L["Levels"] L["Bosses and rares"] L["Finds"] L["Honours"] L["Places"] L["Newest first"] L["Oldest first"]

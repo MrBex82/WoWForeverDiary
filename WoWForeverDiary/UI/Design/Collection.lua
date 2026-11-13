@@ -5,8 +5,7 @@ local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
 local K = UI.Kit
-local R = UI.Router
-local floor, max, min, format = math.floor, math.max, math.min, string.format
+local floor, max, min = math.floor, math.max, math.min
 
 ------------------------------------------------------------------------
 -- The scrolling area that builds only what is in view

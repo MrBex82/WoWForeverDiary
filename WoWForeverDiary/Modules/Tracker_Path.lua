@@ -56,7 +56,6 @@ local function Tick(el)
         lastPos = nil
         return
     end
-    WFD.curMap = map
     -- which map belongs to which zone name: lets the diary rename places when the game language changes
     if zone and zone ~= "" then
         local C = WFD.C
@@ -103,7 +102,6 @@ local function Tick(el)
     else
         lastPos = nil
     end
-    WFD.ticked = true
 end
 
 WFD:OnInit(function()

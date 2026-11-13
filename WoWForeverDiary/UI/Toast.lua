@@ -320,9 +320,6 @@ function UI:Toast(ev, force)
     self:NextToast()
 end
 
--- the cards on the screen and those waiting (the load test reads it)
-function UI.ToastCount() return #shown, #queue end
-
 local HONOUR_FLAVOUR = {
     combat = "Steel sharpened, name written down.", explore = "The road is longer, and so is the map.",
     people = "Strangers become faces in the book.", adventure = "Another line in the story of this life.",
@@ -347,7 +344,7 @@ function UI.DescribeMoment(ev)
             d.name = L[h.name]
             d.metal = L[metal.name]
             d.metalCol = metal.col
-            d.pips, d.pipsOf, d.n = tier, n, n
+            d.pips, d.n = tier, n
             d.points = WFD:TierPoints(tier, n)
             local nextGoal = h.tiers[tier + 1]
             local nextText = nextGoal and (L["Next tier:"] .. " " .. WFD:HonourText(h, nextGoal)) or L["Every tier earned!"]

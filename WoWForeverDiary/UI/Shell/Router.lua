@@ -30,17 +30,11 @@ for _, g in ipairs(UI.NAV) do
 end
 UI.NAV_OF_PART.today = "start"
 
--- the section of a part (label, icon, enabled), or nil
-function UI.SectionOf(key)
-    for _, s in ipairs(UI.sections) do if s.key == key then return s end end
-end
-
 -- the name of a part as the register writes it
 function UI.PartLabel(key)
     if key == "diary" then return WFD.L["Days"] end
     if UI.PART_LABEL and UI.PART_LABEL[key] then return WFD.L[UI.PART_LABEL[key]] end
-    local s = UI.SectionOf(key)
-    return s and WFD.L[s.label] or key
+    return key
 end
 
 -- the parts of a group that are there (a part that only shows when it has something asks PART_ENABLED)
@@ -75,25 +69,16 @@ local function same(a, b)
     return a.section == b.section and a.group == b.group and a.key == b.key and a.map == b.map and a.cont == b.cont and a.day == b.day
 end
 
-local function snapshot(route) return route end
-
-local listeners = {}
-function R.OnChange(fn) listeners[#listeners + 1] = fn end
-local function changed()
-    for _, fn in ipairs(listeners) do fn(R.cur) end
-end
-
 function R.Go(route, opts)
     opts = opts or {}
     if not route then return end
     if R.cur and not opts.noHistory and not same(R.cur, route) then
-        R.back[#R.back + 1] = snapshot(R.cur)
+        R.back[#R.back + 1] = R.cur
         if #R.back > MAX then table.remove(R.back, 1) end
         R.fwd = {}
     end
     R.cur = route
     if UI.ShowRoute then UI:ShowRoute(route) end
-    changed()
 end
 
 function R.CanBack() return #R.back > 0 end
@@ -102,19 +87,17 @@ function R.CanForward() return #R.fwd > 0 end
 function R.Back()
     local to = table.remove(R.back)
     if not to then return end
-    R.fwd[#R.fwd + 1] = snapshot(R.cur)
+    R.fwd[#R.fwd + 1] = R.cur
     R.cur = to
     if UI.ShowRoute then UI:ShowRoute(to) end
-    changed()
 end
 
 function R.Forward()
     local to = table.remove(R.fwd)
     if not to then return end
-    R.back[#R.back + 1] = snapshot(R.cur)
+    R.back[#R.back + 1] = R.cur
     R.cur = to
     if UI.ShowRoute then UI:ShowRoute(to) end
-    changed()
 end
 
 function R.Reset()
@@ -122,7 +105,7 @@ function R.Reset()
 end
 
 -- the place to come back to when the window opens again
-function R.Resume() return snapshot(R.cur) end
+function R.Resume() return R.cur end
 
 -- the route of a part of the book
 function UI.PartRoute(key)

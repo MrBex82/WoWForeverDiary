@@ -77,9 +77,6 @@ WFD:On("TAXIMAP_OPENED", function()
 end)
 
 -- Remember where the hearthstone is bound.
-WFD:On("CONFIRM_BINDER", function(_, loc)
-    WFD.pendingBind = loc
-end)
 WFD:On("CHAT_MSG_SYSTEM", function(_, msg)
     if WFD.paused or not WFD.C or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
     local p = WFD.bindPattern

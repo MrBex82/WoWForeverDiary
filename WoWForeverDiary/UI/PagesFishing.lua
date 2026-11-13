@@ -3,11 +3,9 @@
 local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
-local c = UI.c
-local max, min, ceil, format = math.max, math.min, math.ceil, string.format
+local min, format = math.min, string.format
 
-local CARD_W, CARD_H, GAP_X, GAP_Y = 108, 118, 12, 10
-local PER_PAGE = 9
+local CARD_W, CARD_H = 108, 118
 
 local TIERS = {           -- ranks of the log, by the number of different catches
     { 5, "Bronze", { 0.70, 0.42, 0.20, 1 } }, { 15, "Silver", { 0.70, 0.72, 0.76, 1 } },

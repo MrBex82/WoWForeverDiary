@@ -1,29 +1,6 @@
 -- The time behind the chronicle: played time at a moment, and how long each level took.
 local ADDON, WFD = ...
-local UI = WFD.UI
-local L = WFD.L
-local c = UI.c
-local floor, max, min, format = math.floor, math.max, math.min, string.format
-
-local GOLD = { 0.86, 0.62, 0.18, 1 }
-local RED = { 0.75, 0.24, 0.16, 1 }
-local GREEN = UI.c.good
-
-local function empty(pool, canvas, tx, tw, y, text)
-    local e = pool:Text(13, c.inkFaint, UI.FONT, "CENTER")
-    e:SetText(text)
-    e:SetWidth(tw)
-    e:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-end
-
--- a row of figures in light boxes: { value, label, colour }
-local function tiles(...) return UI.Tiles(...) end
-
-local function caption(pool, canvas, x, y, text)
-    local t = pool:Text(9, c.redInk, UI.FONT)
-    t:SetText(text:upper())
-    t:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, y)
-end
+local max, min = math.max, math.min
 
 ------------------------------------------------------------------------
 -- Time in the world when a moment happened (played seconds)

@@ -2,14 +2,7 @@
 local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
-local c = UI.c
-local floor, max, min, format = math.floor, math.max, math.min, string.format
-
-local LOCKED = { 0.46, 0.39, 0.30, 1 }
-local QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
-local TEAL = { 0.30, 0.66, 0.62, 1 }
-local GREEN = UI.c.good
-local GOLD = { 0.86, 0.62, 0.18, 1 }
+local format = string.format
 
 ------------------------------------------------------------------------
 -- Everything worth collecting, counted once per build of the book

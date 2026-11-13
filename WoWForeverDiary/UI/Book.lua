@@ -11,29 +11,9 @@ local floor, max, min, ceil, format = math.floor, math.max, math.min, math.ceil,
 local PW, PH, GUT, BRD = 420, 560, 22, 18
 UI.PW, UI.PH = PW, PH
 UI.TOP, UI.BOTTOM = 50, 54                  -- text area inside a page
-UI.AREA_H = PH - UI.TOP - UI.BOTTOM
 UI.INNER, UI.OUTER = 38, 34                 -- margins at the spine / at the outer edge
 local BW, BH = PW * 2 + GUT + BRD * 2, PH + BRD * 2
 
-UI.renderers = {}
-UI.sections = {}
-
-function UI:RegisterRenderer(kind, fn) self.renderers[kind] = fn end
-
--- The order of the book, in one place: the parts in groups, from what you open every day to what you
--- look things up in. Each group has its own tab colour and a heading in the contents.
--- Every group but the front one has a tab of its own that leads to its overview page (PagesToday.lua).
-UI.GROUPS = {
-    { key = "front",     col = { 0.45, 0.28, 0.14 } },
-    { key = "goals",     col = { 0.66, 0.48, 0.10 }, label = "Goals and honour", icon = "album" },
-    { key = "chronicle", col = { 0.40, 0.20, 0.50 }, label = "Chronicle", icon = "records" },
-    { key = "world",     col = { 0.20, 0.42, 0.20 }, label = "The world", icon = "atlas" },
-    { key = "hunt",      col = { 0.56, 0.12, 0.08 }, label = "Hunt and loot", icon = "beast" },
-    { key = "people",    col = { 0.16, 0.32, 0.54 }, label = "People and money", icon = "party" },
-    { key = "back",      col = { 0.34, 0.27, 0.20 }, label = "Keepsakes", icon = "kin" },
-}
-UI.GROUP = {}
-for i, g in ipairs(UI.GROUPS) do g.index = i; UI.GROUP[g.key] = g end
 -- part = { group, order, line on the group's overview page }. Parts have no tab of their own:
 -- the tabs are Contents, Today, Diary, Quest book and one per group.
 local LAYOUT = {
@@ -57,20 +37,7 @@ local LAYOUT = {
 
 UI.LAYOUT = LAYOUT        -- the overview pages read the lines of parts that are views of the travel desk now
 
--- def = { key, label, icon, order, build = function(book) ... end }
-function UI:RegisterSection(def)
-    local lay = LAYOUT[def.key]
-    if lay then
-        def.group, def.order, def.sub = lay[1], lay[2], lay[3]
-        if def.key ~= "quests" then def.thumb = false end
-    end
-    def.group = def.group or "back"
-    self.sections[#self.sections + 1] = def
-    table.sort(self.sections, function(a, b) return a.order < b.order end)
-end
-
 -- x of the text column on a page side
-function UI.TextX(side) return side == "left" and UI.OUTER or UI.INNER end
 function UI.TextW() return PW - UI.INNER - UI.OUTER end
 
 ------------------------------------------------------------------------
@@ -116,14 +83,6 @@ function UI.ClearCaches()
     UI.storyCache = {}
 end
 
--- text is measured at the scale it is drawn at: the frame the pages are drawn in
-function UI.MeasureAt(frame)
-    measureFrame:SetParent(frame)
-    measureFrame:ClearAllPoints()
-    measureFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-    measureFrame:SetFrameLevel(1)
-    measureCache = {}
-end
 UI.storyCache = {}
 
 
@@ -203,7 +162,6 @@ function UI:CoverGrowth()
     local nextMetal
     for _, m in ipairs(UI.COVER_METALS) do if sum.points < m[1] then nextMetal = m break end end
     local level = UnitLevel("player") or 1
-    if WFD.demo and WFD.C.level then level = WFD.C.level end
     return {
         points = sum.points, metal = metal, nextMetal = nextMetal,
         tiers = sum.tiers, gems = math.min(8, floor(sum.tiers / 10)),

@@ -6,7 +6,7 @@ local UI = WFD.UI
 local L = WFD.L
 local K = UI.Kit
 local R = UI.Router
-local floor, max, min, format = math.floor, math.max, math.min, string.format
+local floor, min, format = math.floor, math.min, string.format
 
 local function S() return WFD.S end
 local function flag(key, after)
@@ -310,15 +310,13 @@ local function control(parent, it)
         hint:SetText(it.hint)
         hint:SetSpacing(2)
     end
-    local body, fixed
+    local body
     if it.type == "choice" then
         body = K.Segmented(parent, it.options, it.get, it.set)
     elseif it.type == "stepper" then
         body = K.Stepper(parent, it.get, it.set, it.lo, it.hi, it.step, it.fmt)
-        fixed = true
     elseif it.type == "dropdown" then
         body = K.Dropdown(parent, it.options(), it.get, it.set, 280)
-        fixed = true
     elseif it.type == "theme" then
         body = themeCards(parent)
     elseif it.type == "buttons" then

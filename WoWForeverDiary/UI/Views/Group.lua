@@ -5,7 +5,7 @@ local UI = WFD.UI
 local L = WFD.L
 local K = UI.Kit
 local R = UI.Router
-local floor, max, min, abs, format = math.floor, math.max, math.min, math.abs, string.format
+local max, min, abs, format = math.max, math.min, math.abs, string.format
 
 local PAD, GAP = 18, 14
 -- the old key of a group (for its notes, kept in the book as "group:<key>")
@@ -20,9 +20,8 @@ local VIEW_SUB = { bestiary = "A collector's album of every creature slain",
     fishbook = "A collector's album of everything the line brought up" }
 
 local function partInfo(key)
-    local sec = UI.SectionOf(key)
     local lay = UI.LAYOUT and UI.LAYOUT[key]
-    return (sec and sec.icon) or VIEW_ICON[key] or "journal", VIEW_SUB[key] or (sec and sec.sub) or (lay and lay[3])
+    return VIEW_ICON[key] or "journal", VIEW_SUB[key] or (lay and lay[3])
 end
 
 local function newCard(parent)
