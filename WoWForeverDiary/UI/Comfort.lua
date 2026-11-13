@@ -218,6 +218,10 @@ end
 ------------------------------------------------------------------------
 -- Every part counts what came after it was last looked at (C.partSeen[part]); a part never looked at since this
 -- came in counts from C.seenAt, the moment the diary was first opened.
+local EVENT_PART = {
+    honour = "honour", first = "firsts", landmark = "landmarks", level = "levels", dungeon = "runs",
+    weekly = "tasks", challenge = "tasks", capsule = "capsule",
+}
 local function newCounts(C)
     local base = C.seenAt or 0
     local seen = C.partSeen or {}
@@ -231,8 +235,10 @@ local function newCounts(C)
     for _, t in pairs(C.rares or {}) do if type(t) == "number" then add("treasures", t) end end
     for _, e in pairs(C.catch or {}) do add("fishbook", e.first) end
     for _, z in pairs(C.zones or {}) do add("atlas", z.first) end
+    -- the milestones in the parts where they are read (the same moments the note "many at once" bundles)
     for _, e in ipairs(C.events or {}) do
-        if e.k == "honour" then add("honour", e.t) elseif e.k == "first" then add("firsts", e.t) end
+        local part = EVENT_PART[e.k]
+        if part then add(part, e.t) end
     end
     return n
 end
