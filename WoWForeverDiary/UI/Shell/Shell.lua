@@ -912,11 +912,24 @@ function UI:Show()
     show0(self)
 end
 
+-- the cover shows first: in the demo, else by the setting (never / once ever / at the first opening of a session)
+function UI:WantsCover()
+    if WFD.demo then return true end
+    if self.openedOnce then return false end
+    local mode = WFD.S.coverMode or "once"
+    if mode == "session" then return true end
+    if mode == "once" and not WFD.S.coverSeen then
+        WFD.S.coverSeen = true
+        return true
+    end
+    return false
+end
+
 function UI:Toggle()
     self:Build()
     if self.holder:IsShown() then
         self:Hide()
-    elseif not self.openedOnce and WFD.S.cover ~= false or WFD.demo then
+    elseif self:WantsCover() then
         self:Show()
     else
         self:OpenShell()

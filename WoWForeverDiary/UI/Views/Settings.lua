@@ -76,7 +76,9 @@ function UI.SettingsSchema()
             { type = "toggle", label = L["Take a screenshot at milestones"], flag = "screenshots" },
             { type = "toggle", label = L["Show minimap button"], flag = "minimap", after = function() UI:UpdateMinimapButton() end },
             { type = "toggle", label = L["Lock the minimap button"], flag = "minimapLocked" },
-            { type = "toggle", label = L["Show the cover when the book is first opened"], flag = "cover" },
+            { type = "choice", label = L["The cover"],
+                options = { { "never", L["Never"] }, { "once", L["Only the very first time"] }, { "session", L["After every login"] } },
+                get = function() return S().coverMode or "once" end, set = function(v) S().coverMode = v end },
         },
     },
     {

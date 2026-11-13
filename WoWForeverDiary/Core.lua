@@ -168,7 +168,13 @@ WFD:On("ADDON_LOADED", function(_, name)
     if S.minimap == nil then S.minimap = true end
     if S.toasts == nil then S.toasts = true end
     if S.recap == nil then S.recap = true end
-    if S.cover == nil then S.cover = true end
+    -- the cover: never, once (the very first time the diary is opened), or at the first opening of every session.
+    -- The old switch (on by default) becomes "once"; whoever had it already saw the cover.
+    if S.coverMode == nil then
+        if S.cover ~= nil then S.coverSeen = true end
+        S.coverMode = (S.cover == false) and "never" or "once"
+    end
+    S.cover = nil
     if S.memoryPage == nil then S.memoryPage = true end
     if S.memoryToast == nil then S.memoryToast = true end
     if S.itemTip == nil then S.itemTip = true end
