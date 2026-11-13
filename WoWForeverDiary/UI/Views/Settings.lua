@@ -46,6 +46,35 @@ local function setLanguage(code)
     })
 end
 
+-- the backups and the tidying up (also /wfd restore, /wfd backup, /wfd cleanup): asked first, told in the window
+local function restorePrevious()
+    local old = WFDiaryChar and WFDiaryChar.previous
+    if WFD.demo then UI:Notice(L["Leave demo mode first."]) return end
+    if type(old) ~= "table" or not old.born then UI:Notice(L["No diary has been put aside."]) return end
+    UI:Confirm({ title = L["Bring back the diary put aside"], ok = L["Bring back"],
+        text = L["The diary written now is put aside in its place. The interface is reloaded."],
+        onOk = function() WFD:RestorePrevious() end })
+end
+local function restoreBackup()
+    local b = WFDiaryChar and WFDiaryChar.backup
+    if WFD.demo then UI:Notice(L["Leave demo mode first."]) return end
+    if type(b) ~= "table" or type(b.data) ~= "table" or not b.data.born then UI:Notice(L["There is no copy from before an update."]) return end
+    UI:Confirm({ title = L["Bring back the copy from before the update"], ok = L["Bring back"],
+        text = L["The diary written now is put aside in its place. The interface is reloaded."],
+        onOk = function() WFD:RestoreBackup() end })
+end
+local function cleanCompanions()
+    local n, list = WFD:CleanCompanions(false)
+    if n == 0 then UI:Notice(L["No companions to remove."]) return end
+    UI:Confirm({ title = L["Remove strangers from battlegrounds"], ok = L["Remove"], danger = true,
+        text = format(L["%d companions would be removed (strangers from battlegrounds): %s"], n,
+            table.concat(list, ", ", 1, math.min(#list, 15)) .. (#list > 15 and ", ..." or "")),
+        onOk = function()
+            local done = WFD:CleanCompanions(true)
+            UI:Notice(format(L["%d companions removed."], done))
+        end })
+end
+
 local function resetWindow()
     S().shellSize = nil
     UI:ResetPosition()
@@ -63,26 +92,40 @@ function UI.SettingsSchema()
     if UI.SETTINGS then return UI.SETTINGS end
     UI.SETTINGS = {
     {
-        key = "general", label = L["General"], sub = L["Notifications, minimap, pictures"],
+        key = "general", label = L["General"], sub = L["Minimap, tooltips, pictures"],
         items = {
-            { type = "choice", label = L["Notifications"], get = notifyGet, set = notifySet,
-                options = { { "all", L["All"] }, { "important", L["Important only"] }, { "quiet", L["Quiet"] } },
-                hint = L["Important: levels, bosses, rare creatures and finds, dungeons, honours and letters."] },
-            { type = "toggle", label = L["Show a note for new discoveries"], flag = "toasts" },
-            { type = "toggle", label = L["Weekly look back at login"], flag = "recap" },
             { type = "toggle", label = L["A memory on Start"], flag = "memoryPage" },
-            { type = "toggle", label = L["A memory as a note at login"], flag = "memoryToast" },
             { type = "toggle", label = L["Show when an item was first found in its tooltip"], flag = "itemTip" },
             { type = "toggle", label = L["Take a screenshot at milestones"], flag = "screenshots" },
             { type = "toggle", label = L["Show minimap button"], flag = "minimap", after = function() UI:UpdateMinimapButton() end },
             { type = "toggle", label = L["Lock the minimap button"], flag = "minimapLocked" },
-            { type = "choice", label = L["The cover"],
-                options = { { "never", L["Never"] }, { "once", L["Only the very first time"] }, { "session", L["After every login"] } },
-                get = function() return S().coverMode or "once" end, set = function(v) S().coverMode = v end },
         },
     },
     {
-        key = "look", label = L["Appearance"], sub = L["Style, writing, window"],
+        -- first how many notes, then which ones, then where they stand
+        key = "notes", label = L["Pop-up notes"], sub = L["What is announced, and where"],
+        items = {
+            { type = "toggle", label = L["Show a note for new discoveries"], flag = "toasts",
+                hint = L["Switched off, no note comes at all; the diary still writes everything down."] },
+            { type = "choice", label = L["Notifications"], get = notifyGet, set = notifySet,
+                options = { { "all", L["All"] }, { "important", L["Important only"] }, { "quiet", L["Quiet"] } },
+                hint = L["Important: levels, bosses, rare creatures and finds, dungeons, honours and letters."] },
+            { type = "toggle", label = L["Weekly look back at login"], flag = "recap" },
+            { type = "toggle", label = L["A memory as a note at login"], flag = "memoryToast" },
+            { type = "buttons", label = L["Place of the notes"], buttons = {
+                { L["Show a note to move it"], function()
+                    UI:Toast({ k = "memory", jubilee = true, when = L["Anniversary"], title = L["The diary's birthday"],
+                        hint = L["Drag to move."], day = 1, t = time(), quiet = true }, true)
+                end },
+                { L["Put the notes back at the top"], function()
+                    UI:ResetToastPlace()
+                    UI:Notice(L["The notes are back at the top of the screen."])
+                end },
+            } },
+        },
+    },
+    {
+        key = "look", label = L["Appearance"], sub = L["Style and writing"],
         items = {
             { type = "theme", label = L["Style of the book"],
                 hint = L["Leather and gold is the classic book. Modern is flat and calm, strong contrast makes all writing brighter."] .. " "
@@ -90,43 +133,41 @@ function UI.SettingsSchema()
             { type = "choice", label = L["Size of the writing"],
                 options = { { 1, "100%" }, { 1.1, "110%" }, { 1.2, "120%" } },
                 get = function() return S().fontScale or 1 end, set = function(v) UI.SetFontScale(v) end },
+        },
+    },
+    {
+        key = "window", label = L["The window"], sub = L["Size, place, opening, keys"],
+        items = {
             { type = "stepper", label = L["Size of the window"], lo = 0.6, hi = 1.4, step = 0.05,
                 get = function() return S().scale or 0.9 end,
                 set = function(v) UI:SetScale(floor(v * 100 + 0.5) / 100) if UI.LayoutShell then UI.LayoutShell() end end,
                 fmt = function(v) return floor(v * 100 + 0.5) .. "%" end,
                 hint = L["Also with Ctrl + mouse wheel. Drag the corner at the bottom right for a wider or taller window."] },
-            { type = "toggle", label = L["Show the companion beside the game"],
-                get = function() return S().companion and true or false end, set = function(v) UI:ShowCompanion(v) end,
-                hint = L["A small window with today's figures, the tasks and the honours closest to their next tier. Drag it by its title, fold it with the minus."] },
-            { type = "toggle", label = L["Lock the companion in place"], flag = "compLocked",
-                hint = L["The mouse wheel over its title changes its size."] },
-        },
-    },
-    {
-        key = "handling", label = L["Handling"], sub = L["Window, notes, keys"],
-        items = {
             { type = "toggle", label = L["Lock the window"], flag = "locked",
                 hint = L["It can no longer be moved or resized by mistake."] },
-            { type = "buttons", label = L["The window"], buttons = {
+            { type = "buttons", label = L["Place and size"], buttons = {
                 { L["Reset the position and size"], resetWindow },
             } },
             { type = "choice", label = L["When the window opens"],
                 options = { { "auto", L["Start after logging in"] }, { "start", L["Start"] }, { "last", L["Where I left it"] } },
                 get = function() return S().openAt or "auto" end, set = function(v) S().openAt = (v ~= "auto") and v or nil end,
                 hint = L["Back always leads to where the window was left, also after /reload."] },
-            { type = "buttons", label = L["Pop-up notes"], buttons = {
-                { L["Show a note to move it"], function()
-                    UI:Toast({ k = "memory", jubilee = true, when = L["Anniversary"], title = L["The diary's birthday"],
-                        hint = L["Drag to move."], day = 1, t = time(), quiet = true }, true)
-                end },
-                { L["Put the notes back at the top"], function()
-                    UI:ResetToastPlace()
-                    print("|cffffd100WoW Forever Diary:|r " .. L["The notes are back at the top of the screen."])
-                end },
-            } },
+            { type = "choice", label = L["The cover"],
+                options = { { "never", L["Never"] }, { "once", L["Only the very first time"] }, { "session", L["After every login"] } },
+                get = function() return S().coverMode or "once" end, set = function(v) S().coverMode = v end },
             { type = "buttons", label = L["Keys"], buttons = {
                 { L["Show all keys and commands"], function() R.Go({ view = "help" }) end },
             }, hint = L["A key to open the book can be set in the game's key bindings, under AddOns."] },
+        },
+    },
+    {
+        key = "companion", label = L["The companion"], sub = L["A small window beside the game"],
+        items = {
+            { type = "toggle", label = L["Show the companion beside the game"],
+                get = function() return S().companion and true or false end, set = function(v) UI:ShowCompanion(v) end,
+                hint = L["A small window with today's figures, the tasks and the honours closest to their next tier. Drag it by its title, fold it with the minus."] },
+            { type = "toggle", label = L["Lock the companion in place"], flag = "compLocked",
+                hint = L["The mouse wheel over its title changes its size."] },
         },
     },
     {
@@ -145,6 +186,11 @@ function UI.SettingsSchema()
                 { L["Make a moving code"], function() UI:ShowMovingExport() end },
                 { L["Read a moving code"], function() UI:ShowMovingImport() end },
             }, hint = L["Or simply take the WTF folder of the game with you: it holds the diaries of all characters."] },
+            { type = "buttons", label = L["Backups and tidying up"], buttons = {
+                { L["Bring back the diary put aside"], restorePrevious },
+                { L["Bring back the copy from before the update"], restoreBackup },
+                { L["Remove strangers from battlegrounds"], cleanCompanions },
+            }, hint = L["A diary is put aside when another character's diary was found here; the copy is made before every update of the addon."] },
             { type = "buttons", label = L["Demo"], buttons = {
                 { function() return WFD.demo and L["Leave demo mode"] or L["Start demo mode"] end, function() WFD:ToggleDemo() end },
             } },
@@ -400,7 +446,7 @@ UI:RegisterView({
             if b.sub.SetMaxLines then b.sub:SetMaxLines(2) end
             b:SetScript("OnEnter", function(self) if v.section ~= i then self:SetSurface("hover") end end)
             b:SetScript("OnLeave", function(self) v:PaintTabs() end)
-            b:SetScript("OnClick", function() R.Go({ view = "settings", section = i }) end)
+            b:SetScript("OnClick", function() R.Go({ view = "settings", section = i }, { noHistory = true }) end)
             v.tabs[i] = b
         end
         function v:PaintTabs()

@@ -738,6 +738,30 @@ step("news per part", function()
     C.mobs[999001], C.quests[999002] = nil, nil
     if demo then WFD:ToggleDemo() end
 end)
+-- the settings: going through their sections makes no places in the history, the gear leaves them in one step;
+-- the buttons for backups and tidying up ask or tell in the window
+step("settings in one step", function()
+    local Rt = UI.Router
+    UI:OpenShell({ view = "start" })
+    UI.shell.gear:Click()
+    local v = UI.ViewInstance("settings")
+    for _, b in ipairs(v.tabs) do b:Click() end
+    UI.shell.gear:Click()
+    if Rt.cur.view ~= "start" then error("the gear did not leave the settings in one step: " .. tostring(Rt.cur.view)) end
+    for _, sec in ipairs(UI.SettingsSchema()) do
+        for _, it in ipairs(sec.items) do
+            if it.type == "buttons" and sec.key == "data" then
+                -- (the demo button has a label that changes, a function: it is left alone)
+                for _, b in ipairs(it.buttons) do
+                    if type(b[1]) == "string" then
+                        b[2]()
+                        UI.Kit.CloseDialog()
+                    end
+                end
+            end
+        end
+    end
+end)
 -- a text cut short shows the whole row as a tooltip, a whole one shows none
 step("full text", function()
     local K = UI.Kit

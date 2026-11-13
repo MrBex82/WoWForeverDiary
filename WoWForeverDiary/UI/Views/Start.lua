@@ -556,7 +556,7 @@ local FIRST_STEPS = {
     { "Read a day in the diary", function(C) return C.readDay ~= nil end, function() R.Go({ view = "diary" }) end },
     { "Set a bookmark below a day", function(C) return #(C.marks or {}) > 0 end, function() R.Go({ view = "diary" }) end },
     { "Search the diary (Ctrl + F)", function(C, S) return S.searched end, function() if UI.FocusSearch then UI:FocusSearch() end end },
-    { "Choose a style that suits you", function(C, S) return S.styleChosen end, function() R.Go({ view = "settings", section = 2 }) end },
+    { "Choose a style that suits you", function(C, S) return S.styleChosen end, function() R.Go({ view = "settings", section = 3 }) end },
     { "Show the companion beside the game", function(C, S) return S.companion == true end, function() UI:ShowCompanion(true) end },
 }
 -- (L["Read a day in the diary"] L["Set a bookmark below a day"] L["Search the diary (Ctrl + F)"]
