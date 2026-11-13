@@ -51,9 +51,17 @@ function UI.MarkList()
     return out
 end
 
+-- a bookmark taken away can be put back at its place from the note at the foot of the desk
 function UI.RemoveMark(i)
-    if WFD.C and WFD.C.marks then table.remove(WFD.C.marks, i) end
+    local marks = WFD.C and WFD.C.marks
+    local m = marks and table.remove(marks, i)
     if UI.OnMarksChanged then UI:OnMarksChanged() end
+    if m and UI.Notice then
+        UI:Notice(format(L["Bookmark removed: %s"], markTitle(m)), function()
+            table.insert(marks, math.min(i, #marks + 1), m)
+            if UI.OnMarksChanged then UI:OnMarksChanged() end
+        end)
+    end
 end
 
 ------------------------------------------------------------------------

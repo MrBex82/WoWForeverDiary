@@ -771,6 +771,48 @@ function UI:ShowRoute(route)
     self:RefreshHead()
 end
 
+------------------------------------------------------------------------
+-- A short note at the foot of the desk (4 seconds, longer while the mouse is on it), with a button to undo
+-- (fn, label: what the button does and says; without fn no button). Outside the window: in the chat.
+------------------------------------------------------------------------
+function UI:Notice(text, fn, label)
+    if not (S and self.inShell and self.holder and self.holder:IsShown()) then
+        print("|cffffd100WoW Forever Diary:|r " .. text)
+        return
+    end
+    local n = S.notice
+    if not n then
+        n = K.Box(S.content, "panel", "gold")
+        n:SetFrameStrata("DIALOG")
+        n:EnableMouse(true)
+        n.text = K.Text(n, "body", "ink")
+        n.text:SetPoint("LEFT", 14, 0)
+        n.act = K.Button(n, "", "ghost")
+        n.act.minH = 26
+        n.act:SetPoint("RIGHT", -8, 0)
+        n:SetScript("OnUpdate", function(self, dt)
+            if self:IsMouseOver() then return end
+            self.left = (self.left or 0) - dt
+            if self.left <= 0 then self:Hide() end
+        end)
+        S.notice = n
+    end
+    n.text:SetText(text)
+    n.act:SetShown(fn ~= nil)
+    if fn then
+        n.act:SetLabel(label or L["Undo"])
+        n.act.onClick = function() n:Hide() fn() end
+    end
+    local cw = contentSize()
+    local w = max(200, min(cw - 32, 560))
+    n.text:SetWidth(w - 28 - (fn and (n.act:GetWidth() + 12) or 0))
+    n:SetSize(w, max(40, n.text:GetStringHeight() + 20))
+    n:ClearAllPoints()
+    n:SetPoint("BOTTOM", S.content, "BOTTOM", 0, 16)
+    n.left = 4
+    n:Show()
+end
+
 -- the view object of a key, once it was built (for the load test)
 function UI.ViewInstance(key) return views[key] end
 

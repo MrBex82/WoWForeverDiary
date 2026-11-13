@@ -1329,3 +1329,6 @@ L["Nothing found under %s."] = "В разделе «%s» ничего не на�
 L["Search everywhere (%d)"] = "Искать везде (%d)"
 L["No day fits these filters."] = "Ни один день не подходит под эти фильтры."
 L["Nothing found. Try a shorter word, or a name the way the diary writes it."] = "Ничего не найдено. Попробуйте слово покороче или имя так, как его пишет дневник."
+L["Undo"] = "Отменить"
+L["Bookmark removed: %s"] = "Закладка удалена: %s"
+L["Bookmark set: %s"] = "Закладка добавлена: %s"
