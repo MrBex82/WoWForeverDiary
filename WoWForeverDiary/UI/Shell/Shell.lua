@@ -734,7 +734,7 @@ function UI:BuildShell()
     UI.OnRestyle(function() layout() UI:RefreshHead() end)
     -- what was open when the window closed is where it opens again
     h:HookScript("OnHide", function()
-        UI.lastRoute = R.Resume()
+        UI:KeepPlace()
         closeResults()
         K.CloseMenu()
         K.CloseDialog()
@@ -827,6 +827,49 @@ end
 function UI:ShellBack() R.Back() end
 
 ------------------------------------------------------------------------
+-- The place where the window was left: the route and the way back, kept through closing and through /reload
+-- (WFD.C.lastPlace; not in the demo). Only plain values are kept, and only routes to views that exist.
+------------------------------------------------------------------------
+local function plainRoute(r)
+    if type(r) ~= "table" or not (r.view and UI.Views[r.view]) then return nil end
+    local out = {}
+    for k, v in pairs(r) do
+        local t = type(v)
+        if type(k) == "string" and (t == "string" or t == "number" or t == "boolean") then out[k] = v end
+    end
+    return out
+end
+
+function UI:KeepPlace()
+    local cur = plainRoute(R.Resume())
+    if not cur then return end
+    local back = {}
+    for _, r in ipairs(R.back) do back[#back + 1] = plainRoute(r) end
+    self.lastPlace = { route = cur, back = back }
+    if WFD.C and not WFD.demo then WFD.C.lastPlace = self.lastPlace end
+end
+
+-- where a fresh window opens (route: asked for), with the way back laid out
+local function resumePlace(self, route)
+    local saved = self.lastPlace or (WFD.C and not WFD.demo and WFD.C.lastPlace)
+    local last = saved and plainRoute(saved.route)
+    if saved then
+        for _, r in ipairs(saved.back or {}) do
+            local ok = plainRoute(r)
+            if ok then R.back[#R.back + 1] = ok end
+        end
+    end
+    -- Start / the last place / at the first opening after logging in Start, then the last place
+    local mode = WFD.S.openAt or "auto"
+    local toLast = last and not route and (mode == "last" or (mode == "auto" and self.lastPlace ~= nil))
+    if toLast then return last end
+    -- somewhere else first: Back leads to where the window was left
+    if last then R.back[#R.back + 1] = last end
+    while #R.back > 40 do table.remove(R.back, 1) end
+    return route or { view = "start" }
+end
+
+------------------------------------------------------------------------
 -- Opening and closing
 ------------------------------------------------------------------------
 -- route: where to open (nil = where the window was left, or Start)
@@ -850,8 +893,9 @@ function UI:OpenShell(route)
         R.Reset()
         R.cur = nil
         layout()
+        route = resumePlace(self, route)
     end
-    R.Go(route or self.lastRoute or { view = "start" })
+    R.Go(route or { view = "start" })
 end
 
 function UI:OpenStart() self:OpenShell({ view = "start" }) end

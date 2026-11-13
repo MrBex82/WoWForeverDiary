@@ -686,6 +686,35 @@ step("route keeps the state", function()
     if v.state.chip ~= v.chips[1].key or v.state.q ~= "" or Rt.cur.chip or Rt.cur.q then error("resetting the filter left something") end
     if v.clear:IsShown() then error("the reset button stays without a filter") end
 end)
+-- the place where the window was left survives closing and a reload (here: the session's copy forgotten)
+step("last place", function()
+    local Rt = UI.Router
+    local demo = WFD.demo
+    if demo then WFD:ToggleDemo() end
+    UI:OpenShell({ view = "fates", chip = "nemesis" })
+    UI:Hide()
+    UI:OpenShell()
+    if Rt.cur.view ~= "fates" or Rt.cur.chip ~= "nemesis" then error("closing and opening lost the place") end
+    UI:Hide()
+    UI.lastPlace = nil                    -- as after /reload
+    UI:OpenShell()
+    if Rt.cur.view ~= "start" then error("after logging in the window did not open at Start") end
+    Rt.Back()
+    if Rt.cur.view ~= "fates" or Rt.cur.chip ~= "nemesis" then error("Back did not lead to the place before the reload") end
+    UI:Hide()
+    UI.lastPlace = nil
+    WFD.S.openAt = "last"
+    UI:OpenShell()
+    if Rt.cur.view ~= "fates" then error("'where I left it' did not open there") end
+    WFD.S.openAt = nil
+    -- a place of a view that is gone is not taken
+    UI:Hide()
+    UI.lastPlace = nil
+    WFD.C.lastPlace = { route = { view = "gone" }, back = { { view = "gone" } } }
+    UI:OpenShell()
+    if Rt.cur.view ~= "start" or #Rt.back ~= 0 then error("a place of a view that is gone was taken") end
+    if demo then WFD:ToggleDemo() end
+end)
 -- a text cut short shows the whole row as a tooltip, a whole one shows none
 step("full text", function()
     local K = UI.Kit

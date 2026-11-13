@@ -108,6 +108,10 @@ function UI.SettingsSchema()
             { type = "buttons", label = L["The window"], buttons = {
                 { L["Reset the position and size"], resetWindow },
             } },
+            { type = "choice", label = L["When the window opens"],
+                options = { { "auto", L["Start after logging in"] }, { "start", L["Start"] }, { "last", L["Where I left it"] } },
+                get = function() return S().openAt or "auto" end, set = function(v) S().openAt = (v ~= "auto") and v or nil end,
+                hint = L["Back always leads to where the window was left, also after /reload."] },
             { type = "buttons", label = L["Pop-up notes"], buttons = {
                 { L["Show a note to move it"], function()
                     UI:Toast({ k = "memory", jubilee = true, when = L["Anniversary"], title = L["The diary's birthday"],
