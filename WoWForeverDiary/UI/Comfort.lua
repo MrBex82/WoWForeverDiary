@@ -216,29 +216,40 @@ end
 ------------------------------------------------------------------------
 -- New since the diary was last read
 ------------------------------------------------------------------------
-local function newCounts(since)
-    local C = WFD.C
+-- Every part counts what came after it was last looked at (C.partSeen[part]); a part never looked at since this
+-- came in counts from C.seenAt, the moment the diary was first opened.
+local function newCounts(C)
+    local base = C.seenAt or 0
+    local seen = C.partSeen or {}
     local n = {}
-    local function add(k) n[k] = (n[k] or 0) + 1 end
-    for _, m in pairs(C.mobs or {}) do if (m.first or 0) > since then add("bestiary") end end
-    for _, p in pairs(C.npcs or {}) do if not p.obj and (p.first or 0) > since then add("people") end end
-    for _, q in pairs(C.quests or {}) do if (q.done or 0) > since then add("quests") end end
-    for _, t in pairs(C.rares or {}) do if type(t) == "number" and t > since then add("treasures") end end
-    for _, e in pairs(C.catch or {}) do if (e.first or 0) > since then add("fishbook") end end
-    for _, z in pairs(C.zones or {}) do if (z.first or 0) > since then add("atlas") end end
+    local function add(k, t)
+        if (t or 0) > max(base, seen[k] or 0) then n[k] = (n[k] or 0) + 1 end
+    end
+    for _, m in pairs(C.mobs or {}) do add("bestiary", m.first) end
+    for _, p in pairs(C.npcs or {}) do if not p.obj then add("people", p.first) end end
+    for _, q in pairs(C.quests or {}) do add("quests", q.done) end
+    for _, t in pairs(C.rares or {}) do if type(t) == "number" then add("treasures", t) end end
+    for _, e in pairs(C.catch or {}) do add("fishbook", e.first) end
+    for _, z in pairs(C.zones or {}) do add("atlas", z.first) end
     for _, e in ipairs(C.events or {}) do
-        if (e.t or 0) > since then
-            if e.k == "honour" then add("honour") elseif e.k == "first" then add("firsts") end
-        end
+        if e.k == "honour" then add("honour", e.t) elseif e.k == "first" then add("firsts", e.t) end
     end
     return n
 end
 
--- what is new since the window was last put away, per part ({} in the demo)
+-- what is new per part since it was last looked at ({} in the demo)
 function UI.NewCounts()
-    local since = UI.readSince
-    if not since or WFD.demo then return {} end
-    return newCounts(since)
+    local C = WFD.C
+    if not C or not C.seenAt or WFD.demo then return {} end
+    return newCounts(C)
+end
+
+-- a part was looked at: its news are read
+function UI.PartSeen(part)
+    local C = WFD.C
+    if not part or not C or WFD.demo then return end
+    C.partSeen = C.partSeen or {}
+    C.partSeen[part] = time()
 end
 
 ------------------------------------------------------------------------
@@ -251,8 +262,4 @@ function UI:Build()
     if not fresh then return end
     setupKeys(self.holder)
     restorePosition(self.holder)
-    -- the moment the window is put away counts as "read until now"
-    self.holder:HookScript("OnHide", function()
-        if WFD.C and not WFD.demo then WFD.C.seenAt = time() end
-    end)
 end

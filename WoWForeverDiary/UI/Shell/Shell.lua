@@ -772,6 +772,9 @@ function UI:ShowRoute(route)
     v.host:Show()
     if v.Layout then v:Layout(contentSize()) end
     v:Show(route)
+    -- the part on the desk is looked at: its count of news goes
+    local place = UI.VIEW_PLACE and UI.VIEW_PLACE[route.view]
+    if place and UI.PartSeen then UI.PartSeen(place[2]) end
     self:RefreshRail()
     self:RefreshHead()
 end
@@ -880,8 +883,6 @@ function UI:OpenShell(route)
     if fresh then
         local C = WFD.C
         if C and not C.seenAt then C.seenAt = time() end
-        self.readSince = C and C.seenAt
-        self.visited = {}
         self.openedOnce = true
         GameTooltip:Hide()
         self.cover:Hide()

@@ -715,6 +715,29 @@ step("last place", function()
     if Rt.cur.view ~= "start" or #Rt.back ~= 0 then error("a place of a view that is gone was taken") end
     if demo then WFD:ToggleDemo() end
 end)
+-- news go per part: looking at one part reads its news, the others keep theirs, closing reads nothing
+step("news per part", function()
+    local demo = WFD.demo
+    if demo then WFD:ToggleDemo() end
+    local C = WFD.C
+    C.seenAt, C.partSeen = os.time() - 100, nil
+    C.mobs = C.mobs or {}
+    C.mobs[999001] = { name = "Neuer Wolf", first = os.time() }
+    C.quests = C.quests or {}
+    C.quests[999002] = { title = "Neue Quest", done = os.time() }
+    UI:OpenShell({ view = "start" })
+    local n = UI.NewCounts()
+    if (n.bestiary or 0) < 1 or (n.quests or 0) < 1 then error("the news were not counted") end
+    UI:Hide()
+    UI:OpenShell({ view = "start" })
+    if (UI.NewCounts().bestiary or 0) < 1 then error("closing the window read the news") end
+    UI.Router.Go(UI.PartRoute("bestiary"))
+    n = UI.NewCounts()
+    if (n.bestiary or 0) ~= 0 then error("looking at the bestiary did not read its news") end
+    if (n.quests or 0) < 1 then error("looking at the bestiary read the news of the quests") end
+    C.mobs[999001], C.quests[999002] = nil, nil
+    if demo then WFD:ToggleDemo() end
+end)
 -- a text cut short shows the whole row as a tooltip, a whole one shows none
 step("full text", function()
     local K = UI.Kit

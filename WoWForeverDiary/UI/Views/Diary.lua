@@ -436,8 +436,6 @@ UI:RegisterView({
             route.day = self.day          -- the way back returns to this very day
             C.readDay = self.day
             self.read.scroll:ScrollTo(0)
-            -- the open chapter in sight in the index
-            if WFD.dirty then WFD.dirty = false end
         end
         function v:Layout(w, h)
             self.w, self.h = w, h
