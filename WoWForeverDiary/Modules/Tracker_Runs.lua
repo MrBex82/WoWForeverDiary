@@ -13,12 +13,18 @@ local function members()
     local raid = IsInRaid and IsInRaid()
     local prefix = raid and "raid" or "party"
     local count = raid and n or max(0, n - 1)
+    -- inside instances the game may hide who a unit is ("secret values"): such a member is left out, like the
+    -- companions do it (a secret name cannot be a key, a secret level cannot be kept)
+    local isSecret = issecretvalue
     for i = 1, count do
         local u = prefix .. i
         if UnitExists(u) and not UnitIsUnit(u, "player") then
             local name = UnitName(u)
             local class, cf = UnitClass(u)
-            if name then list[name] = { classFile = cf, class = class, level = UnitLevel(u) } end
+            local level = UnitLevel(u)
+            if isSecret and (isSecret(class) or isSecret(cf)) then class, cf = nil, nil end
+            if isSecret and isSecret(level) then level = nil end
+            if name and not (isSecret and isSecret(name)) then list[name] = { classFile = cf, class = class, level = level } end
         end
     end
     return list

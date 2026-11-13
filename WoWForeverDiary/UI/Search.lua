@@ -59,8 +59,9 @@ local function buildIndex()
     for name, z in pairs(C.zones or {}) do
         if not placed[name] then
             placed[name] = true
-            local map = z.map
-            add("place", name, UI.Icon("map"), map and function() UI:OpenShell({ view = "world", map = map }) end
+            -- the map of a region is kept beside the regions (C.zoneMaps), not in its record
+            local map = C.zoneMaps and C.zoneMaps[name]
+            add("place", name, UI.Icon("map"), type(map) == "number" and function() UI:OpenShell({ view = "world", map = map }) end
                 or toDay(z.day or dayOf(z.first)), nil, 4)
         end
         for sub, t in pairs(z.sub or {}) do

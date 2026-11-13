@@ -23,14 +23,13 @@ local function zoneNow()
     -- standing in a zone: the map names it. Inside inns and town halls the game's text is the building
     -- ("Gasthaus Seenhain"), which is no land of its own. Map names this client gives in another language
     -- are put right by the list of the language file (Stormwind -> Sturmwind).
-    if info and info.mapType == 3 then
-        local fix = WFD.loc and WFD.loc.zoneFix
-        local name = info.name and info.name ~= "" and ((fix and fix[info.name]) or info.name)
-        return name or real
-    end
+    local fix = WFD.loc and WFD.loc.zoneFix
+    local function zoneName(i) return i.name and i.name ~= "" and ((fix and fix[i.name]) or i.name) or real end
+    if info and info.mapType == 3 then return zoneName(info) end
     for _ = 1, 4 do
         if not info or not info.mapType then break end
-        if info.mapType == 3 then return (info.name and info.name ~= "") and info.name or real end   -- a zone
+        -- a zone around a building or a cave: its name is put right like the name of the zone itself
+        if info.mapType == 3 then return zoneName(info) end
         if info.mapType < 3 or info.mapType == 4 or not info.parentMapID then break end           -- continent, dungeon
         info = C_Map.GetMapInfo(info.parentMapID)
     end

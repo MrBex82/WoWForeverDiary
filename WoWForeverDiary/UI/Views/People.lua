@@ -331,7 +331,8 @@ local function makeChart(parent)
             local function valueAt(sx)
                 if np == 1 then return pts[1].saldo end
                 local fr = sx / iw * (np - 1)
-                local i = min(np - 1, floor(fr))
+                -- the last point has no next one: at the right edge the step before it is read to its end
+                local i = min(np - 2, floor(fr))
                 return pts[i + 1].saldo + (pts[i + 2].saldo - pts[i + 1].saldo) * (fr - i)
             end
             -- the area in thin slices

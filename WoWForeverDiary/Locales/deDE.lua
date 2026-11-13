@@ -212,18 +212,26 @@ local PLURAL = {
     ["Östliche Pestländer"] = { "Östlichen Pestländern", "Östlichen Pestländer" },
     ["Sümpfe des Elends"] = { "Sümpfen des Elends", "Sümpfe des Elends" },
 }
--- an adjective before a feminine noun takes an ending after "der": "Sengende" -> "Sengenden"
+-- an adjective before the noun takes an ending after the article: "in der Sengenden Schlucht",
+-- "im Scharlachroten Kloster", "in den Geschmolzenen Kern" (but "in die Sengende Schlucht", "ins Scharlachrote Kloster")
 local function decline(name, g, case)
     if g == "p" then
         local forms = PLURAL[name]
         return forms and forms[case == "to" and 2 or 1] or name
     end
-    if g == "f" and case ~= "to" then return (name:gsub("^(%S+e) ", "%1n ")) end
+    if g == "m" or ((g == "f" or g == "n") and case ~= "to") then
+        -- only an adjective: the noun follows it at once ("Vorgebirge des Hügellands" begins with the noun itself)
+        local second = name:match("^%S+e (%S+)")
+        if second and second ~= "von" and second ~= "des" and second ~= "der" then return (name:gsub("^(%S+e) ", "%1n ")) end
+    end
     return name
 end
+-- a name that brings its own article tells its gender with it ("Das Verlies", "Der Tempel von Atal'Hakkar")
+local ARTICLE = { Der = "m", Das = "n", Die = "f" }
 function loc.place(name, case)
     if name == "unbekanntes Land" then return case == "to" and "in unbekanntes Land" or "in unbekanntem Land" end
-    local bare = name:gsub("^Die ", ""):gsub("^Der ", ""):gsub("^Das ", "")
+    local art = ARTICLE[name:match("^(%a+) ") or ""]
+    local bare = art and name:sub(5) or name
     local g = ZONES[bare]
     if not g then
         local head = bare:match("^(%S+) von ") or bare:match("^(%S+) des ") or bare:match("^(%S+) der ") or bare
@@ -231,8 +239,10 @@ function loc.place(name, case)
         for _, s in ipairs(SUFFIX) do
             if head:find(s[1]) then g = s[2] break end
         end
+        -- "Die Todesminen", "Die Höhlen des Wehklagens": "die" before a noun on -en is a plural
+        if not g and art == "f" and head:find("en$") then g = "p" end
     end
-    g = g or (bare ~= name and "f") or "x"
+    g = g or art or "x"
     local p = PREP[case] or PREP["in"]
     return p[g] .. " " .. decline(bare, g, case)
 end

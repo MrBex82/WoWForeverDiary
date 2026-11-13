@@ -116,17 +116,23 @@ local function save()
     local chars, count = 0, 0
     for p, text in pairs(t.pages) do b.pages[p] = text end
     for _, text in pairs(b.pages) do chars = chars + #text; count = count + 1 end
-    -- the book as a whole is cut when it is longer than any book should be
-    if chars > MAX_CHARS then
-        for p = count, 2, -1 do
-            if chars <= MAX_CHARS then break end
-            chars = chars - #(b.pages[p] or "")
-            b.pages[p] = nil
-        end
-    end
-    -- "more follows" only counts for the last page of the book as far as it is known
+    -- the book as a whole is cut when it is longer than any book should be: from its last page backwards
+    -- (the highest page number, not the number of pages: a book read in parts has gaps)
     local top = 0
     for p in pairs(b.pages) do top = math.max(top, p) end
+    if chars > MAX_CHARS then
+        for p = top, 2, -1 do
+            if chars <= MAX_CHARS then break end
+            if b.pages[p] then
+                chars = chars - #b.pages[p]
+                count = count - 1
+                b.pages[p] = nil
+            end
+        end
+        top = 0
+        for p in pairs(b.pages) do top = math.max(top, p) end
+    end
+    -- "more follows" only counts for the last page of the book as far as it is known
     if t.lastPage and t.lastPage >= top then b.more = t.more or nil end
     b.kind = kindOf(t.material, count, chars)
     b.last = time()
