@@ -132,7 +132,12 @@ UI.CollectionView({
                 right2 = f.t and date(WFD.loc.date, f.t) or nil, go = dayGo(f.day) })
         end,
     },
-    empty = function() return L["Nothing matches this choice."] end,
+    empty = function(state)
+        if state.chip == "done" and state.q == "" and next(WFD.C.firsts or {}) == nil then
+            return L["No first time yet. They come by themselves while you play."]
+        end
+        return L["Nothing matches this choice."]
+    end,
 })
 
 ------------------------------------------------------------------------

@@ -215,6 +215,25 @@ function UI.CollectionView(def)
                     V:Refresh()
                 end, 190)
             end
+            -- a chip other than the first, or words in the filter: one button takes it all back
+            function V:Filtered()
+                return (self.state.chip ~= CHIP0) or (self.state.q or "") ~= ""
+            end
+            function V:ClearFilter()
+                self.state.chip, self.state.q = CHIP0, ""
+                note("chip", nil)
+                note("q", nil)
+                if self.search then
+                    self.search:SetText("")
+                    self.search:ClearFocus()
+                    self.search.hint:Show()
+                end
+                self:Refresh()
+            end
+            V.clear = K.Button(V.top, L["Reset filter"], "ghost", function() V:ClearFilter() end)
+            V.clear:AddArrow("close")
+            V.clear.minH = 28
+            V.emptyClear = K.Button(host, L["Reset filter"], "secondary", function() V:ClearFilter() end)
             V.extra = {}
             for _, x in ipairs(def.extra or {}) do
                 V.extra[#V.extra + 1] = K.Button(V.top, L[x[1]], "ghost", function() x[2]() end)
@@ -358,6 +377,8 @@ function UI.CollectionView(def)
                 end
                 if #self.chips > 0 then x = x + 12 end
                 if self.search then put(self.search) end
+                self.clear:SetShown(self:Filtered())
+                if self.clear:IsShown() then put(self.clear) end
                 if self.sort then self.sort:Refresh() put(self.sort) end
                 for _, b in ipairs(self.extra) do put(b) end
                 y = y - rowH - 12
@@ -428,11 +449,15 @@ function UI.CollectionView(def)
                 self.list:SetItems(items, y + 20, self.keepScroll)
                 self.keepScroll = nil
                 self.empty:SetShown(n == 0)
+                -- nothing because of a filter: the way back to everything is a button below the words
+                self.emptyClear:SetShown(n == 0 and self:Filtered())
                 if n == 0 then
                     self.empty:SetWidth(max(100, lw - 80))
                     self.empty:ClearAllPoints()
                     self.empty:SetPoint("TOP", sf, "TOP", 0, -50)
                     self.empty:SetText(def.empty and def.empty(self.state) or L["Nothing here yet."])
+                    self.emptyClear:ClearAllPoints()
+                    self.emptyClear:SetPoint("TOP", self.empty, "BOTTOM", 0, -14)
                 end
                 if self.detail:IsShown() and UI.card and UI.card.docked and UI.card:IsShown() then
                     UI:FitDockedCard()

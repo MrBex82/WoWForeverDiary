@@ -679,6 +679,12 @@ step("route keeps the state", function()
     Rt.Go(mark)
     v.chips[2]:Click()
     if mark.chip then error("the route given was changed") end
+    -- with a filter the button to reset it shows, and takes it all back
+    v.search:SetText("zzqx")
+    if not v.clear:IsShown() then error("no button to reset the filter") end
+    v.emptyClear:Click()
+    if v.state.chip ~= v.chips[1].key or v.state.q ~= "" or Rt.cur.chip or Rt.cur.q then error("resetting the filter left something") end
+    if v.clear:IsShown() then error("the reset button stays without a filter") end
 end)
 -- a text cut short shows the whole row as a tooltip, a whole one shows none
 step("full text", function()
