@@ -177,21 +177,68 @@ end
 -- Buttons
 ------------------------------------------------------------------------
 -- style: primary (the main action), secondary, ghost (looks like a link), danger (destroys something)
+-- (primary and danger are gilded: their surface is drawn below, hover and press only change its light)
 local BUTTON = {
-    primary = { bg = "gold", border = "gold", text = "onGold", hoverBg = "title", hoverBorder = "title" },
-    secondary = { bg = "inset", border = "line", text = "ink", hoverBg = "hover", hoverBorder = "gold" },
-    ghost = { text = "gold", hoverBg = "hover", hoverText = "title" },
-    danger = { bg = "danger", border = "danger", text = "onGold", hoverBg = "neg", hoverBorder = "neg" },
+    primary = { text = "onGold" },
+    secondary = { bg = "inset", border = "line", text = "ink", hoverBg = "hover", hoverBorder = "gold", downBg = "inset", downBorder = "gold" },
+    ghost = { text = "gold", hoverBg = "hover", hoverText = "title", downBg = "inset" },
+    danger = { text = "white" },
 }
+
+-- a pressed button: what it carries moves down by a pixel while the mouse button is held
+local function nudge(region, on)
+    if not region or (region.nudged and true or false) == on then return end
+    region.nudged = on or nil
+    local pts = {}
+    for i = 1, region:GetNumPoints() do pts[i] = { region:GetPoint(i) } end
+    region:ClearAllPoints()
+    for _, p in ipairs(pts) do region:SetPoint(p[1], p[2], p[3], p[4] or 0, (p[5] or 0) + (on and -1 or 1)) end
+end
+
+-- the mouse button goes down and up on a button of the kit (paint repaints it)
+local function pressable(b, paint, ...)
+    local carried = { ... }
+    local function set(self, on)
+        on = on and self:IsEnabled() and true or nil
+        if self.pressed == on then return end
+        self.pressed = on
+        for _, key in ipairs(carried) do nudge(self[key], on and true or false) end
+        paint(self)
+    end
+    b:HookScript("OnMouseDown", function(self, button) if button == "LeftButton" then set(self, true) end end)
+    b:HookScript("OnMouseUp", function(self) set(self, false) end)
+    b:HookScript("OnHide", function(self) set(self, false) end)
+    b:HookScript("OnDisable", function(self) set(self, false) end)
+end
+
+-- a button that cannot be used: no surface of its own, a fine edge, muted writing (not only paler)
+local function paintOff(b)
+    b.bgKey, b.borderKey = nil, "line"
+    paintBox(b)
+    if b.gild then b.gild:Hide() b.edge:Hide() end
+    if b.sheen then b.sheen:Hide() end
+    b.label.colorKey = "muted"
+    paintText(b.label)
+    if b.glyph then b.glyph:SetColorKey("muted") end
+    b:SetAlpha(0.8)
+end
 
 local function paintButton(b)
     local st = BUTTON[b.style] or BUTTON.secondary
-    local hot = b.hover and b:IsEnabled()
-    b.bgKey = hot and (st.hoverBg or st.bg) or st.bg
-    b.borderKey = hot and (st.hoverBorder or st.border) or st.border
-    paintBox(b)
+    local on = b:IsEnabled()
+    local hot = b.hover and on
+    local down = b.pressed and on
+    if not on then
+        paintOff(b)
+    else
+        b.bgKey = down and (st.downBg or st.bg) or hot and (st.hoverBg or st.bg) or st.bg
+        b.borderKey = down and (st.downBorder or st.border) or hot and (st.hoverBorder or st.border) or st.border
+        paintBox(b)
+    end
     -- the main action is gilded: a gold that darkens towards the foot, a darker rim, a light edge at the top
-    if b.style == "primary" or b.style == "danger" then
+    if not on then
+        -- painted above
+    elseif b.style == "primary" or b.style == "danger" then
         if not b.gild then
             b.gild = b:CreateTexture(nil, "BACKGROUND", nil, 1)
             b.gild:SetTexture(WHITE)
@@ -204,10 +251,13 @@ local function paintButton(b)
             b.edge:SetPoint("TOPRIGHT", -1, -1)
         end
         local r, g, bl = Tok(b.style == "danger" and "danger" or "gold")
-        local k = hot and 1.12 or 1
-        UI.Gradient(b.gild, "VERTICAL", { r * 0.62 * k, g * 0.58 * k, bl * 0.55 * k, 1 },
-            { min(1, r * 0.98 * k), min(1, g * 0.92 * k), min(1, bl * 0.90 * k), 1 })
-        b.edge:SetVertexColor(1, 0.95, 0.80, 0.35)
+        -- lighter under the mouse; pressed, the light comes from below (the gilding turned over) and darker
+        local k = down and 0.86 or (hot and 1.12 or 1)
+        local dark = { r * 0.62 * k, g * 0.58 * k, bl * 0.55 * k, 1 }
+        local light = { min(1, r * 0.98 * k), min(1, g * 0.92 * k), min(1, bl * 0.90 * k), 1 }
+        if down then UI.Gradient(b.gild, "VERTICAL", light, dark) else UI.Gradient(b.gild, "VERTICAL", dark, light) end
+        -- the light edge is the colour of the button itself, half way to white (pressed: no light edge)
+        b.edge:SetVertexColor(r + (1 - r) * 0.5, g + (1 - g) * 0.5, bl + (1 - bl) * 0.5, down and 0 or 0.35)
         b:SetBackdropBorderColor(r * 0.5, g * 0.5, bl * 0.5, 1)
         b:SetBackdropColor(0, 0, 0, 0)          -- the flat colour would lie over the gilding
         b.gild:Show()
@@ -216,12 +266,13 @@ local function paintButton(b)
         b.gild:Hide()
         b.edge:Hide()
     end
-    b.label.colorKey = hot and (st.hoverText or st.text) or st.text
-    if b.style == "danger" then b.label.colorKey = "white" end
-    paintText(b.label)
-    if b.glyph then b.glyph:SetColorKey(b.label.colorKey) end
-    b:SetAlpha(b:IsEnabled() and 1 or 0.45)
-    if b.sheen then b.sheen:SetShown(b.style ~= "ghost" or hot) end
+    if on then
+        b.label.colorKey = hot and (st.hoverText or st.text) or st.text
+        paintText(b.label)
+        if b.glyph then b.glyph:SetColorKey(b.label.colorKey) end
+        b:SetAlpha(1)
+        if b.sheen then b.sheen:SetShown(not down and (b.style ~= "ghost" or hot)) end
+    end
     -- the width follows the label (it changes with the size of the writing and the language)
     if not b.fixedW then
         local extra = b.glyph and 18 or 0
@@ -256,6 +307,7 @@ function K.Button(parent, text, style, onClick, width)
         self.label:SetText(t or "")
         paintButton(self)
     end
+    pressable(b, paintButton, "label", "glyph")
     -- a small arrow behind the label (a choice that opens a list)
     function b:AddArrow(shape)
         self.glyph = K.Glyph(self, shape or "down", 12, "soft")
@@ -291,14 +343,19 @@ function K.IconButton(parent, glyph, tip, onClick, size)
         b.glyph:SetPoint("CENTER")
     end
     local function paint(self)
-        local hot = self.hover and self:IsEnabled()
-        self.bgKey = (self.active or hot) and "hover" or (self.flat and nil or "inset")
-        self.borderKey = (self.active or hot) and "gold" or (self.flat and nil or "line")
+        local on = self:IsEnabled()
+        local hot = self.hover and on
+        local down = self.pressed and on
+        local lit = self.active or hot or down
+        -- pressed: sunk into the desk with a gold edge; not usable: no surface, a muted sign
+        self.bgKey = down and "inset" or (lit and "hover" or (self.flat and nil or (on and "inset" or nil)))
+        self.borderKey = lit and "gold" or ((self.flat or not on) and nil or "line")
         paintBox(self)
-        local k = (self.active or hot) and "title" or "soft"
+        local k = not on and "muted" or (lit and "title" or "soft")
         if self.glyph then self.glyph:SetColorKey(k) end
         if self.letter then K.Recolor(self.letter, k) end
-        self:SetAlpha(self:IsEnabled() and 1 or 0.4)
+        if self.icon then self.icon:SetDesaturated(not on) end
+        self:SetAlpha(on and 1 or 0.55)
     end
     b.Paint = paint
     function b:SetActive(on) self.active = on paint(self) end
@@ -308,6 +365,7 @@ function K.IconButton(parent, glyph, tip, onClick, size)
     b:SetScript("OnEnable", paint)
     b:SetScript("OnDisable", paint)
     b:SetScript("OnClick", function(self, ...) if onClick then onClick(self, ...) end end)
+    pressable(b, paint, "glyph", "icon", "letter")
     if tip then K.Tip(b, tip[1], { unpack(tip, 2) }) end
     Skin.Add(b, paint)
     return b

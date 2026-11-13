@@ -584,6 +584,26 @@ step("settings switches", function()
         end
     end
 end)
+-- a button and a sign pressed and let go: what they carry moves down and back to the same place
+step("press", function()
+    local K = UI.Kit
+    local b = K.Button(UI.holder, "Knopf", "primary")
+    local i = K.IconButton(UI.holder, "left", nil, nil)
+    for _, x in ipairs({ b, i }) do
+        local part = x.label or x.glyph
+        local _, _, _, _, y0 = part:GetPoint(1)
+        x:GetScript("OnMouseDown")(x, "LeftButton")
+        if not x.pressed then error("not pressed") end
+        local _, _, _, _, y1 = part:GetPoint(1)
+        x:GetScript("OnMouseUp")(x, "LeftButton")
+        local _, _, _, _, y2 = part:GetPoint(1)
+        if y1 ~= y0 - 1 or y2 ~= y0 then error("pressed part not moved and back: " .. tostring(y0) .. " " .. tostring(y1) .. " " .. tostring(y2)) end
+        x:Disable()
+        x:GetScript("OnMouseDown")(x, "LeftButton")
+        if x.pressed then error("a button that cannot be used is pressed") end
+        x:Enable()
+    end
+end)
 step("dialog", function()
     UI:Confirm({ title = "Frage", text = "Text", ok = "Ja", onOk = function() end })
     UI.Kit.CloseDialog()
