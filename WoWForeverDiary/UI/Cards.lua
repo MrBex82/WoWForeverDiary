@@ -177,8 +177,16 @@ local function tiles(pool, canvas, y, list)
         l:SetWidth(tw - 4)
         l:SetWordWrap(false)
         l:SetPoint("TOP", bg, "TOP", 0, -28)
+        -- a figure with something behind it: { value, label, colour, go, tip lines }
+        if t[4] then
+            local hot = pool:Hot(t[5], t[4])
+            hot:SetAllPoints(bg)
+        end
     end
 end
+
+-- where a card leads: another view of the desk (a docked card belongs to the view it leaves)
+local function goTo(route) return function() UI.Router.Go(route) end end
 
 -- small ink bar chart of a per-day series
 -- Kills per day: the last two weeks of the diary as slim bars in the colour of the creature's rarity,
@@ -335,6 +343,13 @@ local function renderCreature(card, id)
     z:SetText((L["Seen in"] .. " " .. (m.zone and WFD:Place(m.zone, "in") or "-")):upper())
     z:SetWidth(W)
     z:SetPoint("TOP", canvas, "TOP", 0, -298)
+    -- the region it was seen in: its map
+    local seenMap = m.zone and C.zoneMaps and C.zoneMaps[m.zone]
+    if type(seenMap) == "number" then
+        local hot = pool:Hot({ m.zone, L["Click for the map of this region."] }, goTo({ view = "world", map = seenMap }))
+        hot:SetPoint("TOPLEFT", z, "TOPLEFT", 0, 3)
+        hot:SetPoint("BOTTOMRIGHT", z, "BOTTOMRIGHT", 0, -3)
+    end
     -- a line the character wrote beside it
     local note = pool:Text(11, c.inkSoft, UI.FONT, "CENTER")
     note:SetText(WFD:Quote(WFD:MarginNote(id, m)))
@@ -352,7 +367,9 @@ local function renderCreature(card, id)
     tiles(pool, canvas, -332, {
         { m.kills, L["Slain"], c.bad },
         { "#" .. rank, format(L["of %d kinds"], count), c.ink },
-        { nem and nem.n or 0, L["Killed you"], nem and c.bad or c.inkSoft },
+        { nem and nem.n or 0, L["Killed you"], nem and c.bad or c.inkSoft,
+            nem and goTo({ view = "fates", chip = "nemesis", key = "n:" .. m.name }) or nil,
+            nem and { L["Killed you"], L["Click to open."] } or nil },
     })
 
     local firstTxt, firstGo = dayLink(m.first)
@@ -489,10 +506,11 @@ local function renderPerson(card, key)
         t:SetWordWrap(false)
         t:SetPoint("TOPLEFT", canvas, "TOPLEFT", PAD + 16, qy)
     end
-    if #quests > 3 then
-        local more = pool:Text(10, c.inkFaint, UI.FONT)
-        more:SetText(format("+ %d ...", #quests - 3))
-        more:SetPoint("TOPLEFT", canvas, "TOPLEFT", PAD + 16, -438 - 3 * 18)
+    -- every quest of this person: the quest book, filtered by their name
+    if #quests > 0 then
+        local more = pool:Link(format(L["All %d quests"], #quests) .. "  >",
+            goTo({ view = "quests", q = (n.name or ""):lower() }), 12)
+        more:SetPoint("TOPLEFT", canvas, "TOPLEFT", PAD + 16, -438 - min(3, #quests) * 18)
     end
     if n.map then
         local fs = pool:Link(L["Show on map"] .. "  >", function()
@@ -571,7 +589,9 @@ local function renderCatch(card, id)
     wt:SetText(L["WHERE IT BIT"])
     wt:SetPoint("TOPLEFT", canvas, "TOPLEFT", PAD, -396)
     for i = 1, min(3, #waters) do
-        UI.LeaderLine(pool, canvas, PAD, -412 - (i - 1) * 18, W, WFD:MapName(waters[i].map) or "?", tostring(waters[i].n), 13, c.inkSoft)
+        -- each water leads to its map
+        UI.LeaderLine(pool, canvas, PAD, -412 - (i - 1) * 18, W, WFD:MapName(waters[i].map) or "?", tostring(waters[i].n), 13, c.inkSoft,
+            waters[i].map and goTo({ view = "world", map = waters[i].map }) or nil)
     end
 
     local prev, nextMark = 0, nil

@@ -432,12 +432,22 @@ UI.ReportView({
             rp:Kicker(L["Month by month"], "soft")
             local most = 1
             for m = 1, 12 do most = max(most, y.months[m].kills) end
+            -- the first day of every month with entries: a month leads to it
+            local firstOf = {}
+            for d = 1, WFD:NumDays() do
+                if WFD.C.days[d] then
+                    local t = date("*t", WFD:DayTime(d))
+                    if t.year == y.year and not firstOf[t.month] then firstOf[t.month] = d end
+                end
+            end
             for m = 1, 12 do
                 local mo = y.months[m]
                 if mo.days > 0 then
                     local col = (m == y.bestMonth) and { 0.86, 0.62, 0.18 } or { 0.62, 0.30, 0.20 }
+                    local go = firstOf[m] and dayGo(firstOf[m])
                     rp:Line({ name = WFD.loc.months[m], sub = WFD:Count("%d days with entries", mo.days), right = WFD:Count("%d kills", mo.kills),
-                        num = m, col = col, frac = mo.kills / most, barCol = col })
+                        num = m, col = col, frac = mo.kills / most, barCol = col, go = go,
+                        tip = go and { WFD.loc.months[m], { L["Click to read the first day of this month."], 0.5, 0.8, 1 } } or nil })
                 end
             end
             rp:Gap(14)

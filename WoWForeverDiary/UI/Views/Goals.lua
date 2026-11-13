@@ -395,7 +395,9 @@ UI:RegisterView({
             r:SetHeight(72)
             r:SetScript("OnEnter", function(self) self:SetSurface("hover", "gold") end)
             r:SetScript("OnLeave", function(self) self:SetSurface("card", "line") end)
-            r:SetScript("OnClick", function(self) if self.key then R.Go(UI.PartRoute(self.key)) end end)
+            r:SetScript("OnClick", function(self)
+                if type(self.key) == "table" then R.Go(self.key) elseif self.key then R.Go(UI.PartRoute(self.key)) end
+            end)
             return r
         end
 
@@ -415,7 +417,7 @@ UI:RegisterView({
                 { L["Dungeons"] .. " & " .. L["Raids"], g.dFound, g.dTotal, UI.Icon("key"), { 0.78, 0.42, 0.08 },
                     L["Dark places, rich rewards"], "landmarks" },
                 { L["Secrets"], g.sFound, g.sTotal, QUESTION, { 0.70, 0.45, 0.85 },
-                    L["Some honours stay hidden until you find them."], "honour" },
+                    L["Some honours stay hidden until you find them."], { view = "honour", chip = "secret" } },
             }
             for i, it in ipairs(self.items) do
                 local r = self.rows[i] or makeRow()

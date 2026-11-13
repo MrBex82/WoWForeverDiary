@@ -118,7 +118,18 @@ local function drawHint(pool, canvas, x, y, a)
     if who.SetMaxLines then who:SetMaxLines(2) end
     who:SetJustifyV("MIDDLE")
     who:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 6, y - CARD_H + 30)
-    local hot = pool:Hot({ L["Not yet discovered"], a.zone, h.who and format(L["Known to %s"], h.who) or "" })
+    -- like the covered cards of the bestiary: a click leads to where it bites (the map of its water, if known)
+    local map = WFD.C.zoneMaps and WFD.C.zoneMaps[a.zone]
+    local lines = { L["Not yet discovered"], a.zone, h.who and format(L["Known to %s"], h.who) or "" }
+    local go
+    if type(map) == "number" then
+        lines[#lines + 1] = L["Click for the map of this region."]
+        go = function() UI.Router.Go({ view = "world", map = map }) end
+    elseif UI.PART_VIEW.fishwaters then
+        lines[#lines + 1] = L["Click to open."]
+        go = function() UI.Router.Go(UI.PartRoute("fishwaters")) end
+    end
+    local hot = pool:Hot(lines, go)
     hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", x, y)
     hot:SetSize(CARD_W, CARD_H)
 end

@@ -19,6 +19,13 @@ local function mobByName(name)
     end
 end
 local function select(key, id) local v = view(key) if v then v:Select(id) end end
+-- the key of a companion by the name in a group (with or without the realm)
+local function companionKey(name)
+    local list = WFD.C.companions or {}
+    if not name then return nil end
+    if list[name] then return name end
+    for key, e in pairs(list) do if e.name == name then return key end end
+end
 
 -- the colour of an item link (its quality)
 local function linkColour(link)
@@ -105,14 +112,26 @@ local function runReport(rp, key)
         local bits = {}
         if p.level then bits[#bits + 1] = format(L["Level %d"], p.level) end
         if p.class then bits[#bits + 1] = p.class end
+        -- a fellow adventurer leads to their place among the companions
+        local ckey = not p.me and companionKey(p.name)
         rp:Line({ name = p.me and (L["Me"] .. "  -  " .. (p.name or "")) or p.name, icon = path, coords = coords,
-            col = { col[1], col[2], col[3] }, sub = #bits > 0 and table.concat(bits, "  -  ") or nil })
+            col = { col[1], col[2], col[3] }, sub = #bits > 0 and table.concat(bits, "  -  ") or nil,
+            go = ckey and function() R.Go({ view = "companions", key = ckey }) end or nil,
+            tip = ckey and { p.name, { L["Click: the report."], 0.5, 0.8, 1 } } or nil })
     end
     rp:Gap(8)
 
-    -- the bosses, in the order they fell
+    -- the bosses, in the order they fell, each leading to its wanted poster
     rp:Head(L["Bosses"], tostring(#(r.bosses or {})))
-    if #(r.bosses or {}) == 0 then rp:Text("-", "muted", "body") else rp:Bullets(r.bosses) end
+    if #(r.bosses or {}) == 0 then rp:Text("-", "muted", "body") end
+    for _, b in ipairs(r.bosses or {}) do
+        local id = mobByName(b)
+        if id then
+            rp:Link(b, nil, function() R.Go({ view = "bestiary", key = id }) end, L["Click for the wanted poster."], UI.Icon("bestiary"))
+        else
+            rp:Bullets({ b })
+        end
+    end
     rp:Gap(8)
 
     -- the loot
@@ -128,8 +147,11 @@ local function runReport(rp, key)
     rp:Head(L["Fallen"], tostring(#(r.deaths or {})))
     if #(r.deaths or {}) == 0 then rp:Text(L["Nobody fell."], "soft", "body") end
     for _, d in ipairs(r.deaths or {}) do
+        local id = d.by and mobByName(d.by)
         rp:Line({ name = d.me and L["Me"] or (d.who or "?"), nameKey = "neg", col = { 0.62, 0.06, 0.04 }, icon = UI.Icon("skull"),
-            sub = d.by and format(L["Killed by %s"], d.by) or nil })
+            sub = d.by and format(L["Killed by %s"], d.by) or nil,
+            go = id and function() R.Go({ view = "bestiary", key = id }) end or nil,
+            tip = id and { d.by, { L["Click for the wanted poster."], 0.5, 0.8, 1 } } or nil })
     end
 end
 

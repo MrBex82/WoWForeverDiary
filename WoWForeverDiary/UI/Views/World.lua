@@ -400,16 +400,24 @@ UI:RegisterView({
             rp:Title(ch.name)
             rp:Text(st and (format(L["Day %d"], st.first) .. "  -  " .. format(L["%s spent here"], WFD:DurationText(st.sec)))
                 or L["Not yet explored"], "soft", "small", 12)
-            -- the region in eight figures
+            -- the region in eight figures; a figure with something behind it opens the list of it, filtered by the region
+            local q = (ch.name or ""):lower()
+            local function list(view, extra)
+                return function()
+                    local route = { view = view, q = q }
+                    for k, x in pairs(extra or {}) do route[k] = x end
+                    R.Go(route)
+                end
+            end
             rp:Tiles({
                 { st and WFD:DurationText(st.sec) or "-", L["Time spent"] },
                 { ch.visits or (st and 1 or 0), L["Visits"] },
-                { st and st.kills or 0, L["Kills"] },
-                { ch.quests, L["Quests"] },
+                { st and st.kills or 0, L["Kills"], (st and (st.kills or 0) > 0) and list("bestiary", { sort = "zone" }) or nil },
+                { ch.quests, L["Quests"], (ch.quests or 0) > 0 and list("quests") or nil },
                 { st and format(L["Day %d"], st.first) or "-", L["First visit"], st and UI.DayGo(st.first) },
-                { ch.people, L["Acquaintances here"] },
+                { ch.people, L["Acquaintances here"], (ch.people or 0) > 0 and list("people", { sort = "zone" }) or nil },
                 { ch.rests, L["Times rested here"] },
-                { ch.deaths, L["Deaths here"], nil, ch.deaths > 0 and "neg" or nil },
+                { ch.deaths, L["Deaths here"], ch.deaths > 0 and list("fates") or nil, ch.deaths > 0 and "neg" or nil },
             })
 
             -- the numbered places on the map
@@ -474,9 +482,12 @@ UI:RegisterView({
             -- characters of the account found here)
             rp:Head(L["Places discovered"], #ch.subs > ch.found and (ch.found .. " / " .. #ch.subs) or tostring(ch.found))
             if ch.found == 0 then rp:Text(L["No places discovered here yet."], "muted", "body") end
-            local names = {}
-            for i = 1, ch.found do names[#names + 1] = ch.subs[i].name end
-            rp:Bullets(names)
+            -- a place found leads to the day it was found
+            for i = 1, ch.found do
+                local it = ch.subs[i]
+                local day = type(it.t) == "number" and WFD:DayIndex(it.t) or nil
+                if day then rp:DayLink(day, nil, it.name) else rp:Bullets({ it.name }) end
+            end
             for i = ch.found + 1, #ch.subs do
                 local it = ch.subs[i]
                 rp:Line({ name = it.name, nameKey = "muted",
