@@ -1321,3 +1321,4 @@ L["Nothing found. Try a shorter word, or a name the way the diary writes it."] =
 L["Undo"] = "復原"
 L["Bookmark removed: %s"] = "已移除書籤：%s"
 L["Bookmark set: %s"] = "已加入書籤：%s"
+L["The diary does not know \"%s\"."] = "日記不認得「%s」。"

@@ -1337,3 +1337,4 @@ L["Nothing found. Try a shorter word, or a name the way the diary writes it."] =
 L["Undo"] = "Deshacer"
 L["Bookmark removed: %s"] = "Marcador quitado: %s"
 L["Bookmark set: %s"] = "Marcador puesto: %s"
+L["The diary does not know \"%s\"."] = "El diario no conoce \"%s\"."

@@ -1318,3 +1318,4 @@ L["Nothing found. Try a shorter word, or a name the way the diary writes it."] =
 L["Undo"] = "되돌리기"
 L["Bookmark removed: %s"] = "책갈피 제거: %s"
 L["Bookmark set: %s"] = "책갈피 추가: %s"
+L["The diary does not know \"%s\"."] = "일기가 \"%s\"을(를) 알지 못합니다."

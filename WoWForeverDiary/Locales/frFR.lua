@@ -1325,3 +1325,4 @@ L["Nothing found. Try a shorter word, or a name the way the diary writes it."] =
 L["Undo"] = "Annuler"
 L["Bookmark removed: %s"] = "Marque-page retiré : %s"
 L["Bookmark set: %s"] = "Marque-page posé : %s"
+L["The diary does not know \"%s\"."] = "Le carnet ne connaît pas « %s »."

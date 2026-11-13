@@ -1409,3 +1409,4 @@ L["Nothing found. Try a shorter word, or a name the way the diary writes it."] =
 L["Undo"] = "Rückgängig"
 L["Bookmark removed: %s"] = "Lesezeichen entfernt: %s"
 L["Bookmark set: %s"] = "Lesezeichen gesetzt: %s"
+L["The diary does not know \"%s\"."] = "Das Tagebuch kennt \"%s\" nicht."

@@ -1332,3 +1332,4 @@ L["Nothing found. Try a shorter word, or a name the way the diary writes it."] =
 L["Undo"] = "Отменить"
 L["Bookmark removed: %s"] = "Закладка удалена: %s"
 L["Bookmark set: %s"] = "Закладка добавлена: %s"
+L["The diary does not know \"%s\"."] = "Дневник не знает «%s»."

@@ -815,6 +815,9 @@ SlashCmdList["WOWFOREVERDIARY"] = function(msg)
     elseif WFD.UI:OpenPart(msg) then
         -- "/wfd bestiary", "/wfd 12": the book opens at that part or day
     else
-        WFD.UI:Toggle()
+        -- an unknown word: the window opens with a note that leads to the help
+        local UI = WFD.UI
+        UI:OpenShell()
+        UI:Notice(format(L["The diary does not know \"%s\"."], msg), function() UI.Router.Go({ view = "help" }) end, L["Help"])
     end
 end

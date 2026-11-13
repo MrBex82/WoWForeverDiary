@@ -9,6 +9,6 @@ for lang, vals in data["tr"].items():
     if not s.endswith("\n"):
         s += "\n"
     for k, v in zip(keys, vals):
-        s += 'L["%s"] = "%s"\n' % (k, v.replace('"', '\\"'))
+        s += 'L["%s"] = "%s"\n' % (k.replace('"', '\\"'), v.replace('"', '\\"'))
     open(p, "w", encoding="utf-8", newline="\n").write(s)
 print("ok")

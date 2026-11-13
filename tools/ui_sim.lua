@@ -682,7 +682,7 @@ step("side windows", function()
     UI:ShowMovingImport()
 end)
 step("slash", function()
-    for _, cmd in ipairs({ "bestiarium", "12", "einstellungen", "heute", "" }) do env.SlashCmdList.WOWFOREVERDIARY(cmd) end
+    for _, cmd in ipairs({ "bestiarium", "12", "einstellungen", "heute", "quatsch", "" }) do env.SlashCmdList.WOWFOREVERDIARY(cmd) end
 end)
 step("close again", function() UI:Hide() UI:Toggle() end)
 
