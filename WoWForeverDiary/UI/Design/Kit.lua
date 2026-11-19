@@ -1448,3 +1448,54 @@ function K.BookHost(outer)
     host:SetAllPoints(book)
     return book, host
 end
+
+-- A box to tick (a task, a first step): a small well in the page with a clean edge on all four sides, filled and
+-- ticked when done. It grows with the writing; b:Beside(fs, x) puts it at the left of the first line of fs.
+function K.CheckBox(parent)
+    local b = CreateFrame("Frame", nil, parent)
+    b:EnableMouse(false)
+    b.well = b:CreateTexture(nil, "ARTWORK", nil, 0)
+    b.well:SetTexture(UI.WHITE)
+    b.well:SetPoint("TOPLEFT", 1, -1)
+    b.well:SetPoint("BOTTOMRIGHT", -1, 1)
+    b.edges = {}
+    for i, e in ipairs({ { "TOPLEFT", "TOPRIGHT" }, { "BOTTOMLEFT", "BOTTOMRIGHT" }, { "TOPLEFT", "BOTTOMLEFT" }, { "TOPRIGHT", "BOTTOMRIGHT" } }) do
+        local t = b:CreateTexture(nil, "ARTWORK", nil, 1)
+        t:SetTexture(UI.WHITE)
+        t:SetPoint(e[1])
+        t:SetPoint(e[2])
+        if i <= 2 then t:SetHeight(1) else t:SetWidth(1) end
+        b.edges[i] = t
+    end
+    b.tick = K.Glyph(b, "check", 12, "onGold")
+    b.tick:SetPoint("CENTER", 0, 0)
+    local function paint(s)
+        local done = s.done
+        local er, eg, eb = UI.Tok(done and "pos" or "muted")
+        for _, t in ipairs(s.edges) do t:SetVertexColor(er, eg, eb, done and 1 or 0.85) end
+        if done then
+            s.well:SetVertexColor(er, eg, eb, 0.85)
+        else
+            local r, g, bb = UI.Tok("inset")
+            s.well:SetVertexColor(r, g, bb, 1)
+        end
+        s.tick:SetShown(done and true or false)
+    end
+    UI.Skin.Add(b, paint)
+    function b:SetDone(done)
+        self.done = done and true or false
+        paint(self)
+    end
+    -- the size follows the writing; the box stands in the middle of the first line of fs, x points from the left
+    function b:Beside(fs, x)
+        local size = floor(15 * UI.FK() + 0.5)
+        self:SetSize(size, size)
+        self.tick:SetSize(size - 4, size - 4)
+        local _, fsize = fs:GetFont()
+        local line = (fsize or 12) * 1.15
+        self:ClearAllPoints()
+        self:SetPoint("TOPLEFT", fs:GetParent(), "TOPLEFT", x or 0, -floor(max(0, (line - size) / 2) + 0.5))
+        return size
+    end
+    return b
+end
