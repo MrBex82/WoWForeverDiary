@@ -157,7 +157,7 @@ local function closeLayer()
     if UI.Kit and (UI.Kit.CloseDialog() or UI.Kit.CloseMenu()) then return true end
     if UI.ShellCloseLayer and UI:ShellCloseLayer() then return true end
     if UI.replayBox and UI.replayBox:IsReplaying() then UI.replayBox:StopReplay() return true end
-    if UI.card and UI.card:IsShown() and not UI.card.docked then UI.card:Hide() return true end
+
     return false
 end
 

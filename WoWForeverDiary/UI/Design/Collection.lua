@@ -124,7 +124,7 @@ end
 --   data = function(state) return { { title, right, frac, items = { entry, ... } }, ... } end,
 --   cell = { w, h, gap, make, fill }  (a grid of cards)   or   row = { h, make, fill }  (one line each)
 --   empty = function(state) return text end,
---   cardKind = "creature" | "catch" | "person"   (the card of Cards.lua that opens on the right)
+
 --   detail = function(report, key)              (or a report of its own in that column, see Report.lua;
 --                                                V:Select(key) opens it)
 --   keyOf = function(entry) return key end      (to leaf through the cards in the order shown)
@@ -327,19 +327,15 @@ function UI.CollectionView(def)
                 self.selected = nil
                 note("key", nil)
                 self.detail:Hide()
-                if UI.card and UI.card.docked then UI.card:Hide() end
                 self:Arrange()
             end
-            function V:DockSize()
-                return self.detail:GetWidth() or DETAIL_MIN, (self.h or host:GetHeight() or 600) - 46
-            end
             function V:Step(dir)
-                local cur = def.detail and self.selected or (UI.card and UI.card.key)
+                local cur = self.selected
                 if cur == nil or #self.order == 0 then return end
                 local at = 1
                 for i, k in ipairs(self.order) do if k == cur then at = i break end end
                 local key = self.order[((at - 1 + dir) % #self.order) + 1]
-                if def.detail then self:Select(key) else UI:ShowCard(def.cardKind, key) end
+                self:Select(key)
             end
             function V:ShowingCard(key)
                 note("key", key)
@@ -507,10 +503,7 @@ function UI.CollectionView(def)
                     self.emptyClear:ClearAllPoints()
                     self.emptyClear:SetPoint("TOP", self.empty, "BOTTOM", 0, -14)
                 end
-                if self.detail:IsShown() and UI.card and UI.card.docked and UI.card:IsShown() then
-                    UI:FitDockedCard()
-                    self:ShowingCard(UI.card.key)
-                elseif self.detail:IsShown() and self.selected ~= nil then
+                if self.detail:IsShown() and self.selected ~= nil then
                     self:ShowingCard(self.selected)
                 end
             end
@@ -529,10 +522,6 @@ function UI.CollectionView(def)
             end
 
             function V:Show(route)
-                UI.cardDockProvider = function(kind)
-                    if kind ~= def.cardKind then return nil end
-                    return V:OpenDetail(), V
-                end
                 -- the route says everything: what it does not name is back at its start
                 self.restoring = true
                 self.state.chip = route.chip or CHIP0
@@ -544,17 +533,13 @@ function UI.CollectionView(def)
                 end
                 self.selected = nil
                 self.detail:Hide()
-                if UI.card and UI.card.docked then UI.card:Hide() end
                 self:Refresh()
-                if route.key ~= nil and def.detail then self:Select(route.key)
-                elseif route.key ~= nil and def.cardKind then UI:ShowCard(def.cardKind, route.key) end
+                if route.key ~= nil and def.detail then self:Select(route.key) end
                 self.restoring = nil
             end
             function V:Hide()
-                if UI.cardDockProvider then UI.cardDockProvider = nil end
                 self.selected = nil
                 self.detail:Hide()
-                if UI.card and UI.card.docked then UI.card:Hide() end
             end
             function V:Head()
                 local g = UI.NAV_GROUP[def.group]

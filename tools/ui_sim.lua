@@ -463,15 +463,8 @@ fire("PLAYER_LOGIN")
 fire("PLAYER_ENTERING_WORLD", true, false)
 
 ------------------------------------------------------------------------ go everywhere
-local cardsShown, cardsDocked, reportsOpened = 0, 0, 0
-do
-    local show0 = UI.ShowCard
-    UI.ShowCard = function(self, kind, key)
-        show0(self, kind, key)
-        cardsShown = cardsShown + 1
-        if self.card and self.card.docked then cardsDocked = cardsDocked + 1 end
-    end
-end
+
+local reportsOpened = 0
 local function everywhere(label)
     local Rt = UI.Router
     step(label .. " start", function() UI:OpenStart() end)
@@ -902,7 +895,7 @@ for _, g in ipairs(UI.NAV) do parts = parts + #UI.PartsOf(g) end
 print(string.format("Reached: %d parts in the register, demo %s, theme %s, window %dx%d",
     parts, WFD.demo and "on" or "off", tostring(UI.THEME),
     UI.holder and UI.holder:GetWidth() or 0, UI.holder and UI.holder:GetHeight() or 0))
-print(string.format("Cards opened: %d, in the column of a view: %d; reports opened: %d", cardsShown, cardsDocked, reportsOpened))
+print(string.format("Reports opened beside a list: %d", reportsOpened))
 -- every part of the register has a name of its own, not its key
 for _, g in ipairs(UI.NAV) do
     for _, key in ipairs(UI.PartsOf(g)) do
