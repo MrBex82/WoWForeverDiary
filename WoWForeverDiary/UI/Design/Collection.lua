@@ -299,6 +299,7 @@ function UI.CollectionView(def)
                 V.report = K.Report(V.sheet)
                 V.report:SetAllPoints(V.sheet)
                 V.report.fill = function() V:FillDetail() end
+                V.report.scroll:SetFade("card")
             end
             function V:FillDetail()
                 if self.selected == nil or not self.report then return end

@@ -9,7 +9,7 @@ local K = UI.Kit
 local R = UI.Router
 local floor, max, min, format = math.floor, math.max, math.min, string.format
 
-local INDEX_MIN, INDEX_MAX = 230, 290
+local INDEX_MIN, INDEX_MAX = 250, 300
 local PAGE_W = 620              -- the page at its widest (60 to 75 letters in a line of the story)
 
 UI.PART_VIEW.diary = "diary"
@@ -181,6 +181,7 @@ UI:RegisterView({
         v.list:SetPoint("TOPLEFT", v.index, "TOPLEFT", 0, 0)
         v.list:SetPoint("BOTTOMRIGHT", v.index, "BOTTOMRIGHT", 0, 52)
         v.list.fill = function() v:FillIndex() end
+        v.list.scroll:SetFade("card")
         v.jump = K.Button(v.index, L["Go to day"], "secondary", function()
             UI:Ask({
                 title = L["Go to day"], ok = L["Go to day"],
@@ -205,6 +206,7 @@ UI:RegisterView({
         v.read:SetPoint("TOPLEFT", v.page, "TOPLEFT", 14, -8)
         v.read:SetPoint("BOTTOMRIGHT", v.page, "BOTTOMRIGHT", -14, 8)
         v.read.fill = function() v:FillPage() end
+        v.read.scroll:SetFade("card")          -- more of the day below: the foot of the page fades
 
         -- below the page: the day before and after, where you are, the bookmark
         v.foot = CreateFrame("Frame", nil, host)
@@ -280,7 +282,7 @@ UI:RegisterView({
                 if here then
                     for _, day in ipairs(ch.days) do
                         local cur = day == self.day
-                        rp:Line({ name = "      " .. format(L["Day %d"], day), right = date(WFD.loc.dayMonth, WFD:DayTime(day)),
+                        rp:Line({ name = format(L["Day %d"], day), right = date(WFD.loc.dayMonth, WFD:DayTime(day)), bare = not cur, indent = 14,
                             nameKey = cur and "title" or "soft", mark = cur and "right" or nil, markKey = "gold",
                             go = function() R.Go({ view = "diary", day = day }, { noHistory = true }) end })
                     end
@@ -410,7 +412,7 @@ UI:RegisterView({
             local W, H = self.w or host:GetWidth() or 0, self.h or host:GetHeight() or 0
             if W <= 0 or H <= 0 then return end
             local k = max(1, UI.FONT_SCALE or 1)
-            local iw = max(INDEX_MIN, min(INDEX_MAX, floor(W * 0.26)))
+            local iw = floor(max(INDEX_MIN, min(INDEX_MAX, W * 0.26)) * k + 0.5)          -- wider with bigger writing
             local narrow = W < 760
             self.narrow = narrow
             -- narrow: the index lies over the page while it is open, the foot has the buttons for it
@@ -419,17 +421,17 @@ UI:RegisterView({
             self.indexBtn:SetShown(narrow)
             self.jumpBtn:SetShown(narrow)
             self.indexBtn:SetActive(narrow and self.indexOpen)
-            local left = narrow and 12 or (iw + 24)
+            local left = narrow and 14 or (iw + 28)
             self.index:ClearAllPoints()
-            self.index:SetPoint("TOPLEFT", host, "TOPLEFT", 12, -12)
-            self.index:SetPoint("BOTTOMLEFT", host, "BOTTOMLEFT", 12, narrow and 52 or 12)
+            self.index:SetPoint("TOPLEFT", host, "TOPLEFT", 14, -14)
+            self.index:SetPoint("BOTTOMLEFT", host, "BOTTOMLEFT", 14, narrow and 56 or 18)
             self.index:SetWidth(narrow and min(iw + 40, W - 24) or iw)
             local footH = 44
-            local avail = W - left - 12
+            local avail = W - left - 22          -- room on the right for the shadow of the page and the edge of the desk
             local pw = min(avail, floor(PAGE_W * k))
             self.page:ClearAllPoints()
-            self.page:SetPoint("TOPLEFT", host, "TOPLEFT", left + floor((avail - pw) / 2), -12)
-            self.page:SetSize(pw, max(100, H - 24 - footH))
+            self.page:SetPoint("TOPLEFT", host, "TOPLEFT", left + floor((avail - pw) / 2), -14)
+            self.page:SetSize(pw, max(100, H - 32 - footH))
             self.foot:ClearAllPoints()
             self.foot:SetPoint("TOPLEFT", self.page, "BOTTOMLEFT", 0, -8)
             self.foot:SetSize(pw, footH - 8)

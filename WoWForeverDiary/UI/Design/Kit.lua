@@ -240,9 +240,9 @@ local function pressable(b, paint, ...)
     b:HookScript("OnDisable", function(self) set(self, false) end)
 end
 
--- a button that cannot be used: no surface of its own, a fine edge, muted writing (not only paler)
+-- a button that cannot be used: sunk into the desk, a fine edge, muted writing (not only paler)
 local function paintOff(b)
-    b.bgKey, b.borderKey = nil, "line"
+    b.bgKey, b.borderKey = "inset", "line"          -- a whole button, sunk and muted (an empty frame looked cut off)
     paintBox(b)
     if b.gild then b.gild:Hide() b.edge:Hide() end
     if b.sheen then b.sheen:Hide() end
@@ -795,6 +795,8 @@ function K.Scroll(parent)
         local h = sf:GetHeight() or 0
         local r = range()
         local show = r > 1
+        -- more below: the foot of the area fades into its surface, so the page does not end hard
+        if sf.fade then sf.fade:SetShown(show and sf:GetVerticalScroll() < r - 2) end
         sf.bar:SetShown(show)
         sf.thumb:SetShown(show)
         if not show then return end
@@ -811,6 +813,26 @@ function K.Scroll(parent)
         self:SetVerticalScroll(max(0, min(range(), y)))
         place()
         if self.onScroll then self.onScroll(self) end
+    end
+    -- key: the token of the surface below the area (its foot fades into it while there is more to scroll)
+    function sf:SetFade(key)
+        if not self.fade then
+            local holder = CreateFrame("Frame", nil, self)
+            holder:SetAllPoints(self)
+            holder:SetFrameLevel(content:GetFrameLevel() + 20)
+            self.fade = holder:CreateTexture(nil, "OVERLAY")
+            self.fade:SetTexture(WHITE)
+            self.fade:SetPoint("BOTTOMLEFT", 0, 0)
+            self.fade:SetPoint("BOTTOMRIGHT", -8, 0)
+            self.fade:SetHeight(36)
+            Skin.Add(self.fade, function(t)
+                local r, g, b = Tok(t.colorKey)
+                UI.Gradient(t, "VERTICAL", { r, g, b, 1 }, { r, g, b, 0 })
+            end)
+        end
+        self.fade.colorKey = key or "card"
+        K.Repaint(self.fade)
+        place()
     end
     function sf:SetContentHeight(h)
         self.contentH = h

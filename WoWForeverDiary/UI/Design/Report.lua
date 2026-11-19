@@ -73,6 +73,13 @@ local function makeLine(parent)
         self:SetWidth(w)
         local col = o.col or { 0.5, 0.4, 0.3 }
         self.disc:SetVertexColor(col[1], col[2], col[3], (o.col or o.icon) and 1 or 0.35)
+        -- indent: a line below another (the days of a chapter); bare: no disc, only the writing
+        local ind = o.indent or 0
+        self.disc:ClearAllPoints()
+        self.disc:SetPoint("TOPLEFT", 4 + ind, -6)
+        self.disc:SetShown(not o.bare)
+        self.name:ClearAllPoints()
+        self.name:SetPoint("TOPLEFT", 32 + ind, -6)
         self.icon:SetShown(o.icon ~= nil)
         if o.icon then
             self.icon:SetTexture(o.icon)
@@ -83,7 +90,7 @@ local function makeLine(parent)
         self.mark:SetShown(o.mark ~= nil)
         if o.mark then self.mark:SetShape(o.mark) self.mark:SetColorKey(o.markKey or "pos") end
         self.right:SetText(o.right or "")
-        local room = max(40, w - 32 - (o.right and (self.right:GetStringWidth() + 12) or 6))
+        local room = max(40, w - 32 - ind - (o.right and (self.right:GetStringWidth() + 12) or 6))
         self.name:SetWordWrap(o.wrap and true or false)
         self.name:SetWidth(room)
         self.sub:SetWidth(max(40, w - 38))
