@@ -638,7 +638,7 @@ end
 UI:RegisterView({
     key = "start",
     build = function(outer)
-        local _, host = K.BookHost(outer)
+        local book, host = K.BookHost(outer)
         local v = {}
         local scroll = K.Scroll(host)
         scroll:SetPoint("TOPLEFT", 0, 0)
@@ -662,9 +662,43 @@ UI:RegisterView({
             self:Arrange()
         end
 
+        -- the open book, wide enough: today on the left page (the first steps, today, the tasks, the memory),
+        -- what comes next on the right page (new, where to go, almost done, the collections)
+        function v:ArrangeSpread(BW)
+            local half = floor(BW / 2)
+            book:Lay(half)
+            local mem = (not C.memory.off) and C.memory or nil
+            local pages = {
+                { x = 20, list = { (not C.first.off) and C.first or nil, C.today, C.tasks, mem } },
+                { x = half + 20, list = { C.new, C.destination, C.almost, C.progress } },
+            }
+            local cw = half - 40
+            local bottom = 0
+            for _, pg in ipairs(pages) do
+                local y = 20
+                for i = 1, 4 do
+                    local card = pg.list[i]
+                    if card then
+                        local h = card:Measure(cw)
+                        card:ClearAllPoints()
+                        card:SetPoint("TOPLEFT", area, "TOPLEFT", pg.x, -y)
+                        card:SetWidth(cw)
+                        card:SetHeight(h)
+                        card:Show()
+                        y = y + h + GAP
+                    end
+                end
+                bottom = max(bottom, y)
+            end
+            scroll:SetContentHeight(bottom + 6)
+        end
+
         -- rows of cards: { card, span } or a stack of cards in one column
         function v:Arrange()
-            local W = (self.w or scroll:GetWidth() or 0) - 2 * 20
+            local BW = self.w or scroll:GetWidth() or 0
+            if BW >= 780 * UI.FK() then return self:ArrangeSpread(BW) end
+            book:Lay(nil)
+            local W = BW - 2 * 20
             if W <= 0 then return end
             local cols = (W >= 840 * UI.FK()) and 3 or 2
             local cw = (W - (cols - 1) * GAP) / cols
