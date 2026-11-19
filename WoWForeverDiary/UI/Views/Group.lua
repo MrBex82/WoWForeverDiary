@@ -5,7 +5,7 @@ local UI = WFD.UI
 local L = WFD.L
 local K = UI.Kit
 local R = UI.Router
-local max, min, abs, format = math.max, math.min, math.abs, string.format
+local floor, max, min, abs, format = math.floor, math.max, math.min, math.abs, string.format
 
 local PAD, GAP = 18, 14
 -- the old key of a group (for its notes, kept in the book as "group:<key>")
@@ -93,7 +93,7 @@ end
 UI:RegisterView({
     key = "group",
     build = function(outer)
-        local _, host = K.BookHost(outer)
+        local book, host = K.BookHost(outer)
         local v = { cards = {} }
         local scroll = K.Scroll(host)
         scroll:SetAllPoints(host)
@@ -203,7 +203,12 @@ UI:RegisterView({
         end
 
         function v:Arrange()
-            local W = (self.w or scroll:GetWidth() or 0) - 2 * 24
+            local BW = self.w or scroll:GetWidth() or 0
+            -- the open book, wide enough: the crest and the notes on the left page, the parts on the right page
+            local spread = BW >= 780 * UI.FK()
+            local half = floor(BW / 2)
+            book:Lay(spread and half or nil)
+            local W = (spread and half or BW) - 2 * 24
             if W <= 0 then return end
             local x0, y = 24, 22
             self.rim:ClearAllPoints()
@@ -223,6 +228,8 @@ UI:RegisterView({
             self.rule:SetPoint("TOPLEFT", area, "TOPLEFT", x0, -y)
             self.rule:SetWidth(W)
             y = y + 22
+            local leftY = y
+            if spread then x0, y = half + 24, 22 end
             local cols = (W >= 900) and 3 or ((W >= 560) and 2 or 1)
             local cw = (W - (cols - 1) * GAP) / cols
             for i = 1, self.n or 0, cols do
@@ -237,12 +244,15 @@ UI:RegisterView({
                 y = y + rowH + GAP
             end
             y = y + 6
+            local rightY = y
+            if spread then x0, y = 24, leftY end
             self.notes:ClearAllPoints()
             self.notes:SetPoint("TOPLEFT", area, "TOPLEFT", x0, -y)
             self.notesY = y
             self.notesH = self:NotesHeight()
             self.notes:SetSize(W, self.notesH)
             y = y + self.notesH + 20
+            if spread then y = max(y, rightY + 14) end
             scroll:SetContentHeight(y)
         end
 
