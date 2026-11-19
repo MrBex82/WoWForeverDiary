@@ -166,8 +166,10 @@ local function kindName(k) return WFD:SpellName(k.spell) or L[k.label] end
 ------------------------------------------------------------------------
 UI:RegisterView({
     key = "world",
-    build = function(host)
-        local v = { mode = "cont" }
+    build = function(outer)
+        -- the open book: the map on the left page, the report of the continent or the region on the right page
+        local book, host = K.BookHost(outer)
+        local v = { mode = "cont", book = book }
 
         -- the bar above the map
         v.bar = CreateFrame("Frame", nil, host)
@@ -224,7 +226,7 @@ UI:RegisterView({
         end
 
         -- the column beside it: a card with the report of the continent or the region
-        v.side = K.Card(host)
+        v.side = CreateFrame("Frame", nil, host)
         v.report = K.Report(v.side)
         v.report:SetAllPoints(v.side)
         v.report.fill = function() v:FillSide() end
@@ -538,6 +540,7 @@ UI:RegisterView({
             self.side:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", -12, 12)
             self.side:SetWidth(sw)
             local lw = W - sw - 24
+            book:Lay(W - sw - 18)
 
             -- the bar: the continent, the way up, the replay, then the layers (lines break where the room ends)
             local zone = self.mode == "zone"
@@ -610,14 +613,14 @@ UI:RegisterView({
             self.token = (self.token or 0) + 1
             local t = self.token
             C_Timer.After(0.15, function()
-                if t ~= self.token or not host:IsShown() then return end
+                if t ~= self.token or not host:IsVisible() then return end
                 self:DrawMap()
                 self:FillSide()
             end)
         end
 
         function v:Layout(w, h)
-            self.w, self.h = w, h
+            self.w, self.h = w - K.BOOK_W, h - K.BOOK_H          -- inside the book
             if not self.loaded then return end
             if self:Arrange() then self:QueueDraw() else self:FillSide() end
         end
@@ -639,7 +642,7 @@ UI:RegisterView({
         end
 
         UI.OnRestyle(function()
-            if host:IsShown() and v.loaded then
+            if host:IsVisible() and v.loaded then
                 v:Arrange()
                 v:FillSide()
             end

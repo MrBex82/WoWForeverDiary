@@ -1422,15 +1422,17 @@ function UI.Painting(parent, w, h)
         local alone = not ev.npc
         self.hero:ClearAllPoints()
         self.foe:ClearAllPoints()
+        -- the figures stand above the plaque, so it never lies on their feet
+        local foot = 30
         if alone then
             self.hero:SetPoint("TOPLEFT", w * 0.2, -6)
-            self.hero:SetPoint("BOTTOMRIGHT", -w * 0.2, 6)
+            self.hero:SetPoint("BOTTOMRIGHT", -w * 0.2, foot)
             self.foe:Hide()
         else
             self.hero:SetPoint("TOPLEFT", 6, -6)
-            self.hero:SetPoint("BOTTOMRIGHT", self, "BOTTOM", 10, 6)
+            self.hero:SetPoint("BOTTOMRIGHT", self, "BOTTOM", 10, foot)
             self.foe:SetPoint("TOPLEFT", self, "TOP", -10, -6)
-            self.foe:SetPoint("BOTTOMRIGHT", -6, 6)
+            self.foe:SetPoint("BOTTOMRIGHT", -6, foot)
             self.foe:Show()
             UI.LoadCreature(self.foe, ev.npc, nil, nil)
             pcall(self.foe.SetRotation, self.foe, -0.7)
@@ -1445,7 +1447,7 @@ function UI.Painting(parent, w, h)
             -- full figure: the camera steps back (as for the creatures), more in a low frame,
             -- so the head and the feet stay inside the picture
             if self.hero.SetPortraitZoom then self.hero:SetPortraitZoom(0) end
-            if self.hero.SetCamDistanceScale then self.hero:SetCamDistanceScale(h < 120 and 1.4 or 1.15) end
+            if self.hero.SetCamDistanceScale then self.hero:SetCamDistanceScale(h < 120 and 1.7 or (h < 170 and 1.5 or 1.3)) end
             if self.hero.SetPosition then self.hero:SetPosition(0, 0, 0) end
         end)
         -- the plaque names the subject only ("Späherkuppe", not "Landmark discovered: Späherkuppe")
