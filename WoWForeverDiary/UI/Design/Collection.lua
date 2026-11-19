@@ -180,7 +180,7 @@ function UI.CollectionView(def)
             end
             if def.search ~= false then
                 local e = K.Box(V.top, "inset", "line", "EditBox")
-                e:SetSize(190, 28)
+                e:SetSize(floor(190 * UI.FK() + 0.5), 28)
                 e:SetAutoFocus(false)
                 e:SetTextInsets(8, 8, 0, 0)
                 e:SetFontObject(ChatFontNormal)
@@ -384,7 +384,11 @@ function UI.CollectionView(def)
                     put(b, 4)
                 end
                 if #self.chips > 0 then x = x + 12 end
-                if self.search then put(self.search) end
+                if self.search then
+                    local _, fsz = UI.TypeFont("body")
+                    self.search:SetSize(floor(190 * UI.FK() + 0.5), max(28, fsz + 14))
+                    put(self.search)
+                end
                 self.clear:SetShown(self:Filtered())
                 if self.clear:IsShown() then put(self.clear) end
                 if self.sort then self.sort:Refresh() put(self.sort) end

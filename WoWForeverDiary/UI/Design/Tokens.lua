@@ -101,6 +101,9 @@ UI.TYPE = {
     display = { 26, "head" }, title = { 19, "head" }, heading = { 16, "head" }, section = { 11, "body" },
     value = { 19, "body" }, strong = { 14, "body" }, body = { 13, "body" }, small = { 11, "body" },
 }
+-- how much bigger than at 100% a size bound to the writing is (never smaller)
+function UI.FK() return math.max(1, UI.FONT_SCALE or 1) end
+
 function UI.TypeFont(role)
     local r = UI.TYPE[role] or UI.TYPE.body
     return (r[2] == "head") and UI.HEAD or UI.FONT, UI.FS(r[1])

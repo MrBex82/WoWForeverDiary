@@ -159,7 +159,7 @@ function cards.today(parent)
         self.mood:ClearAllPoints()
         self.mood:SetPoint("TOPRIGHT", self, "TOPRIGHT", -PAD, -PAD - 4)
         self.mood:SetSize(self.mood.text:GetStringWidth() + 20, 24)
-        local cols = 4
+        local cols = (w >= 520 * UI.FK()) and 4 or 2          -- two to a row when the writing is big or the card narrow
         local tw = (w - 2 * PAD - (cols - 1) * 10) / cols
         local th = 0
         for i, t in ipairs(self.tiles) do
@@ -167,11 +167,13 @@ function cards.today(parent)
             th = max(th, t:Height())
         end
         for i, t in ipairs(self.tiles) do
+            local col, row = (i - 1) % cols, floor((i - 1) / cols)
             t:SetHeight(th)
             t:ClearAllPoints()
-            t:SetPoint("TOPLEFT", self, "TOPLEFT", PAD + (i - 1) * (tw + 10), -y)
+            t:SetPoint("TOPLEFT", self, "TOPLEFT", PAD + col * (tw + 10), -y - row * (th + 10))
         end
-        y = y + th + 14
+        local rows = floor((#self.tiles - 1) / cols) + 1
+        y = y + rows * th + (rows - 1) * 10 + 14
         self.story:SetWidth(min(w - 2 * PAD, 640))
         self.story:ClearAllPoints()
         self.story:SetPoint("TOPLEFT", self, "TOPLEFT", PAD, -y)
@@ -533,7 +535,7 @@ function cards.progress(parent)
         local y = PAD + 18 + 10
         local n = self.count or 0
         if n == 0 then return y + PAD end
-        local perRow = (w >= 760) and min(n, 8) or min(n, 4)
+        local perRow = (w >= 760 * UI.FK()) and min(n, 8) or min(n, 4)
         local tw = (w - 2 * PAD - (perRow - 1) * 10) / perRow
         local th = 0
         for i = 1, n do
@@ -663,7 +665,7 @@ UI:RegisterView({
         function v:Arrange()
             local W = (self.w or scroll:GetWidth() or 0) - 2 * 20
             if W <= 0 then return end
-            local cols = (W >= 840) and 3 or 2
+            local cols = (W >= 840 * UI.FK()) and 3 or 2
             local cw = (W - (cols - 1) * GAP) / cols
             local rows
             local mem = (not C.memory.off) and C.memory or nil

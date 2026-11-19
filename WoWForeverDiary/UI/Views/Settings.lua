@@ -6,7 +6,7 @@ local UI = WFD.UI
 local L = WFD.L
 local K = UI.Kit
 local R = UI.Router
-local floor, min, format = math.floor, math.min, string.format
+local floor, min, max, format = math.floor, math.min, math.max, string.format
 
 local function S() return WFD.S end
 local function flag(key, after)
@@ -473,10 +473,28 @@ UI:RegisterView({
             return p
         end
 
+        -- the tabs grow with the writing: wider, and each as tall as its two lines need
+        function v:PlaceTabs()
+            local tw = floor(200 * UI.FK() + 0.5)
+            tabs:SetWidth(tw)
+            local y = 16
+            for _, b in ipairs(self.tabs) do
+                b.sub:SetWidth(tw - 40)
+                local h = max(58, 9 + b.title:GetStringHeight() + 3 + b.sub:GetStringHeight() + 10)
+                b:SetHeight(h)
+                b:ClearAllPoints()
+                b:SetPoint("TOPLEFT", tabs, "TOPLEFT", 10, -y)
+                b:SetPoint("RIGHT", tabs, "RIGHT", -10, 0)
+                y = y + h + 4
+            end
+            return tw
+        end
+
         function v:Arrange()
+            local tw = self:PlaceTabs()
             local p = self.panes[self.section]
             if not p then return end
-            local w = min(720, ((self.w and self.w - 200) or scroll:GetWidth() or 0) - 2 * 28)
+            local w = min(720, ((self.w and self.w - tw) or scroll:GetWidth() or 0) - 2 * 28)
             if w <= 0 then return end
             p.title:ClearAllPoints()
             p.title:SetPoint("TOPLEFT", p, "TOPLEFT", 28, -22)

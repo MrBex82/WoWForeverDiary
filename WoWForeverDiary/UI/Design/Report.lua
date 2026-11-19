@@ -293,7 +293,7 @@ function K.Report(parent)
 
     -- figures: { { value, caption, go, key } }, per = tiles in a row (by default as many as fit)
     function rp:Tiles(list, per)
-        per = per or ((self.w >= 420) and 4 or 2)
+        per = per or ((self.w >= 420 * UI.FK()) and 4 or 2)          -- two to a row in a narrow column or with big writing
         per = min(per, #list)
         if per < 1 then return end
         local tw = (self.w - (per - 1) * 8) / per

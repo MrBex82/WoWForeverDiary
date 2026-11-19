@@ -46,7 +46,7 @@ function UI.Unclip(fs)
     local font, size, flags = fs:GetFont()
     if not (font and size) then return end
     size = floor(size + 0.5)
-    local smallest = max(8, floor(size * 0.85))
+    local smallest = max(11, floor(size * 0.85))          -- nothing readable smaller than 11
     while size > smallest and truncated(fs) do
         size = size - 1
         fs:SetFont(font, size, flags or "")
@@ -632,14 +632,14 @@ function UI.MapSketch(parent, w, h)
             p.rim:SetPoint("CENTER")
             p.dot = UI.Circle(p, 8, c.gold, "ARTWORK", 1)
             p.dot:SetPoint("CENTER")
-            p.num = UI.Text(p, 9, { 1, 1, 1, 1 }, "CENTER", UI.FONT, true)
+            p.num = UI.Text(p, 11, { 1, 1, 1, 1 }, "CENTER", UI.FONT, true)
             p.num:SetPoint("CENTER", 0, 0)
             -- a skull for graves: readable without the colour red
             p.skull = p:CreateTexture(nil, "OVERLAY", nil, 2)
             p.skull:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Skull")
             p.skull:Hide()
             -- name written next to the pin (continent atlas)
-            p.label = UI.Text(p, 9, { 0.16, 0.09, 0.03, 1 }, "LEFT", UI.FONT)
+            p.label = UI.Text(p, 11, { 0.16, 0.09, 0.03, 1 }, "LEFT", UI.FONT)
             p.label:SetShadowColor(1, 0.95, 0.80, 0.9)
             p.label:SetShadowOffset(1, -1)
             p.label:SetPoint("LEFT", p, "RIGHT", 1, 0)
@@ -769,7 +769,7 @@ function UI.MapSketch(parent, w, h)
                 p.dot:SetSize((size - 3) * k, (size - 3) * k)
                 p.dot:SetVertexColor(col4(z.visited and { 0.90, 0.66, 0.16, 1 } or { 0.58, 0.52, 0.44, 1 }))
                 p.num:SetText(z.visited and "" or "?")
-                p.num:SetFont(UI.FONT, 8, "")
+                p.num:SetFont(UI.FONT, 11, "")
                 p.label:SetText(z.visited and z.name or "")
                 p.info = z.info
                 p.onClick = z.onClick
@@ -933,7 +933,7 @@ function UI.MapSketch(parent, w, h)
             p.rim:SetSize(size * k, size * k)
             p.dot:SetSize((size - 3) * k, (size - 3) * k)
             p.dot:SetVertexColor(col4(col))
-            p.num:SetFont(UI.FONT, 9, "")
+            p.num:SetFont(UI.FONT, 11, "")
             p.info = infoLines
             if numbered then
                 legend[#legend + 1] = numbered
