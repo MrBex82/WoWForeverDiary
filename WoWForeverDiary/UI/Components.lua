@@ -1447,7 +1447,7 @@ function UI.Painting(parent, w, h)
             -- full figure: the camera steps back (as for the creatures), more in a low frame,
             -- so the head and the feet stay inside the picture
             if self.hero.SetPortraitZoom then self.hero:SetPortraitZoom(0) end
-            if self.hero.SetCamDistanceScale then self.hero:SetCamDistanceScale(h < 120 and 1.7 or (h < 170 and 1.5 or 1.3)) end
+            if self.hero.SetCamDistanceScale then self.hero:SetCamDistanceScale(h < 120 and 1.9 or (h < 170 and 1.75 or 1.5)) end
             if self.hero.SetPosition then self.hero:SetPosition(0, 0, 0) end
         end)
         -- the plaque names the subject only ("Späherkuppe", not "Landmark discovered: Späherkuppe")
