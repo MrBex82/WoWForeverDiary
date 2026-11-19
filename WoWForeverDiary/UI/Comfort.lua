@@ -304,6 +304,22 @@ function UI.NewCounts()
     return newCounts(C)
 end
 
+-- What is new in a part is marked while you look at it the first time: when the part opens, the moment it was last
+-- looked at is kept here, and IsNew tells whether a thing came after it. The next visit counts it as read.
+UI.newSince = {}
+local shownPart
+function UI.IsNew(part, t)
+    local s = UI.newSince[part]
+    return (s and t and t > s) and true or false
+end
+function UI.EnterPart(part)
+    if part == shownPart then return end
+    shownPart = part
+    local C = WFD.C
+    if not part or not C or WFD.demo or not C.seenAt then return end
+    UI.newSince[part] = max(C.seenAt, C.partSeen and C.partSeen[part] or 0)
+end
+
 -- a part was looked at: its news are read
 function UI.PartSeen(part)
     local C = WFD.C
@@ -322,4 +338,6 @@ function UI:Build()
     if not fresh then return end
     setupKeys(self.holder)
     restorePosition(self.holder)
+    -- closed: the next opening marks the news of the part it opens at again
+    self.holder:HookScript("OnHide", function() UI.EnterPart(nil) end)
 end

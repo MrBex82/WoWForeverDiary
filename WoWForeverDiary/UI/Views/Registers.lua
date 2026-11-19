@@ -80,7 +80,9 @@ local function makeRow(parent)
         local room = self:GetWidth() - 56 - max(self.right:GetStringWidth(), self.right2:GetStringWidth()) - 20
         self.name:SetWidth(max(40, room))
         self.sub:SetWidth(max(40, room))
-        self.name:SetText(o.name or "?")
+        -- new since the part was last looked at: a small gold NEW before the name (once, see UI.IsNew)
+        local tag = o.new and ("|cff" .. UI.Hex({ UI.Tok("gold") }) .. L["NEW"] .. "|r  ") or ""
+        self.name:SetText(tag .. (o.name or "?"))
         K.Recolor(self.name, o.nameKey or "ink")
         self.sub:SetText(o.sub or "")
         self.go, self.tip = o.go, o.tip
@@ -216,7 +218,7 @@ UI.CollectionView({
                 icon = UI.IconPath(UI.ROLE_ICONS[role]),
                 ring = regular and { 0.93, 0.73, 0.22 } or { 0.55, 0.42, 0.24 },
                 name = n.name, sub = sub,
-                right = (n.talks or 0) .. "x", right2 = day and format(L["Day %d"], day) or nil,
+                right = (n.talks or 0) .. "x", right2 = day and format(L["Day %d"], day) or nil, new = UI.IsNew("people", n.first),
                 go = function() UI.SelectIn("people", e.key) end,
             })
         end,
@@ -346,7 +348,7 @@ UI.CollectionView({
             local sub = e.giver and (L["Received from"] .. " " .. e.giver) or (q.zone or "")
             r:Set({
                 mark = look.mark, markKey = look.key, name = q.title or ("#" .. tostring(e.id)), nameKey = look.name,
-                sub = sub, right = day and format(L["Day %d"], day) or nil,
+                sub = sub, right = day and format(L["Day %d"], day) or nil, new = UI.IsNew("quests", q.done),
                 right2 = (q.xp and q.xp > 0) and ("+" .. WFD:Int(q.xp) .. " XP") or nil,
                 -- a click opens the report beside the list, a right-click the day straight away
                 go = function(button)

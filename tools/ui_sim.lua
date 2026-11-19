@@ -755,6 +755,11 @@ step("news per part", function()
     UI:OpenShell({ view = "start" })
     if (UI.NewCounts().bestiary or 0) < 1 then error("closing the window read the news") end
     UI.Router.Go(UI.PartRoute("bestiary"))
+    -- marked as new while looked at the first time, not on the next visit
+    if not UI.IsNew("bestiary", C.mobs[999001].first) then error("a new creature was not marked new") end
+    UI.Router.Go({ view = "start" })
+    UI.Router.Go(UI.PartRoute("bestiary"))
+    if UI.IsNew("bestiary", C.mobs[999001].first - 200) then error("an old creature was marked new") end
     n = UI.NewCounts()
     if (n.bestiary or 0) ~= 0 then error("looking at the bestiary did not read its news") end
     if (n.quests or 0) < 1 then error("looking at the bestiary read the news of the quests") end

@@ -181,11 +181,13 @@ function UI:RefreshRail()
         for _, p in ipairs(parts) do new = new + (counts[p] or 0) end
         b.badge:SetShown(new > 0 and not (b.active and not narrow))
         b.badge.text:SetText(new > 99 and "99" or tostring(new))
-        b.badge:SetWidth(max(20, b.badge.text:GetStringWidth() + 10))
+        -- narrow: a small round count at the upper right of the sign, beside it rather than over it
+        b.badge:SetHeight(narrow and 15 or 18)
+        b.badge:SetWidth(max(narrow and 15 or 20, b.badge.text:GetStringWidth() + (narrow and 6 or 10)))
         b.text:SetWidth(max(40, UI.RailWidth() - 12 - 8 - 28 - 10 - (b.badge:IsShown() and (b.badge:GetWidth() + 12) or 8)))
         if narrow then
             b.badge:ClearAllPoints()
-            b.badge:SetPoint("TOPRIGHT", b, "TOPRIGHT", -2, -1)
+            b.badge:SetPoint("CENTER", b.ring, "TOPRIGHT", 0, -3)
         else
             b.badge:ClearAllPoints()
             b.badge:SetPoint("RIGHT", -8, 0)
@@ -824,9 +826,11 @@ function UI:ShowRoute(route)
     GameTooltip:Hide()
     v.host:Show()
     if v.Layout then v:Layout(contentSize()) end
-    v:Show(route)
-    -- the part on the desk is looked at: its count of news goes
+    -- the part on the desk: what is new since it was last looked at is marked while it is shown (EnterPart, before
+    -- the view fills), and its count of news goes
     local place = UI.VIEW_PLACE and UI.VIEW_PLACE[route.view]
+    if UI.EnterPart then UI.EnterPart(place and place[2]) end
+    v:Show(route)
     if place and UI.PartSeen then UI.PartSeen(place[2]) end
     self:RefreshRail()
     self:RefreshHead()

@@ -448,21 +448,23 @@ local function newCard(parent)
         end
         fitName(self.name, m.name or "?")
         self.badge:SetCount(UI.ShortCount(m.kills), UI.BADGE_COLOURS[rarityOf(m)] or UI.BADGE_COLOURS.normal)
-        local isNew = m.first and WFD:DayIndex(m.first) == WFD:NumDays()
+        -- new since the bestiary was last looked at (shown once: the next look counts it as read)
+        local isNew = UI.IsNew and UI.IsNew("bestiary", m.first)
         self.new:SetText(isNew and L["NEW"] or "")
-        if type(e.id) ~= "number" then
-            -- known only by its name: the game kept its ID secret (in some dungeons), so there is no model
+        -- known only by its name (the game kept the ID secret in some dungeons): the picture of the same name elsewhere
+        local mid = UI.ModelIdFor(e.id, m.name)
+        if not mid then
             self.modelId = nil
             self.model.wantId = nil
             self.model:ClearModel()
             self.sil:SetTextColor(0.85, 0.72, 0.48, 0.9)
             self.sil:Show()
             self.silNote:Show()
-        elseif self.modelId ~= e.id then
-            self.modelId = e.id
+        elseif self.modelId ~= mid then
+            self.modelId = mid
             self.sil:SetTextColor(0.55, 0.45, 0.30, 0.55)
             self.silNote:Hide()
-            UI.LoadCreature(self.model, e.id, 0.65, self.sil)
+            UI.LoadCreature(self.model, mid, 0.65, self.sil)
         end
     end
     return f

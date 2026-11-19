@@ -36,7 +36,8 @@ function UI.CreatureReport(rp, id)
     rp:Kicker(L["WANTED"])
     rp:Title(m.name or "?")
     rp:Chips({ { L[r.label], "gold" }, { format(L["Level %s"], levelText(m)), "ink" }, m.ctype and { m.ctype, "soft" } or nil })
-    rp:Model(id, 170, type(id) ~= "number" and L["In this place the game keeps secret what the creatures look like."] or nil)
+    local mid = UI.ModelIdFor(id, m.name)
+    rp:Model(mid, 170, not mid and L["In this place the game keeps secret what the creatures look like."] or nil)
     rp:Text(WFD:Quote(WFD:MarginNote(id, m)), "soft", "body")
     local rank, count = 1, 0
     for _, o in pairs(C.mobs) do

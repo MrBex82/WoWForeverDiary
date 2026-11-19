@@ -362,6 +362,19 @@ local function hasModel(model)
     return true
 end
 
+-- The ID for the picture of a creature. In some dungeons the game keeps the ID secret and the creature is known by
+-- its name only; then the same name with a known ID is looked for: your own kills elsewhere, the account's bestiary
+-- (other characters), what you sighted. nil when it is known nowhere.
+function UI.ModelIdFor(key, name)
+    if type(key) == "number" then return key end
+    if not name or name == "" then return nil end
+    local C, S = WFD.C or {}, WFD.S or {}
+    for id, m in pairs(C.mobs or {}) do if type(id) == "number" and m.name == name then return id end end
+    for id, e in pairs(S.creatures or {}) do if type(id) == "number" and e.n == name then return id end end
+    for id, s in pairs(C.sighted or {}) do if type(id) == "number" and s.n == name then return id end end
+    return nil
+end
+
 function UI.LoadCreature(model, npcId, zoom, placeholder)
     model.wantId = npcId
     model:ClearModel()
