@@ -1340,3 +1340,54 @@ function K.Gutter(parent)
     g:Hide()
     return g
 end
+
+-- The open book: one sheet of paper (the surface of a card, so fades and writing match), the leaves under it at the
+-- foot and the outer edges, a shadow on the desk, and the fold where the two pages meet. b.left and b.right are the
+-- two pages; b:Lay(split) puts the fold split points from the left (nil: one page, b.right is the whole sheet).
+function K.Spread(parent)
+    local b = K.Box(parent, nil, "line")
+    K.Material(b, "card")
+    K.Corners(b, 5, 6)
+    -- (a frame of its own: one frame keeps one drawing per style, and b already has the one of its surface)
+    local under = CreateFrame("Frame", nil, parent)
+    under:SetAllPoints(b)
+    under:SetFrameLevel(max(0, b:GetFrameLevel() - 1))
+    b.under = under
+    UI.Themed(under, function(fr)
+        local classic = CLASSIC[UI.THEME or "codex"]
+        local c = tokenAt("card")
+        -- the leaves below the top one: a little darker each, peeping out at the foot and at both sides
+        for i = 3, 1, -1 do
+            local k = 1 - i * (classic and 0.10 or 0.06)
+            local leafTex = UI.Fill(fr, { c[1] * k, c[2] * k, c[3] * k }, "BACKGROUND", -8 + (3 - i), 1)
+            leafTex:SetPoint("TOPLEFT", fr, "TOPLEFT", -i, -i * 2)
+            leafTex:SetPoint("BOTTOMRIGHT", fr, "BOTTOMRIGHT", i, -i * 2)
+        end
+        local sh = UI.Fill(fr, { 0, 0, 0 }, "BACKGROUND", -8, classic and 0.35 or 0.22)
+        sh:SetPoint("TOPLEFT", fr, "TOPLEFT", 2, -8)
+        sh:SetPoint("BOTTOMRIGHT", fr, "BOTTOMRIGHT", 6, -10)
+    end)
+    b.left = CreateFrame("Frame", nil, b)
+    b.right = CreateFrame("Frame", nil, b)
+    b.fold = K.Gutter(b)
+    function b:Lay(split)
+        self.split = split
+        self.left:ClearAllPoints()
+        self.right:ClearAllPoints()
+        if split then
+            self.left:SetPoint("TOPLEFT")
+            self.left:SetPoint("BOTTOMRIGHT", self, "BOTTOMLEFT", split, 0)
+            self.right:SetPoint("TOPLEFT", self, "TOPLEFT", split, 0)
+            self.right:SetPoint("BOTTOMRIGHT")
+            self.left:Show()
+            self.fold:Place(split)
+            self.fold:SetFrameLevel(self:GetFrameLevel() + 30)
+        else
+            self.right:SetAllPoints(self)
+            self.left:Hide()
+            self.fold:Hide()
+        end
+    end
+    b:Lay(nil)
+    return b
+end

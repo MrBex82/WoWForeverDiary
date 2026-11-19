@@ -175,8 +175,11 @@ UI:RegisterView({
     build = function(host)
         local v = {}
 
-        -- the chapters and days
-        v.index = K.Card(host)
+        -- the open book: the chapters and days on the left page, the day on the right page
+        v.book = K.Spread(host)
+        -- in a narrow window the index lies on a card of its own over the page
+        v.indexCard = K.Card(host)
+        v.index = CreateFrame("Frame", nil, host)
         v.list = K.Report(v.index)
         v.list:SetPoint("TOPLEFT", v.index, "TOPLEFT", 0, 0)
         v.list:SetPoint("BOTTOMRIGHT", v.index, "BOTTOMRIGHT", 0, 52)
@@ -201,7 +204,7 @@ UI:RegisterView({
         v.jump:SetPoint("BOTTOMLEFT", v.index, "BOTTOMLEFT", 14, 12)
 
         -- the page
-        v.page = K.Card(host)
+        v.page = CreateFrame("Frame", nil, v.book)
         v.read = K.Report(v.page)
         v.read:SetPoint("TOPLEFT", v.page, "TOPLEFT", 14, -8)
         v.read:SetPoint("BOTTOMRIGHT", v.page, "BOTTOMRIGHT", -14, 8)
@@ -209,7 +212,7 @@ UI:RegisterView({
         v.read.scroll:SetFade("card")          -- more of the day below: the foot of the page fades
 
         -- below the page: the day before and after, where you are, the bookmark
-        v.foot = CreateFrame("Frame", nil, host)
+        v.foot = CreateFrame("Frame", nil, v.book)
         v.prev = K.Button(v.foot, L["Day before"], "secondary", function() v:Turn(-1) end)
         v.prev:AddArrow("left")
         v.nextB = K.Button(v.foot, L["Day after"], "secondary", function() v:Turn(1) end)
@@ -417,25 +420,42 @@ UI:RegisterView({
             self.narrow = narrow
             -- narrow: the index lies over the page while it is open, the foot has the buttons for it
             self.index:SetShown(not narrow or self.indexOpen)
-            self.index:SetFrameLevel(host:GetFrameLevel() + (narrow and 30 or 1))
             self.indexBtn:SetShown(narrow)
             self.jumpBtn:SetShown(narrow)
             self.indexBtn:SetActive(narrow and self.indexOpen)
-            local left = narrow and 14 or (iw + 28)
+            -- the book lies on the desk with a margin (room for its shadow on the right and below)
+            local book = self.book
+            book:ClearAllPoints()
+            book:SetPoint("TOPLEFT", host, "TOPLEFT", 14, -12)
+            book:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", -20, 18)
+            local BW, BH = W - 34, H - 30
+            local split = (not narrow) and (iw + 16) or nil
+            book:Lay(split)
+            self.indexCard:SetShown(narrow and self.indexOpen or false)
             self.index:ClearAllPoints()
-            self.index:SetPoint("TOPLEFT", host, "TOPLEFT", 14, -14)
-            self.index:SetPoint("BOTTOMLEFT", host, "BOTTOMLEFT", 14, narrow and 56 or 18)
-            self.index:SetWidth(narrow and min(iw + 40, W - 24) or iw)
+            if narrow then
+                self.index:SetParent(host)
+                self.index:SetPoint("TOPLEFT", host, "TOPLEFT", 14, -14)
+                self.index:SetPoint("BOTTOMLEFT", host, "BOTTOMLEFT", 14, 56)
+                self.index:SetWidth(min(iw + 40, W - 24))
+                self.indexCard:ClearAllPoints()
+                self.indexCard:SetAllPoints(self.index)
+                self.indexCard:SetFrameLevel(host:GetFrameLevel() + 29)
+            else
+                self.index:SetParent(book.left)
+                self.index:SetPoint("TOPLEFT", book.left, "TOPLEFT", 0, -4)
+                self.index:SetPoint("BOTTOMRIGHT", book.left, "BOTTOMRIGHT", -6, 4)
+            end
+            self.index:SetFrameLevel((narrow and host:GetFrameLevel() + 30) or (book:GetFrameLevel() + 2))
+            -- the right page: the day in a column of a good length to read, the foot at the bottom of the page
             local footH = 44
-            local avail = W - left - 22          -- room on the right for the shadow of the page and the edge of the desk
-            local pw = min(avail, floor(PAGE_W * k))
+            local rw = BW - (split or 0)
+            local pw = min(rw - 28, floor(PAGE_W * k))
             self.page:ClearAllPoints()
-            self.page:SetPoint("TOPLEFT", host, "TOPLEFT", left + floor((avail - pw) / 2), -14)
-            self.page:SetSize(pw, max(100, H - 32 - footH))
-            -- wide: the index and the day are the two pages of the open book
-            UI.SetSpread(host, (not narrow) and (iw + 21) or nil)
+            self.page:SetPoint("TOPLEFT", book.right, "TOPLEFT", floor((rw - pw) / 2), -4)
+            self.page:SetSize(pw, max(100, BH - 8 - footH))
             self.foot:ClearAllPoints()
-            self.foot:SetPoint("TOPLEFT", self.page, "BOTTOMLEFT", 0, -8)
+            self.foot:SetPoint("TOPLEFT", self.page, "BOTTOMLEFT", 0, -2)
             self.foot:SetSize(pw, footH - 8)
             self.prev:ClearAllPoints()
             self.prev:SetPoint("LEFT", self.foot, "LEFT", 0, 0)

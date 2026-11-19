@@ -149,9 +149,16 @@ function UI.CollectionView(def)
     UI.PART_VIEW[def.part or def.key] = UI.PART_VIEW[def.part or def.key] or def.key
     UI:RegisterView({
         key = def.key,
-        build = function(host)
+        build = function(outer)
+            -- the open book on the desk: the list on its left page, the report of a line on its right page;
+            -- everything of the view lies inside the book (host), with room for its shadow
+            local book = K.Spread(outer)
+            book:SetPoint("TOPLEFT", outer, "TOPLEFT", 10, -8)
+            book:SetPoint("BOTTOMRIGHT", outer, "BOTTOMRIGHT", -16, 14)
+            local host = CreateFrame("Frame", nil, book)
+            host:SetAllPoints(book)
             local CHIP0, SORT0 = def.chips and def.chips[1][1], def.sorts and def.sorts[1][1]
-            local V = { state = { chip = CHIP0, sort = SORT0, q = "" } }
+            local V = { state = { chip = CHIP0, sort = SORT0, q = "" }, book = book }
             -- what is chosen here is written into the place in the history (nothing while a route is laid out)
             local function note(k, v, default)
                 local cur = UI.Router.cur
@@ -269,8 +276,7 @@ function UI.CollectionView(def)
             V.emptyPlace:Hide()
 
             -- the column for the card
-            V.detail = K.Box(host, nil, nil)
-            K.Material(V.detail, "leaf")
+            V.detail = CreateFrame("Frame", nil, host)
             V.detail:SetPoint("TOPRIGHT", 0, 0)
             V.detail:SetPoint("BOTTOMRIGHT", 0, 0)
             V.detail:Hide()
@@ -289,7 +295,7 @@ function UI.CollectionView(def)
 
             -- a report of its own in the column: a card on the leather, written by def.detail
             if def.detail then
-                V.sheet = K.Card(V.dock)
+                V.sheet = CreateFrame("Frame", nil, V.dock)
                 V.sheet:SetPoint("TOPLEFT", 10, 0)
                 V.sheet:SetPoint("BOTTOMRIGHT", -10, 10)
                 V.report = K.Report(V.sheet)
@@ -427,7 +433,7 @@ function UI.CollectionView(def)
                 end
                 local lw = W - dw
                 -- a report beside the list: they are the two pages of the open book
-                UI.SetSpread(host, dw > 0 and lw or nil)
+                V.book:Lay(dw > 0 and lw or nil)
                 self.top:ClearAllPoints()
                 self.top:SetPoint("TOPLEFT", host, "TOPLEFT", 0, 0)
                 self.top:SetWidth(lw)
@@ -516,7 +522,7 @@ function UI.CollectionView(def)
             end
 
             function V:Layout(w, h)
-                self.w, self.h = w, h
+                self.w, self.h = w - 26, h - 22          -- inside the book
                 self:Arrange()
             end
 
