@@ -237,24 +237,9 @@ UI:RegisterView({
             for i, m in ipairs(WFD.C.marks or {}) do if m.day == self.day then return i end end
         end
         function v:ToggleMark()
-            local C = WFD.C
-            C.marks = C.marks or {}
-            local i = self:Marked()
-            if i then
-                UI.RemoveMark(i)
-            elseif #C.marks >= 12 then
-                UI:Notice(format(L["All %d bookmarks are in use. Remove one first."], 12))
-                return
-            else
-                C.marks[#C.marks + 1] = { day = self.day }
-                local n = #C.marks
-                UI:Notice(format(L["Bookmark set: %s"], format(L["Day %d"], self.day)), function()
-                    if C.marks[n] and C.marks[n].day == self.day then UI.RemoveMark(n) end
-                    self:PaintFoot()
-                end)
-            end
+            -- (the same as the button in the head bar: set or taken away, with undo in the note)
+            UI.ToggleMarkAt({ view = "diary", day = self.day })
             self:PaintFoot()
-            if UI.OnMarksChanged then UI:OnMarksChanged() end
         end
 
         function v:PaintFoot()

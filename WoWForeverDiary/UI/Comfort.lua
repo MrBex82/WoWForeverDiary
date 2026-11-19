@@ -51,6 +51,55 @@ function UI.MarkList()
     return out
 end
 
+-- the bookmark of a place on the desk, if there is one (a day of the diary by its day, every other place by its
+-- route, with what was chosen in it)
+local MAX_MARKS = 12
+local function markOf(route)
+    if not route then return nil end
+    for i, m in ipairs(WFD.C and WFD.C.marks or {}) do
+        if route.view == "diary" then
+            if m.day and m.day == route.day then return i end
+        elseif m.route and UI.Router.Same(m.route, route) then
+            return i
+        end
+    end
+end
+UI.MarkOf = markOf
+
+-- sets or takes away the bookmark of a place (the button in the head bar); both can be undone
+function UI.ToggleMarkAt(route)
+    local C = WFD.C
+    if not (C and route) then return end
+    C.marks = C.marks or {}
+    local i = markOf(route)
+    if i then UI.RemoveMark(i) return end
+    if #C.marks >= MAX_MARKS then
+        UI:Notice(format(L["All %d bookmarks are in use. Remove one first."], MAX_MARKS))
+        return
+    end
+    local mk
+    if route.view == "diary" then
+        if not route.day then return end
+        mk = { day = route.day }
+    else
+        local r = {}
+        for k, v in pairs(route) do
+            local t = type(v)
+            if t == "string" or t == "number" or t == "boolean" then r[k] = v end
+        end
+        mk = { route = r }
+    end
+    C.marks[#C.marks + 1] = mk
+    if UI.OnMarksChanged then UI:OnMarksChanged() end
+    UI:Notice(format(L["Bookmark set: %s"], markTitle(mk)), function()
+        local at = markOf(route)
+        if at then
+            table.remove(C.marks, at)
+            if UI.OnMarksChanged then UI:OnMarksChanged() end
+        end
+    end)
+end
+
 -- a bookmark taken away can be put back at its place from the note at the foot of the desk
 function UI.RemoveMark(i)
     local marks = WFD.C and WFD.C.marks

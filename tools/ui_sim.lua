@@ -789,6 +789,24 @@ step("tasks and goals", function()
     found.box:Click()
     WFD.C.myGoals = nil
 end)
+-- every place can be bookmarked from the head bar, with what was chosen in it; undo takes it away again
+step("bookmark any view", function()
+    local Rt = UI.Router
+    WFD.C.marks = {}
+    UI:OpenShell({ view = "fates", chip = "nemesis" })
+    UI.shell.mark:Click()
+    if #WFD.C.marks ~= 1 or not WFD.C.marks[1].route or WFD.C.marks[1].route.chip ~= "nemesis" then error("the place was not bookmarked") end
+    if not UI.shell.mark.active then error("the button does not show the bookmark") end
+    UI:OpenShell({ view = "start" })
+    UI.MarkList()[1].go()
+    if Rt.cur.view ~= "fates" or Rt.cur.chip ~= "nemesis" then error("the bookmark did not lead back with its chip") end
+    UI.shell.mark:Click()
+    if #WFD.C.marks ~= 0 then error("the second click did not take the bookmark away") end
+    UI.shell.notice.act:Click()
+    if #WFD.C.marks ~= 1 then error("undo did not bring the bookmark back") end
+    WFD.C.marks = {}
+    UI:OnMarksChanged()
+end)
 -- a text cut short shows the whole row as a tooltip, a whole one shows none
 step("full text", function()
     local K = UI.Kit

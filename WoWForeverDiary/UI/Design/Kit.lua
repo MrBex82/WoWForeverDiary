@@ -114,6 +114,9 @@ local SHAPES = {
     plus = { { 0, 0, 0.7, 0 }, { 0, 0, 0.7, pi / 2 } },
     minus = { { 0, 0, 0.7, 0 } },
     menu = { { 0, 0.24, 0.7, 0 }, { 0, 0, 0.7, 0 }, { 0, -0.24, 0.7, 0 } },
+    -- a ribbon of a bookmark: two sides, the top, and the notch at its foot
+    mark = { { -0.2, 0.06, 0.72, pi / 2 }, { 0.2, 0.06, 0.72, pi / 2 }, { 0, 0.42, 0.42, 0 },
+        { -0.1, -0.36, 0.3, R45 }, { 0.1, -0.36, 0.3, -R45 } },
 }
 
 function K.Glyph(parent, shape, size, key)

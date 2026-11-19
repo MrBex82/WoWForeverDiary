@@ -256,7 +256,13 @@ function UI:RefreshRail()
 
     S.fold.glyph:SetShape(narrow and "right" or "left")
 end
-function UI:OnMarksChanged() self:RefreshRail() end
+-- a bookmark set or taken away: the register, the button in the head bar and the foot of the diary follow
+function UI:OnMarksChanged()
+    self:RefreshRail()
+    self:RefreshHead()
+    local d = views.diary
+    if d and d.host:IsShown() and d.PaintFoot then d:PaintFoot() end
+end
 
 ------------------------------------------------------------------------
 -- The head bar: back, forward, where you are
@@ -281,6 +287,10 @@ function UI:RefreshHead()
     S.title:SetPoint("RIGHT", S.search, "LEFT", -12, 0)
     S.gear:SetActive(cur and cur.view == "settings")
     S.help:SetActive(cur and cur.view == "help")
+    -- the bookmark of this place: lit when there is one; not for the settings and the help
+    local markable = cur and cur.view ~= "settings" and cur.view ~= "help" and (cur.view ~= "diary" or cur.day ~= nil)
+    S.mark:SetShown(markable and true or false)
+    S.mark:SetActive(markable and UI.MarkOf and UI.MarkOf(cur) ~= nil)
 end
 
 ------------------------------------------------------------------------
@@ -572,7 +582,7 @@ local function layout()
     S.narrow = (w < NARROW_AT) or WFD.S.navCollapsed and true or false
     local rw = S.narrow and RAIL_NARROW or UI.RailWidth()
     S.rail:SetWidth(rw)
-    S.search:SetWidth(max(160, min(300, w - rw - 520)))
+    S.search:SetWidth(max(160, min(300, w - rw - 556)))
     UI:RefreshRail()
     local cur = R.cur and views[R.cur.view]
     if cur and cur.Layout then cur:Layout(contentSize()) end
@@ -648,8 +658,12 @@ function UI:BuildShell()
         if R.cur and R.cur.view == "help" then R.Back() else R.Go({ view = "help" }) end
     end)
     S.help:SetPoint("RIGHT", S.gear, "LEFT", -6, 0)
+    S.mark = K.IconButton(top, "mark", nil, function() UI.ToggleMarkAt(R.cur) end)
+    K.Tip(S.mark, function() return UI.MarkOf(R.cur) and L["Remove the bookmark"] or L["Set a bookmark"] end,
+        function() return { L["Bookmarks stand at the foot of the register."] } end)
+    S.mark:SetPoint("RIGHT", S.help, "LEFT", -6, 0)
     S.search = buildSearch(top)
-    S.search:SetPoint("RIGHT", S.help, "LEFT", -10, 0)
+    S.search:SetPoint("RIGHT", S.mark, "LEFT", -10, 0)
     S.title:SetPoint("RIGHT", S.search, "LEFT", -12, 0)
 
     -- the register
