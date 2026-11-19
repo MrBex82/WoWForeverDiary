@@ -453,17 +453,28 @@ end
 function K.Segmented(parent, items, get, set)
     local f = CreateFrame("Frame", nil, parent)
     f.buttons = {}
+    -- the buttons side by side; where they would run over maxW (big writing, a narrow page) they go on in a
+    -- second row
     function f:Refresh()
         local cur = get()
-        local x = 0
+        local x, y, widest = 0, 0, 0
+        local bh = self.buttons[1] and self.buttons[1]:GetHeight() or 30
         for _, b in ipairs(self.buttons) do
             b.style = (b.value == cur) and "primary" or "secondary"
             paintButton(b)
+            local bw = b:GetWidth()
+            if self.maxW and x > 0 and x + bw > self.maxW then x, y = 0, y + bh + 6 end
             b:ClearAllPoints()
-            b:SetPoint("TOPLEFT", self, "TOPLEFT", x, 0)
-            x = x + b:GetWidth() - 1
+            b:SetPoint("TOPLEFT", self, "TOPLEFT", x, -y)
+            x = x + bw - 1
+            widest = max(widest, x + 1)
         end
-        self:SetSize(max(1, x + 1), self.buttons[1] and self.buttons[1]:GetHeight() or 30)
+        self:SetSize(max(1, widest), y + bh)
+    end
+    function f:Measure(w)
+        self.maxW = w
+        self:Refresh()
+        return self:GetHeight()
     end
     for i, it in ipairs(items) do
         local b = K.Button(f, it[2], "secondary", function()

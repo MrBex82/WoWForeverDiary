@@ -264,6 +264,10 @@ UI:RegisterView({
             -- shown only where it fits whole between the buttons (larger writing, a narrow window)
             local room = (self.foot:GetWidth() or 0) - self.prev:GetWidth() - self.nextB:GetWidth() - self.mark:GetWidth() - 36 - (self.narrow and 70 or 0)
             self.where:SetShown(self.where:GetStringWidth() <= room)
+            -- very narrow (big writing, a small window): the bookmark stays in the head bar, its button here goes
+            local fw = self.foot:GetWidth() or 0
+            self.mark:SetShown(fw <= 0 or self.prev:GetWidth() + self.nextB:GetWidth() + self.mark:GetWidth() + 24
+                + (self.narrow and 70 or 0) <= fw)
         end
 
         ------------------------------------------------------------------------

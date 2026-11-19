@@ -80,11 +80,32 @@ local function newCard(parent)
     function c:Measure(w)
         self:SetWidth(w)
         local right = max(self.stat:GetStringWidth(), self.new:GetStringWidth())
-        self.name:SetWidth(max(60, w - PAD * 2 - 56 - right - 10))
+        local room = w - PAD * 2 - 56
+        -- the figure beside the name, or (a long figure in a narrow card, big writing) below it
+        local below = room - right - 10 < min(self.name:GetStringWidth(), 120)
+        self.stat:ClearAllPoints()
+        self.new:ClearAllPoints()
+        local top = PAD + 44
+        if below then
+            self.name:SetWidth(room)
+            self.stat:SetJustifyH("LEFT")
+            self.stat:SetPoint("TOPLEFT", self.name, "BOTTOMLEFT", 0, -4)
+            self.new:SetJustifyH("LEFT")
+            self.new:SetPoint("TOPLEFT", self.stat, "BOTTOMLEFT", 0, -3)
+            local h = 2 + self.name:GetStringHeight() + 4 + self.stat:GetStringHeight()
+                + (((self.new:GetText() or "") ~= "") and (3 + self.new:GetStringHeight()) or 0)
+            top = max(top, PAD + h)
+        else
+            self.name:SetWidth(max(60, room - right - 10))
+            self.stat:SetJustifyH("RIGHT")
+            self.stat:SetPoint("TOPRIGHT", -PAD, -PAD - 2)
+            self.new:SetJustifyH("RIGHT")
+            self.new:SetPoint("TOPRIGHT", self.stat, "BOTTOMRIGHT", 0, -3)
+        end
         self.sub:ClearAllPoints()
-        self.sub:SetPoint("TOPLEFT", self, "TOPLEFT", PAD, -(PAD + 44 + 12))
+        self.sub:SetPoint("TOPLEFT", self, "TOPLEFT", PAD, -(top + 12))
         self.sub:SetWidth(w - 2 * PAD)
-        local h = PAD + 44 + 12 + self.sub:GetStringHeight() + PAD
+        local h = top + 12 + self.sub:GetStringHeight() + PAD
         return max(h, PAD + 44 + PAD)
     end
     return c
