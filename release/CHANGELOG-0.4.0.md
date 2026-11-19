@@ -6,8 +6,7 @@ changed since 0.3.5, in short.
 ## English
 
 **Still a book**
-- Every part lies in an open book on the desk: two pages with a fold between them, the leaves below, a tab in
-  the colour of each group at its edge. The diary has its chapters on the left page and the day on the right,
+- Every part lies in an open book on the desk: two pages with a fold between them and the leaves below. The diary has its chapters on the left page and the day on the right,
   every list its entries on the left and the open one on the right.
 - The leaves turn when another page opens (it can be switched off under Appearance).
 
@@ -46,8 +45,8 @@ changed since 0.3.5, in short.
 ## Deutsch
 
 **Weiter ein Buch**
-- Jeder Teil liegt in einem aufgeschlagenen Buch auf dem Tisch: zwei Seiten mit dem Falz dazwischen, die Blätter
-  darunter, am Rand ein Reiter in der Farbe jeder Gruppe. Im Tagebuch stehen links die Kapitel und rechts der
+- Jeder Teil liegt in einem aufgeschlagenen Buch auf dem Tisch: zwei Seiten mit dem Falz dazwischen und den Blättern
+  darunter. Im Tagebuch stehen links die Kapitel und rechts der
   Tag, in jeder Liste links die Einträge und rechts der geöffnete.
 - Beim Wechsel der Seite wird umgeblättert (lässt sich unter Aussehen abschalten).
 
