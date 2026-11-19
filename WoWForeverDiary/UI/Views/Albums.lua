@@ -147,7 +147,7 @@ UI.CollectionView({
             f:SetEntry(e, nil, e.zone)
         end,
     },
-    cardKind = "creature",
+    detail = function(rp, id) UI.CreatureReport(rp, id) end,          -- (Cards.lua)
     keyOf = function(e) if not e.hint then return e.id end end,
     empty = function(state)
         if next(WFD.C.mobs) == nil then return { icon = UI.Icon("bestiary"), title = L["Nothing here yet."], hint = L["Every creature you slay gets its card here: where it lives, how often it fell, what it left behind."], button = { L["Hunting grounds"], UI.PartRoute("huntgrounds") } } end

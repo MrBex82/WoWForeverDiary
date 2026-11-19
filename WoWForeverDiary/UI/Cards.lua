@@ -300,6 +300,55 @@ end
 -- marks for one kind of creature: always one more to reach
 local MARKS = { 5, 25, 100, 250, 500, 1000 }
 
+-- the wanted poster as a report in the column of the bestiary, written for its width
+function UI.CreatureReport(rp, id)
+    local C = WFD.C
+    local m = C.mobs and C.mobs[id]
+    if not m then return end
+    local r = rarityOf(m)
+    local R = UI.Router
+    rp:Kicker(L["WANTED"])
+    rp:Title(m.name or "?")
+    rp:Chips({ { L[r.label], "gold" }, { format(L["Level %s"], levelText(m)), "ink" }, m.ctype and { m.ctype, "soft" } or nil })
+    rp:Model(id, 170, type(id) ~= "number" and L["In this place the game keeps secret what the creatures look like."] or nil)
+    rp:Text(WFD:Quote(WFD:MarginNote(id, m)), "soft", "body")
+    local rank, count = 1, 0
+    for _, o in pairs(C.mobs) do
+        count = count + 1
+        if o.kills > m.kills then rank = rank + 1 end
+    end
+    local nem = C.nemesis and C.nemesis[m.name or ""]
+    rp:Tiles({ { m.kills, L["Slain"], nil, "neg" }, { "#" .. rank, format(L["of %d kinds"], count) },
+        { nem and nem.n or 0, L["Killed you"],
+            nem and function() R.Go({ view = "fates", chip = "nemesis", key = "n:" .. m.name }) end, nem and "neg" or nil } }, 3)
+    -- the next mark for this kind
+    local prev, nextMark = 0, nil
+    for _, mk in ipairs(MARKS) do
+        if m.kills < mk then nextMark = mk break end
+        prev = mk
+    end
+    if nextMark then
+        rp:Text(format(L["Next mark: %d slain"], nextMark), "gold", "small", 4)
+        rp:Progress((m.kills - prev) / (nextMark - prev), m.kills .. " / " .. nextMark)
+    else
+        rp:Text(L["Every mark reached"], "gold", "small", 8)
+    end
+    -- where it lives, and when
+    local map = m.zone and C.zoneMaps and C.zoneMaps[m.zone]
+    if m.zone then
+        rp:Link(L["Seen in"] .. " " .. m.zone, nil, type(map) == "number" and function() R.Go({ view = "world", map = map }) end or nil,
+            type(map) == "number" and L["Click for the map of this region."] or nil)
+    end
+    local fd = m.first and WFD:DayIndex(m.first)
+    rp:DayLink(fd, m.first, L["First kill"] .. (m.fpl and ("  -  " .. format(L["Level %s"], tostring(m.fpl))) or ""))
+    if m.last and m.last ~= m.first then rp:DayLink(WFD:DayIndex(m.last), m.last, L["Last kill"]) end
+    if m.best then
+        rp:Head(L["Best loot"])
+        local q = WFD.qualityColors[m.bestQ or 1] or WFD.qualityColors[1]
+        rp:Icons({ { WFD:ItemIcon(m.best) or UI.Icon("loot"), { q[1], q[2], q[3] }, m.best } })
+    end
+end
+
 local function renderCreature(card, id)
     local C = WFD.C
     local m = C.mobs[id]
@@ -718,7 +767,7 @@ function UI:FitDockedCard()
 end
 
 -- kinds whose card is a report in the column of their view now (written for its width, not scaled down)
-local REPORT_VIEW = { person = "people" }
+local REPORT_VIEW = { person = "people", creature = "bestiary" }
 
 function UI:ShowCard(kind, key)
     if not self.holder then return end
