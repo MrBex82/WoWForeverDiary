@@ -10,6 +10,36 @@ local max, min, format = math.max, math.min, string.format
 local PAD, GAP = 16, 14
 local MAX_GOALS = 10
 
+-- Where a task is taken on: the part of the desk that shows what it counts (kills: the bestiary, a landmark: the
+-- landmarks ...). The tasks of the week and the month (wkills, mkm ...) lead where those of the day do.
+local TASK_PART = {
+    kills = { view = "bestiary", sort = "last" }, quests = { view = "quests", chip = "open" }, people = { view = "people", sort = "new" },
+    places = "atlas", km = "atlas", loot = "treasures", landmark = "landmarks", landmarks = "landmarks", region = "atlas",
+    regions = "atlas", honours = "honour", dungeon = "runs",
+}
+function UI.TaskGo(task)
+    local k = task and task.k
+    if not k then return nil end
+    local to = TASK_PART[k] or TASK_PART[(k:gsub("^[wm]", ""))]
+    if not to then return nil end
+    local route = type(to) == "table" and to or UI.PartRoute(to)
+    return function() R.Go(route) end, UI.PartLabel(route.view == "world" and "atlas" or (type(to) == "string" and to or route.view))
+end
+
+-- a task line that leads where the task is taken on: lights up, tells where in its tooltip
+function UI.TaskLink(r)
+    r:SetScript("OnEnter", function(self)
+        if not self.go then return end
+        self:SetSurface("hover")
+        K.ShowTip(self, self.text:GetText(), { { format(L["Click: %s"], self.where or ""), 0.5, 0.8, 1 } }, "ANCHOR_RIGHT")
+    end)
+    r:SetScript("OnLeave", function(self) self:SetSurface(nil) GameTooltip:Hide() end)
+    r:SetScript("OnClick", function(self) if self.go then self.go() end end)
+    function r:SetTask(task)
+        self.go, self.where = UI.TaskGo(task)
+    end
+end
+
 -- a card with a heading; lines are added by the view
 local function card(parent, title)
     local c = K.Card(parent)
@@ -21,7 +51,8 @@ end
 
 -- one task: a box (ticked when done), the text, below it a bar with the figures
 local function taskLine(parent)
-    local r = CreateFrame("Frame", nil, parent)
+    local r = K.Box(parent, nil, nil, "Button")
+    UI.TaskLink(r)
     r.box = K.Box(r, nil, "muted")
     r.box:SetSize(18, 18)
     r.box:SetPoint("TOPLEFT", 0, 0)
@@ -146,26 +177,16 @@ UI:RegisterView({
         local area = scroll.content
 
         -- the day
+        -- the day: read in full on Start; here only how far it is and the runs of days
         local day = card(area, L["Tasks of the day"])
-        day.lines = {}
         day.tiles = tilesRow(day, 3)
+        day.start = K.Button(day, L["The tasks of the day on Start"], "ghost", function() R.Go({ view = "start" }) end)
+        day.start:AddArrow("right")
         function day:Fill()
             local tasks = WFD.TodayChallenges and WFD:TodayChallenges()
             local list = tasks and tasks.list or {}
-            local today = WFD:DayIndex()
             local doneN = 0
-            for i, task in ipairs(list) do
-                local l = self.lines[i] or taskLine(self)
-                self.lines[i] = l
-                local done = tasks.done[i] and true or false
-                if done then doneN = doneN + 1 end
-                local val, gl = WFD:ChallengeProgress(today, task)
-                l:Set(WFD:ChallengeText(task), done, gl > 1 and (WFD:TaskValueText(task, val) .. " / " .. gl) or nil,
-                    gl > 1 and val / max(1, gl) or nil, "pos")
-                l:Show()
-            end
-            for i = #list + 1, #self.lines do self.lines[i]:Hide() end
-            self.n = #list
+            for i in ipairs(list) do if tasks.done[i] then doneN = doneN + 1 end end
             self.head:Set(L["Tasks of the day"], #list > 0 and (doneN .. " / " .. #list) or nil)
             local full, total, best = WFD:ChallengeStats()
             self.tiles:Set({ { full, L["Perfect days"] }, { best, L["Longest run"] }, { total, L["Tasks done"] } })
@@ -173,16 +194,12 @@ UI:RegisterView({
         function day:Measure(w)
             self:SetWidth(w)
             local y = PAD + 18 + 12
-            for i = 1, self.n or 0 do
-                local l = self.lines[i]
-                l:ClearAllPoints()
-                l:SetPoint("TOPLEFT", self, "TOPLEFT", PAD, -y)
-                y = y + l:Measure(w - 2 * PAD) + 8
-            end
-            y = y + 6
             self.tiles:ClearAllPoints()
             self.tiles:SetPoint("TOPLEFT", self, "TOPLEFT", PAD, -y)
-            return y + self.tiles:Measure(w - 2 * PAD) + PAD
+            y = y + self.tiles:Measure(w - 2 * PAD) + 10
+            self.start:ClearAllPoints()
+            self.start:SetPoint("TOPLEFT", self, "TOPLEFT", PAD - 8, -y)
+            return y + self.start:GetHeight() + PAD - 4
         end
 
         -- the week and the month
@@ -200,6 +217,7 @@ UI:RegisterView({
                 self.head:Set(L["Task of the week"], format(L["Days %d-%d"], from, to))
                 local val, gl = WFD:WeeklyProgress(w, wk.task)
                 self.week:Set(WFD:WeeklyText(wk.task), wk.done, WFD:TaskValueText(wk.task, val) .. " / " .. gl, val / max(1, gl), "gold")
+                self.week:SetTask(not wk.done and wk.task or nil)
             end
             self.week:SetShown(self.hasWeek)
             local mo, m
@@ -210,6 +228,7 @@ UI:RegisterView({
                 self.monthHead:Set(L["Task of the month"], format(L["Days %d-%d"], from, to))
                 local val, gl = WFD:MonthlyProgress(m, mo.task)
                 self.month:Set(WFD:MonthlyText(mo.task), mo.done, WFD:TaskValueText(mo.task, val) .. " / " .. gl, val / max(1, gl), "gold")
+                self.month:SetTask(not mo.done and mo.task or nil)
             end
             self.monthHead:SetShown(self.hasMonth)
             self.month:SetShown(self.hasMonth)
@@ -266,28 +285,52 @@ UI:RegisterView({
                 if g.done then doneN = doneN + 1 end
                 local r = self.rows[i]
                 if not r then
-                    r = CreateFrame("Button", nil, self)
-                    r.box = K.Box(r, nil, "muted")
+                    -- the box ticks the goal off, a click on the text edits it, the cross removes it (with undo)
+                    r = K.Box(self, nil, nil, "Button")
+                    r.box = K.Box(r, nil, "muted", "Button")
                     r.box:SetSize(18, 18)
                     r.box:SetPoint("LEFT", 0, 0)
-                    r.box:EnableMouse(false)
+                    r.box:SetScript("OnClick", function()
+                        local gg = WFD.C.myGoals[r.index]
+                        if gg then gg.done = not gg.done or nil end
+                        v:Refresh()
+                    end)
+                    K.Tip(r.box, L["Tick off"])
                     r.tick = K.Glyph(r.box, "check", 14, "pos")
                     r.tick:SetPoint("CENTER")
                     r.text = K.Text(r, "body", "ink")
                     r.text:SetPoint("LEFT", r.box, "RIGHT", 10, 0)
                     r.text:SetWordWrap(false)
                     r.del = K.IconButton(r, "close", { L["Remove this goal"] }, function(b)
-                        table.remove(WFD.C.myGoals, b.index)
+                        local list, at = WFD.C.myGoals, b.index
+                        local gone = table.remove(list, at)
                         v:Refresh()
+                        if gone then
+                            UI:Notice(format(L["Goal removed: %s"], gone.text), function()
+                                table.insert(list, min(at, #list + 1), gone)
+                                v:Refresh()
+                            end)
+                        end
                     end, 24)
                     r.del:SetFlat(true)
                     r.del:SetPoint("RIGHT", 0, 0)
                     r:SetHeight(28)
-                    K.FullTip(r, "ANCHOR_RIGHT", r.text)
+                    r:SetScript("OnEnter", function(s)
+                        s:SetSurface("hover")
+                        K.ShowTip(s, s.text:GetText(), { { L["Click to edit."], 0.5, 0.8, 1 } }, "ANCHOR_RIGHT")
+                    end)
+                    r:SetScript("OnLeave", function(s) s:SetSurface(nil) GameTooltip:Hide() end)
                     r:SetScript("OnClick", function(b)
                         local gg = WFD.C.myGoals[b.index]
-                        if gg then gg.done = not gg.done or nil end
-                        v:Refresh()
+                        if not gg then return end
+                        UI:Ask({
+                            title = L["Edit the goal"], ok = OKAY or "OK", input = { max = 48, value = gg.text },
+                            onOk = function(text)
+                                text = strtrim(text or "")
+                                if text ~= "" then gg.text = text end
+                                v:Refresh()
+                            end,
+                        })
                     end)
                     self.rows[i] = r
                 end

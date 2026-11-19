@@ -762,6 +762,33 @@ step("settings in one step", function()
         end
     end
 end)
+-- tasks lead where they are taken on; an own goal removed comes back with undo
+step("tasks and goals", function()
+    for _, k in ipairs({ "kills", "wquests", "mkm", "landmark", "region", "loot", "people", "places" }) do
+        local go = UI.TaskGo({ k = k })
+        if not go then error("the task " .. k .. " leads nowhere") end
+        go()
+    end
+    WFD.C.myGoals = { { text = "Eins" }, { text = "Zwei" } }
+    UI:OpenShell(UI.PartRoute("tasks"))
+    local v = UI.ViewInstance("tasks")
+    -- the second goal's cross, then the undo of the note
+    local list = WFD.C.myGoals
+    local found
+    local function walk(f)
+        if found then return end
+        if f.del and f.index == 2 then found = f return end
+        for _, ch in ipairs({ f:GetChildren() }) do walk(ch) end
+    end
+    walk(v.host)
+    if not found then error("no row of an own goal") end
+    found.del:Click()
+    if #list ~= 1 then error("the goal was not removed") end
+    UI.shell.notice.act:Click()
+    if #list ~= 2 or list[2].text ~= "Zwei" then error("undo did not bring the goal back to its place") end
+    found.box:Click()
+    WFD.C.myGoals = nil
+end)
 -- a text cut short shows the whole row as a tooltip, a whole one shows none
 step("full text", function()
     local K = UI.Kit

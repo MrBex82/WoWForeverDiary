@@ -572,8 +572,15 @@ UI:RegisterView({
             })
         end)
         purse.dropGoal = K.Button(purse, L["Remove"], "ghost", function()
+            local was = WFD.C.goldGoal
             WFD.C.goldGoal = nil
             v:Refresh()
+            if was then
+                UI:Notice(L["The savings goal is removed."], function()
+                    WFD.C.goldGoal = was
+                    v:Refresh()
+                end)
+            end
         end)
         function purse:Fill(t, days)
             local bal = t.income - t.spend

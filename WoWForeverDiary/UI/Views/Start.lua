@@ -54,7 +54,9 @@ end
 
 -- a task with its box: ticked when done
 local function taskRow(parent)
-    local r = CreateFrame("Frame", nil, parent)
+    -- a task not yet done leads to where it is taken on (UI.TaskLink, Goals.lua)
+    local r = K.Box(parent, nil, nil, "Button")
+    UI.TaskLink(r)
     r.box = K.Box(r, nil, "muted")
     r.box:SetSize(16, 16)
     r.box:SetPoint("TOPLEFT", 0, -1)
@@ -208,6 +210,7 @@ function cards.tasks(parent)
             local v, gl = WFD:ChallengeProgress(today, task)
             local val = (not done and gl and gl > 1) and (WFD:TaskValueText(task, v) .. " / " .. gl) or nil
             r:Set(WFD:ChallengeText(task), done, val)
+            r:SetTask(not done and task or nil)
             r:Show()
         end
         for i = #list + 1, #self.rows do self.rows[i]:Hide() end
