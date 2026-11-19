@@ -156,7 +156,12 @@ UI.CollectionView({
         table.sort(done, function(a, b) return a.f.t < b.f.t end)
         local out = {}
         if state.chip ~= "open" and #done > 0 then out[#out + 1] = { title = L["Experienced"], right = tostring(#done), items = done } end
-        if state.chip ~= "done" and #open > 0 then out[#out + 1] = { title = L["Still to come"], right = tostring(#open), items = open } end
+        -- under All, what is still to come is one dense line (its own chip lists them one by one)
+        if state.chip == "all" and #open > 0 then
+            out[#out + 1] = { title = L["Still to come"], right = tostring(#open), items = { { openAll = open } } }
+        elseif state.chip == "open" and #open > 0 then
+            out[#out + 1] = { title = L["Still to come"], right = tostring(#open), items = open }
+        end
         return out
     end,
     row = {
@@ -164,6 +169,18 @@ UI.CollectionView({
         make = UI.ListRow,
         fill = function(row, item)
             local e = item.entry
+            if e.openAll then
+                local names = {}
+                for _, o in ipairs(e.openAll) do names[#names + 1] = L[o.def.label] end
+                row:Set({ icon = QUESTION, ring = { 0.46, 0.39, 0.30 }, name = format(L["%d still to come"], #names), nameKey = "muted",
+                    sub = table.concat(names, ", "),
+                    go = function() UI.Router.Go({ view = "firsts", chip = "open" }) end,
+                    tip = function(r)
+                        K.ShowTip(r, format(L["%d still to come"], #names), { table.concat(names, ", "),
+                            { L["Click to show them one by one."], 0.5, 0.8, 1 } }, "ANCHOR_RIGHT")
+                    end })
+                return
+            end
             if not e.f then
                 row:Set({ icon = QUESTION, ring = { 0.46, 0.39, 0.30 }, name = L[e.def.label], nameKey = "muted",
                     go = function() UI.SelectIn("firsts", e.def.key) end })
@@ -205,7 +222,7 @@ UI.CollectionView({
             end
         end
     end,
-    keyOf = function(e) return e.def.key end,
+    keyOf = function(e) return e.def and e.def.key end,
     empty = function(state)
         if state.chip == "done" and state.q == "" and next(WFD.C.firsts or {}) == nil then
             return L["No first time yet. They come by themselves while you play."]
@@ -300,7 +317,7 @@ UI.ReportView({
         rp:Text(L["The best and the worst of days"], "soft", "small", 12)
         for _, r in ipairs(records()) do
             local go = r.day and dayGo(r.day)
-            rp:Line({ name = r.value or "-", nameKey = r.value and (r.dark and "neg" or "ink") or "muted",
+            rp:Line({ name = r.value or L["Not set yet"], nameKey = r.value and (r.dark and "neg" or "ink") or "muted",
                 sub = UI.Upper(r.label), subKey = r.dark and "neg" or "gold",
                 icon = UI.IconPath({ r.icon }, "records"), col = r.dark and { 0.75, 0.16, 0.10 } or { 0.86, 0.62, 0.18 },
                 right = r.day and format(L["Day %d"], r.day) or nil, go = go,

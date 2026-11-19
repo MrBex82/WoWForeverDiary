@@ -292,7 +292,7 @@ UI.CollectionView({
     end,
     keyOf = function(f) return f.name end,
     empty = function()
-        if #WFD:Factions() == 0 then return L["Fills as soon as there is something to tell."] end
+        if #WFD:Factions() == 0 then return { icon = UI.Icon("banner"), title = L["Nothing here yet."], hint = L["A faction is noted as soon as your standing with it changes: help it, and its steps appear here."] } end
         return L["Nothing matches this choice."]
     end,
 })
@@ -654,7 +654,7 @@ UI:RegisterView({
         local chart = card(area, L["The purse over the days"])
         chart.chart = makeChart(chart)
         chart.none = K.Text(chart, "body", "soft")
-        chart.none:SetText("-")
+        chart.none:SetText(L["Every coin you earn or spend is drawn here, day by day."])
         function chart:Fill(days) self.days = days end
         function chart:Measure(w)
             self:SetWidth(w)
@@ -674,7 +674,7 @@ UI:RegisterView({
             local c = card(area, title)
             c.rows = {}
             c.none = K.Text(c, "body", "muted")
-            c.none:SetText("-")
+            c.none:SetText(L["Nothing here yet."])
             function c:Fill()
                 local sums, total = {}, 0
                 for _, day in pairs(WFD.C.days or {}) do

@@ -310,7 +310,7 @@ UI:RegisterView({
             local f = day and WFD:DayFacts(day)
             if not f then
                 rp:Gap(40)
-                rp:Text(L["The pages are still empty. Go and live an adventure!"], "soft", "body")
+                rp:Empty(UI.Icon("journal"), L["The pages are still empty. Go and live an adventure!"], L["The diary writes itself while you play: every day gets its page, told as a story."])
                 rp:End()
                 return
             end

@@ -254,6 +254,8 @@ function UI.CollectionView(def)
             V.list:SetKinds(kinds)
             V.empty = K.Text(host, "body", "soft", "CENTER")
             V.empty:SetSpacing(3)
+            V.emptyPlace = K.Empty(host)
+            V.emptyPlace:Hide()
 
             -- the column for the card
             V.detail = K.Box(host, nil, nil)
@@ -454,14 +456,26 @@ function UI.CollectionView(def)
                 end
                 self.list:SetItems(items, y + 20, self.keepScroll)
                 self.keepScroll = nil
-                self.empty:SetShown(n == 0)
-                -- nothing because of a filter: the way back to everything is a button below the words
+                -- nothing at all: an empty place that tells how it fills (def.empty gives a table); nothing because
+                -- of a filter: the words, and the way back to everything as a button below them
+                local said = n == 0 and (def.empty and def.empty(self.state) or L["Nothing here yet."]) or nil
+                local place = type(said) == "table" and not self:Filtered()
+                self.empty:SetShown(n == 0 and not place)
+                self.emptyPlace:SetShown(place)
                 self.emptyClear:SetShown(n == 0 and self:Filtered())
-                if n == 0 then
+                if place then
+                    local b = said.button
+                    self.emptyPlace:Set(said.icon, said.title, said.hint, b and b[1], b and function()
+                        if type(b[2]) == "table" then UI.Router.Go(b[2]) else b[2]() end
+                    end)
+                    self.emptyPlace:Measure(lw - 80)
+                    self.emptyPlace:ClearAllPoints()
+                    self.emptyPlace:SetPoint("TOP", sf, "TOP", 0, -40)
+                elseif n == 0 then
                     self.empty:SetWidth(max(100, lw - 80))
                     self.empty:ClearAllPoints()
                     self.empty:SetPoint("TOP", sf, "TOP", 0, -50)
-                    self.empty:SetText(def.empty and def.empty(self.state) or L["Nothing here yet."])
+                    self.empty:SetText(type(said) == "table" and (said.filtered or L["Nothing matches this choice."]) or said)
                     self.emptyClear:ClearAllPoints()
                     self.emptyClear:SetPoint("TOP", self.empty, "BOTTOM", 0, -14)
                 end

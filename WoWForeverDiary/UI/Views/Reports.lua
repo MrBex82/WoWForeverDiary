@@ -123,7 +123,7 @@ local function runReport(rp, key)
 
     -- the bosses, in the order they fell, each leading to its wanted poster
     rp:Head(L["Bosses"], tostring(#(r.bosses or {})))
-    if #(r.bosses or {}) == 0 then rp:Text("-", "muted", "body") end
+    if #(r.bosses or {}) == 0 then rp:Text(L["No boss fell this time."], "muted", "body") end
     for _, b in ipairs(r.bosses or {}) do
         local id = mobByName(b)
         if id then
@@ -140,7 +140,7 @@ local function runReport(rp, key)
     for _, link in ipairs(r.loot or {}) do
         icons[#icons + 1] = { WFD:ItemIcon(link) or UI.Icon("loot"), linkColour(link), link }
     end
-    if #icons == 0 then rp:Text("-", "muted", "body") else rp:Icons(icons) end
+    if #icons == 0 then rp:Text(L["Nothing worth keeping this time."], "muted", "body") else rp:Icons(icons) end
     rp:Gap(8)
 
     -- who fell
@@ -193,7 +193,7 @@ UI.CollectionView({
     detail = runReport,
     keyOf = function(e) return e.i end,
     empty = function()
-        if #(WFD.C.runs or {}) == 0 then return L["No dungeon visited yet. The depths are waiting."] end
+        if #(WFD.C.runs or {}) == 0 then return { icon = UI.Icon("runs"), title = L["No dungeon visited yet. The depths are waiting."], hint = L["Every visit to a dungeon gets its report: the group, the bosses, the loot, who fell."], button = { L["Landmarks"], UI.PartRoute("landmarks") } } end
         return L["Nothing matches this choice."]
     end,
 })

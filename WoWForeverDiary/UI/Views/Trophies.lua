@@ -198,7 +198,7 @@ UI.CollectionView({
     detail = treasureReport,
     keyOf = function(a) return a.id end,
     empty = function()
-        if #UI.TreasureList() == 0 then return L["No treasures found yet."] end
+        if #UI.TreasureList() == 0 then return { icon = UI.Icon("loot"), title = L["No treasures found yet."], hint = L["Every find of uncommon quality or better is kept here, with its day and who dropped it."] } end
         return L["Nothing matches this choice."]
     end,
 })

@@ -1207,6 +1207,57 @@ function K.Floating(name, w, h, title)
     return f
 end
 
+------------------------------------------------------------------------
+-- An empty place: a sign, what belongs here, how it fills, and where useful a button to start
+-- (f:Set(icon, title, hint, label, onClick); f:Measure(w) lays it out and gives its height)
+------------------------------------------------------------------------
+function K.Empty(parent)
+    local f = CreateFrame("Frame", nil, parent)
+    f.ring = UI.Circle(f, 52, { 1, 1, 1, 1 }, "ARTWORK", 0)
+    f.ring:SetPoint("TOP", 0, 0)
+    f.icon = f:CreateTexture(nil, "ARTWORK", nil, 2)
+    f.icon:SetSize(40, 40)
+    f.icon:SetPoint("CENTER", f.ring, "CENTER")
+    f.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    UI.Round(f.icon, f)
+    f.title = K.Text(f, "heading", "title", "CENTER")
+    f.hint = K.Text(f, "body", "soft", "CENTER")
+    f.hint:SetSpacing(3)
+    f.button = K.Button(f, "", "primary")
+    UI.Skin.Add(f, function(s) s.ring:SetVertexColor(UI.Tok("gold", 0.55)) end)
+    function f:Set(icon, title, hint, label, onClick)
+        self.icon:SetTexture(icon or UI.Icon("journal"))
+        self.title:SetText(title or "")
+        self.title:SetShown(title ~= nil and title ~= "")
+        self.hint:SetText(hint or "")
+        self.button:SetShown(label ~= nil and onClick ~= nil)
+        if label then self.button:SetLabel(label) self.button.onClick = function() onClick() end end
+    end
+    function f:Measure(w)
+        w = max(120, min(w, 480))
+        self:SetWidth(w)
+        local y = 52 + 12
+        if self.title:IsShown() then
+            self.title:SetWidth(w)
+            self.title:ClearAllPoints()
+            self.title:SetPoint("TOP", self, "TOP", 0, -y)
+            y = y + self.title:GetStringHeight() + 8
+        end
+        self.hint:SetWidth(w)
+        self.hint:ClearAllPoints()
+        self.hint:SetPoint("TOP", self, "TOP", 0, -y)
+        y = y + self.hint:GetStringHeight() + 14
+        if self.button:IsShown() then
+            self.button:ClearAllPoints()
+            self.button:SetPoint("TOP", self, "TOP", 0, -y)
+            y = y + self.button:GetHeight()
+        end
+        self:SetHeight(y)
+        return y
+    end
+    return f
+end
+
 -- an edit field in the style of the desk (one line)
 function K.Edit(parent, w)
     local e = K.Box(parent, "inset", "line", "EditBox")

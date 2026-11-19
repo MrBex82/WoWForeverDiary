@@ -172,6 +172,7 @@ function K.Report(parent)
             UI.Skin.Add(f, function(s) s.dia:SetVertexColor(UI.Tok("gold")) end)
             return f
         end),
+        empty = stock(function(p) return K.Empty(p) end),
         chip = stock(function(p)
             local b = K.Box(p, "inset", "line", "Button")
             b.text = K.Text(b, "small", "ink")
@@ -501,6 +502,17 @@ function K.Report(parent)
     end
 
     -- a few small diamonds in the middle: the end of an entry
+    -- an empty place in the middle: a sign, what belongs here, how it fills, a button to start (see K.Empty)
+    function rp:Empty(icon, title, hint, label, onClick)
+        local f = st.empty:Take(area)
+        f:Set(icon, title, hint, label, onClick)
+        local h = f:Measure(self.w)
+        f:ClearAllPoints()
+        f:SetPoint("TOP", area, "TOPLEFT", PAD + self.w / 2, -self.y - 12)
+        self.y = self.y + h + 24
+        return f
+    end
+
     function rp:Flourish()
         local f = st.flourish:Take(area)
         f:ClearAllPoints()
