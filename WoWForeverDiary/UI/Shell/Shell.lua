@@ -93,43 +93,14 @@ local function newItem(parent)
         if S.narrow or self.tip or self.text:IsTruncated() then K.ShowTip(self, self.label, self.tip, "ANCHOR_RIGHT") end
     end)
     b:SetScript("OnLeave", function(self) self.hover = nil self:Paint() GameTooltip:Hide() end)
-    -- the tab of the group: it reaches from the register over the edge of the book, like a thumb index; the one of
-    -- the open group is longer and lies on the page
-    local tab = CreateFrame("Button", nil, S.tabLayer)
-    tab:SetHeight(26)
-    tab.fill = tab:CreateTexture(nil, "ARTWORK", nil, 1)
-    tab.fill:SetTexture(UI.WHITE)
-    tab.fill:SetAllPoints()
-    tab.edge = tab:CreateTexture(nil, "ARTWORK", nil, 2)
-    tab.edge:SetTexture(UI.WHITE)
-    tab.edge:SetPoint("TOPRIGHT")
-    tab.edge:SetPoint("BOTTOMRIGHT")
-    tab.edge:SetWidth(2)
-    tab.shade = tab:CreateTexture(nil, "ARTWORK", nil, 3)
-    tab.shade:SetTexture(UI.WHITE)
-    tab.shade:SetPoint("BOTTOMLEFT")
-    tab.shade:SetPoint("BOTTOMRIGHT")
-    tab.shade:SetHeight(2)
-    tab:SetScript("OnClick", function() local fn = b:GetScript("OnClick") if fn then fn(b) end end)
-    tab:SetScript("OnEnter", function() b:GetScript("OnEnter")(b) end)
-    tab:SetScript("OnLeave", function() b:GetScript("OnLeave")(b) end)
-    b.tab = tab
-    b:HookScript("OnShow", function() tab:Show() end)
-    b:HookScript("OnHide", function() tab:Hide() end)
     function b:Paint()
-        local col0 = self.col or { 0.4, 0.3, 0.2 }
-        local lit = (self.active and 1.15) or (self.hover and 1.05) or 0.80
-        local cr, cg, cb = min(1, col0[1] * lit), min(1, col0[2] * lit), min(1, col0[3] * lit)
-        UI.Gradient(self.tab.fill, "HORIZONTAL", { cr * 0.75, cg * 0.75, cb * 0.75, 1 }, { cr, cg, cb, 1 })
-        self.tab.edge:SetVertexColor(min(1, cr * 1.3), min(1, cg * 1.3), min(1, cb * 1.3), 1)
-        self.tab.shade:SetVertexColor(0, 0, 0, 0.35)
-        self.tab:ClearAllPoints()
-        self.tab:SetPoint("LEFT", self, "RIGHT", 6, 0)
-        self.tab:SetWidth(self.active and 26 or ((self.hover and 20) or 16))
         local r, g, bb = UI.Tok("railGold")
         local a = self.active and 0.30 or (self.hover and 0.14 or 0)
         UI.Gradient(self.glow, "HORIZONTAL", { r, g, bb, a }, { r, g, bb, 0 })
         self.accent:SetShown(self.active and true or false)
+        -- the mark of the open entry in the colour of its group
+        local gc = self.col
+        if gc then self.accent:SetVertexColor(min(1, gc[1] * 1.3), min(1, gc[2] * 1.3), min(1, gc[3] * 1.3), 1) end
         K.Recolor(self.text, self.active and "railTitle" or "rail")
         local col = self.col or { 0.4, 0.3, 0.2 }
         local k = (self.active or self.hover) and 1.25 or 1
@@ -766,11 +737,6 @@ function UI:BuildShell()
     content:SetPoint("BOTTOMRIGHT", -1, 1)
     if content.SetClipsChildren then content:SetClipsChildren(true) end
     S.content = content
-    -- the tabs of the groups lie over the edge of the book
-    S.tabLayer = CreateFrame("Frame", nil, inner)
-    S.tabLayer:SetAllPoints(inner)
-    S.tabLayer:SetFrameLevel(inner:GetFrameLevel() + 60)
-    S.tabLayer:EnableMouse(false)
 
     -- the grip in the corner
     local grip = CreateFrame("Button", nil, f)
