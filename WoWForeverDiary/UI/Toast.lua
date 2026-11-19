@@ -171,7 +171,7 @@ local function layout()
     for _, f in ipairs(shown) do
         f:ClearAllPoints()
         f:SetPoint("TOP", stack, "TOP", 0, -y + (f.lift or 0))
-        y = y + TH + 8
+        y = y + (f:GetHeight() or TH) + 8
     end
 end
 
@@ -193,7 +193,7 @@ local function buildCard()
     f.kicker = K.Text(f, "section", "railGold")
     f.kicker:SetPoint("TOPLEFT", TX, -14)
     f.name = K.Text(f, "heading", "railTitle")
-    f.name:SetPoint("TOPLEFT", TX, -30)
+    f.name:SetPoint("TOPLEFT", f.kicker, "BOTTOMLEFT", 0, -3)
     f.name:SetWidth(NAME_W)
     f.name:SetWordWrap(false)
     f.metal = K.Text(f, "section", "railGold")
@@ -268,7 +268,12 @@ local function fill(f, ev)
     f.glow:SetVertexColor(d.col[1], d.col[2], d.col[3], 1)
     f.kicker:SetText(UI.Upper(d.kicker or ""))
     f.name:SetText(d.name or "")
-    UI.FitText(f.name, NAME_W, UI.FS(16), UI.FS(12))
+    f.points:SetText(d.points and ("+" .. d.points) or "")
+    -- the name ends where the points begin (they are wider with bigger writing)
+    local pw = d.points and (f.points:GetStringWidth() or 0) or 0
+    local nameW = min(NAME_W, TW - TX - 42 - pw - 10)
+    f.name:SetWidth(nameW)
+    UI.FitText(f.name, nameW, UI.FS(16), UI.FS(12))
     f.metal:SetText(UI.Upper(d.metal or ""))
     if d.metalCol then f.metal:SetTextColor(d.metalCol[1], d.metalCol[2], d.metalCol[3], 1) else K.Recolor(f.metal, "railGold") end
     local mw = (d.metal and d.metal ~= "") and (f.metal:GetStringWidth() + 10) or 0
@@ -289,7 +294,12 @@ local function fill(f, ev)
     f.hint:ClearAllPoints()
     f.hint:SetPoint("TOPLEFT", (d.metal and d.metal ~= "") and f.metal or f.name, "BOTTOMLEFT", 0, -5)
     f.hint:SetText(d.hint or "")
-    f.points:SetText(d.points and ("+" .. d.points) or "")
+    -- as tall as its lines: with bigger writing the card grows instead of the hint running out below it
+    local function hgt(fs) return (fs:GetText() or "") ~= "" and (fs:GetStringHeight() or 0) or 0 end
+    local h = 14 + hgt(f.kicker) + 3 + hgt(f.name)
+    if d.metal and d.metal ~= "" then h = h + 4 + hgt(f.metal) end
+    if (d.hint or "") ~= "" then h = h + 5 + hgt(f.hint) end
+    f:SetHeight(math.max(TH, math.ceil(h + 14)))
     f.go = d.go
 end
 
