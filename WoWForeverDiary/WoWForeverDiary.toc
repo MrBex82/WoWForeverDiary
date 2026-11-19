@@ -104,4 +104,5 @@ UI\Views\People.lua
 UI\Views\Chronicle.lua
 UI\Views\Keepsakes.lua
 UI\Views\Group.lua
+UI\Views\Notebook.lua
 UI\LayoutCheck.lua

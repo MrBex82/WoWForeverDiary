@@ -1,5 +1,5 @@
 -- The overview of a group on the travel desk: its crest and name, one card for every part (its figure, a line on
--- what it holds, what is new) and the notes you keep on the group. A click on a card opens the part.
+-- what it holds, what is new). A click on a card opens the part.
 local ADDON, WFD = ...
 local UI = WFD.UI
 local L = WFD.L
@@ -8,8 +8,6 @@ local R = UI.Router
 local floor, max, min, abs, format = math.floor, math.max, math.min, math.abs, string.format
 
 local PAD, GAP = 18, 14
--- the old key of a group (for its notes, kept in the book as "group:<key>")
-local OLD_KEY = { keep = "back" }
 -- the picture of a part that has no page in the book any more, and its line
 local VIEW_ICON = { bestiary = "beast", fishbook = "fish", treasures = "loot", honour = "honour", tasks = "task",
     collection = "album", people = "people", quests = "quests", atlas = "atlas", runs = "runs", fates = "skull",
@@ -132,69 +130,6 @@ UI:RegisterView({
         v.sub = K.Text(area, "body", "soft")
         v.rule = K.GoldRule(area)
 
-        -- the notes of the group
-        v.notes = K.Card(area)
-        v.notes.head = K.SectionHead(v.notes, L["Notes"])
-        v.notes.head:SetPoint("TOPLEFT", PAD, -PAD)
-        v.notes.head:SetPoint("RIGHT", v.notes, "RIGHT", -PAD, 0)
-        local eb = CreateFrame("EditBox", nil, v.notes)
-        eb:SetMultiLine(true)
-        eb:SetAutoFocus(false)
-        eb:SetMaxLetters(4000)
-        -- only the top is fixed: the box grows with the text, and the card and the page grow with it
-        eb:SetPoint("TOPLEFT", PAD, -PAD - 30)
-        eb:SetPoint("TOPRIGHT", -PAD, -PAD - 30)
-        UI.Skin.Add(eb, function(e)
-            local font, size = UI.TypeFont("body")
-            e:SetFont(font, size, "")
-            e:SetTextColor(UI.Tok("ink"))
-        end)
-        eb.hint = K.Text(v.notes, "body", "muted")
-        eb.hint:SetPoint("TOPLEFT", eb, "TOPLEFT", 0, 0)
-        eb.hint:SetText(L["Click here to write your own notes ..."])
-        local function hint(e) e.hint:SetShown((e:GetText() or "") == "" and not e:HasFocus()) end
-        eb:SetScript("OnEditFocusGained", hint)
-        eb:SetScript("OnEditFocusLost", hint)
-        eb:SetScript("OnEscapePressed", function(e) e:ClearFocus() end)
-        eb:SetScript("OnTextChanged", function(e, user)
-            hint(e)
-            if user and v.noteKey and WFD.C then
-                local t = e:GetText() or ""
-                WFD.C.notes = WFD.C.notes or {}
-                WFD.C.notes[v.noteKey] = (t ~= "") and t or nil
-            end
-        end)
-        -- a longer note makes the card taller (checked each frame while the box is shown, as the box grows a
-        -- frame after the text), and the page follows the cursor while writing
-        eb:SetScript("OnSizeChanged", function()
-            if abs(v:NotesHeight() - (v.notesH or 0)) >= 1 then v:Arrange() end
-        end)
-        eb:SetScript("OnCursorChanged", function(e, _, y, _, h)
-            if not e:HasFocus() then return end
-            v.cursorY, v.cursorH = y, h
-            C_Timer.After(0, function() v:KeepCursor() end)
-        end)
-        v.notes:EnableMouse(true)
-        v.notes:SetScript("OnMouseUp", function() eb:SetFocus() end)
-        v.edit = eb
-
-        function v:NotesHeight()
-            return max(170, (self.edit:GetHeight() or 0) + PAD * 2 + 30 + 10)
-        end
-        -- the line with the cursor stays in sight of the scrolling page
-        function v:KeepCursor()
-            local cy = self.cursorY
-            if not cy or not self.notesY then return end
-            local top = self.notesY + PAD + 30 - cy
-            local bottom = top + (self.cursorH or 16) + 8
-            local cur, vh = scroll:GetVerticalScroll(), scroll:GetHeight() or 0
-            if top < cur then
-                scroll:ScrollTo(top - 8)
-            elseif bottom > cur + vh then
-                scroll:ScrollTo(bottom - vh)
-            end
-        end
-
         function v:Fill()
             local g = UI.NAV_GROUP[self.group]
             if not g then return end
@@ -217,16 +152,12 @@ UI:RegisterView({
             for i = #parts + 1, #self.cards do self.cards[i]:Hide() end
             self.n = #parts
             self.sub:SetText(format(L["%d parts"], #parts) .. (new > 0 and ("  -  " .. format(L["%d new since you last read"], new)) or ""))
-            self.noteKey = "group:" .. (OLD_KEY[g.key] or g.key)
-            local text = WFD.C and WFD.C.notes and WFD.C.notes[self.noteKey] or ""
-            if not self.edit:HasFocus() then self.edit:SetText(text) end
-            hint(self.edit)
         end
 
         function v:Arrange()
             local BW = self.w or scroll:GetWidth() or 0
-            -- the open book, wide enough: the crest and the notes on the left page, the parts on the right page
-            local spread = BW >= 780 * UI.FK()
+            -- one page of the book: the crest, then the parts (the notes of the groups live in the notebook now)
+            local spread = false
             local half = floor(BW / 2)
             book:Lay(spread and half or nil)
             local W = (spread and half or BW) - 2 * 24
@@ -265,16 +196,7 @@ UI:RegisterView({
                 y = y + rowH + GAP
             end
             y = y + 6
-            local rightY = y
-            if spread then x0, y = 24, leftY end
-            self.notes:ClearAllPoints()
-            self.notes:SetPoint("TOPLEFT", area, "TOPLEFT", x0, -y)
-            self.notesY = y
-            self.notesH = self:NotesHeight()
-            self.notes:SetSize(W, self.notesH)
-            y = y + self.notesH + 20
-            if spread then y = max(y, rightY + 14) end
-            scroll:SetContentHeight(y)
+            scroll:SetContentHeight(y + 14)
         end
 
         function v:Refresh()

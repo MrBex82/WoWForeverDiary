@@ -230,7 +230,7 @@ local function isN(v) return v == nil or type(v) == "number" end
 local function looksLikeDiary(C)
     if type(C) ~= "table" or type(C.born) ~= "number" then return false end
     for _, k in ipairs({ "days", "mobs", "npcs", "quests", "events", "zones", "skills", "nemesis", "companions",
-        "traders", "rests", "runs", "firsts", "challenges", "capsules", "gather", "dayNotes",
+        "traders", "rests", "runs", "firsts", "challenges", "capsules", "gather", "dayNotes", "notebook",
         "catch", "catchZone", "tackle" }) do
         if not isT(C[k]) then return false end
     end

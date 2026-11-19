@@ -13,6 +13,7 @@ local UI = WFD.UI
 UI.NAV = {
     { key = "start", label = "Start", icon = "time", route = { view = "start" } },
     { key = "diary", label = "Diary", icon = "quill", parts = { "diary", "quests", "memoriam" } },
+    { key = "notebook", label = "Notebook", icon = "journal", route = { view = "notebook" } },
     { key = "chronicle", label = "Chronicle", icon = "records", old = "grp_chronicle",
         parts = { "milestones", "firsts", "records", "levels", "yearbook", "recap", "gallery" } },
     { key = "goals", label = "Goals and honour", icon = "album", old = "grp_goals", parts = { "tasks", "collection", "honour" } },

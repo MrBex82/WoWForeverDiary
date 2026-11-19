@@ -57,7 +57,7 @@ UI.TOKENS = TOKENS        -- the settings show a sample of every style in its ow
 UI.GROUP_COLOURS = {
     start = { 0.48, 0.30, 0.16 }, diary = { 0.48, 0.30, 0.16 }, chronicle = { 0.40, 0.20, 0.54 },
     goals = { 0.60, 0.44, 0.09 }, world = { 0.20, 0.42, 0.20 }, hunt = { 0.56, 0.12, 0.08 },
-    people = { 0.16, 0.32, 0.54 }, keep = { 0.37, 0.29, 0.20 },
+    people = { 0.16, 0.32, 0.54 }, keep = { 0.37, 0.29, 0.20 }, notebook = { 0.44, 0.38, 0.22 },
 }
 
 -- the current colours: one table that is changed in place, so a closure that reads UI.T.gold always paints

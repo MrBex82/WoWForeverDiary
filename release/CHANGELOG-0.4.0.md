@@ -9,6 +9,8 @@ changed since 0.3.5, in short.
 - Every part lies in an open book on the desk: two pages with a fold between them and the leaves below. The diary has its chapters on the left page and the day on the right,
   every list its entries on the left and the open one on the right.
 - The leaves turn when another page opens (it can be switched off under Appearance).
+- A notebook of your own in the register: as many pages as you like, each with a title, written like in an
+  editor with the numbers of the lines at the margin. The notes you kept on the groups moved into it.
 
 **Find everything quickly**
 - A window you can make as large as you like. On the left a register with every part, on top back and forward,
@@ -49,6 +51,8 @@ changed since 0.3.5, in short.
   darunter. Im Tagebuch stehen links die Kapitel und rechts der
   Tag, in jeder Liste links die Einträge und rechts der geöffnete.
 - Beim Wechsel der Seite wird umgeblättert (lässt sich unter Aussehen abschalten).
+- Ein eigenes Notizbuch im Register: so viele Seiten du willst, jede mit Titel, geschrieben wie in einem Editor
+  mit Zeilennummern am Rand. Die Notizen, die du bei den Gruppen hattest, sind dorthin umgezogen.
 
 **Alles schnell finden**
 - Ein Fenster, so groß du willst. Links ein Register mit allen Teilen, oben Zurück und Vor, wo du bist, und eine
