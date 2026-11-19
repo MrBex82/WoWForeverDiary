@@ -149,7 +149,7 @@ etwa 0,5 MB größer. Entschieden: keine eigene Schrift (siehe Entscheidungen).
 ## Rundgang 19.11.2026 (Phase 0, Leder, Cylinsis, 100 %)
 
 28 Aufnahmen liegen außerhalb des Repos (sie zeigen Charakter- und Realmnamen) in
-`D:\Git\WoW_Forever_Diary_Backupufnahmen-vor-tagebuch-20261119\`. Pergament und Modern fehlen noch.
+`D:/Git/WoW_Forever_Diary_Backup/aufnahmen-vor-tagebuch-20261119/`. Pergament und Modern fehlen noch.
 
 **Querschnitt (gilt für viele Teile):**
 - **Kachelreihe oben:** in 17 von 28 Teilen (Start, Questbuch, Meilensteine, Premieren, Stufen, Jahrbuch,
