@@ -21,12 +21,13 @@ changed since 0.3.4, in short.
 - Dungeon reports with the whole group, fate with your nemeses, a ledger with a chart of your purse.
 
 **One look everywhere**
-- Four styles that switch at once: leather and gold, parchment, modern, strong contrast. Writing up to 120 percent.
+- Four styles that switch at once: leather and gold, parchment, modern, strong contrast. Writing up to 150 percent, the window
+  grows with it. The notes can be drawn up to twice their size (settings, Pop-up notes).
 - Notes, the companion, the week in review and every small window share the same look.
 - Colours always come with a sign or a mark, and every style was checked for good contrast.
 
 **Fixed**
-- Everything fixed in 0.3.4 is in this version too.
+- Everything fixed in 0.3.4 and 0.3.5 is in this version too.
 - Flying over a region no longer gives it time or a first visit in its region chronicle. Flights are now kept
   apart from your footsteps and show paler on the world map. Flights from before this version still count as
   footsteps.
@@ -53,12 +54,13 @@ changed since 0.3.4, in short.
 - Dungeon-Berichte mit der ganzen Gruppe, Schicksal mit deinen Erzfeinden, ein Kassenbuch mit Kurve des Geldbeutels.
 
 **Überall ein Gesicht**
-- Vier Stile, die sofort wechseln: Leder und Gold, Pergament, Modern, Starker Kontrast. Schrift bis 120 Prozent.
+- Vier Stile, die sofort wechseln: Leder und Gold, Pergament, Modern, Starker Kontrast. Schrift bis 150 Prozent, das Fenster
+  wächst mit. Meldungen bis doppelt so groß (Einstellungen, Meldungen).
 - Meldungen, Begleiter, Wochenrückblick und jedes kleine Fenster haben denselben Stil.
 - Farben stehen immer zusammen mit einem Zeichen, und jeder Stil wurde auf guten Kontrast geprüft.
 
 **Behoben**
-- Alle Fehlerbehebungen aus 0.3.4 sind auch in dieser Version enthalten.
+- Alle Fehlerbehebungen aus 0.3.4 und 0.3.5 sind auch in dieser Version enthalten.
 - Wer über ein Gebiet fliegt, bekommt dort in der Gebietschronik keine Zeit und keinen ersten Besuch mehr. Flüge
   werden jetzt getrennt von deinen Fußwegen gespeichert und erscheinen auf der Weltkarte blasser. Flüge von vor
   dieser Version zählen weiter als Fußwege.

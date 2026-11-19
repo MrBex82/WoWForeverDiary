@@ -1398,3 +1398,4 @@ L["The diary writes itself while you play: every day gets its page, told as a st
 L["Bookmarks stand at the foot of the register."] = "Закладки находятся внизу указателя."
 L["Filter"] = "Фильтр"
 L["No longer read later"] = "Больше не читать позже"
+L["Size of the notes"] = "Размер заметок"

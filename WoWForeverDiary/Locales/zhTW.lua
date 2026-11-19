@@ -1387,3 +1387,4 @@ L["The diary writes itself while you play: every day gets its page, told as a st
 L["Bookmarks stand at the foot of the register."] = "書籤位於目錄的底部。"
 L["Filter"] = "篩選"
 L["No longer read later"] = "取消稍後閱讀"
+L["Size of the notes"] = "提示大小"

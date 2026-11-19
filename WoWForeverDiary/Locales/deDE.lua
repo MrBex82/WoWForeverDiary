@@ -1475,3 +1475,4 @@ L["The diary writes itself while you play: every day gets its page, told as a st
 L["Bookmarks stand at the foot of the register."] = "Lesezeichen stehen am Fuß des Registers."
 L["Filter"] = "Filter"
 L["No longer read later"] = "Nicht mehr später lesen"
+L["Size of the notes"] = "Größe der Meldungen"

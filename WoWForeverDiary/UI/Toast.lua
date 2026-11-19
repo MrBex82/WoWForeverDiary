@@ -147,6 +147,15 @@ local function setSize(factor)
     placeStack()
 end
 
+function UI:ToastSize() return sizeFactor() end
+
+-- the size chosen in the settings; the notes on the screen follow at once
+function UI:SetToastSize(factor)
+    if stack then setSize(factor)
+    elseif WFD.S then WFD.S.toastSize = factor end
+    if WFD.S and math.abs((WFD.S.toastSize or 1) - 1) < 0.001 then WFD.S.toastSize = nil end
+end
+
 -- back to the top of the screen, at the usual size
 function UI:ResetToastPlace()
     if WFD.S then WFD.S.toastPos, WFD.S.toastSize = nil, nil end

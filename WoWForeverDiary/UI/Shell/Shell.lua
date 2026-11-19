@@ -27,12 +27,20 @@ local function maxSize()
     return floor((UIParent:GetWidth() or 1600) / sc), floor((UIParent:GetHeight() or 900) / sc)
 end
 
+-- the smallest window: bigger with bigger writing (940x676 at 150 %), never bigger than the screen
+function UI.MinShellSize()
+    local g = 1 + (UI.FK() - 1) * 0.6
+    local mw, mh = maxSize()
+    return min(mw, floor(MIN_W * g + 0.5)), min(mh, floor(MIN_H * g + 0.5))
+end
+
 local function shellSize()
     local sz = WFD.S.shellSize
     local mw, mh = maxSize()
     local w = sz and sz[1] or DEF_W
     local h = sz and sz[2] or DEF_H
-    return max(MIN_W, min(mw, w)), max(MIN_H, min(mh, h))
+    local nw, nh = UI.MinShellSize()
+    return max(nw, min(mw, w)), max(nh, min(mh, h))
 end
 
 -- the holder is the size of the cover while the cover shows, the size of the desk otherwise
@@ -601,7 +609,8 @@ end
 local function layout()
     if not S then return end
     local w = UI.holder:GetWidth() or DEF_W
-    S.narrow = (w < NARROW_AT) or WFD.S.navCollapsed and true or false
+    -- the register grows with the writing, so it folds to its signs already in a wider window
+    S.narrow = (w < NARROW_AT + 2 * (UI.RailWidth() - RAIL_W)) or WFD.S.navCollapsed and true or false
     local rw = S.narrow and RAIL_NARROW or UI.RailWidth()
     S.rail:SetWidth(rw)
     S.search:SetWidth(max(160, min(300, w - rw - 556)))
@@ -740,8 +749,9 @@ function UI:BuildShell()
     grip:SetScript("OnMouseDown", function()
         if WFD.S.locked then return end
         local mw, mh = maxSize()
-        if h.SetResizeBounds then h:SetResizeBounds(MIN_W, MIN_H, mw, mh)
-        elseif h.SetMinResize then h:SetMinResize(MIN_W, MIN_H) h:SetMaxResize(mw, mh) end
+        local nw, nh = UI.MinShellSize()
+        if h.SetResizeBounds then h:SetResizeBounds(nw, nh, mw, mh)
+        elseif h.SetMinResize then h:SetMinResize(nw, nh) h:SetMaxResize(mw, mh) end
         h:StartSizing("BOTTOMRIGHT")
         S.sizing = true
     end)
@@ -786,7 +796,16 @@ function UI:BuildShell()
     end)
 
     f:Hide()
-    UI.OnRestyle(function() layout() UI:RefreshHead() end)
+    UI.OnRestyle(function()
+        -- bigger writing: a window below the new smallest size grows to it
+        if UI.inShell and UI.holder then
+            local w, hh = UI.holder:GetSize()
+            local nw, nh = UI.MinShellSize()
+            if (w or 0) < nw or (hh or 0) < nh then UI.holder:SetSize(max(w or 0, nw), max(hh or 0, nh)) end
+        end
+        layout()
+        UI:RefreshHead()
+    end)
     -- what was open when the window closed is where it opens again
     h:HookScript("OnHide", function()
         UI:KeepPlace()

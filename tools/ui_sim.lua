@@ -578,7 +578,7 @@ for _, theme in ipairs({ "parchment", "modern", "contrast", "codex" }) do
     step("theme " .. theme .. " book", function() UI.Router.Go(UI.PartRoute("bestiary")) end)
     step("theme " .. theme .. " start", function() UI:OpenStart() end)
 end
-for _, k in ipairs({ 1.1, 1.2, 1 }) do step("font " .. k, function() UI.SetFontScale(k) end) end
+for _, k in ipairs({ 1.1, 1.2, 1.3, 1.4, 1.5, 1 }) do step("font " .. k, function() UI.SetFontScale(k) end) end
 for _, size in ipairs({ { 760, 520 }, { 1400, 900 }, { 1080, 700 } }) do
     step("size " .. size[1], function()
         UI.holder:SetSize(size[1], size[2])
@@ -593,7 +593,7 @@ end
 for _, theme in ipairs({ "parchment", "modern", "contrast", "codex" }) do
     step("small big " .. theme, function()
         UI.SetTheme(theme)
-        UI.SetFontScale(1.2)
+        UI.SetFontScale(1.5)
         UI:OpenStart()
         UI.holder:SetSize(760, 520)
         UI.LayoutShell()

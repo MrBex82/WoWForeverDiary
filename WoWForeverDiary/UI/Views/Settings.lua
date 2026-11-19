@@ -112,6 +112,18 @@ function UI.SettingsSchema()
                 hint = L["Important: levels, bosses, rare creatures and finds, dungeons, honours and letters."] },
             { type = "toggle", label = L["Weekly look back at login"], flag = "recap" },
             { type = "toggle", label = L["A memory as a note at login"], flag = "memoryToast" },
+            { type = "choice", label = L["Size of the notes"],
+                options = { { 1, "100%" }, { 1.25, "125%" }, { 1.5, "150%" }, { 1.75, "175%" }, { 2, "200%" } },
+                get = function()
+                    -- a size set with the mouse wheel shows as the nearest step
+                    local v, best, d = UI:ToastSize(), 1, 9
+                    for _, k in ipairs({ 1, 1.25, 1.5, 1.75, 2 }) do
+                        if math.abs(v - k) < d then best, d = k, math.abs(v - k) end
+                    end
+                    return best
+                end,
+                set = function(v) UI:SetToastSize(v) end,
+                hint = L["Mouse wheel changes the size."] },
             { type = "buttons", label = L["Place of the notes"], buttons = {
                 { L["Show a note to move it"], function()
                     UI:Toast({ k = "memory", jubilee = true, when = L["Anniversary"], title = L["The diary's birthday"],
@@ -131,7 +143,7 @@ function UI.SettingsSchema()
                 hint = L["Leather and gold is the classic book. Modern is flat and calm, strong contrast makes all writing brighter."] .. " "
                     .. L["Parchment is bright, like old quest paper."] },
             { type = "choice", label = L["Size of the writing"],
-                options = { { 1, "100%" }, { 1.1, "110%" }, { 1.2, "120%" } },
+                options = { { 1, "100%" }, { 1.1, "110%" }, { 1.2, "120%" }, { 1.3, "130%" }, { 1.4, "140%" }, { 1.5, "150%" } },
                 get = function() return S().fontScale or 1 end, set = function(v) UI.SetFontScale(v) end },
         },
     },
