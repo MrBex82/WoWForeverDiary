@@ -257,7 +257,7 @@ local function build()
     f.points:SetPoint("TOPRIGHT", -18, -16)
     f.pointsLabel = shade(UI.Caps(top, "", 9, { 0.95, 0.80, 0.50, 1 }))
     f.pointsLabel:SetJustifyH("RIGHT")
-    f.pointsLabel:SetPoint("TOPRIGHT", -18, -44)
+    f.pointsLabel:SetPoint("TOPRIGHT", f.points, "BOTTOMRIGHT", 0, -2)
 
     -- a sheen that sweeps across once
     local clip = CreateFrame("Frame", nil, f)
@@ -446,7 +446,13 @@ function UI:NextToast()
     toast.glow:SetVertexColor(d.col[1], d.col[2], d.col[3], 1)
     toast.kicker:SetText(d.kicker:upper())
     toast.name:SetText(d.name)
-    UI.FitText(toast.name, NAME_W, 20, 14)
+    toast.points:SetText(d.points and ("+" .. d.points) or "")
+    toast.pointsLabel:SetText(d.points and L["Honour points"]:upper() or "")
+    -- the name ends where the points begin (they are wider with bigger writing)
+    local pw = d.points and math.max(toast.points:GetStringWidth() or 0, toast.pointsLabel:GetStringWidth() or 0) or 0
+    local nameW = math.min(NAME_W, TW - TX - 18 - pw - 10)
+    toast.name:SetWidth(nameW)
+    UI.FitText(toast.name, nameW, 20, 14)
     toast.metal:SetText((d.metal or ""):upper())
     toast.metal:SetTextColor(UI.col4(d.metalCol or c.gold))
     -- tier diamonds after the metal name
@@ -483,8 +489,6 @@ function UI:NextToast()
     toast:SetHeight(h)
     toast.sheen:SetHeight(h - 8)
     toast.sheen2:SetHeight(h - 8)
-    toast.points:SetText(d.points and ("+" .. d.points) or "")
-    toast.pointsLabel:SetText(d.points and L["Honour points"]:upper() or "")
     toast.ev = ev
     toast.phase, toast.t, toast.life = "in", 0, 0
     toast:SetAlpha(0)
