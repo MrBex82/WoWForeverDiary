@@ -1405,3 +1405,4 @@ L["Nothing worth keeping this time."] = "На этот раз ничего це�
 L["Talk to a merchant, a trainer or a quest giver: everyone you speak to gets a calling card."] = "Поговорите с торговцем, наставником или тем, кто даёт задания: каждый собеседник получает визитку."
 L["The diary writes itself while you play: every day gets its page, told as a story."] = "Дневник пишется сам, пока вы играете: каждый день получает свою страницу, рассказанную как история."
 L["Bookmarks stand at the foot of the register."] = "Закладки находятся внизу указателя."
+L["Filter"] = "Фильтр"

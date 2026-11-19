@@ -178,6 +178,17 @@ function UI.CollectionView(def)
                 b.key, b.minH = ch[1], 28
                 V.chips[#V.chips + 1] = b
             end
+            -- the chips folded into one button (a narrow window, big writing): a menu of them
+            V.filter = K.Button(V.top, "", "secondary", function(self)
+                local items = {}
+                for _, b in ipairs(V.chips) do items[#items + 1] = { b.key, b.label:GetText() } end
+                K.Menu(self, items, V.state.chip, function(key)
+                    for _, b in ipairs(V.chips) do if b.key == key then b:Click() end end
+                end)
+            end)
+            V.filter:AddArrow("down")
+            V.filter.minH = 28
+            V.filter:Hide()
             if def.search ~= false then
                 local e = K.Box(V.top, "inset", "line", "EditBox")
                 e:SetSize(floor(190 * UI.FK() + 0.5), 28)
@@ -378,10 +389,23 @@ function UI.CollectionView(def)
                     x = x + fw + (gapAfter or 6)
                     rowH = max(rowH, fh)
                 end
+                -- the chips; when they would need more than one row they fold into one button with a menu
+                local need = 0
+                for _, b in ipairs(self.chips) do need = need + b:GetWidth() + 4 end
+                local fold = #self.chips > 3 and need > w - 2 * PAD
+                self.filter:SetShown(fold)
                 for _, b in ipairs(self.chips) do
                     b.style = (b.key == self.state.chip) and "primary" or "secondary"
                     K.Repaint(b)
-                    put(b, 4)
+                    b:SetShown(not fold)
+                    if not fold then put(b, 4) end
+                end
+                if fold then
+                    local label
+                    for _, b in ipairs(self.chips) do if b.key == self.state.chip then label = b.label:GetText() end end
+                    self.filter.style = self.state.chip ~= CHIP0 and "primary" or "secondary"
+                    self.filter:SetLabel(L["Filter"] .. ": " .. (label or ""))
+                    put(self.filter, 4)
                 end
                 if #self.chips > 0 then x = x + 12 end
                 if self.search then

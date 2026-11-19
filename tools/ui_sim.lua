@@ -596,6 +596,29 @@ for _, size in ipairs({ { 760, 520 }, { 1400, 900 }, { 1080, 700 } }) do
         UI.LayoutShell()
     end)
 end
+-- the smallest window with the biggest writing, in every style: every part opens; the chips of a long list fold
+for _, theme in ipairs({ "parchment", "modern", "contrast", "codex" }) do
+    step("small big " .. theme, function()
+        UI.SetTheme(theme)
+        UI.SetFontScale(1.2)
+        UI:OpenStart()
+        UI.holder:SetSize(760, 520)
+        UI.LayoutShell()
+        for part in pairs(UI.PART_VIEW) do UI.Router.Go(UI.PartRoute(part)) end
+        UI.Router.Go({ view = "settings" })
+        UI.Router.Go({ view = "help" })
+        UI.Router.Go(UI.PartRoute("treasures"))
+        local v = UI.ViewInstance("treasures")
+        if not v.filter:IsShown() then error("seven chips in a small window with big writing did not fold") end
+        v.filter:Click()
+        UI.Kit.CloseMenu()
+    end)
+end
+step("back to normal", function()
+    UI.SetFontScale(1)
+    UI.holder:SetSize(1080, 700)
+    UI.LayoutShell()
+end)
 -- every switch of the settings, twice (back to where it was)
 step("settings switches", function()
     for _, sec in ipairs(UI.SettingsSchema()) do

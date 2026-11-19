@@ -1482,3 +1482,4 @@ L["Nothing worth keeping this time."] = "Diesmal nichts, was sich aufzuheben loh
 L["Talk to a merchant, a trainer or a quest giver: everyone you speak to gets a calling card."] = "Sprich mit einem Händler, Lehrer oder Questgeber: Jeder, mit dem du sprichst, bekommt eine Visitenkarte."
 L["The diary writes itself while you play: every day gets its page, told as a story."] = "Das Tagebuch schreibt sich beim Spielen von selbst: Jeder Tag bekommt seine Seite, als Geschichte erzählt."
 L["Bookmarks stand at the foot of the register."] = "Lesezeichen stehen am Fuß des Registers."
+L["Filter"] = "Filter"

@@ -228,6 +228,11 @@ function UI:StepScale(delta)
     s = max(0.6, min(1.4, s))
     S.scale = s
     self.holder:SetScale(s)
+    -- bigger: the window may no longer fit the screen; its size is bounded again and the desk laid out anew
+    if self.inShell and self.SetHolderMode then
+        self:SetHolderMode("shell")
+        if UI.LayoutShell then UI.LayoutShell() end
+    end
     if not sizeLabel then
         sizeLabel = UI.Text(self.holder, 16, c.gold, "CENTER", UI.HEAD, true)
         sizeLabel:SetPoint("TOP", self.holder, "BOTTOM", 0, -6)

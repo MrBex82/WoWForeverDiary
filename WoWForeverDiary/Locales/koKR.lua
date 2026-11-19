@@ -1391,3 +1391,4 @@ L["Nothing worth keeping this time."] = "이번에는 간직할 만한 것이 �
 L["Talk to a merchant, a trainer or a quest giver: everyone you speak to gets a calling card."] = "상인, 훈련사, 퀘스트를 주는 이와 대화하세요. 대화한 모든 이가 명함을 받습니다."
 L["The diary writes itself while you play: every day gets its page, told as a story."] = "일기는 플레이하는 동안 저절로 쓰입니다. 날마다 이야기로 된 한 페이지가 생깁니다."
 L["Bookmarks stand at the foot of the register."] = "책갈피는 목록 아래쪽에 있습니다."
+L["Filter"] = "필터"

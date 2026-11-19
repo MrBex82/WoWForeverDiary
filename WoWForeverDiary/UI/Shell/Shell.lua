@@ -755,7 +755,15 @@ function UI:BuildShell()
         if cur and cur.Settled then cur:Settled() end
     end)
     K.Tip(grip, L["Drag to change the size of the window."], { L["Ctrl + mouse wheel changes the size of everything."] })
-    h:HookScript("OnSizeChanged", function() if UI.inShell then layout() end end)
+    -- while the corner is dragged the desk is laid out at most every 0.1 s; at the end once more (OnMouseUp)
+    local pending
+    h:HookScript("OnSizeChanged", function()
+        if not UI.inShell then return end
+        if not S.sizing then layout() return end
+        if pending then return end
+        pending = true
+        C_Timer.After(0.1, function() pending = nil if UI.inShell then layout() end end)
+    end)
 
     -- Ctrl + mouse wheel anywhere on the desk scales the window
     f:EnableMouseWheel(true)
