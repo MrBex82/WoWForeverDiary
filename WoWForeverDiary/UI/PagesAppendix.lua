@@ -258,7 +258,7 @@ local function newCard(parent)
             self.hl:Show()
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:SetText(L["Not yet discovered"], 1, 0.86, 0.5)
-            GameTooltip:AddLine(format(L["You have been %s of this area least of all. Something may still be waiting there."],
+            GameTooltip:AddLine(format(L["I have been %s of this area least of all. Something may still be waiting there."],
                 L[fill.dir]), 0.9, 0.9, 0.9, true)
             GameTooltip:AddLine(L["Click to set a marker on the map."], 0.5, 0.8, 1)
             GameTooltip:Show()
@@ -303,7 +303,7 @@ local function newCard(parent)
         if stage == 1 then
             GameTooltip:AddLine(format(L["A sketch: %d more and it is in colour."], WFD.STAGE_COLOUR - m.kills), 0.75, 0.65, 0.45, true)
         elseif stage == 2 then
-            GameTooltip:AddLine(format(L["%d more to become a connoisseur."], WFD.STAGE_MASTER - m.kills), 0.75, 0.65, 0.45, true)
+            GameTooltip:AddLine(format(L["%d more and I am a connoisseur."], WFD.STAGE_MASTER - m.kills), 0.75, 0.65, 0.45, true)
         else
             GameTooltip:AddLine(L["Connoisseur of this kind"], 1, 0.82, 0.3)
         end
@@ -318,7 +318,7 @@ local function newCard(parent)
         if m.best then GameTooltip:AddLine(L["Best loot"] .. ": " .. m.best, 0.7, 0.7, 0.7) end
         local nem = WFD.C.nemesis[m.name or ""]
         if nem and nem.n > 0 then
-            GameTooltip:AddLine(nem.n == 1 and L["Got you once."] or WFD:Count("Got you %d times.", nem.n), 1, 0.35, 0.25)
+            GameTooltip:AddLine(nem.n == 1 and L["Got me once."] or WFD:Count("Got me %d times.", nem.n), 1, 0.35, 0.25)
         end
         GameTooltip:AddLine(L["Click for the wanted poster."], 0.5, 0.8, 1)
         GameTooltip:Show()

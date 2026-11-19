@@ -444,8 +444,8 @@ UI:RegisterView({
                         local go = UI.DayGo(it.day)
                         rp:Line({ name = L["Grave"] .. "  -  " .. format(L["Day %d"], it.day or 0), num = it.num,
                             col = { 0.55, 0.04, 0.04 }, nameKey = "neg",
-                            sub = it.by and format(L["Killed by %s"], it.by) or L["You died here"], go = go,
-                            tip = go and { L["You died here"], L["Click to read this day."] } or nil })
+                            sub = it.by and format(L["Killed by %s"], it.by) or L["I died here"], go = go,
+                            tip = go and { L["I died here"], L["Click to read this day."] } or nil })
                     end
                 end
                 rp:Gap(10)

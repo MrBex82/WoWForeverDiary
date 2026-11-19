@@ -317,7 +317,7 @@ local function fateReport(rp, key)
         local n = C.nemesis and C.nemesis[f.by]
         if n then
             local nkey = "n:" .. f.by
-            rp:Line({ name = f.by, sub = WFD:Count("Killed you %d times", n.n or 0), icon = UI.Icon("nemesis"),
+            rp:Line({ name = f.by, sub = WFD:Count("Killed me %d times", n.n or 0), icon = UI.Icon("nemesis"),
                 col = { 0.62, 0.06, 0.04 }, nameKey = "neg",
                 go = function() R.Go({ view = "fates", chip = "nemesis", key = nkey }) end })
         elseif id then
@@ -355,7 +355,7 @@ UI.CollectionView({
                 row:Set({
                     icon = UI.Icon("nemesis"), ring = { 0.75, 0.16, 0.10 },
                     name = e.nem.name, nameKey = "neg",
-                    sub = WFD:Count("Killed you %d times", e.nem.n.n or 0) .. (e.nem.n.zone and ("  -  " .. e.nem.n.zone) or ""),
+                    sub = WFD:Count("Killed me %d times", e.nem.n.n or 0) .. (e.nem.n.zone and ("  -  " .. e.nem.n.zone) or ""),
                     right = took and L["Revenge taken"] or L["Score unsettled"], right2 = lastDay and format(L["Day %d"], lastDay) or nil,
                     go = function() select("fates", nkey) end,
                 })
@@ -377,10 +377,10 @@ UI.CollectionView({
     keyOf = function(e) if e.nem then return "n:" .. e.nem.name end return e.i end,
     empty = function(state)
         if state.chip == "nemesis" then
-            if #WFD:Fates() > 0 then return L["You have died, but who did it slipped past the diary."] end
-            return L["No nemesis yet: nobody has defeated you so far."]
+            if #WFD:Fates() > 0 then return L["I have died, but who did it slipped past the diary."] end
+            return L["No nemesis yet: nobody has defeated me so far."]
         end
-        if #WFD:Fates() == 0 then return L["Nobody has defeated you yet. Long may it last!"] end
+        if #WFD:Fates() == 0 then return L["Nobody has defeated me yet. Long may it last!"] end
         return L["Nothing matches this choice."]
     end,
 })

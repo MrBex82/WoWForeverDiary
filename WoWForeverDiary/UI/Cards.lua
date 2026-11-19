@@ -46,7 +46,7 @@ function UI.CreatureReport(rp, id)
     end
     local nem = C.nemesis and C.nemesis[m.name or ""]
     rp:Tiles({ { m.kills, L["Slain"], nil, "neg" }, { "#" .. rank, format(L["of %d kinds"], count) },
-        { nem and nem.n or 0, L["Killed you"],
+        { nem and nem.n or 0, L["Killed me"],
             nem and function() R.Go({ view = "fates", chip = "nemesis", key = "n:" .. m.name }) end, nem and "neg" or nil } }, 3)
     -- the next mark for this kind
     local prev, nextMark = 0, nil

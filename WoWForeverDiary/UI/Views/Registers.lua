@@ -226,7 +226,7 @@ UI.CollectionView({
     detail = personReport,
     keyOf = function(e) return e.key end,
     empty = function()
-        if next(WFD.C.npcs or {}) == nil then return { icon = UI.Icon("people"), title = L["You have not talked to anyone yet."], hint = L["Talk to a merchant, a trainer or a quest giver: everyone you speak to gets a calling card."] } end
+        if next(WFD.C.npcs or {}) == nil then return { icon = UI.Icon("people"), title = L["I have not talked to anyone yet."], hint = L["Everyone I speak to gets a calling card here: merchants, trainers, quest givers."] } end
         return L["Nothing matches this choice."]
     end,
 })
@@ -376,7 +376,7 @@ UI.CollectionView({
     detail = questReport,
     keyOf = function(e) return e.id end,
     empty = function()
-        if next(WFD.C.quests or {}) == nil then return { icon = UI.Icon("quests"), title = L["No quests recorded yet."], hint = L["Accept a quest: it is written down with who gave it, where, and what it brought."] } end
+        if next(WFD.C.quests or {}) == nil then return { icon = UI.Icon("quests"), title = L["No quests recorded yet."], hint = L["Every quest I take is written down here: who gave it, where, and what it brought."] } end
         return L["Nothing matches this choice."]
     end,
 })

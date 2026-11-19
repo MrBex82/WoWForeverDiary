@@ -238,7 +238,7 @@ local CLICK_HINTS = {
     "Click to show only these.", "Click to show all again.", "Ctrl-click to set or remove a bookmark here.",
     "Click to open, right-click to remove.", "Click to go to a page.", "Right-click for the contents.",
     "Click to set a bookmark here.", "Click to remove the bookmark.",
-    "Click to make this your title.", "Click to give up this title.",
+    "Click to make this my title.", "Click to give up this title.",
     "Right-click to put it in the showcase.", "Right-click to take it out of the showcase.",
     "Click to change the goal.", "Right-click to take the goal away.",
 }
@@ -863,7 +863,7 @@ function UI.MapSketch(parent, w, h)
             me:EnableMouse(true)
             me:SetScript("OnEnter", function(s)
                 GameTooltip:SetOwner(s, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["You are here."], 1, 0.86, 0.5)
+                GameTooltip:SetText(L["I am here."], 1, 0.86, 0.5)
                 GameTooltip:Show()
             end)
             me:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -998,7 +998,7 @@ function UI.MapSketch(parent, w, h)
                     graves = graves + 1
                     local by = pos[4] or (#pos < 4 and aligned and d.deathBy[j]) or nil
                     local p = addPin(pos[2], pos[3], { 0.55, 0.04, 0.04, 1 }, {
-                        L["You died here"], by and format(L["Killed by %s"], by) or "", format(L["Day %d"], i),
+                        L["I died here"], by and format(L["Killed by %s"], by) or "", format(L["Day %d"], i),
                     }, (graves <= 2) and { kind = "grave", day = i, by = by, num = math.min(6, #people) + graves } or nil, true)
                     if p and o.onDay then
                         local day = i

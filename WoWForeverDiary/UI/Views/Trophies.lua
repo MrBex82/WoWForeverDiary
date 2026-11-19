@@ -255,7 +255,7 @@ end
 local function tipLines(e)
     local out = {}
     for _, l in ipairs(UI.HonourTip(e)) do
-        if not (l == L["Click to give up this title."] or l == L["Click to make this your title."]
+        if not (l == L["Click to give up this title."] or l == L["Click to make this my title."]
             or l == L["Right-click to take it out of the showcase."] or l == L["Right-click to put it in the showcase."]) then
             out[#out + 1] = l
         end

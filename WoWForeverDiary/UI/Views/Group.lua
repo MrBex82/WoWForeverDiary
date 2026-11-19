@@ -151,7 +151,7 @@ UI:RegisterView({
             end
             for i = #parts + 1, #self.cards do self.cards[i]:Hide() end
             self.n = #parts
-            self.sub:SetText(format(L["%d parts"], #parts) .. (new > 0 and ("  -  " .. format(L["%d new since you last read"], new)) or ""))
+            self.sub:SetText(format(L["%d parts"], #parts) .. (new > 0 and ("  -  " .. format(L["%d new since I last read"], new)) or ""))
         end
 
         function v:Arrange()

@@ -260,10 +260,10 @@ UI:RegisterView({
         local own = card(area, L["My own goals"])
         own.rows = {}
         own.none = K.Text(own, "body", "soft")
-        own.none:SetText(L["Write down what you want to do next, and tick it off when it is done."])
+        own.none:SetText(L["What I want to do next goes here, ticked off when it is done."])
         own.add = K.Button(own, L["Add a goal"], "primary", function()
             UI:Ask({
-                title = L["What do you want to do next?"], ok = L["Add a goal"], input = { max = 48 },
+                title = L["What do I want to do next?"], ok = L["Add a goal"], input = { max = 48 },
                 onOk = function(text)
                     text = strtrim(text or "")
                     local C = WFD.C
@@ -458,7 +458,7 @@ UI:RegisterView({
                 { L["Dungeons"] .. " & " .. L["Raids"], g.dFound, g.dTotal, UI.Icon("key"), { 0.78, 0.42, 0.08 },
                     L["Dark places, rich rewards"], "landmarks" },
                 { L["Secrets"], g.sFound, g.sTotal, QUESTION, { 0.70, 0.45, 0.85 },
-                    L["Some honours stay hidden until you find them."], { view = "honour", chip = "secret" } },
+                    L["Some honours stay hidden until I find them."], { view = "honour", chip = "secret" } },
             }
             for i, it in ipairs(self.items) do
                 local r = self.rows[i] or makeRow()

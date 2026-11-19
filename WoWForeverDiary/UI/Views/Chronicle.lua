@@ -225,7 +225,7 @@ UI.CollectionView({
     keyOf = function(e) return e.def and e.def.key end,
     empty = function(state)
         if state.chip == "done" and state.q == "" and next(WFD.C.firsts or {}) == nil then
-            return L["No first time yet. They come by themselves while you play."]
+            return L["No first time yet. They come by themselves while I play."]
         end
         return L["Nothing matches this choice."]
     end,
@@ -552,7 +552,7 @@ UI.CollectionView({
         end,
     },
     empty = function()
-        if #galleryList() == 0 then return L["The first painting waits for your first great moment."] end
+        if #galleryList() == 0 then return L["The first painting waits for my first great moment."] end
         return L["Nothing matches this choice."]
     end,
 })

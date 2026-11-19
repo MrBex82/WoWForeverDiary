@@ -103,7 +103,7 @@ UI.ReportView({
         local C = WFD.C
         rp:Kicker(L["Angler's log"])
         rp:Title(L["Waters and tackle"], "display")
-        rp:Text(L["Where it bites, and what you fished with"], "soft", "small", 12)
+        rp:Text(L["Where it bites, and what I fished with"], "soft", "small", 12)
         rp:Tiles({ { C.catchCasts or 0, L["Casts in all"] }, { C.catchLured or 0, L["Casts with a lure"] } }, 2)
         local waters = {}
         for map, z in pairs(C.catchZone or {}) do
@@ -200,7 +200,7 @@ UI.CollectionView({
     detail = function(rp, id) UI.BookReport(rp, id) end,          -- (Cards.lua)
     keyOf = function(e) return e.id end,
     empty = function()
-        if #WFD:Library() == 0 then return L["The shelf is empty. Every book, note and plaque you read will stand here."] end
+        if #WFD:Library() == 0 then return L["The shelf is empty. Every book, note and plaque I read will stand here."] end
         return L["Nothing matches this choice."]
     end,
 })
@@ -238,7 +238,7 @@ UI.ReportView({
             if title then bits[#bits + 1] = L[title.name] end
             if e.dead then bits[#bits + 1] = L["In memoriam"]
             elseif not f.me and e.last then bits[#bits + 1] = format(L["Last seen %s"], date(WFD.loc.date, e.last)) end
-            rp:Line({ name = (e.name or "?") .. (f.me and ("  (" .. L["you"] .. ")") or ""), nameKey = e.dead and "muted" or "ink",
+            rp:Line({ name = (e.name or "?") .. (f.me and ("  (" .. L["me"] .. ")") or ""), nameKey = e.dead and "muted" or "ink",
                 icon = path, coords = coords, col = e.dead and { 0.46, 0.39, 0.30 } or { col[1], col[2], col[3] },
                 sub = table.concat(bits, "  -  "), wrap = true, right = format(L["Level %d"], e.level or 0),
                 tip = { e.name or "?",
@@ -248,7 +248,7 @@ UI.ReportView({
         end
         if #fam < 2 then
             rp:Gap(6)
-            rp:Text(L["Log in with your other characters once, and they will appear here."], "soft", "body")
+            rp:Text(L["Once I log in with my other characters, they will appear here."], "soft", "body")
             return
         end
         -- who got there first, by calendar day
@@ -287,7 +287,7 @@ UI.ReportView({
             rp:Head(L["Quickest to the level"])
             for _, x in ipairs(pace) do
                 rp:Line({ name = raceLabel(x.r), right = x.best.name .. "  -  " .. WFD:DurationText(x.best.secs),
-                    sub = (x.mine and x.mine > x.best.secs) and (L["you"] .. ": " .. WFD:DurationText(x.mine)) or nil })
+                    sub = (x.mine and x.mine > x.best.secs) and (L["me"] .. ": " .. WFD:DurationText(x.mine)) or nil })
             end
         end
         -- the hall of fame: the highest tiers earned anywhere in the family
@@ -362,7 +362,7 @@ UI.ReportView({
                 local goal = min(cap, (floor(lvl / 10) + 1) * 10)
                 rp:Button(format(L["at level %d"], goal), function() seal("level", goal) end, "primary")
             end
-            rp:Text(L["Until then the letter stays sealed. Not even you can read it."], "muted", "small")
+            rp:Text(L["Until then the letter stays sealed. Not even I can read it."], "muted", "small")
         else
             rp:Button(L["Write a letter"], writeLetter, "primary")
         end
@@ -411,7 +411,7 @@ UI.ReportView({
         rp:Gap(10)
         rp:Kicker(L["In memoriam"], "muted")
         if not o then
-            rp:Text(L["Nobody has defeated you yet. Long may it last!"], "soft", "body")
+            rp:Text(L["Nobody has defeated me yet. Long may it last!"], "soft", "body")
             return
         end
         rp:Title(C.name or "?", "display")

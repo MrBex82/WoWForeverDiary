@@ -22,7 +22,7 @@ local function honourTip(e)
         return { "???", L[h.secret], L["A secret honour. Keep exploring!"] }
     end
     local lines = { L[h.name] }
-    if WFD.C and WFD.C.title == h.key then lines[#lines + 1] = "|cffffd100" .. L["Your title"] .. "|r" end
+    if WFD.C and WFD.C.title == h.key then lines[#lines + 1] = "|cffffd100" .. L["My title"] .. "|r" end
     if WFD:InShowcase(h.key) then lines[#lines + 1] = "|cffffd100" .. L["In the showcase"] .. "|r" end
     for i, g in ipairs(h.tiers) do
         local m = WFD:MetalOf(i, e.n)
@@ -30,7 +30,7 @@ local function honourTip(e)
         lines[#lines + 1] = "|cff" .. UI.Hex(m.col) .. L[m.name] .. "|r  " .. WFD:HonourText(h, g) .. "  " .. mark
     end
     if e.tier > 0 then
-        lines[#lines + 1] = (WFD.C and WFD.C.title == h.key) and L["Click to give up this title."] or L["Click to make this your title."]
+        lines[#lines + 1] = (WFD.C and WFD.C.title == h.key) and L["Click to give up this title."] or L["Click to make this my title."]
         lines[#lines + 1] = WFD:InShowcase(h.key) and L["Right-click to take it out of the showcase."] or L["Right-click to put it in the showcase."]
     end
     return lines

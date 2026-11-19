@@ -150,7 +150,7 @@ UI.CollectionView({
     detail = function(rp, id) UI.CreatureReport(rp, id) end,          -- (Cards.lua)
     keyOf = function(e) if not e.hint then return e.id end end,
     empty = function(state)
-        if next(WFD.C.mobs) == nil then return { icon = UI.Icon("bestiary"), title = L["Nothing here yet."], hint = L["Every creature you slay gets its card here: where it lives, how often it fell, what it left behind."], button = { L["Hunting grounds"], UI.PartRoute("huntgrounds") } } end
+        if next(WFD.C.mobs) == nil then return { icon = UI.Icon("bestiary"), title = L["Nothing here yet."], hint = L["Every creature I slay gets its card here: where it lives, how often it fell, what it left behind."], button = { L["Hunting grounds"], UI.PartRoute("huntgrounds") } } end
         return L["Nothing matches this choice."]
     end,
     extra = { { "Hunting grounds", function() R.Go(UI.PartRoute("huntgrounds")) end } },

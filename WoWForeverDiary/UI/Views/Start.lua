@@ -274,10 +274,10 @@ end
 -- what came into the book since it was last put away
 function cards.new(parent)
     local c = K.Card(parent)
-    head(c, L["New since you last read"])
+    head(c, L["New since I last read"])
     c.rows = {}
     c.none = K.Text(c, "body", "soft")
-    c.none:SetText(L["Nothing new since you last read."])
+    c.none:SetText(L["Nothing new since I last read."])
 
     function c:Fill()
         local counts = UI.NewCounts and UI.NewCounts() or {}
@@ -291,7 +291,7 @@ function cards.new(parent)
                 end
             end
         end
-        self.head:Set(L["New since you last read"], total > 0 and tostring(total) or nil)
+        self.head:Set(L["New since I last read"], total > 0 and tostring(total) or nil)
         for i, e in ipairs(list) do
             local r = self.rows[i] or leadRow(self)
             self.rows[i] = r
@@ -401,7 +401,7 @@ function cards.destination(parent)
         if dest then
             self.icon:SetTexture(dest.icon)
             self.name:SetText(dest.name)
-            self.kind:SetText(dest.group .. "  -  " .. L["You have not seen this place yet."])
+            self.kind:SetText(dest.group .. "  -  " .. L["I have not seen this place yet."])
             self.go:SetLabel(dest.go and L["Set a waypoint"] or L["All landmarks"])
             self.go.onClick = function()
                 if not (dest.go and dest.go()) then R.Go(UI.PartRoute("landmarks")) end
@@ -409,7 +409,7 @@ function cards.destination(parent)
         else
             self.icon:SetTexture(UI.Icon("sight"))
             self.name:SetText(L["Every landmark seen"])
-            self.kind:SetText(L["You have seen every landmark. Remarkable!"])
+            self.kind:SetText(L["I have seen every landmark. Remarkable!"])
             self.go:SetLabel(L["All landmarks"])
             self.go.onClick = function() R.Go(UI.PartRoute("landmarks")) end
         end

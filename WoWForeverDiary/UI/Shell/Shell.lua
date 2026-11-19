@@ -203,7 +203,7 @@ function UI:RefreshRail()
             b.badge:ClearAllPoints()
             b.badge:SetPoint("RIGHT", -8, 0)
         end
-        b.tip = new > 0 and { { format(L["%d new since you last read"], new), 1, 0.6, 0.45 } } or nil
+        b.tip = new > 0 and { { format(L["%d new since I last read"], new), 1, 0.6, 0.45 } } or nil
         -- narrow: a group of several parts opens a menu of them beside the sign (its overview first)
         b:SetScript("OnClick", function(self)
             if S.narrow and #parts > 1 then
