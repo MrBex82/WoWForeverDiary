@@ -146,6 +146,62 @@ etwa 0,5 MB größer. Entschieden: keine eigene Schrift (siehe Entscheidungen).
   - Der Begleiter als **aufgeklapptes Notizheft** im kleinen Format.
   - Beides ist Feinschliff am Schluss.
 
+## Rundgang 19.11.2026 (Phase 0, Leder, Cylinsis, 100 %)
+
+28 Aufnahmen liegen außerhalb des Repos (sie zeigen Charakter- und Realmnamen) in
+`D:\Git\WoW_Forever_Diary_Backupufnahmen-vor-tagebuch-20261119\`. Pergament und Modern fehlen noch.
+
+**Querschnitt (gilt für viele Teile):**
+- **Kachelreihe oben:** in 17 von 28 Teilen (Start, Questbuch, Meilensteine, Premieren, Stufen, Jahrbuch,
+  Wochenrückblick, Aufgaben, Ehrenbuch, Dungeons, Bestiarium, Anglerbuch, Schätze, Schicksal, Personen, Ruf, Bibliothek).
+- **Filterknöpfe:** in 12 Teilen, oft fünf bis sieben Stück. Dazu überall ein Namensfilter und ein Sortiermenü.
+- **Noch nicht im Buch:** Aufgaben, Sammelalbum und Kassenbuch liegen direkt auf dem Leder, ohne Buchseite.
+- **Stimme gemischt:** Das Tagebuch spricht in der Ich-Form ("Das merke ich mir"), andere Teile mit "du".
+  Beispiele: In Memoriam "Noch hat dich niemand erwischt", Ruf "hilf ihr", Familienbuch "(du)".
+  Die Zeitkapsel schreibt "Liebes Ich". Für ein Tagebuch gehört alles in die Ich-Form.
+- **Verzeichnisse als Tabellen:** Symbol, Titel, graue Unterzeile, rechts Zahl oder "Tag 3". So sehen Questbuch,
+  Meilensteine, Premieren, Schätze, Schicksal, Personen, Bibliothek und Dungeons aus.
+- **Leere Seiten:** In Memoriam ist eine ganze Seite mit einem Satz, Ruf ein Hinweis mitten auf leerer Fläche,
+  die Aufgaben-Seite zur Hälfte leer.
+
+**Je Teil (zusätzlich zu "Teil für Teil" oben):**
+
+| Teil | Befund | Idee |
+|---|---|---|
+| Start | 4 Kacheln, Raster aus 8 Kästen | heutige Doppelseite (siehe oben) |
+| Tagebuch | gut; Chips unter dem Datum, Knopffuß | Randnotizen, Tintenlinks |
+| Questbuch | Kacheln, 4 Filter, Tabelle mit XP | "Meine Aufträge" nach Gebiet als Verzeichnis, XP an den Rand |
+| In Memoriam | leere Seite, "dich" | Ich-Form, Gedenkseite mit Linie für die Namen |
+| Meilensteine | Protokoll mit Uhrzeiten, viele "Getötet von" | pro Tag als kleine Liste in Sätzen, Tode gebündelt |
+| Premieren | Tabelle | "Zum ersten Mal ..." als Satzliste |
+| Rekordbuch | Zahlenliste | Sätze ("Der reichste Tag war Tag 3.") |
+| Stufen-Zeitstrahl | Balken | Linie mit Daten am Rand, wie gezeichnet |
+| Jahrbuch | "Ein Reisejahr in Zahlen", 6 Kacheln | Jahresbrief mit Zahlen am Rand |
+| Wochenrückblick | Kacheln und Listen | Wochenbrief, Listen als Fließtext |
+| Aufgaben | nicht im Buch, Karten, halb leer | Vorsätze auf einer Seite im Buch |
+| Sammelalbum | nicht im Buch, Fortschrittsbalken | Inhaltsverzeichnis der Sammlungen mit Strichen |
+| Ehrenbuch | 7 Kacheln, Knöpfe "Titel" und "Vitrine" je Zeile | Urkunden, Aktionen im Bericht rechts statt in jeder Zeile |
+| Weltkarte | gut (Atlas) | Reisebericht rechts statt Checkliste |
+| Sehenswürdigkeiten | Tabelle mit Datum und Uhrzeit | Verzeichnis nach Gebiet, Datum als Tagebuchdatum |
+| Dungeon-Berichte | Tabelle; **Fehler:** "Halle der Thanen" sechsmal mit 176 Stunden und 0 Bossen | Fehler zuerst beheben, dann Berichte als Einträge |
+| Bestiarium | Sammelkarten mit "#001 St. 2" | Karten bleiben (passt zum Sammelalbum), Nummern kleiner, Kacheln weg |
+| Anglerbuch | Sammelkarten | wie Bestiarium |
+| Schätze | Tabelle nach Platz | "Was ich trage und fand" nach Platz, Farbe der Seltenheit bleibt |
+| Schicksal | Liste der Tode | Nachrufseite, gebündelt nach Feind |
+| Personen | Kacheln, 5 Filter, Tabelle | Adressbuch: Buchstaben als Registerzungen am Rand |
+| Ruf | leer: Hinweis in der Mitte | Ich-Form, Satz oben auf der Seite |
+| Kassenbuch | nicht im Buch, Kacheln und Diagramm | Kassenbuch mit Spalten und Linien, Kurve als Skizze |
+| Bibliothek | Tabelle | Bücherregal als Verzeichnis |
+| Familienbuch | schon Buchseite | Stammbaum-Optik, Ich-Form |
+| Zeitkapsel | schon Buchseite, Knopf "Brief schreiben" | Brief als Tintenlink, Briefe als Umschläge |
+| Einstellungen | Schalter wie im System | Vorsatzblatt, Ankreuzringe (in Leder und Pergament) |
+| Hilfe | Tabelle der Tasten | Gebrauchsanweisung mit Leaderpunkten |
+
+**Neue Punkte für die Phasen:**
+- **Phase 2a (vor allem anderen):** Aufgaben, Sammelalbum und Kassenbuch ins Buch legen (`K.BookHost`).
+- **Phase 2b:** Ich-Form in allen Texten, die zum Spieler sprechen (alle neun Sprachen).
+- **Fehler:** doppelte Dungeon-Berichte mit 176 Stunden prüfen (`Modules`, Erfassung der Läufe), eigener Commit.
+
 ## Phasen (je ein Commit, danach Spieltest in Leder, Pergament und Modern, bei 100 und 150 %)
 
 0. **Rundgang:**
