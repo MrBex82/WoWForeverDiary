@@ -432,16 +432,13 @@ end
 ------------------------------------------------------------------------
 UI:RegisterView({
     key = "settings",
-    build = function(host)
-        local v = { section = 1, panes = {} }
+    build = function(outer)
+        local book, host = K.BookHost(outer)
+        local v = { section = 1, panes = {}, book = book }
         local tabs = CreateFrame("Frame", nil, host)
         tabs:SetPoint("TOPLEFT", 0, 0)
         tabs:SetPoint("BOTTOMLEFT", 0, 0)
         tabs:SetWidth(200)
-        local line = K.Fill(tabs, "line", "ARTWORK", 0)
-        line:SetWidth(1)
-        line:SetPoint("TOPRIGHT")
-        line:SetPoint("BOTTOMRIGHT")
         v.tabs = {}
         for i, sec in ipairs(UI.SettingsSchema()) do
             local b = K.Box(tabs, nil, nil, "Button")
@@ -489,6 +486,7 @@ UI:RegisterView({
         function v:PlaceTabs()
             local tw = floor(200 * UI.FK() + 0.5)
             tabs:SetWidth(tw)
+            book:Lay(tw)
             local y = 16
             for _, b in ipairs(self.tabs) do
                 b.sub:SetWidth(tw - 40)
@@ -528,9 +526,9 @@ UI:RegisterView({
             scroll:ScrollTo(0)
             self:Arrange()
         end
-        function v:Layout(w, h) self.w = w self:Arrange() end
-        scroll.onResize = function(sf) v.w = sf:GetWidth() + 200 v:Arrange() end
-        UI.OnRestyle(function() if host:IsShown() then v:PaintTabs() v:Arrange() end end)
+        function v:Layout(w, h) self.w = w - K.BOOK_W self:Arrange() end
+        scroll.onResize = function(sf) v.w = sf:GetWidth() + (tabs:GetWidth() or 200) v:Arrange() end
+        UI.OnRestyle(function() if host:IsVisible() then v:PaintTabs() v:Arrange() end end)
         function v:Head() return L["Settings"], nil end
         return v
     end,

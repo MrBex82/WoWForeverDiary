@@ -52,7 +52,8 @@ end
 
 UI:RegisterView({
     key = "help",
-    build = function(host)
+    build = function(outer)
+        local _, host = K.BookHost(outer)
         local v = {}
         local scroll = K.Scroll(host)
         scroll:SetAllPoints(host)
@@ -106,9 +107,9 @@ UI:RegisterView({
             scroll:ScrollTo(0)
             self:Arrange()
         end
-        function v:Layout(w, h) self.w = w self:Arrange() end
+        function v:Layout(w, h) self.w = w - K.BOOK_W self:Arrange() end
         scroll.onResize = function(sf) v.w = sf:GetWidth() v:Arrange() end
-        UI.OnRestyle(function() if host:IsShown() then v:Arrange() end end)
+        UI.OnRestyle(function() if host:IsVisible() then v:Arrange() end end)
         function v:Head() return L["Help"] end
         return v
     end,

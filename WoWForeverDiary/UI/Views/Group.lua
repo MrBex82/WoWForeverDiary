@@ -92,7 +92,8 @@ end
 
 UI:RegisterView({
     key = "group",
-    build = function(host)
+    build = function(outer)
+        local _, host = K.BookHost(outer)
         local v = { cards = {} }
         local scroll = K.Scroll(host)
         scroll:SetAllPoints(host)
@@ -255,9 +256,9 @@ UI:RegisterView({
             self.group = route.group
             self:Refresh()
         end
-        function v:Layout(w, h) self.w = w self:Arrange() end
+        function v:Layout(w, h) self.w = w - K.BOOK_W self:Arrange() end
         scroll.onResize = function(sf) v.w = sf:GetWidth() v:Arrange() end
-        UI.OnRestyle(function() if host:IsShown() then v:Refresh() end end)
+        UI.OnRestyle(function() if host:IsVisible() then v:Refresh() end end)
         function v:Head()
             local g = UI.NAV_GROUP[self.group]
             return g and L[g.label] or "", nil

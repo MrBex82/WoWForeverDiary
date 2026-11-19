@@ -152,11 +152,7 @@ function UI.CollectionView(def)
         build = function(outer)
             -- the open book on the desk: the list on its left page, the report of a line on its right page;
             -- everything of the view lies inside the book (host), with room for its shadow
-            local book = K.Spread(outer)
-            book:SetPoint("TOPLEFT", outer, "TOPLEFT", 10, -8)
-            book:SetPoint("BOTTOMRIGHT", outer, "BOTTOMRIGHT", -16, 14)
-            local host = CreateFrame("Frame", nil, book)
-            host:SetAllPoints(book)
+            local book, host = K.BookHost(outer)
             local CHIP0, SORT0 = def.chips and def.chips[1][1], def.sorts and def.sorts[1][1]
             local V = { state = { chip = CHIP0, sort = SORT0, q = "" }, book = book }
             -- what is chosen here is written into the place in the history (nothing while a route is laid out)
@@ -522,7 +518,7 @@ function UI.CollectionView(def)
             end
 
             function V:Layout(w, h)
-                self.w, self.h = w - 26, h - 22          -- inside the book
+                self.w, self.h = w - K.BOOK_W, h - K.BOOK_H          -- inside the book
                 self:Arrange()
             end
 
@@ -550,7 +546,7 @@ function UI.CollectionView(def)
                 local g = UI.NAV_GROUP[def.group]
                 return L[def.label], g and L[g.label], g and UI.GroupRoute(g)
             end
-            UI.OnRestyle(function() if host:IsShown() then V:Arrange() end end)
+            UI.OnRestyle(function() if host:IsVisible() then V:Arrange() end end)
             return V
         end,
     })

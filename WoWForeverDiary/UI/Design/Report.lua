@@ -570,7 +570,7 @@ function UI.ReportView(def)
         key = def.key,
         build = function(host)
             local v = {}
-            v.sheet = K.Card(host)
+            v.sheet = K.Spread(host)
             v.report = K.Report(v.sheet)
             v.report:SetPoint("TOPLEFT", v.sheet, "TOPLEFT", 12, -6)
             v.report:SetPoint("BOTTOMRIGHT", v.sheet, "BOTTOMRIGHT", -12, 6)
@@ -587,8 +587,8 @@ function UI.ReportView(def)
                 if W <= 0 or H <= 0 then return end
                 local sw = min(W - 24, floor((def.width or 760) * max(1, UI.FONT_SCALE or 1)))
                 self.sheet:ClearAllPoints()
-                self.sheet:SetPoint("TOP", host, "TOP", 0, -12)
-                self.sheet:SetSize(sw, H - 24)
+                self.sheet:SetPoint("TOP", host, "TOP", -3, -8)
+                self.sheet:SetSize(sw, H - K.BOOK_H)
             end
             function v:Refresh() self:Arrange() self:Fill() end
             function v:Show(route)

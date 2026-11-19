@@ -1391,3 +1391,15 @@ function K.Spread(parent)
     b:Lay(nil)
     return b
 end
+
+-- A view inside the open book: the book lies on the desk (outer) with room for its shadow, and everything of the
+-- view goes into host, the size of the book. K.BOOK_W and K.BOOK_H are what the book is smaller than the desk.
+K.BOOK_W, K.BOOK_H = 26, 22
+function K.BookHost(outer)
+    local book = K.Spread(outer)
+    book:SetPoint("TOPLEFT", outer, "TOPLEFT", 10, -8)
+    book:SetPoint("BOTTOMRIGHT", outer, "BOTTOMRIGHT", -16, 14)
+    local host = CreateFrame("Frame", nil, book)
+    host:SetAllPoints(book)
+    return book, host
+end
