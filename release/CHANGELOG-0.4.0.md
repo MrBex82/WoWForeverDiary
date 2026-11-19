@@ -1,9 +1,15 @@
 # 0.4.0
 
-The big rework: from a book you leafed through to a travel desk you can find your way around. This is what
-changed since 0.3.4, in short.
+The big rework: the book stays a book, and now it is as easy to find your way in as a window. This is what
+changed since 0.3.5, in short.
 
 ## English
+
+**Still a book**
+- Every part lies in an open book on the desk: two pages with a fold between them, the leaves below, a tab in
+  the colour of each group at its edge. The diary has its chapters on the left page and the day on the right,
+  every list its entries on the left and the open one on the right.
+- The leaves turn when another page opens (it can be switched off under Appearance).
 
 **Find everything quickly**
 - A window you can make as large as you like. On the left a register with every part, on top back and forward,
@@ -38,6 +44,12 @@ changed since 0.3.4, in short.
 - "/wfd demo" shows the diary with invented data, in the language of your game where the game can name things.
 
 ## Deutsch
+
+**Weiter ein Buch**
+- Jeder Teil liegt in einem aufgeschlagenen Buch auf dem Tisch: zwei Seiten mit dem Falz dazwischen, die Blätter
+  darunter, am Rand ein Reiter in der Farbe jeder Gruppe. Im Tagebuch stehen links die Kapitel und rechts der
+  Tag, in jeder Liste links die Einträge und rechts der geöffnete.
+- Beim Wechsel der Seite wird umgeblättert (lässt sich unter Aussehen abschalten).
 
 **Alles schnell finden**
 - Ein Fenster, so groß du willst. Links ein Register mit allen Teilen, oben Zurück und Vor, wo du bist, und eine
