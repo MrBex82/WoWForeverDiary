@@ -466,6 +466,23 @@ function UI:NextToast()
         end
     end
     toast.hint:SetText(d.hint or "")
+    -- the lines one below the other by their real height: with bigger writing the card grows instead of the
+    -- hint running out below it
+    local function hgt(fs, least) return math.max(least, fs:GetStringHeight() or 0) end
+    local y = 15 + hgt(toast.kicker, 11) + 4
+    toast.name:ClearAllPoints()
+    toast.name:SetPoint("TOPLEFT", TX, -y)
+    y = y + hgt(toast.name, 20) + 6
+    toast.metal:ClearAllPoints()
+    toast.metal:SetPoint("TOPLEFT", TX, -y)
+    y = y + hgt(toast.metal, 11) + 7
+    toast.hint:ClearAllPoints()
+    toast.hint:SetPoint("TOPLEFT", TX, -y)
+    if (d.hint or "") ~= "" then y = y + hgt(toast.hint, 12) end
+    local h = math.max(TH, math.ceil(y + 16))
+    toast:SetHeight(h)
+    toast.sheen:SetHeight(h - 8)
+    toast.sheen2:SetHeight(h - 8)
     toast.points:SetText(d.points and ("+" .. d.points) or "")
     toast.pointsLabel:SetText(d.points and L["Honour points"]:upper() or "")
     toast.ev = ev
