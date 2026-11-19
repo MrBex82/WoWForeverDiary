@@ -1385,3 +1385,4 @@ L["Bookmarks stand at the foot of the register."] = "책갈피는 목록 아래�
 L["Filter"] = "필터"
 L["No longer read later"] = "나중에 읽기 해제"
 L["Size of the notes"] = "알림 크기"
+L["Turn the leaves visibly"] = "페이지 넘김 보이기"

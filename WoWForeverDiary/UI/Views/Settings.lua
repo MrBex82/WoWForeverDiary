@@ -145,6 +145,8 @@ function UI.SettingsSchema()
             { type = "choice", label = L["Size of the writing"],
                 options = { { 1, "100%" }, { 1.1, "110%" }, { 1.2, "120%" }, { 1.3, "130%" }, { 1.4, "140%" }, { 1.5, "150%" } },
                 get = function() return S().fontScale or 1 end, set = function(v) UI.SetFontScale(v) end },
+            { type = "toggle", label = L["Turn the leaves visibly"],
+                get = function() return S().turnAnim ~= false end, set = function(v) S().turnAnim = (not v) and false or nil end },
         },
     },
     {

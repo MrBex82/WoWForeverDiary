@@ -1391,3 +1391,4 @@ L["Bookmarks stand at the foot of the register."] = "Os marcadores ficam no pé 
 L["Filter"] = "Filtro"
 L["No longer read later"] = "Não ler mais tarde"
 L["Size of the notes"] = "Tamanho das notas"
+L["Turn the leaves visibly"] = "Virar as folhas de forma visível"

@@ -1399,3 +1399,4 @@ L["Bookmarks stand at the foot of the register."] = "Закладки наход
 L["Filter"] = "Фильтр"
 L["No longer read later"] = "Больше не читать позже"
 L["Size of the notes"] = "Размер заметок"
+L["Turn the leaves visibly"] = "Показывать перелистывание"

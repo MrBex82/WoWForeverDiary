@@ -1476,3 +1476,4 @@ L["Bookmarks stand at the foot of the register."] = "Lesezeichen stehen am Fuß 
 L["Filter"] = "Filter"
 L["No longer read later"] = "Nicht mehr später lesen"
 L["Size of the notes"] = "Größe der Meldungen"
+L["Turn the leaves visibly"] = "Seiten sichtbar umblättern"

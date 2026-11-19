@@ -238,7 +238,7 @@ UI:RegisterView({
             for i, d in ipairs(days) do
                 if d == self.day then
                     local to = days[i + dir]
-                    if to then R.Go({ view = "diary", day = to }, { noHistory = true }) end
+                    if to then R.Go({ view = "diary", day = to }, { noHistory = true, dir = dir }) end
                     return
                 end
             end

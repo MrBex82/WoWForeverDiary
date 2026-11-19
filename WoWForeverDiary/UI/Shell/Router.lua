@@ -87,6 +87,7 @@ function R.Note(k, v)
 end
 
 function R.Go(route, opts)
+    R.dir = (opts and opts.dir) or 1
     opts = opts or {}
     if not route then return end
     -- a copy: the history writes into its places (R.Note), the route given may be a bookmark's
@@ -106,6 +107,7 @@ function R.CanForward() return #R.fwd > 0 end
 function R.Back()
     local to = table.remove(R.back)
     if not to then return end
+    R.dir = -1
     R.fwd[#R.fwd + 1] = R.cur
     R.cur = to
     if UI.ShowRoute then UI:ShowRoute(to) end
@@ -114,6 +116,7 @@ end
 function R.Forward()
     local to = table.remove(R.fwd)
     if not to then return end
+    R.dir = 1
     R.back[#R.back + 1] = R.cur
     R.cur = to
     if UI.ShowRoute then UI:ShowRoute(to) end

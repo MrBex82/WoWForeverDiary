@@ -868,8 +868,84 @@ local function viewFor(key)
     return v
 end
 
+-- Turning a leaf: a page in the colour of the paper lifts from one side of the fold and lays itself down on the
+-- other (0.36 s), with a shadow at its edge; forward it goes from right to left, back from left to right.
+-- Off with "Turn the leaves visibly".
+local TURN = 0.36
+local function turnLeaf(dir, view)
+    if WFD.S.turnAnim == false or not (S and S.content:IsVisible()) then return end
+    local c = S.content
+    if not S.leaf then
+        local f = CreateFrame("Frame", nil, c)
+        f:SetFrameLevel(c:GetFrameLevel() + 80)
+        f.paper = f:CreateTexture(nil, "ARTWORK", nil, 1)
+        f.paper:SetTexture(UI.WHITE)
+        f.paper:SetAllPoints()
+        f.shade = f:CreateTexture(nil, "ARTWORK", nil, 2)
+        f.shade:SetTexture(UI.WHITE)
+        f.shade:SetWidth(18)
+        f.shade:SetPoint("TOP")
+        f.shade:SetPoint("BOTTOM")
+        f:SetScript("OnUpdate", function(self, dt)
+            self.t = self.t + dt
+            local p = min(1, self.t / TURN)
+            -- first half: the leaf rises and narrows towards the fold; second half: it opens on the other side
+            local w, side
+            if p < 0.5 then side = self.from else side = -self.from end
+            local half = side > 0 and self.halfR or self.halfL
+            w = max(1, half * ((p < 0.5) and (1 - p * 2) or (p * 2 - 1)))
+            self:ClearAllPoints()
+            local at, mid = self.at, self.mid
+            if side > 0 then
+                self:SetPoint("TOPLEFT", at, "TOPLEFT", mid, self.top)
+                self:SetPoint("BOTTOMLEFT", at, "BOTTOMLEFT", mid, self.bottom)
+            else
+                self:SetPoint("TOPRIGHT", at, "TOPLEFT", mid, self.top)
+                self:SetPoint("BOTTOMRIGHT", at, "BOTTOMLEFT", mid, self.bottom)
+            end
+            self:SetWidth(w)
+            self.shade:ClearAllPoints()
+            self.shade:SetPoint("TOP")
+            self.shade:SetPoint("BOTTOM")
+            if side > 0 then self.shade:SetPoint("RIGHT") else self.shade:SetPoint("LEFT") end
+            local a = 0.30 * (1 - math.abs(p - 0.5) * 2) + 0.08
+            if side > 0 then
+                UI.Gradient(self.shade, "HORIZONTAL", { 0, 0, 0, 0 }, { 0, 0, 0, a })
+            else
+                UI.Gradient(self.shade, "HORIZONTAL", { 0, 0, 0, a }, { 0, 0, 0, 0 })
+            end
+            self:SetAlpha(p < 0.85 and 1 or (1 - (p - 0.85) / 0.15))
+            if p >= 1 then self:Hide() end
+        end)
+        S.leaf = f
+    end
+    local f = S.leaf
+    local r, g, b = UI.Tok("card")
+    -- (the paper a little lighter than the page, so the turning leaf stands out from it)
+    f.paper:SetVertexColor(min(1, r * 1.08 + 0.02), min(1, g * 1.08 + 0.02), min(1, b * 1.08 + 0.02), 1)
+    -- at the fold of the open book of the view; a view of one page turns at the middle of the desk
+    local book = view and view.book
+    if book and book.split and book:IsVisible() then
+        f.at, f.mid, f.top, f.bottom = book, book.split, 0, 0
+        f.halfL, f.halfR = book.split, max(40, book:GetWidth() - book.split)
+    else
+        local half = max(40, c:GetWidth() / 2 - 16)
+        f.at, f.mid, f.top, f.bottom = c, c:GetWidth() / 2, -8, 14
+        f.halfL, f.halfR = half, half
+    end
+    f.from = (dir or 1) >= 0 and 1 or -1
+    f.t = 0
+    f:Show()
+    UI.Sound("IG_ABILITY_PAGE_TURN", 836)
+end
+
 function UI:ShowRoute(route)
     if not S then return end
+    -- a leaf turns over when another page of the book opens (not when the same one is laid out anew)
+    local before = self.shownRoute
+    self.shownRoute = route
+    local turn = before and before ~= route and (before.view ~= route.view or before.day ~= route.day or before.group ~= route.group
+        or before.section ~= route.section)
     local v = viewFor(route.view)
     if not v then return end
     for key, other in pairs(views) do
@@ -882,6 +958,7 @@ function UI:ShowRoute(route)
     GameTooltip:Hide()
     v.host:Show()
     if v.Layout then v:Layout(contentSize()) end
+    if turn then turnLeaf(R.dir, v) end
     -- the part on the desk: what is new since it was last looked at is marked while it is shown (EnterPart, before
     -- the view fills), and its count of news goes
     local place = UI.VIEW_PLACE and UI.VIEW_PLACE[route.view]
