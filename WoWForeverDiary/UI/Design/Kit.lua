@@ -589,7 +589,7 @@ local function placeMenuRows()
     end
 end
 
-local function openMenu(owner, items, cur, onPick)
+local function openMenu(owner, items, cur, onPick, side)
     if not menu then
         menu = K.Box(UIParent, "panel", "gold")
         menu:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -610,7 +610,7 @@ local function openMenu(owner, items, cur, onPick)
     if menu:IsShown() and menu.owner == owner then menu:Hide() return end
     menu.owner, menu.items, menu.cur, menu.onPick = owner, items, cur, onPick
     menu:SetScale(owner:GetEffectiveScale() / UIParent:GetEffectiveScale())
-    local w = max(owner:GetWidth(), 160)
+    local w = max(owner:GetWidth(), side == "right" and floor(210 * max(1, UI.FONT_SCALE or 1)) or 160)
     -- a row is as high as the writing needs; the list as high as it may be, then it scrolls
     local _, size = UI.TypeFont("body")
     local rowH = max(26, floor(size + 13))
@@ -647,9 +647,13 @@ local function openMenu(owner, items, cur, onPick)
     placeMenuRows()
     menu:SetSize(w, visible * rowH + 8)
     menu:ClearAllPoints()
-    menu:SetPoint("TOPLEFT", owner, "BOTTOMLEFT", 0, -2)
+    if side == "right" then menu:SetPoint("TOPLEFT", owner, "TOPRIGHT", 4, 0) else menu:SetPoint("TOPLEFT", owner, "BOTTOMLEFT", 0, -2) end
     menu:Show()
 end
+
+-- a small menu of choices beside a frame: items = { { value, label } }, onPick(value); side = "right" opens it to
+-- the right of the frame (else below)
+K.Menu = openMenu
 
 function K.Dropdown(parent, items, get, set, width)
     local b = K.Button(parent, "", "secondary", nil, width or 220)

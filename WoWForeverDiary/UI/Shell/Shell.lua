@@ -191,7 +191,21 @@ function UI:RefreshRail()
             b.badge:SetPoint("RIGHT", -8, 0)
         end
         b.tip = new > 0 and { { format(L["%d new since you last read"], new), 1, 0.6, 0.45 } } or nil
-        b:SetScript("OnClick", function() R.Go(UI.GroupRoute(g)) end)
+        -- narrow: a group of several parts opens a menu of them beside the sign (its overview first)
+        b:SetScript("OnClick", function(self)
+            if S.narrow and #parts > 1 then
+                local items = { { "@group", L[g.label] } }
+                for _, key in ipairs(parts) do
+                    local n = counts[key] or 0
+                    items[#items + 1] = { key, UI.PartLabel(key) .. (n > 0 and ("  +" .. n) or "") }
+                end
+                K.Menu(self, items, part, function(key)
+                    if key == "@group" then R.Go(UI.GroupRoute(g)) else R.Go(UI.PartRoute(key)) end
+                end, "right")
+                return
+            end
+            R.Go(UI.GroupRoute(g))
+        end)
         b:ClearAllPoints()
         b:SetPoint("TOPLEFT", rail, "TOPLEFT", 6, y)
         b:SetPoint("RIGHT", rail, "RIGHT", -6, 0)
@@ -255,6 +269,8 @@ function UI:RefreshRail()
     S.markHead:SetPoint("RIGHT", rail, "RIGHT", -10, 0)
 
     S.fold.glyph:SetShape(narrow and "right" or "left")
+    -- narrow: the bookmarks behind a sign above the fold
+    S.markMenu:SetShown(narrow and #(UI.MarkList and UI.MarkList() or {}) > 0)
 end
 -- a bookmark set or taken away: the register, the button in the head bar and the foot of the diary follow
 function UI:OnMarksChanged()
@@ -685,6 +701,17 @@ function UI:BuildShell()
     end, 26)
     S.fold:SetFlat(true)
     S.fold:SetPoint("BOTTOMLEFT", 12, 8)
+    S.markMenu = K.IconButton(rail, "mark", { L["Bookmarks"] }, function(self)
+        local items, go = {}, {}
+        for _, m in ipairs(UI.MarkList()) do
+            items[#items + 1] = { m.i, m.title }
+            go[m.i] = m.go
+        end
+        K.Menu(self, items, nil, function(i) if go[i] then go[i]() end end, "right")
+    end, 26)
+    S.markMenu:SetFlat(true)
+    S.markMenu:SetPoint("BOTTOM", S.fold, "TOP", 0, 6)
+    S.markMenu:Hide()
 
     -- the desk
     local content = CreateFrame("Frame", nil, inner)

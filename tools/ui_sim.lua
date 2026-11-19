@@ -796,6 +796,27 @@ step("tasks and goals", function()
     found.box:Click()
     WFD.C.myGoals = nil
 end)
+-- the narrow register: a group opens a menu of its parts, a sign the bookmarks
+step("narrow register", function()
+    UI:OpenShell({ view = "start" })
+    WFD.S.navCollapsed = true
+    UI.LayoutShell()
+    local hunt
+    for _, b in ipairs(UI.shell.items) do if b.col == UI.GROUP_COLOURS.hunt then hunt = b end end
+    hunt:Click()
+    local menu = env.WoWForeverDiaryMenu
+    if not (menu and menu:IsShown()) then error("the group opened no menu of its parts") end
+    menu.rows[2]:Click()
+    if UI.Router.cur.view == "start" then error("a part picked in the menu did not open") end
+    WFD.C.marks = { { day = 1 } }
+    UI:OnMarksChanged()
+    if not UI.shell.markMenu:IsShown() then error("no sign for the bookmarks in the narrow register") end
+    UI.shell.markMenu:Click()
+    UI.Kit.CloseMenu()
+    WFD.C.marks = {}
+    WFD.S.navCollapsed = nil
+    UI.LayoutShell()
+end)
 -- every place can be bookmarked from the head bar, with what was chosen in it; undo takes it away again
 step("bookmark any view", function()
     local Rt = UI.Router
