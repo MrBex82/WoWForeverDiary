@@ -588,6 +588,13 @@ local function buildSearch(top)
     return box
 end
 
+-- the fold between the two pages of the open view, x points from the left of the desk; nil: one page, no fold
+function UI.SetSpread(host, x)
+    if not (S and S.gutter) then return end
+    if host and not host:IsShown() then return end
+    if x then S.gutter:Place(x) else S.gutter:Hide() end
+end
+
 function UI:FocusSearch()
     if not S or not self.inShell then return end
     S.search:SetFocus()
@@ -734,6 +741,9 @@ function UI:BuildShell()
     content:SetPoint("BOTTOMRIGHT", -1, 1)
     if content.SetClipsChildren then content:SetClipsChildren(true) end
     S.content = content
+    -- the fold of the open book: a view with two pages (index and day, list and report) says where it lies
+    S.gutter = K.Gutter(content)
+    S.gutter:SetFrameLevel(content:GetFrameLevel() + 40)
 
     -- the grip in the corner
     local grip = CreateFrame("Button", nil, f)
@@ -843,6 +853,7 @@ function UI:ShowRoute(route)
     end
     closeResults()
     GameTooltip:Hide()
+    S.gutter:Hide()
     v.host:Show()
     if v.Layout then v:Layout(contentSize()) end
     -- the part on the desk: what is new since it was last looked at is marked while it is shown (EnterPart, before

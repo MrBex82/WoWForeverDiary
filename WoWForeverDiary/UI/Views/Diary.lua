@@ -432,6 +432,8 @@ UI:RegisterView({
             self.page:ClearAllPoints()
             self.page:SetPoint("TOPLEFT", host, "TOPLEFT", left + floor((avail - pw) / 2), -14)
             self.page:SetSize(pw, max(100, H - 32 - footH))
+            -- wide: the index and the day are the two pages of the open book
+            UI.SetSpread(host, (not narrow) and (iw + 21) or nil)
             self.foot:ClearAllPoints()
             self.foot:SetPoint("TOPLEFT", self.page, "BOTTOMLEFT", 0, -8)
             self.foot:SetSize(pw, footH - 8)

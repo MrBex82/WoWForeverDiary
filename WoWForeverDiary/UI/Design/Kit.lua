@@ -1303,3 +1303,40 @@ function K.Edit(parent, w)
     e:SetScript("OnEditFocusLost", function(s) s:SetSurface("inset", "line") end)
     return e
 end
+
+-- The fold between two pages of the open book: a dark line where the leaves meet, the paper bending into it on
+-- both sides (shadow towards the middle) and a little light on the curve. Place(x) puts it x points from the left of
+-- its parent, over the whole height; in the flat styles it is a quiet line with a soft shadow.
+function K.Gutter(parent)
+    local g = CreateFrame("Frame", nil, parent)
+    g:SetWidth(72)
+    g:EnableMouse(false)
+    UI.Themed(g, function(fr)
+        local classic = CLASSIC[UI.THEME or "codex"]
+        local a = classic and 1 or 0.45
+        local l = UI.GradRect(fr, "HORIZONTAL", { 0, 0, 0, 0 }, { 0, 0, 0, 0.42 * a }, "OVERLAY", 1)
+        l:SetPoint("TOPLEFT")
+        l:SetPoint("BOTTOMRIGHT", fr, "BOTTOM", 0, 0)
+        local r = UI.GradRect(fr, "HORIZONTAL", { 0, 0, 0, 0.30 * a }, { 0, 0, 0, 0 }, "OVERLAY", 1)
+        r:SetPoint("TOPLEFT", fr, "TOP", 0, 0)
+        r:SetPoint("BOTTOMRIGHT")
+        local line = UI.Fill(fr, { 0.06, 0.035, 0.015 }, "OVERLAY", 3, classic and 0.75 or 0.35)
+        line:SetWidth(2)
+        line:SetPoint("TOP")
+        line:SetPoint("BOTTOM")
+        if classic then
+            -- the light on the curve of the right leaf, a little away from the fold
+            local hi = UI.GradRect(fr, "HORIZONTAL", { 1, 0.92, 0.75, 0 }, { 1, 0.92, 0.75, 0.07 }, "OVERLAY", 2)
+            hi:SetPoint("TOPLEFT", fr, "TOP", 6, 0)
+            hi:SetPoint("BOTTOMRIGHT", fr, "BOTTOM", 18, 0)
+        end
+    end)
+    function g:Place(x)
+        self:ClearAllPoints()
+        self:SetPoint("TOP", parent, "TOPLEFT", x, 0)
+        self:SetPoint("BOTTOM", parent, "BOTTOMLEFT", x, 0)
+        self:Show()
+    end
+    g:Hide()
+    return g
+end
