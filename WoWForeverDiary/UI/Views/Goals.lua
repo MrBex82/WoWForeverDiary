@@ -166,7 +166,9 @@ UI.PART_LABEL.tasks = "Tasks"
 
 UI:RegisterView({
     key = "tasks",
-    build = function(host)
+    build = function(outer)
+        -- one page of the open book
+        local _, host = K.BookHost(outer)
         local v = {}
         local scroll = K.Scroll(host)
         scroll:SetAllPoints(host)
@@ -383,9 +385,9 @@ UI:RegisterView({
             self:Arrange()
         end
         function v:Show() self:Refresh() end
-        function v:Layout(w, h) self.w = w self:Arrange() end
+        function v:Layout(w, h) self.w = w - K.BOOK_W self:Arrange() end
         scroll.onResize = function(sf) v.w = sf:GetWidth() v:Arrange() end
-        UI.OnRestyle(function() if host:IsShown() then v:Arrange() end end)
+        UI.OnRestyle(function() if host:IsVisible() then v:Arrange() end end)
         function v:Head()
             local g = UI.NAV_GROUP.goals
             return L["Tasks"], L[g.label], UI.GroupRoute(g)
@@ -405,7 +407,9 @@ local QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 
 UI:RegisterView({
     key = "collection",
-    build = function(host)
+    build = function(outer)
+        -- one page of the open book
+        local _, host = K.BookHost(outer)
         local v = { rows = {} }
         local scroll = K.Scroll(host)
         scroll:SetAllPoints(host)
@@ -495,9 +499,9 @@ UI:RegisterView({
             self:Arrange()
         end
         function v:Show() self:Refresh() end
-        function v:Layout(w, h) self.w = w self:Arrange() end
+        function v:Layout(w, h) self.w = w - K.BOOK_W self:Arrange() end
         scroll.onResize = function(sf) v.w = sf:GetWidth() v:Arrange() end
-        UI.OnRestyle(function() if host:IsShown() then v:Arrange() end end)
+        UI.OnRestyle(function() if host:IsVisible() then v:Arrange() end end)
         function v:Head()
             local g = UI.NAV_GROUP.goals
             return L["Collection"], L[g.label], UI.GroupRoute(g)
