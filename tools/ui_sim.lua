@@ -536,6 +536,13 @@ local function everywhere(label)
         Rt.Go({ view = "diary" })
         v:ToggleMark()
         v:Layout(700, 500)
+        -- narrow: the index folds away and opens from the foot
+        if v.index:IsShown() then error("the index stays in a narrow window") end
+        v.indexBtn:Click()
+        if not v.index:IsShown() then error("the index does not open from the foot") end
+        v.jumpBtn:Click()
+        UI.Kit.CloseDialog()
+        v.indexBtn:Click()
         v:Layout(1300, 860)
         if v.day and v.day > 1 then Rt.Go({ view = "diary", day = 1 }) end
     end)

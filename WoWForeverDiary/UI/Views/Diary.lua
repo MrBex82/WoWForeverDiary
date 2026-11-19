@@ -215,6 +215,12 @@ UI:RegisterView({
         v.mark = K.Button(v.foot, L["Bookmark"], "ghost", function() v:ToggleMark() end)
         v.where = K.Text(v.foot, "small", "muted", "CENTER")
         v.where:SetWordWrap(false)
+        -- in a narrow window the index folds away: these two open it and ask for a day
+        v.indexBtn = K.IconButton(v.foot, "menu", { L["Chapters"] }, function()
+            v.indexOpen = not v.indexOpen
+            v:Arrange()
+        end)
+        v.jumpBtn = K.IconButton(v.foot, "text:#", { L["Go to day"] }, function() v.jump:Click() end)
 
         function v:Days()
             self.days = self.days or dayList()
@@ -251,7 +257,7 @@ UI:RegisterView({
             self.mark:SetLabel(self:Marked() and L["Remove the bookmark"] or L["Set a bookmark"])
             self.where:SetText(self.day and format(L["Day %d of %d"], self.day, days[#days] or self.day) or "")
             -- shown only where it fits whole between the buttons (larger writing, a narrow window)
-            local room = (self.foot:GetWidth() or 0) - self.prev:GetWidth() - self.nextB:GetWidth() - self.mark:GetWidth() - 36
+            local room = (self.foot:GetWidth() or 0) - self.prev:GetWidth() - self.nextB:GetWidth() - self.mark:GetWidth() - 36 - (self.narrow and 70 or 0)
             self.where:SetShown(self.where:GetStringWidth() <= room)
         end
 
@@ -406,12 +412,18 @@ UI:RegisterView({
             local k = max(1, UI.FONT_SCALE or 1)
             local iw = max(INDEX_MIN, min(INDEX_MAX, floor(W * 0.26)))
             local narrow = W < 760
-            self.index:SetShown(not narrow)
+            self.narrow = narrow
+            -- narrow: the index lies over the page while it is open, the foot has the buttons for it
+            self.index:SetShown(not narrow or self.indexOpen)
+            self.index:SetFrameLevel(host:GetFrameLevel() + (narrow and 30 or 1))
+            self.indexBtn:SetShown(narrow)
+            self.jumpBtn:SetShown(narrow)
+            self.indexBtn:SetActive(narrow and self.indexOpen)
             local left = narrow and 12 or (iw + 24)
             self.index:ClearAllPoints()
             self.index:SetPoint("TOPLEFT", host, "TOPLEFT", 12, -12)
-            self.index:SetPoint("BOTTOMLEFT", host, "BOTTOMLEFT", 12, 12)
-            self.index:SetWidth(iw)
+            self.index:SetPoint("BOTTOMLEFT", host, "BOTTOMLEFT", 12, narrow and 52 or 12)
+            self.index:SetWidth(narrow and min(iw + 40, W - 24) or iw)
             local footH = 44
             local avail = W - left - 12
             local pw = min(avail, floor(PAGE_W * k))
@@ -427,8 +439,12 @@ UI:RegisterView({
             self.nextB:SetPoint("RIGHT", self.foot, "RIGHT", 0, 0)
             self.mark:ClearAllPoints()
             self.mark:SetPoint("RIGHT", self.nextB, "LEFT", -6, 0)
+            self.indexBtn:ClearAllPoints()
+            self.indexBtn:SetPoint("LEFT", self.prev, "RIGHT", 6, 0)
+            self.jumpBtn:ClearAllPoints()
+            self.jumpBtn:SetPoint("LEFT", self.indexBtn, "RIGHT", 4, 0)
             self.where:ClearAllPoints()
-            self.where:SetPoint("LEFT", self.prev, "RIGHT", 8, 0)
+            self.where:SetPoint("LEFT", narrow and self.jumpBtn or self.prev, "RIGHT", 8, 0)
             self.where:SetPoint("RIGHT", self.mark, "LEFT", -8, 0)
             self:PaintFoot()
         end
@@ -451,6 +467,7 @@ UI:RegisterView({
 
         function v:Show(route)
             local C = WFD.C
+            self.indexOpen = nil          -- a day chosen in the folded index closes it
             self.day = route.day or (self.day) or C.readDay
             self:Refresh()
             route.day = self.day          -- the way back returns to this very day
