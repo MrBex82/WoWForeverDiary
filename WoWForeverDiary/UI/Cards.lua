@@ -575,6 +575,43 @@ end
 ------------------------------------------------------------------------
 local CATCH_MARKS = { 5, 25, 100, 250, 500, 1000 }
 
+-- the catch as a report in the column of the angler's log, written for its width
+function UI.CatchReport(rp, id)
+    local C = WFD.C
+    local e = C.catch and C.catch[id]
+    if not e then return end
+    local k = UI.FISH_KINDS[e.kind or "other"] or UI.FISH_KINDS.other
+    local qc = UI.FISH_QCOL[min(5, e.q or 1)] or UI.FISH_QCOL[1]
+    rp:Kicker(L["CAUGHT"])
+    rp:Title(e.name or "?")
+    rp:Chips({ { L[k.label], "gold" } })
+    rp:Icons({ { UI.FishIcon(e, id), { qc[1], qc[2], qc[3] }, e.link } })
+    local waters = {}
+    for map, cnt in pairs(e.zones or {}) do waters[#waters + 1] = { map = map, n = cnt } end
+    table.sort(waters, function(a, b) return a.n > b.n end)
+    local share = (C.catchTotal or 0) > 0 and (e.n or 0) / C.catchTotal or 0
+    rp:Tiles({ { e.n or 0, L["Caught"] }, { format("%d%%", floor(share * 100 + 0.5)), L["Of all catches"] },
+        { #waters, L["Waters"] } }, 3)
+    local prev, nextMark = 0, nil
+    for _, mk in ipairs(CATCH_MARKS) do
+        if (e.n or 0) < mk then nextMark = mk break end
+        prev = mk
+    end
+    if nextMark then
+        rp:Text(format(L["Next mark: %d caught"], nextMark), "gold", "small", 4)
+        rp:Progress(((e.n or 0) - prev) / (nextMark - prev), (e.n or 0) .. " / " .. nextMark)
+    end
+    rp:DayLink(e.first and WFD:DayIndex(e.first), e.first, L["First catch"])
+    if e.last and e.last ~= e.first then rp:DayLink(WFD:DayIndex(e.last), e.last, L["Last catch"]) end
+    if (e.lured or 0) > 0 then rp:Text(L["On a lure"] .. ": " .. e.lured, "soft", "body") end
+    rp:Head(L["WHERE IT BIT"], tostring(#waters))
+    for i = 1, min(8, #waters) do
+        local w = waters[i]
+        rp:Link(WFD:MapName(w.map) or "?", w.n .. "x", function() UI.Router.Go({ view = "world", map = w.map }) end,
+            L["Click for the map of this region."])
+    end
+end
+
 local function renderCatch(card, id)
     local C = WFD.C
     local e = C.catch and C.catch[id]
@@ -767,7 +804,7 @@ function UI:FitDockedCard()
 end
 
 -- kinds whose card is a report in the column of their view now (written for its width, not scaled down)
-local REPORT_VIEW = { person = "people", creature = "bestiary" }
+local REPORT_VIEW = { person = "people", creature = "bestiary", catch = "fishbook" }
 
 function UI:ShowCard(kind, key)
     if not self.holder then return end

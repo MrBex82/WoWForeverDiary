@@ -230,7 +230,7 @@ UI.CollectionView({
             f.pool:End()
         end,
     },
-    cardKind = "catch",
+    detail = function(rp, id) UI.CatchReport(rp, id) end,          -- (Cards.lua)
     keyOf = function(a) if not a.hint then return a.id end end,
     empty = function()
         if next(WFD.C.catch or {}) == nil then return { icon = UI.Icon("fish"), title = L["Nothing here yet."], hint = L["Fish with a rod anywhere: every new catch gets its card here."], button = { L["Waters and tackle"], UI.PartRoute("fishwaters") } } end
