@@ -143,6 +143,47 @@ local function peopleData(state)
     return groupBy(list, function(e) return letterOf(e.n.name) end)
 end
 
+-- the calling card of a person, written for the width of the column: portrait, trades, figures, places, quests
+local function personReport(rp, key)
+    local C = WFD.C
+    local n = C.npcs and C.npcs[key]
+    if not n then return end
+    local R = UI.Router
+    rp:Kicker(L["Acquaintance"])
+    rp:Title(n.name or "?")
+    local roles = {}
+    for _, r in ipairs(UI.ROLE_ORDER or {}) do
+        if n.roles and n.roles[r] and r ~= "talk" then roles[#roles + 1] = { WFD:RoleName(r), "gold" } end
+    end
+    if #roles > 0 then rp:Chips(roles) end
+    rp:Model(type(key) == "number" and key or nil, 170)
+    local quests = {}
+    for id, q in pairs(C.quests or {}) do
+        if q.giver == key or q.turnin == key then quests[#quests + 1] = { id = id, q = q } end
+    end
+    table.sort(quests, function(a, b) return (a.q.acc or a.q.done or 0) < (b.q.acc or b.q.done or 0) end)
+    local firstDay = n.first and WFD:DayIndex(n.first)
+    rp:Tiles({ { n.talks or 0, L["Conversations"], nil, (n.talks or 0) >= REGULAR and "gold" or nil }, { #quests, L["Quests"] },
+        { firstDay and format(L["Day %d"], firstDay) or "-", L["First met"] } }, 3)
+    if n.zone then rp:Text(n.zone .. ((n.sub and n.sub ~= "") and ("  -  " .. n.sub) or ""), "soft", "body") end
+    rp:DayLink(firstDay, n.first, L["First met"])
+    if n.last and n.last ~= n.first then rp:DayLink(WFD:DayIndex(n.last), n.last, L["Last met"]) end
+    if n.map then rp:Link(L["Show on the world map"], n.zone, function() R.Go({ view = "world", map = n.map }) end) end
+    rp:Head(L["Quests"], tostring(#quests))
+    if #quests == 0 then rp:Text(L["No quests recorded."], "muted", "body") end
+    for i, e in ipairs(quests) do
+        if i > 8 then
+            rp:Link(format(L["All %d quests"], #quests), nil, function() R.Go({ view = "quests", q = (n.name or ""):lower() }) end)
+            break
+        end
+        local q = e.q
+        rp:Line({ name = q.title or "?", mark = q.done and "check" or "right", markKey = "white",
+            col = q.done and { 0.30, 0.62, 0.30 } or { 0.55, 0.40, 0.16 },
+            go = function() R.Go({ view = "quests", key = e.id }) end,
+            tip = { q.title or "?", { L["Click: the report."], 0.5, 0.8, 1 } } })
+    end
+end
+
 UI.CollectionView({
     key = "people", label = "People", group = "people",
     chips = { { "all", "All" }, { "trainer", "Trainers" }, { "merchant", "Merchants" }, { "flight", "Flight masters" },
@@ -176,11 +217,11 @@ UI.CollectionView({
                 ring = regular and { 0.93, 0.73, 0.22 } or { 0.55, 0.42, 0.24 },
                 name = n.name, sub = sub,
                 right = (n.talks or 0) .. "x", right2 = day and format(L["Day %d"], day) or nil,
-                go = function() UI:ShowCard("person", e.key) end,
+                go = function() UI.SelectIn("people", e.key) end,
             })
         end,
     },
-    cardKind = "person",
+    detail = personReport,
     keyOf = function(e) return e.key end,
     empty = function()
         if next(WFD.C.npcs or {}) == nil then return { icon = UI.Icon("people"), title = L["You have not talked to anyone yet."], hint = L["Talk to a merchant, a trainer or a quest giver: everyone you speak to gets a calling card."] } end

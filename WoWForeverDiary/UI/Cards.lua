@@ -717,8 +717,17 @@ function UI:FitDockedCard()
     card:SetPoint("TOP", card:GetParent(), "TOP", 0, -2)
 end
 
+-- kinds whose card is a report in the column of their view now (written for its width, not scaled down)
+local REPORT_VIEW = { person = "people" }
+
 function UI:ShowCard(kind, key)
     if not self.holder then return end
+    local view = REPORT_VIEW[kind]
+    if view then
+        local R = UI.Router
+        if R.cur and R.cur.view == view then UI.SelectIn(view, key) else self:OpenShell({ view = view, key = key }) end
+        return
+    end
     local card = self.card or buildCard(self)
     card.kind, card.key = kind, key
     -- a view on the travel desk may take the card into its column; else it lies over the book

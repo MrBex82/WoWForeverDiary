@@ -233,6 +233,7 @@ function K.Report(parent)
         local w = self:Width()
         for _, s in pairs(st) do s.n = 0 end
         for _, p in pairs(pictures) do p:Hide() end
+        if self.modelBox then self.modelBox:Hide() end
         self.y = PAD
         self.w = w
         return self.w
@@ -367,6 +368,20 @@ function K.Report(parent)
         p:Show()
         p:Paint(ev)
         place(p, h + 10)
+    end
+
+    -- the 3D portrait of a creature or a person (npcId; nil: "no portrait", and why below it), as wide as the report
+    function rp:Model(npcId, h, why)
+        h = h or 170
+        if not self.modelBox then self.modelBox = UI.ModelBox(area, 200, h) end
+        local m = self.modelBox
+        m:SetSize(floor(self.w), h)
+        m.why:SetWidth(max(60, self.w - 40))
+        m:SetFrameLevel(area:GetFrameLevel() + 2)
+        m:Show()
+        m:Show3D(npcId, why)
+        place(m, h + 10)
+        self.modelShown = true
     end
 
     function rp:Gap(n) self.y = self.y + (n or 12) end
