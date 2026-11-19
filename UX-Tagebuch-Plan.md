@@ -47,13 +47,12 @@ Das Tagebuch selbst (ein Tag als Seite mit großem Anfangsbuchstaben und erzähl
 | `K.InkLink` | Tintenlink, unterstrichen beim Darüberfahren | `K.Button "ghost"` in Texten |
 | `K.Tabs` (Registerzungen) | Filter als Wörter in roter Tinte, Überlauf in ein Menü | Chip-Reihen |
 | `K.Lead` | Einleitungssatz einer Seite aus dem Erzähler, mit Initiale | Untertitel und Zahlenreihen |
-| Buchschrift (optional) | eine Schrift für Fließtext, die nach Buch aussieht | FRIZQT im Fließtext |
 
 **Recherche zur Schrift:** Ein Addon darf eigene TTF-Dateien mitbringen und über
 `SetFont("Interface\\AddOns\\WoWForeverDiary\\Media\\...")` nutzen. EB Garamond (OFL-Lizenz) hat Latein und
 Kyrillisch, passt also zu Deutsch, Englisch, Französisch, Spanisch, Portugiesisch und Russisch. Koreanisch und
 Chinesisch bleiben bei den Schriften des Spiels. Die Lizenzdatei muss mitgeliefert werden, das Addon wird dadurch
-etwa 0,5 MB größer. Ob das gewünscht ist, ist unten eine offene Frage.
+etwa 0,5 MB größer. Entschieden: keine eigene Schrift (siehe Entscheidungen).
 
 ## Teil für Teil
 
@@ -61,10 +60,10 @@ etwa 0,5 MB größer. Ob das gewünscht ist, ist unten eine offene Frage.
 - **Befund:** Die Kopfzeile ist ein Browser (Zurück, Vor, Pfad, Suchfeld, vier Symbolknöpfe). Das Register ist eine
   App-Seitenleiste mit Zählern, die Reiter am Buchrand waren deplatziert und sind wieder weg.
 - **Vorschlag:**
-  - Die Kopfzeile wird zum oberen Buchrand: links ein **Lesebändchen** für Zurück und Vor, in der Mitte nichts, weil
-    der Kolumnentitel auf der Seite steht.
+  - Die Kopfzeile wird zum oberen Buchrand: links Zurück und Vor als Pfeile im Stil des Buchrands, in der Mitte
+    nichts, weil der Kolumnentitel auf der Seite steht.
   - Rechts kleiner Platz für Stichwort (Suche), Lesezeichen und Einstellungen.
-  - Das Register wird ein **Inhaltsverzeichnis auf dem Vorsatz**: Gruppennamen in Buchschrift, Teile darunter mit
+  - Das Register wird ein **Inhaltsverzeichnis auf dem Vorsatz**: Gruppennamen in MORPHEUS, Teile darunter mit
     Leaderpunkten ("Bestiarium ........ 34"). "Neu" steht als kleines rotes Wort statt als Zahl im Kasten.
   - Schmal bleibt es das Zeichenregister.
 
@@ -154,8 +153,7 @@ etwa 0,5 MB größer. Ob das gewünscht ist, ist unten eine offene Frage.
      `screenshots/vor-tagebuch/`.
    - Ein Befundblatt je Teil ergänzt diesen Plan.
    - Heute nur teilweise geschafft, der Charakter wurde mitten im Rundgang ausgeloggt.
-1. **Bausteine:** `K.RunningHead`, `K.Folio`, `K.Margin`, `K.InkLink`, `K.Tabs`, `K.Lead`. Die Buchschrift erst,
-   wenn entschieden.
+1. **Bausteine:** `K.RunningHead`, `K.Folio`, `K.Margin`, `K.InkLink`, `K.Tabs`, `K.Lead`. Keine eigene Schrift.
 2. **Rahmen:** Kopfzeile und Register.
 3. **Start** als heutige Doppelseite.
 4. **Tagebuch und Notizbuch.**
@@ -174,14 +172,15 @@ etwa 0,5 MB größer. Ob das gewünscht ist, ist unten eine offene Frage.
 Jede Phase ist einzeln spielbar. Was nicht gefällt, wird vor der nächsten Phase geändert. Neue Texte kommen in allen
 neun Sprachen und ohne Gedankenstriche.
 
-## Offene Fragen
+## Entscheidungen (19.11.2026)
 
-1. **Buchschrift:** EB Garamond mitliefern (etwa 0,5 MB, OFL-Lizenz) oder bei den Schriften des Spiels bleiben?
-2. **Modern und Starker Kontrast:** Sollen sie das Buchgefühl voll mitmachen (Registerzungen, Randnotizen) oder
-   bewusst sachlicher bleiben, für alle, die es nüchtern mögen?
-3. **Kennzahlen:** ganz an den Rand oder auf Start eine kleine Zeile "in Zahlen" behalten?
-4. **Kopfzeile:** Zurück und Vor als Lesebändchen ok, oder lieber sichtbar als Pfeile behalten?
-5. **Reihenfolge:** erst die großen Flächen (Start, Listen) oder erst die Bausteine überall?
+1. **Schrift:** keine eigene Buchschrift, es bleiben die Schriften des Spiels (FRIZQT, MORPHEUS, SKURRI).
+   Das Buchgefühl kommt aus Satz, Kolumnentiteln, Randnotizen, Initialen und Tinte.
+2. **Stile:** Leder und Pergament werden voll zum Buch (Registerzungen, Randnotizen, Tintenlinks, eingeklebte Bilder).
+   Modern und Starker Kontrast bleiben **sachlicher**: Sie bekommen die neue Ordnung (Einleitungssatz, Zahlen am Rand,
+   Kolumnentitel), aber Knöpfe und Filter bleiben dort als klare Knöpfe. Jeder Baustein fragt dafür `CLASSIC[THEME]`.
+3. **Kennzahlen:** an den Rand, als Randnotizen. Keine Kachelreihen mehr.
+4. **Zurück und Vor:** bleiben als sichtbare Pfeile, nur im Stil des Buchrands.
 
 ## Quellen der Recherche
 
