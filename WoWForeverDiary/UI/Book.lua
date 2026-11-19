@@ -15,6 +15,19 @@ UI.AREA_H = PH - UI.TOP - UI.BOTTOM
 UI.INNER, UI.OUTER = 38, 34                 -- margins at the spine / at the outer edge
 local BW, BH = PW * 2 + GUT + BRD * 2, PH + BRD * 2
 
+-- The size of the writing makes the whole page grow: its canvas is drawn k times bigger and is k times
+-- smaller inside. UI.PW, UI.PH, the margins and UI.AREA_H are the page as the layouts see it, so with big
+-- writing less fits on a page and the book gets more pages instead of running over. The margins stay as wide
+-- on the screen as they are at 100 %, the head and the foot grow with the writing.
+UI.PAGE_K = 1
+function UI.SetPageGeometry(k)
+    k = math.max(1, k or 1)
+    UI.PAGE_K = k
+    UI.PW, UI.PH = floor(PW / k), floor(PH / k)
+    UI.INNER, UI.OUTER = floor(38 / k + 0.5), floor(34 / k + 0.5)
+    UI.AREA_H = UI.PH - UI.TOP - UI.BOTTOM
+end
+
 UI.renderers = {}
 UI.sections = {}
 UI.spread = 1
@@ -71,7 +84,21 @@ end
 
 -- x of the text column on a page side
 function UI.TextX(side) return side == "left" and UI.OUTER or UI.INNER end
-function UI.TextW() return PW - UI.INNER - UI.OUTER end
+function UI.TextW() return UI.PW - UI.INNER - UI.OUTER end
+
+-- A map in its mount below y: as wide as the text, 3 : 2; on a short page (big writing) smaller and centred, so
+-- `below` points still fit under it. Returns the map's width and height and the mount's x and width.
+function UI.MapBox(tx, tw, y, below, mat)
+    mat = mat or 9
+    local mw = tw - mat * 2
+    local mh = floor(mw / 1.5)
+    local room = floor((UI.PH - UI.BOTTOM) + y - mat * 2 - below)
+    if mh > room then
+        mh = max(60, room)
+        mw = floor(mh * 1.5)
+    end
+    return mw, mh, tx + floor((tw - mw - mat * 2) / 2), mw + mat * 2
+end
 
 ------------------------------------------------------------------------
 -- Text measuring for pagination
@@ -127,7 +154,146 @@ function Book:Add(page)
     self.pages[#self.pages + 1] = page
     page.index = #self.pages
     page.section = page.section or self.curSection
+    self.kindPage[page.kind] = self.kindPage[page.kind] or page.index
+    if UI.FLOW[page.kind] and UI.PAGE_K > 1 and not page.flowPart then UI.SplitFlowPage(self, page) end
     return page
+end
+
+------------------------------------------------------------------------
+-- Pages that flow on: a page drawn in one piece (the settings, ...) that does not fit with big writing goes
+-- on over as many pages as it needs. It is drawn once out of sight at pagination; whole lines (every widget
+-- of the page by its top edge) are given to the parts, so nothing is cut in half. Part 2 and on draw the
+-- same page moved up and hide what belongs to another part.
+------------------------------------------------------------------------
+UI.FLOW = {}
+function UI.FlowKind(kind) UI.FLOW[kind] = true end
+-- the pages drawn in one piece: the page of the owner, today and what comes next, the overviews of the groups,
+-- the year book, the pages before an album or a list (the settings register themselves)
+for _, kind in ipairs({ "owner", "today", "nextgoals", "groupindex", "groupglance", "yearbook", "fatestats",
+    "albumkinds", "albumnext", "mapinfo", "libdesk", "tasks", "collection", "ledgersum" }) do
+    UI.FLOW[kind] = true
+end
+
+local flowFrame, flowPool
+-- calls the renderer of a page with room without end below (a page that stops at its foot would hide what
+-- belongs on the next part)
+local function drawUnbounded(fn, pool, page, side, canvas, index)
+    local ph, ah = UI.PH, UI.AREA_H
+    UI.PH, UI.AREA_H = 100000, 100000 - UI.TOP - UI.BOTTOM
+    UI.flowing = true          -- what fills a page to its foot (ruled notes) takes a few lines instead
+    local ok, err = pcall(fn, pool, page, side, canvas, index)
+    UI.flowing = nil
+    UI.PH, UI.AREA_H = ph, ah
+    return ok, err
+end
+
+-- every widget the pool handed out since snap, with its top and bottom measured from the top of base
+-- (widgets of one group, a chart, count as one piece: from the highest top to the lowest bottom)
+local function placed(pool, snap, base)
+    local out, top, groups = {}, base:GetTop(), {}
+    if not top then return out end
+    for kind, list in pairs(pool.lists) do
+        for i = (snap[kind] or 0) + 1, (pool.used[kind] or 0) do
+            local o = list[i]
+            local t, b = o:GetTop(), o:GetBottom()
+            if t and b and o:IsShown() then
+                local g = o.flowGroup and groups[o.flowGroup]
+                if g then
+                    g.objs[#g.objs + 1] = o
+                    g.t, g.b = max(g.t, t - top), min(g.b, b - top)
+                else
+                    local e = { o = o, objs = { o }, t = t - top, b = b - top, keep = o.flowKeep }
+                    out[#out + 1] = e
+                    if o.flowGroup then groups[o.flowGroup] = e end
+                end
+            end
+        end
+    end
+    return out
+end
+
+-- A widget held to the foot of the page (links at the very bottom) belongs to the first part, in its place.
+-- It is found by making the frame taller for a moment: what moves with its bottom edge hangs from the foot.
+local function markFoot(list, frame)
+    local h, before = frame:GetHeight(), {}
+    for i, e in ipairs(list) do before[i] = e.objs[1]:GetTop() end
+    frame:SetHeight(h + 1000)
+    for i, e in ipairs(list) do
+        local t = e.objs[1]:GetTop()
+        e.foot = (t and before[i] and math.abs(t - before[i]) > 1) or false
+    end
+    frame:SetHeight(h)
+end
+local function inFoot(e) return e.foot end
+
+function UI.SplitFlowPage(book, page)
+    local fn = UI.renderers[page.kind]
+    if not fn then return end
+    if not flowFrame then
+        -- on the screen itself, out of sight: inside the closed book the game would not place anything
+        flowFrame = CreateFrame("Frame", nil, UIParent)
+        flowFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", -4000, 4000)
+        flowFrame:SetAlpha(0)
+        flowPool = UI.NewPool(flowFrame)
+        flowPool.raw = true
+    end
+    flowFrame:SetScale(UI.PAGE_K * ((WFD.S and WFD.S.scale) or 0.9))
+    flowFrame:SetSize(UI.PW, UI.PH)
+    local side = (page.index % 2 == 1) and "left" or "right"
+    flowPool:Begin()
+    local titled, titleText = UI.titled, UI.titleText
+    -- pages look things up in UI.book (links to other parts): the first time, before there is a book, the one
+    -- being laid out stands in
+    local before = UI.book
+    UI.book = UI.book or book
+    local ok, err = drawUnbounded(fn, flowPool, page, side, flowFrame, page.index)
+    UI.book = before
+    UI.titled, UI.titleText = titled, titleText
+    if not ok then WFD:Error("flow " .. page.kind, err) end
+    local items = ok and placed(flowPool, {}, flowFrame) or {}
+    markFoot(items, flowFrame)
+    flowPool:End()
+    for _, list in pairs(flowPool.lists) do for _, o in ipairs(list) do o:Hide() end end
+    local limit, top0 = -(UI.PH - UI.BOTTOM), -UI.TOP
+    local body = {}
+    for _, e in ipairs(items) do if not inFoot(e) then body[#body + 1] = e end end
+    items = body
+    local parts, from = {}, math.huge
+    while #parts < 6 do
+        local highest = -math.huge
+        for _, e in ipairs(items) do if e.t <= from + 0.01 and e.t > highest then highest = e.t end end
+        if highest == -math.huge then break end
+        local shift = (#parts == 0) and 0 or (top0 - highest)
+        -- the highest top of what does not fit: it and all below go on
+        local cut = -math.huge
+        for _, e in ipairs(items) do
+            if e.t <= from + 0.01 and e.b + shift < limit - 0.5 and e.t > cut then cut = e.t end
+        end
+        if cut >= highest - 0.01 then
+            -- not even the first line fits: it stays here anyway, the rest goes on
+            cut = -math.huge
+            for _, e in ipairs(items) do if e.t < highest - 0.01 and e.t > cut then cut = e.t end end
+        end
+        -- a heading never stays alone at the foot of a part: when it is the last thing above the cut, it goes on too
+        if cut > -math.huge then
+            local low
+            for _, e in ipairs(items) do
+                if e.t <= from + 0.01 and e.t > cut + 0.01 and (not low or e.t < low.t) then low = e end
+            end
+            if low and low.keep and low.t < highest - 2 then cut = low.t + 2 end
+        end
+        parts[#parts + 1] = { shift = shift, from = from, to = cut }
+        if cut == -math.huge then break end
+        from = cut
+    end
+    if #parts < 2 then return end
+    page.flowParts, page.flowPart = parts, 1
+    for i = 2, #parts do
+        local more = {}
+        for k, v in pairs(page) do more[k] = v end
+        more.flowPart, more.index, more.first = i, nil, nil
+        book:Add(more)
+    end
 end
 
 -- make sure the next page is a left page
@@ -211,9 +377,9 @@ function UI.Fingerprint()
         C.itemTotal or 0, C.npcCount or 0, C.deathTotal or 0, C.questTotal or 0 }, ":")
 end
 
-function UI:Paginate()
+local function paginate(self)
     UI.shownPrint = UI.Fingerprint()
-    local book =setmetatable({ pages = {}, dayPage = {}, sectionStart = {}, toc = {} }, Book)
+    local book =setmetatable({ pages = {}, dayPage = {}, sectionStart = {}, toc = {}, kindPage = {} }, Book)
     book:Add({ kind = "endpaper" })
     book:Add({ kind = "owner" })
 
@@ -312,6 +478,12 @@ function UI:Paginate()
     self.book = book
     return book
 end
+function UI:Paginate()
+    -- the very first time the pages that flow on are measured without a book to look things up in (page
+    -- numbers of later parts): laid out once more with the first one, they come out right
+    if not self.book then UI.AsPage(paginate, self) end
+    return UI.AsPage(paginate, self)
+end
 
 ------------------------------------------------------------------------
 -- Navigation
@@ -379,13 +551,13 @@ local function drawWornParchment(pool, canvas, side, index)
         local zone = floor(R(k, 21) * 3)
         local x, y
         if zone == 0 then      -- the outer strip
-            x = (side == "left") and (14 + 34 * R(k, 22)) or (PW - 14 - 34 * R(k, 22))
-            y = 50 + (PH - 100) * R(k, 23)
+            x = (side == "left") and (14 + 34 * R(k, 22)) or (UI.PW - 14 - 34 * R(k, 22))
+            y = 50 + (UI.PH - 100) * R(k, 23)
         elseif zone == 1 then  -- the foot, away from the page number
-            x = (R(k, 22) < 0.5) and (30 + 70 * R(k, 24)) or (PW - 30 - 70 * R(k, 24))
-            y = PH - 22 - 30 * R(k, 23)
+            x = (R(k, 22) < 0.5) and (30 + 70 * R(k, 24)) or (UI.PW - 30 - 70 * R(k, 24))
+            y = UI.PH - 22 - 30 * R(k, 23)
         else                   -- the head, away from the path
-            x = (R(k, 22) < 0.5) and (30 + 60 * R(k, 24)) or (PW - 30 - 60 * R(k, 24))
+            x = (R(k, 22) < 0.5) and (30 + 60 * R(k, 24)) or (UI.PW - 30 - 60 * R(k, 24))
             y = 14 + 16 * R(k, 23)
         end
         return x, y
@@ -398,8 +570,8 @@ local function drawWornParchment(pool, canvas, side, index)
     local EDGE = 18
     local function stain(cellX, cellY, size, x, y, alpha, k, reach)
         local r = size * reach
-        x = max(EDGE + r, min(PW - EDGE - r, x))
-        y = max(EDGE + r, min(PH - EDGE - r, y))
+        x = max(EDGE + r, min(UI.PW - EDGE - r, x))
+        y = max(EDGE + r, min(UI.PH - EDGE - r, y))
         local t = pool:Icon(STAINS, size, "BACKGROUND", 2)
         local u0, v0 = cellX * 0.5, cellY * 0.5
         local mirrorX, mirrorY = R(k, 61) < 0.5, R(k, 62) < 0.5
@@ -430,8 +602,8 @@ function UI.DrawWear(pool, canvas, side, index)
     if w <= 0 or index <= 2 then return end
     -- a ring left by a mug: small dots around a circle, in the lower outer corner where no text stands
     if hash(index, 1) < w * 0.30 then
-        local cx = (side == "left") and (24 + 30 * hash(index, 2)) or (PW - 24 - 30 * hash(index, 2))
-        local cy = PH - 30 - 24 * hash(index, 3)
+        local cx = (side == "left") and (24 + 30 * hash(index, 2)) or (UI.PW - 24 - 30 * hash(index, 2))
+        local cy = UI.PH - 30 - 24 * hash(index, 3)
         local r = 22 + 14 * hash(index, 4)
         local a = 0.06 + 0.07 * w
         for k = 0, 23 do
@@ -444,8 +616,8 @@ function UI.DrawWear(pool, canvas, side, index)
     -- foxing: little brown spots near the edges
     if w > 0.2 then
         for k = 1, floor(hash(index, 6) * 6 * w) do
-            local x = (side == "left") and (14 + 60 * hash(index + k, 7)) or (PW - 14 - 60 * hash(index + k, 7))
-            local y = 30 + (PH - 60) * hash(index * 7 + k, 8)
+            local x = (side == "left") and (14 + 60 * hash(index + k, 7)) or (UI.PW - 14 - 60 * hash(index + k, 7))
+            local y = 30 + (UI.PH - 60) * hash(index * 7 + k, 8)
             local s = 2 + 4 * hash(index + k, 9)
             local d = pool:Circle(s, { 0.36, 0.22, 0.09, 0.14 + 0.10 * w }, "BACKGROUND", 1)
             d:SetPoint("CENTER", canvas, "TOPLEFT", x, -y)
@@ -484,7 +656,7 @@ function UI:CrumbItems(page, index)
     return #items > 0 and items or nil
 end
 
-function UI:RenderPage(side, index)
+local function renderPage(self, side, index)
     local pg = self.pageFrames[side]
     local pool = pg.pool
     pool:Begin()
@@ -513,9 +685,35 @@ function UI:RenderPage(side, index)
     end
     local fn = self.renderers[page.kind]
     UI.titled = false          -- set by UI.PageTitle
+    UI.flowGroup = nil
     if fn then
-        local ok, err = pcall(fn, pool, page, side, pg.canvas, index)
-        if not ok then WFD:Error("page " .. page.kind, err) end
+        local part = page.flowParts and page.flowParts[page.flowPart or 1]
+        if part then
+            -- a part of a page that flows on: drawn moved up, what belongs to the other parts hidden
+            if not pg.shift then pg.shift = CreateFrame("Frame", nil, pg.canvas) end
+            pg.shift:ClearAllPoints()
+            pg.shift:SetPoint("TOPLEFT", pg.canvas, "TOPLEFT", 0, part.shift)
+            pg.shift:SetSize(UI.PW, UI.PH)
+            local snap = {}
+            for k, v in pairs(pool.used) do snap[k] = v end
+            pool.anchor = pg.shift
+            local ok, err = drawUnbounded(fn, pool, page, side, pg.shift, index)
+            pool.anchor = nil
+            if not ok then WFD:Error("page " .. page.kind, err) end
+            local list = placed(pool, snap, pg.shift)
+            markFoot(list, pg.shift)
+            for _, e in ipairs(list) do
+                local keep
+                if inFoot(e) then keep = (page.flowPart or 1) == 1
+                else keep = e.t <= part.from + 0.01 and e.t > part.to + 0.01 end
+                if not keep then
+                    for _, o in ipairs(e.objs) do o:Hide() end
+                end
+            end
+        else
+            local ok, err = pcall(fn, pool, page, side, pg.canvas, index)
+            if not ok then WFD:Error("page " .. page.kind, err) end
+        end
     end
     -- where this page lies: "Hunt and loot > Bestiary", each step before the current one a link
     local items = self:CrumbItems(page, index)
@@ -562,6 +760,8 @@ function UI:RenderPage(side, index)
                 fs:SetText(it.text)
             end
             fs:SetWordWrap(false)
+            -- a last step still too long for the page (a long date with big writing) ends in "..."
+            if i == #items and x + it.w > tx + tw then fs:SetWidth(max(20, tx + tw - x)) end
             fs:SetPoint("TOPLEFT", pg.canvas, "TOPLEFT", x, -21)
             x = x + it.w
         end
@@ -577,6 +777,8 @@ function UI:RenderPage(side, index)
         -- the running head, unless the page already carries the part's big title
         local h = pool:Text(9, c.inkFaint, UI.FONT, "CENTER")
         h:SetText(page.head:upper())
+        h:SetWidth(tw)
+        h:SetWordWrap(false)
         h:SetPoint("TOP", pg.canvas, "TOPLEFT", tx + tw / 2, -24)
         local r = pool:Grad("HORIZONTAL", { 0.78, 0.60, 0.26, 0 }, { 0.78, 0.60, 0.26, 0.45 })
         r:SetSize(tw / 2, 1)
@@ -587,6 +789,7 @@ function UI:RenderPage(side, index)
     end
     pool:End()
 end
+function UI:RenderPage(side, index) return UI.AsPage(renderPage, self, side, index) end
 
 function UI:ShowSpread(s)
     if not self.bookFrame then return end
@@ -1119,11 +1322,14 @@ local function buildBook(holder)
         p:SetFrameLevel(base + 3)
         if side == "left" then p:SetPoint("TOPLEFT", BRD, -BRD) else p:SetPoint("TOPLEFT", BRD + PW + GUT, -BRD) end
         local canvas = CreateFrame("Frame", nil, p)
-        canvas:SetAllPoints()
+        canvas:SetPoint("TOPLEFT")
+        canvas:SetSize(UI.PW, UI.PH)
+        canvas:SetScale(UI.PAGE_K)
         canvas:SetFrameLevel(base + 6)
 
         p.canvas = canvas
         p.pool = UI.NewPool(canvas)
+        p.pool.raw = true          -- sizes of the page: the canvas makes them bigger
         -- the glow that shows which page a link or tab led to
         local glow = CreateFrame("Frame", nil, p)
         glow:SetAllPoints()
@@ -1683,6 +1889,7 @@ function UI:Build()
     self.frame = h
     -- measure text at exactly the scale it is drawn at
     measureFrame:SetParent(h)
+    measureFrame:SetScale(UI.PAGE_K)
     measureFrame:ClearAllPoints()
     measureFrame:SetPoint("TOPLEFT", h, "TOPLEFT", 0, 0)
     measureFrame:SetFrameLevel(1)

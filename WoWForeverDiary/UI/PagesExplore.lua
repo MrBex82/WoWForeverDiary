@@ -288,9 +288,13 @@ UI:RegisterRenderer("nextgoals", function(pool, page, side, canvas)
         n:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 54, y - 4)
         local s = pool:Text(9, c.redInk, UI.FONT)
         s:SetText(L[dest.grp.def.label]:upper())
+        s:SetWidth(tw - 56)
+        s:SetWordWrap(false)
         s:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 54, y - 28)
         local h = pool:Text(11, c.inkSoft, UI.FONT)
         h:SetText(L["You have not seen this place yet."])
+        h:SetWidth(tw - 56)
+        h:SetWordWrap(false)
         h:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 54, y - 41)
         local mapID = landmarkMap(it)
         local hot
@@ -427,17 +431,16 @@ UI:RegisterRenderer("atlasmap", function(pool, page, side, canvas)
     local y = UI.PageTitle(pool, canvas, side, e.name, format(L["%d of %d regions explored"], e.visited, e.total), -56)
     -- same mount as the region maps, so the pooled map frame fits
     local MAT = 9
-    local mw = tw - MAT * 2
-    local mh = floor(mw / 1.5)
+    local mw, mh, mx, mt = UI.MapBox(tx, tw, y, 86, MAT)
     local shadow = pool:Rect({ 0, 0, 0 }, 0.25, "ARTWORK", 0)
-    shadow:SetSize(tw, mh + MAT * 2)
-    shadow:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 4, y - 5)
+    shadow:SetSize(mt, mh + MAT * 2)
+    shadow:SetPoint("TOPLEFT", canvas, "TOPLEFT", mx + 4, y - 5)
     local mat = pool:Rect({ 0.08, 0.055, 0.035 }, 1, "ARTWORK", 1)
-    mat:SetSize(tw, mh + MAT * 2)
-    mat:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+    mat:SetSize(mt, mh + MAT * 2)
+    mat:SetPoint("TOPLEFT", canvas, "TOPLEFT", mx, y)
     local m = pool:Map(mw, mh)
     m:SetSize(mw, mh)
-    m:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + MAT, y - MAT)
+    m:SetPoint("TOPLEFT", canvas, "TOPLEFT", mx + MAT, y - MAT)
     m:SetFrameLevel(canvas:GetFrameLevel() + 2)
     local zones = {}
     for _, z in ipairs(e.zones) do
@@ -462,10 +465,15 @@ UI:RegisterRenderer("atlasmap", function(pool, page, side, canvas)
     }
     local x = tx
     for _, k in ipairs(keys) do
-        local d = k[3] and pool:Diamond(6, k[2]) or pool:Circle(9, k[2])
-        d:SetPoint("CENTER", canvas, "TOPLEFT", x + 4, y - 6)
         local t = pool:Text(10, c.inkSoft, UI.FONT)
         t:SetText(k[1])
+        -- a key that does not fit beside the others starts a new line (narrow page)
+        if x > tx and x + 12 + t:GetStringWidth() > tx + tw then
+            x = tx
+            y = y - 16
+        end
+        local d = k[3] and pool:Diamond(6, k[2]) or pool:Circle(9, k[2])
+        d:SetPoint("CENTER", canvas, "TOPLEFT", x + 4, y - 6)
         t:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 12, y - 1)
         x = x + 12 + t:GetStringWidth() + 16
     end

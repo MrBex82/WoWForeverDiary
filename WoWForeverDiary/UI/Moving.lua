@@ -162,6 +162,6 @@ function UI:ShowMovingImport()
             return
         end
         WFD:ApplyMovingCode(f.data)
-        ReloadUI()
+        WFD:Reload()
     end)
 end

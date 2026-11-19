@@ -53,15 +53,27 @@ end
 
 -- a size in points, scaled by the chosen size of the writing. Nothing is set smaller than 11 points:
 -- captions in 8 to 10 points were hard to read on the dark leather.
+-- The pages of the book grow as a whole (their canvas is scaled, see UI.SetPageGeometry): while a page is
+-- laid out or drawn (UI.pageDepth > 0) sizes stay as they are, the canvas makes them bigger.
 function UI.FS(size)
     if size < 11 then size = 11 end
     local k = UI.FONT_SCALE or 1
-    if k == 1 then return size end
+    if k == 1 or (UI.pageDepth or 0) > 0 then return size end
     return math.floor(size * k + 0.5)
+end
+
+-- runs fn(...) as page work: sizes in points are those of the page, not scaled again
+function UI.AsPage(fn, ...)
+    UI.pageDepth = (UI.pageDepth or 0) + 1
+    local ok, a, b = pcall(fn, ...)
+    UI.pageDepth = UI.pageDepth - 1
+    if not ok then error(a, 0) end
+    return a, b
 end
 
 WFD:On("ADDON_LOADED", function(_, name)
     if name ~= ADDON or not WFD.S then return end
     UI.ApplyTheme(WFD.S.theme)
     UI.FONT_SCALE = WFD.S.fontScale or 1
+    if UI.SetPageGeometry then UI.SetPageGeometry(UI.FONT_SCALE) end
 end)

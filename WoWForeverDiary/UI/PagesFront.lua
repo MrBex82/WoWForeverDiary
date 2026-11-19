@@ -5,7 +5,6 @@ local L = WFD.L
 local c = UI.c
 local max, min, format = math.max, math.min, string.format
 
-local PW, PH = UI.PW, UI.PH
 
 -- dots between a label and a page number
 local function leader(pool, canvas, x, y, w, label, value, size, labelCol, onClick)
@@ -68,8 +67,10 @@ function UI.SettingsTabs(current)
         for i, name in ipairs(names) do
             local on = i == current
             local fs = pool:Link(name, function()
-                local first = UI.book and UI.book.sectionStart.notes
-                if first then UI:GoToPage(first + i - 1) end
+                -- with big writing a page of the settings may go on over more pages
+                local kinds = { "settings", "appearance", "handling", "data" }
+                local p = UI.book and UI.book.kindPage and UI.book.kindPage[kinds[i]]
+                if p then UI:GoToPage(p) end
             end, 13, on and c.redInk or c.inkSoft)
             items[i] = { fs = fs, on = on }
         end
@@ -109,6 +110,7 @@ function UI.SectionHead(pool, canvas, tx, tw, y, h, text, count)
     local dm = pool:Diamond(6, c.redInk)
     dm:SetPoint("CENTER", canvas, "TOPLEFT", tx + 3, base - 5)
     local t = pool:Text(10, c.redInk, UI.FONT)
+    t.flowKeep = true
     t:SetText(text:upper())
     t:SetWordWrap(false)
     t:SetWidth(tw - 70)
@@ -273,7 +275,7 @@ UI:RegisterRenderer("endpaper", function(pool, page, side, canvas, index)
         m:Show()
         -- a fine gold rule where the paper meets the board
         local I = 12
-        for _, e in ipairs({ { I, -I, PW - 2 * I, 1 }, { I, -(PH - I - 1), PW - 2 * I, 1 }, { I, -I, 1, PH - 2 * I }, { PW - I - 1, -I, 1, PH - 2 * I } }) do
+        for _, e in ipairs({ { I, -I, UI.PW - 2 * I, 1 }, { I, -(UI.PH - I - 1), UI.PW - 2 * I, 1 }, { I, -I, 1, UI.PH - 2 * I }, { UI.PW - I - 1, -I, 1, UI.PH - 2 * I } }) do
             local r = pool:Rect(c.redInk, 0.40, "BORDER", 1)
             r:SetSize(e[3], e[4])
             r:SetPoint("TOPLEFT", canvas, "TOPLEFT", e[1], e[2])
@@ -286,7 +288,7 @@ UI:RegisterRenderer("endpaper", function(pool, page, side, canvas, index)
             for col = 0, 14 do
                 local x = 14 + col * 28 + ((row % 2 == 1) and 14 or 0)
                 local y = 14 + row * 28
-                if x < PW - 8 and y < PH - 8 then
+                if x < UI.PW - 8 and y < UI.PH - 8 then
                     local d = pool:Diamond(row % 2 == 1 and 5 or 7, { 0.85, 0.66, 0.30, row % 2 == 1 and 0.18 or 0.28 }, "BORDER")
                     d:SetPoint("CENTER", canvas, "TOPLEFT", x, -y)
                 end
@@ -294,7 +296,7 @@ UI:RegisterRenderer("endpaper", function(pool, page, side, canvas, index)
         end
     end
     local sh = pool:Grad("HORIZONTAL", side == "left" and { 0, 0, 0, 0 } or { 0, 0, 0, 0.6 }, side == "left" and { 0, 0, 0, 0.6 } or { 0, 0, 0, 0 }, "BORDER", 2)
-    sh:SetSize(60, PH - 4)
+    sh:SetSize(60, UI.PH - 4)
     if side == "left" then sh:SetPoint("TOPRIGHT", -2, -2) else sh:SetPoint("TOPLEFT", 2, -2) end
 
     if index == 1 then
@@ -450,7 +452,9 @@ UI:RegisterRenderer("owner", function(pool, page, side, canvas)
 
     -- two ways in: the contents, and today's entry (or, in a book that has just begun, a look at a sample book)
     local toc = UI.book and UI.book.sectionStart.toc
-    if toc then
+    -- with big writing the two links would not fit side by side: the contents are a tab away anyway
+    local narrow = (UI.PAGE_K or 1) > 1.15
+    if toc and not narrow then
         local fs = pool:Link(L["To the contents"] .. "  >", function() UI:GoToPage(toc) end, 13, c.redInk)
         fs:SetPoint("BOTTOM", canvas, "BOTTOMLEFT", cx - 90, 24)
     end
@@ -460,7 +464,7 @@ UI:RegisterRenderer("owner", function(pool, page, side, canvas)
     else
         other = pool:Link(L["To today's entry"] .. "  >", function() UI:GoToPage(UI:TodayPage()) end, 13, c.redInk)
     end
-    other:SetPoint("BOTTOM", canvas, "BOTTOMLEFT", cx + 90, 24)
+    other:SetPoint("BOTTOM", canvas, "BOTTOMLEFT", narrow and cx or (cx + 90), 24)
 end)
 
 ------------------------------------------------------------------------
@@ -529,25 +533,27 @@ local LINE = 26
 -- per character under `key`
 function UI.NoteArea(pool, canvas, side, top, key)
     local tx, tw = UI.TextX(side), UI.TextW()
+    -- the foot of the ruled paper; on a page that flows on over more pages a few lines
+    local foot = UI.flowing and (top + 5 * LINE) or (UI.PH - 66)
     -- ruled lines: two pixels at low alpha look the same on every line, whatever the scale
-    for y = top + LINE, PH - 66, LINE do
+    for y = top + LINE, foot, LINE do
         local ln = pool:Rect({ 0.78, 0.60, 0.26 }, 0.16)
         ln:SetSize(tw + 16, 2)
         ln:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx - 16, -y)
     end
     -- red margin line as in a school exercise book
     local mg = pool:Rect(c.bad, 0.40)
-    mg:SetSize(1, PH - 66 - top)
+    mg:SetSize(1, foot - top)
     mg:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx - 6, -top)
     local C = WFD.C
     C.notes = C.notes or {}
-    local eb = pool:NoteEdit(tw, PH - top - 70, LINE, C.notes[key] or "", function(text)
+    local eb = pool:NoteEdit(tw, foot - top - 4, LINE, C.notes[key] or "", function(text)
         C.notes[key] = (text ~= "") and text or nil
     end, L["Click here to write your own notes ..."])
     eb:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, -(top + 7))
     local hot = pool:Hot(nil, function() eb:SetFocus() end)
     hot:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, -top)
-    hot:SetSize(tw, PH - top - 66)
+    hot:SetSize(tw, foot - top)
     hot.hl:SetAlpha(0)
     eb:SetFrameLevel(hot:GetFrameLevel() + 1)
 end

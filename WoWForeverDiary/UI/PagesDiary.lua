@@ -5,13 +5,14 @@ local L = WFD.L
 local c = UI.c
 local floor, max, format, concat = math.floor, math.max, string.format, table.concat
 
-local NOTE_W = 66                    -- margin column for notes
+-- margin column beside the text: as wide on the screen as at 100 %, whatever the size of the writing
+local function noteW() return math.floor(66 / (UI.PAGE_K or 1) + 0.5) end
 local FONT_SIZE, SPACING = 13, 3
 local H_CHAPTER, H_DAY, H_FLOURISH, GAP = 196, 58, 30, 8
 local CAP_SIZE, CAP_LINES = 40, 2    -- illuminated initial at the start of every day
 local ITEM_SLOT, MOMENT_H = 80, 34  -- width of a taped item card, height of a moment card (with its gap)
 
-local function textColW() return UI.TextW() - NOTE_W end
+local function textColW() return UI.TextW() - noteW() end
 
 ------------------------------------------------------------------------
 -- Chapters
@@ -196,6 +197,23 @@ local function keepsakes(f)
     return { items = items, moments = moments, h = h }
 end
 
+-- keepsakes taller than a page (big writing, many moments) go on over the next pages, moment by moment
+local function splitKeep(keep, room)
+    local parts = {}
+    local cur = { items = keep.items, moments = {}, h = 24 + (#keep.items > 0 and 100 or 0) }
+    for _, ev in ipairs(keep.moments) do
+        local mh = momentH(ev)
+        if cur.h + mh > room and (#cur.moments > 0 or #cur.items > 0) then
+            parts[#parts + 1] = cur
+            cur = { items = {}, moments = {}, h = 24 }
+        end
+        cur.moments[#cur.moments + 1] = ev
+        cur.h = cur.h + mh
+    end
+    parts[#parts + 1] = cur
+    return parts
+end
+
 -- the height of each task line (a long task takes two lines) and of the whole box
 local function taskRowHeights(list, w)
     local rows, sum = {}, 0
@@ -295,7 +313,9 @@ function UI.LayoutDiary(book, chapters)
                         local n = 1
                         for k = 2, #words do
                             w1[#w1 + 1] = words[k]
-                            if UI.Measure(concat(w1, SEP), FS, tw2, SPACING, UI.FONT) > limit then
+                            -- a little narrower than drawn: at 130 or 140 % the letters are rounded differently on the page,
+                            -- and a line more beside the initial would run into the text below it
+                            if UI.Measure(concat(w1, SEP), FS, tw2 - 6, SPACING, UI.FONT) > limit then
                                 w1[#w1] = nil
                                 break
                             end
@@ -343,8 +363,10 @@ function UI.LayoutDiary(book, chapters)
             end
             local keep = f and keepsakes(f)
             if keep then
-                if y + keep.h > AREA then newPage(head) end
-                put({ t = "keep", keep = keep, day = day }, keep.h + GAP)
+                for _, part in ipairs(splitKeep(keep, AREA - GAP)) do
+                    if y + part.h > AREA then newPage(head) end
+                    put({ t = "keep", keep = part, day = day }, part.h + GAP)
+                end
             end
             if y + H_FLOURISH <= AREA then
                 put({ t = "flourish" }, H_FLOURISH)
@@ -372,7 +394,9 @@ end
 
 local function drawKeep(pool, canvas, x, top, keep, w)
     local cx = x
-    for _, it in ipairs(keep.items) do
+    local fit = math.max(1, math.floor((w + 6) / ITEM_SLOT))   -- cards side by side, as many as the column holds
+    for i, it in ipairs(keep.items) do
+        if i > fit then break end
         local shadow = pool:Rect({ 0, 0, 0 }, 0.25, "ARTWORK", 0)
         shadow:SetSize(58, 64)
         shadow:SetPoint("TOPLEFT", canvas, "TOPLEFT", cx + 3, top - 5)
@@ -447,7 +471,7 @@ end
 UI:RegisterRenderer("diary", function(pool, page, side, canvas)
     local tx, tw = UI.TextX(side), UI.TextW()
     local TCW = textColW()
-    local textX = (side == "left") and (tx + NOTE_W) or tx
+    local textX = (side == "left") and (tx + noteW()) or tx
     local noteX = (side == "left") and tx or (tx + TCW + 10)
     local top = -UI.TOP
 
@@ -470,6 +494,12 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
             local t = pool:Text(28, c.ink, UI.HEAD, "CENTER")
             t:SetText(ch.title)
             t:SetWidth(tw - 20)
+            -- two lines at most above the sub line: a long title on a narrow page gets smaller
+            local size = 28
+            while size > 18 and (t:GetStringHeight() or 0) > 72 do
+                size = size - 2
+                t:SetFont(UI.HEAD, size, "")
+            end
             t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 10, y - 42)
             local s = pool:Text(10, c.inkFaint, UI.FONT, "CENTER")
             s:SetText(ch.sub:upper())
@@ -660,8 +690,8 @@ UI:RegisterRenderer("diary", function(pool, page, side, canvas)
             if ny + 15 > UI.AREA_H then break end
             local fs = pool:Text(10, note[2], UI.FONT, side == "left" and "RIGHT" or "LEFT")
             fs:SetText(note[1])
-            UI.FitText(fs, NOTE_W - 18, 10, 8, UI.FONT)   -- long words in some languages shrink instead of being cut
-            fs:SetWidth(NOTE_W - 18)          -- keeps clear of the margin rule and the text
+            UI.FitText(fs, noteW() - 18, 10, 8, UI.FONT)   -- long words in some languages shrink instead of being cut
+            fs:SetWidth(noteW() - 18)          -- keeps clear of the margin rule and the text
             fs:SetWordWrap(false)
             fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", noteX, top - ny)
             ny = ny + 15

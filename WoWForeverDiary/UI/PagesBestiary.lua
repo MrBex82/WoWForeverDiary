@@ -246,14 +246,13 @@ UI:RegisterRenderer("huntmap", function(pool, page, side, canvas, index)
 
     -- the map in a dark mount, like the map pages (same size: the map frames are shared)
     local MAT = 9
-    local mw = tw - MAT * 2
-    local mh = floor(mw / 1.5)
+    local mw, mh, mx, mt = UI.MapBox(tx, tw, y, 96, MAT)
     local mat = pool:Rect({ 0.08, 0.055, 0.035 }, 1, "ARTWORK", 1)
-    mat:SetSize(tw, mh + MAT * 2)
-    mat:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+    mat:SetSize(mt, mh + MAT * 2)
+    mat:SetPoint("TOPLEFT", canvas, "TOPLEFT", mx, y)
     local m = pool:Map(mw, mh)
     m:SetSize(mw, mh)
-    m:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + MAT, y - MAT)
+    m:SetPoint("TOPLEFT", canvas, "TOPLEFT", mx + MAT, y - MAT)
     m:SetFrameLevel(canvas:GetFrameLevel() + 2)
 
     -- slain: a full dot in the colour of its rank (a click opens the wanted poster);
@@ -444,7 +443,8 @@ end)
 -- Still to discover in an area: what you only saw and what your other characters know, as one list
 -- in place of pages full of covered cards
 ------------------------------------------------------------------------
-UI.HINT_ROWS = 12
+-- rows of hints on a page: twelve, fewer when big writing leaves a smaller page
+function UI.HintRows() return math.max(3, math.floor((UI.AREA_H - 48) / 34)) end
 local HINT_ROW = 34
 
 local function hintEdge(h)

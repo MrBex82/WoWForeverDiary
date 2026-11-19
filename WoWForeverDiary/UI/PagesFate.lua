@@ -123,14 +123,13 @@ UI:RegisterRenderer("fatemap", function(pool, page, side, canvas, index)
     else
         -- the map in a dark mount, like the hunting grounds (same size: the map frames are shared)
         local MAT = 9
-        local mw = tw - MAT * 2
-        local mh = floor(mw / 1.5)
+        local mw, mh, mx, mt = UI.MapBox(tx, tw, y, 50, MAT)
         local mat = pool:Rect({ 0.08, 0.055, 0.035 }, 1, "ARTWORK", 1)
-        mat:SetSize(tw, mh + MAT * 2)
-        mat:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+        mat:SetSize(mt, mh + MAT * 2)
+        mat:SetPoint("TOPLEFT", canvas, "TOPLEFT", mx, y)
         local m = pool:Map(mw, mh)
         m:SetSize(mw, mh)
-        m:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + MAT, y - MAT)
+        m:SetPoint("TOPLEFT", canvas, "TOPLEFT", mx + MAT, y - MAT)
         m:SetFrameLevel(canvas:GetFrameLevel() + 2)
         local points = {}
         for _, f in ipairs(area.list) do

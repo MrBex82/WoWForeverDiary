@@ -207,12 +207,19 @@ UI:RegisterRenderer("family", function(pool, page, side, canvas)
             local path, coords = UI.ClassCrest(e.classFile)
             local ccol = UI.ClassColor(e.classFile)
             pool:Plaque(tx + 30, y - 37, 42, path, e.dead and LOCKED or ccol, not e.dead, e.level and tostring(e.level), coords)
-            local n = line(pool, canvas, tx + 62, y - 7, tw - 62 - 92, e.name or "?", 17, e.dead and c.inkFaint or UI.Deep(ccol, 0.3), UI.HEAD)
+            -- the honour points on the right first: the name takes the room they leave
+            local pts = rightText(pool, canvas, tx + tw - 8, y - 8, format(L["%d honour points"], e.points or 0), 10, c.redInk)
+            local youW = me and (UI.MeasureWidth("(" .. L["you"] .. ")", UI.FS(11), UI.FONT) + 6) or 0
+            -- too little room (narrow page): no "(you)", the row of your own character is marked by its colour
+            local showYou = me
+            if tw - 62 - pts:GetStringWidth() - 16 - youW < 60 then showYou, youW = false, 0 end
+            local nameW = max(40, tw - 62 - pts:GetStringWidth() - 16 - youW)
+            local n = line(pool, canvas, tx + 62, y - 7, nameW, e.name or "?", 17, e.dead and c.inkFaint or UI.Deep(ccol, 0.3), UI.HEAD)
             n:SetShadowColor(0, 0, 0, 0.8)
-            if me then
+            if showYou then
                 local you = pool:Text(11, c.inkSoft, UI.FONT)
                 you:SetText("(" .. L["you"] .. ")")
-                you:SetPoint("BOTTOMLEFT", n, "BOTTOMLEFT", min(n:GetStringWidth(), tw - 62 - 92) + 6, 2)
+                you:SetPoint("BOTTOMLEFT", n, "BOTTOMLEFT", min(n:GetStringWidth(), nameW) + 6, 2)
             end
             line(pool, canvas, tx + 62, y - 28, tw - 62 - 8,
                 ((e.race or "") .. " " .. (e.class or "")) .. "  -  " .. (e.realm or "")
@@ -222,7 +229,6 @@ UI:RegisterRenderer("family", function(pool, page, side, canvas)
             if stats:GetStringWidth() > tw - 62 - 8 then
                 stats:SetText(WFD:Count("%d days, %d kills, %d quests", e.days or 0, e.kills or 0, e.quests or 0))
             end
-            rightText(pool, canvas, tx + tw - 8, y - 8, format(L["%d honour points"], e.points or 0), 10, c.redInk)
             -- a line of its own, so it never runs into the realm
             if e.dead then
                 line(pool, canvas, tx + 62, y - 59, tw - 62 - 8, L["In memoriam"], 10, c.bad)
@@ -260,6 +266,8 @@ UI:RegisterRenderer("family", function(pool, page, side, canvas)
             if r.mine and r.mine > r.best.secs then
                 local me = pool:Text(10, c.inkFaint, UI.FONT, "RIGHT")
                 me:SetText(L["you"] .. ": " .. WFD:DurationText(r.mine))
+                -- only where it does not run into the name of the race (it is a narrow page with big writing)
+                if tw - who:GetStringWidth() - 14 - me:GetStringWidth() < tw * 0.4 + 16 then me:SetText("") end
                 me:SetPoint("TOPRIGHT", canvas, "TOPLEFT", tx + tw - who:GetStringWidth() - 14, y - 5)
             end
         elseif r.race then

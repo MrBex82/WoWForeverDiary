@@ -5,7 +5,7 @@ _G.WoWForeverDiary = WFD
 local floor, min, format = math.floor, math.min, string.format
 local time, date = time, date
 
-WFD.version = "0.3.4"
+WFD.version = "0.3.5"
 WFD.gameLocale = GetLocale()
 WFD.locale = WFD.gameLocale
 WFD.isDE = (WFD.locale == "deDE")
@@ -702,7 +702,7 @@ function WFD:RestorePrevious()
     WFDiaryChar = old
     self.paused = true          -- nothing more is written into the diary that was just put aside
     print("|cffffd100WoW Forever Diary:|r " .. L["The diary put aside is back. The interface is reloaded."])
-    ReloadUI()
+    WFD:Reload()
 end
 
 -- Brings back the copy made before the last update. The diary as it is now is put aside (/wfd restore undoes it).
@@ -725,7 +725,7 @@ function WFD:RestoreBackup()
     WFDiaryChar = old
     self.paused = true
     print("|cffffd100WoW Forever Diary:|r " .. format(L["The copy from before the update to version %s is back. The interface is reloaded."], WFD.version))
-    ReloadUI()
+    WFD:Reload()
 end
 
 ------------------------------------------------------------------------
@@ -765,6 +765,8 @@ SlashCmdList["WOWFOREVERDIARY"] = function(msg)
         WFD.UI:ShowMovingImport()
     elseif msg == "killdebug" and WFD.KillDebug then
         WFD:KillDebug()
+    elseif msg == "layoutcheck" and WFD.UI.LayoutCheck then
+        WFD.UI:LayoutCheck()
     elseif msg == "idtest" and WFD.IdTest then
         WFD:IdTest()
     elseif msg == "cleanup" or msg == "cleanup yes" then

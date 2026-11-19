@@ -7,7 +7,9 @@ local c = UI.c
 local max, min, ceil, format = math.max, math.min, math.ceil, string.format
 
 local CARD_W, CARD_H, GAP_X, GAP_Y = 108, 118, 12, 10
-local PER_PAGE = 9
+-- three by three cards; with big writing the page is smaller and holds fewer
+local function gridCols() return max(1, min(3, math.floor((UI.TextW() + GAP_X) / (CARD_W + GAP_X)))) end
+local function gridRows() return max(1, min(3, math.floor((UI.AREA_H - 24 + GAP_Y) / (CARD_H + GAP_Y)))) end
 
 local TIERS = {           -- ranks of the log, by the number of different catches
     { 5, "Bronze", { 0.70, 0.42, 0.20, 1 } }, { 15, "Silver", { 0.70, 0.72, 0.76, 1 } },
@@ -117,6 +119,7 @@ UI:RegisterSection({
             for _, a in ipairs(byZone[z]) do list[#list + 1] = a end
             local hidden = hints[z] and #hints[z] or 0
             for _, h in ipairs(hints[z] or {}) do list[#list + 1] = h end
+            local PER_PAGE = gridCols() * gridRows()
             local pages = ceil(#list / PER_PAGE)
             local first
             for p = 1, pages do
@@ -228,10 +231,11 @@ UI:RegisterRenderer("fishalbum", function(pool, page, side, canvas)
     local tx, tw = UI.TextX(side), UI.TextW()
     local top = -UI.TOP
     UI.AlbumHead(pool, canvas, tx, tw, page)
-    local gridX = tx + (tw - (CARD_W * 3 + GAP_X * 2)) / 2
+    local cols = gridCols()
+    local gridX = tx + (tw - (CARD_W * cols + GAP_X * (cols - 1))) / 2
     for i, a in ipairs(page.cards) do
-        local col = (i - 1) % 3
-        local row = math.floor((i - 1) / 3)
+        local col = (i - 1) % cols
+        local row = math.floor((i - 1) / cols)
         drawCard(pool, canvas, gridX + col * (CARD_W + GAP_X), top - 24 - row * (CARD_H + GAP_Y), a)
     end
 end)
@@ -285,6 +289,8 @@ UI:RegisterRenderer("fishintro", function(pool, page, side, canvas)
         local plaque = pool:Plaque(x, MY, (i == cur) and 38 or 32, UI.IconPath(UI.METAL_ICONS[i], "loot"), t[3], reached, tostring(t[1]))
         local lab = pool:Text(9, i == cur and c.redInk or (reached and c.ink or c.inkFaint), UI.FONT, "CENTER")
         lab:SetText(L[t[2]]:upper())
+        lab:SetWidth(step - 2)          -- side by side on a narrow page: a long rank ends in "..."
+        lab:SetWordWrap(false)
         lab:SetPoint("TOP", canvas, "TOPLEFT", x, MY - 27)
         local hot = pool:Hot({ L[t[2]], format(L["Land %d different catches."], t[1]),
             reached and L["Reached!"] or format(L["%d still missing."], t[1] - species) })
@@ -293,7 +299,8 @@ UI:RegisterRenderer("fishintro", function(pool, page, side, canvas)
     end
     y = y - 86
 
-    local th = UI.Tiles(pool, canvas, tx, y, tw, {
+    -- no room for the tiles on a short page (big writing): they are left out
+    local th = (y - ((tw < 300) and 96 or 48) < -(UI.PH - UI.BOTTOM)) and 0 or UI.Tiles(pool, canvas, tx, y, tw, {
         { sum.casts, L["Casts"], c.ink },
         { sum.kinds.fish or 0, L["Fish"], KINDS.fish.col },
         { sum.kinds.treasure or 0, L["Treasure"], KINDS.treasure.col },
@@ -301,6 +308,8 @@ UI:RegisterRenderer("fishintro", function(pool, page, side, canvas)
     })
     y = y - th - 12
 
+    -- no room left (big writing): the album pages are reached by turning on
+    if y - 44 < -(UI.PH - UI.BOTTOM) then return end
     UI.SectionHead(pool, canvas, tx, tw, y + 18, 32, L["Album pages"], tostring(#page.zoneIndex))
     y = y - 22
     local mapIcon = UI.Icon("map")

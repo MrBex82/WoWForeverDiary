@@ -106,12 +106,16 @@ function Pool:Get(kind, factory)
         list[n] = o
     end
     o:Show()
+    o.flowGroup = UI.flowGroup     -- widgets drawn as one piece (a chart) stay together on a page that flows on
+    o.flowKeep = nil               -- a heading sets it: on a page that flows on it goes on with what follows it
     return o
 end
 
 function Pool:Text(size, col, font, justify)
     local fs = self:Get("text", function(p) return p:CreateFontString(nil, "OVERLAY") end)
-    fs:SetFont(font or UI.HEAD, UI.FS and UI.FS(size or 14) or (size or 14), "")
+    local s = size or 14
+    if self.raw then s = math.max(s, 11) elseif UI.FS then s = UI.FS(s) end
+    fs:SetFont(font or UI.HEAD, s, "")
     local r, g, b, a = col4(col or c.ink)
     fs:SetTextColor(r, g, b, a)
     fs:SetJustifyH(justify or "LEFT")
@@ -159,7 +163,7 @@ end
 
 -- a straight line between two points of the canvas (nil on clients without line regions)
 function Pool:Line(x1, y1, x2, y2, col, a, thick)
-    local canvas = self.parent
+    local canvas = self.anchor or self.parent   -- anchor: the moved part of a page that flows on
     if not canvas.CreateLine then return nil end
     local l = self:Get("line", function(p) return p:CreateLine(nil, "ARTWORK") end)
     l:SetDrawLayer("ARTWORK", 3)
@@ -214,7 +218,7 @@ end
 -- A trophy plaque: a game icon in a bevelled metal frame with a drop shadow, centred on (cx, cy).
 -- Locked plaques are grey and dim, so there is always something left to win.
 function Pool:Plaque(cx, cy, size, path, col, earned, count, coords)
-    local canvas = self.parent
+    local canvas = self.anchor or self.parent
     local f = size + 6
     local metal = earned and col or { 0.46, 0.39, 0.30, 1 }
     local sh = self:Rect({ 0, 0, 0 }, earned and 0.35 or 0.15, "ARTWORK", 0)

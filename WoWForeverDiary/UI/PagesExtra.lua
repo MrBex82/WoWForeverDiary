@@ -141,8 +141,13 @@ local function drawSummary(pool, canvas, tx, tw, y, s)
     local of = pool:Text(15, c.inkFaint, UI.HEAD)
     of:SetText(" / " .. s.maxPoints)
     of:SetPoint("BOTTOMLEFT", big, "BOTTOMRIGHT", 0, 4)
+    -- the medal cabinet takes the right of the line: on a narrow page the figures keep to the room left of it
+    local room = tw - 5 * 34 - 6
+    if big:GetStringWidth() + of:GetStringWidth() > room then of:SetText("") end
     local lab = pool:Text(9, c.inkSoft, UI.FONT)
     lab:SetText(L["Honour points"]:upper())
+    lab:SetWidth(max(30, room))
+    lab:SetWordWrap(false)
     lab:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 1, y - 38)
     -- the medal cabinet: how many tiers of each metal
     local x = tx + tw
@@ -368,6 +373,10 @@ UI:RegisterRenderer("landmarks", function(pool, page, side, canvas)
                     n:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 33, y - 4)
                     local sub = pool:Text(9, it.found and c.redInk or c.inkFaint, UI.FONT)
                     sub:SetText(it.found and (format(L["Day %d"], it.day) .. "  -  " .. date(WFD.loc.date, it.t)) or L["not yet found"])
+                    -- a narrow column (big writing) keeps the date alone
+                    if it.found and sub:GetStringWidth() > colW - 36 then sub:SetText(date(WFD.loc.date, it.t)) end
+                    sub:SetWidth(colW - 36)
+                    sub:SetWordWrap(false)
                     sub:SetPoint("TOPLEFT", canvas, "TOPLEFT", x + 33, y - 19)
                     local p = it.found and UI.book.dayPage[it.day]
                     local hot = pool:Hot(it.found and { it.name, date(WFD.loc.date .. " %H:%M", it.t), L["Click to read this day."] }

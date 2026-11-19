@@ -804,9 +804,12 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
     local S = WFD.S
     local function caption(text)
         local t = pool:Text(10, c.redInk, UI.FONT)
+        t.flowKeep = true
+        t.flowKeep = true
+        t:SetWidth(tw)
         t:SetText(text:upper())
         t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-        y = y - 18
+        y = y - max(18, (t:GetStringHeight() or 0) + 6)
     end
     local function links(items)
         local x = tx
@@ -860,8 +863,20 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
         { text = L["Put the notes back at the top"], fn = function()
             UI:ResetToastPlace()
             print("|cffffd100WoW Forever Diary:|r " .. L["The notes are back at the top of the screen."])
+            UI:ShowSpread(UI.spread)
         end },
     })
+    -- how big the notes are drawn (the mouse wheel over a note does the same)
+    caption(L["Size of the notes"])
+    local curNote, noteItems = UI:ToastSize(), {}
+    for _, k in ipairs({ 1, 1.25, 1.5, 1.75, 2 }) do
+        noteItems[#noteItems + 1] = { text = floor(k * 100 + 0.5) .. "%", active = math.abs(curNote - k) < 0.01,
+            fn = function()
+                UI:SetToastSize(k)
+                UI:ShowSpread(UI.spread)
+            end }
+    end
+    links(noteItems)
 
     -- what the keyboard and the mouse do in the book
     caption(L["Keys while the mouse is over the book"])
@@ -878,8 +893,21 @@ UI:RegisterRenderer("handling", function(pool, page, side, canvas)
     }
     for _, r in ipairs(rows) do
         if y - 22 < -(UI.PH - UI.BOTTOM) then break end
-        UI.LeaderLine(pool, canvas, tx, y, tw, r[1], r[2], 13, c.inkSoft)
-        y = y - 22
+        if UI.MeasureWidth(r[1] .. "  " .. r[2], UI.FS(12), UI.FONT) > tw - 30 then
+            -- too long for one line beside each other (narrow page): the key, and what it does below it
+            local a = pool:Text(12, c.ink, UI.FONT)
+            a:SetWidth(tw)
+            a:SetText(r[1])
+            a:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+            local b = pool:Text(12, c.inkSoft, UI.FONT)
+            b:SetWidth(tw - 12)
+            b:SetText(r[2])
+            b:SetPoint("TOPLEFT", a, "BOTTOMLEFT", 12, -2)
+            y = y - a:GetStringHeight() - b:GetStringHeight() - 8
+        else
+            UI.LeaderLine(pool, canvas, tx, y, tw, r[1], r[2], 13, c.inkSoft)
+            y = y - 22
+        end
     end
     y = y - 4
     small(L["A key to open the book can be set in the game's key bindings, under AddOns."])
@@ -889,10 +917,10 @@ end)
 -- The page of the look: the style of the book, the size of the writing, the companion
 ------------------------------------------------------------------------
 local THEME_NAMES = { codex = "Leather and gold", parchment = "Parchment", modern = "Modern", contrast = "Strong contrast" }
-local SIZES = { 1, 1.1, 1.2 }
+local SIZES = { 1, 1.1, 1.2, 1.3, 1.4, 1.5 }
 local function setAndReload(key, value)
     WFD.S[key] = value
-    ReloadUI()
+    WFD:Reload()
 end
 UI.SetAndReload = setAndReload
 
@@ -902,9 +930,10 @@ UI:RegisterRenderer("appearance", function(pool, page, side, canvas)
     local S = WFD.S
     local function caption(text)
         local t = pool:Text(10, c.redInk, UI.FONT)
+        t:SetWidth(tw)
         t:SetText(text:upper())
         t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-        y = y - 18
+        y = y - max(18, (t:GetStringHeight() or 0) + 6)
     end
     local function links(items)
         local x = tx
@@ -959,7 +988,7 @@ UI:RegisterRenderer("appearance", function(pool, page, side, canvas)
     caption(L["Size of the book"])
     items = {}
     -- a size set with Ctrl + mouse wheel joins the row, so the current one is always marked
-    local cur, steps = S.scale or 0.9, { 0.75, 0.8, 0.9, 1, 1.1 }
+    local cur, steps = S.scale or 0.9, { 0.75, 0.8, 0.9, 1, 1.1, 1.2 }
     local known = false
     for _, st in ipairs(steps) do if math.abs(cur - st) < 0.001 then known = true end end
     if not known then

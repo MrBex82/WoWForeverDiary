@@ -104,6 +104,7 @@ UI:RegisterRenderer("timeline", function(pool, page, side, canvas)
             local d = pool:Text(13, c.redInk, UI.HEAD)
             d:SetText(WFD:LongDate(r.dayHead) .. (r.cont and ("  |cff" .. UI.Hex(c.inkFaint) .. "(" .. L["continued"] .. ")|r") or ""))
             d:SetWordWrap(false)
+            d:SetWidth(max(40, tx + tw - (SX - 22 + cw + 8)))   -- a long date ends in "..." on a narrow page
             d:SetPoint("LEFT", chip, "RIGHT", 8, 0)
             local ln = pool:Grad("HORIZONTAL", { 0.91, 0.76, 0.42, 0.45 }, { 0.91, 0.76, 0.42, 0 })
             ln:SetSize(max(10, tx + tw - (SX - 22 + cw + 16 + d:GetStringWidth())), 1)
@@ -215,15 +216,22 @@ UI:RegisterRenderer("map", function(pool, page, side, canvas)
     local MAT = 9
     local mw = tw - MAT * 2
     local mh = floor(mw / 1.5)
+    -- on a short page (big writing) the map gets smaller, so the key and a row of places still fit below it
+    local room = floor((UI.PH - UI.BOTTOM) + y - MAT * 2 - 14 - 40 - 28)
+    if mh > room then
+        mh = max(60, room)
+        mw = floor(mh * 1.5)
+    end
+    local mx, mt = tx + floor((tw - mw - MAT * 2) / 2), mw + MAT * 2      -- the mount, centred
     local shadow = pool:Rect({ 0, 0, 0 }, 0.30, "ARTWORK", 0)
-    shadow:SetSize(tw, mh + MAT * 2)
-    shadow:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 4, y - 5)
+    shadow:SetSize(mt, mh + MAT * 2)
+    shadow:SetPoint("TOPLEFT", canvas, "TOPLEFT", mx + 4, y - 5)
     local mat = pool:Rect({ 0.08, 0.055, 0.035 }, 1, "ARTWORK", 1)
-    mat:SetSize(tw, mh + MAT * 2)
-    mat:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
+    mat:SetSize(mt, mh + MAT * 2)
+    mat:SetPoint("TOPLEFT", canvas, "TOPLEFT", mx, y)
     local m = pool:Map(mw, mh)
     m:SetSize(mw, mh)
-    m:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + MAT, y - MAT)
+    m:SetPoint("TOPLEFT", canvas, "TOPLEFT", mx + MAT, y - MAT)
     m:SetFrameLevel(canvas:GetFrameLevel() + 2)
     local legend = m:Draw(e.id) or {}
     -- photo corners (drawn above the map)
@@ -239,8 +247,8 @@ UI:RegisterRenderer("map", function(pool, page, side, canvas)
         return f
     end)
     holder:SetFrameLevel(cl)
-    holder:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-    holder:SetSize(tw, mh + MAT * 2)
+    holder:SetPoint("TOPLEFT", canvas, "TOPLEFT", mx, y)
+    holder:SetSize(mt, mh + MAT * 2)
     local L1, T1 = 26, 6
     local corners = { { "TOPLEFT", 1, -1 }, { "TOPRIGHT", -1, -1 }, { "BOTTOMLEFT", 1, 1 }, { "BOTTOMRIGHT", -1, 1 } }
     for i, cdef in ipairs(corners) do
@@ -262,10 +270,18 @@ UI:RegisterRenderer("map", function(pool, page, side, canvas)
     cap:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 12, y)
     local sym = { { L["Route"], { 0.55, 0.08, 0.05, 1 } }, { L["Kill sites"], { 0.30, 0.42, 0.86, 1 } } }
     local sx = tx + tw
+    -- on a narrow page (big writing) the key goes on a line of its own below the caption
+    local keyW = 0
+    for _, sm in ipairs(sym) do keyW = keyW + UI.MeasureWidth(sm[1], UI.FS(9), UI.FONT) + 24 end
+    local sy = y
+    if tx + 12 + cap:GetStringWidth() + 8 > tx + tw - keyW then
+        sy = y - 16
+        y = y - 16
+    end
     for i = #sym, 1, -1 do
         local t = pool:Text(9, c.inkSoft, UI.FONT, "RIGHT")
         t:SetText(sym[i][1])
-        t:SetPoint("TOPRIGHT", canvas, "TOPLEFT", sx, y - 1)
+        t:SetPoint("TOPRIGHT", canvas, "TOPLEFT", sx, sy - 1)
         local d = pool:Diamond(6, sym[i][2])
         d:SetPoint("RIGHT", t, "LEFT", -5, 0)
         sx = sx - t:GetStringWidth() - 24
@@ -485,7 +501,10 @@ local TIERS = {           -- collector ranks of the bestiary (also shown on the 
 }
 UI.BESTIARY_TIERS = TIERS
 local CARD_W, CARD_H, CARD_GAP, ROW_GAP = 108, 136, 12, 10
-local PER_PAGE = 9
+-- three by three cards; with big writing the page is smaller and holds fewer
+local function gridCols() return math.max(1, math.min(3, math.floor((UI.TextW() + CARD_GAP) / (CARD_W + CARD_GAP)))) end
+local function gridRows() return math.max(1, math.min(3, math.floor((UI.AREA_H - 24 + ROW_GAP) / (CARD_H + ROW_GAP)))) end
+local function perPage() return gridCols() * gridRows() end
 
 -- collection order: first kill first, numbered like an album
 local function collection()
@@ -596,12 +615,12 @@ local function addHints(book, g)
     local first, i, pieces = nil, 1, {}
     while i <= #g.rows do
         local cost = (hintPage and #hintPage.groups > 0) and HINT_HEAD or 0
-        if not hintPage or hintUsed + cost + 1 > UI.HINT_ROWS then
+        if not hintPage or hintUsed + cost + 1 > UI.HintRows() then
             hintPage = book:Add({ kind = "albumhints", numbered = true, head = L["Bestiary"], groups = {} })
             hintUsed, cost = 0, 0
         end
         local grp = { zone = g.zone, count = g.count, hidden = g.hidden, rows = {} }
-        for k = i, math.min(#g.rows, i + UI.HINT_ROWS - hintUsed - cost - 1) do grp.rows[#grp.rows + 1] = g.rows[k] end
+        for k = i, math.min(#g.rows, i + UI.HintRows() - hintUsed - cost - 1) do grp.rows[#grp.rows + 1] = g.rows[k] end
         hintPage.groups[#hintPage.groups + 1] = grp
         pieces[#pieces + 1] = grp
         hintUsed = hintUsed + cost + #grp.rows
@@ -681,6 +700,7 @@ UI:RegisterSection({
             end)
             local hidden = #hints
             local first
+            local PER_PAGE = perPage()
             local pages = math.ceil(#mine / PER_PAGE)
             for p = 1, pages do
                 local cards = {}
@@ -1153,12 +1173,13 @@ UI:RegisterRenderer("album", function(pool, page, side, canvas)
     local top = -UI.TOP
     UI.AlbumHead(pool, canvas, tx, tw, page)
 
-    local gridX = tx + (tw - (CARD_W * 3 + CARD_GAP * 2)) / 2
+    local cols = gridCols()
+    local gridX = tx + (tw - (CARD_W * cols + CARD_GAP * (cols - 1))) / 2
     -- with a list of what is still to discover after these cards, empty slots stay empty
-    local slots = ((page.hidden or 0) > 0) and #page.cards or PER_PAGE
+    local slots = ((page.hidden or 0) > 0) and #page.cards or perPage()
     for i = 1, slots do
-        local col = (i - 1) % 3
-        local row = math.floor((i - 1) / 3)
+        local col = (i - 1) % cols
+        local row = math.floor((i - 1) / cols)
         local card = pool:Get("albumcard", newCard)
         card:SetFrameLevel(canvas:GetFrameLevel() + 2)
         card:SetPoint("TOPLEFT", canvas, "TOPLEFT", gridX + col * (CARD_W + CARD_GAP), top - 24 - row * (CARD_H + ROW_GAP))
@@ -1225,6 +1246,8 @@ UI:RegisterRenderer("albumintro", function(pool, page, side, canvas)
         local plaque = pool:Plaque(x, MY, size, UI.IconPath(UI.METAL_ICONS[i], "bestiary"), t[3], reached, tostring(t[1]))
         local lab = pool:Text(9, i == cur and c.redInk or (reached and c.ink or c.inkFaint), UI.FONT, "CENTER")
         lab:SetText(L[t[2]]:upper())
+        lab:SetWidth(step - 2)          -- side by side on a narrow page: a long rank ends in "..."
+        lab:SetWordWrap(false)
         lab:SetPoint("TOP", canvas, "TOPLEFT", x, MY - 27)
         if i == nextT then
             -- how far along the way to the next trophy
@@ -1265,7 +1288,8 @@ UI:RegisterRenderer("albumintro", function(pool, page, side, canvas)
         line:SetWidth(tw)
         line:SetWordWrap(false)
     else
-        th = UI.Tiles(pool, canvas, tx, y, tw, {
+        -- no room for the tiles on a short page (big writing): they are left out
+        th = (y - ((tw < 300) and 96 or 48) < -(UI.PH - UI.BOTTOM)) and 0 or UI.Tiles(pool, canvas, tx, y, tw, {
             { bosses, L["Bosses"], bosses > 0 and RARITY.boss.border or c.ink },
             { rares, L["Rare creatures"], rares > 0 and { 0.22, 0.38, 0.66, 1 } or c.ink },
             { elites, L["Elite"], elites > 0 and { 0.74, 0.54, 0.14, 1 } or c.ink },
@@ -1275,6 +1299,8 @@ UI:RegisterRenderer("albumintro", function(pool, page, side, canvas)
     y = y - th - 12
 
     -- the album pages, one row per area with how many kinds live there
+    -- no room left (big writing): the album pages are reached by turning on
+    if y - 44 < -(UI.PH - UI.BOTTOM) then return end
     UI.SectionHead(pool, canvas, tx, tw, y + 18, 32, L["Album pages"], tostring(#page.zoneIndex))
     y = y - 22
     local mapIcon = UI.Icon("map")
@@ -1400,7 +1426,8 @@ UI:RegisterRenderer("people", function(pool, page, side, canvas)
             for i = #ROLE_ORDER, 1, -1 do
                 local role = ROLE_ORDER[i]
                 local n = r.tally[role]
-                if n and n > 0 and x - 36 > tx + 90 then
+                -- the trades stay right of the figure and its label (wider with big writing)
+                if n and n > 0 and x - 36 > tx + max(90, lab:GetStringWidth() + 10) then
                     local cx = x - 15
                     local pl = pool:Plaque(cx, y - 12, 18, UI.IconPath(ROLE_ICONS[role]), { 0.72, 0.54, 0.22, 1 }, true)
                     local t = pool:Text(11, c.ink, UI.HEAD, "CENTER")
@@ -1619,7 +1646,7 @@ local function purseChart(pool, canvas, x, y, w, h, days)
     local function valueAt(sx)
         if np == 1 then return pts[1].saldo end
         local f = sx / iw * (np - 1)
-        local i = math.min(np - 1, floor(f))
+        local i = math.max(0, math.min(np - 2, floor(f)))
         local t = f - i
         return pts[i + 1].saldo + (pts[i + 2].saldo - pts[i + 1].saldo) * t
     end
@@ -1814,15 +1841,20 @@ UI:RegisterRenderer("ledgersum", function(pool, page, side, canvas)
     cap:SetText(L["The purse over the days"]:upper())
     cap:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
     local chartTop = y - 26
-    local chartH = max(40, (UI.PH - UI.BOTTOM) + chartTop - 18)
+    -- the chart fills the page to its foot; on a page that flows on over more pages it gets a height of its own
+    local chartH = UI.flowing and 150 or max(40, (UI.PH - UI.BOTTOM) + chartTop - 18)
+    UI.flowGroup = "purse"
     purseChart(pool, canvas, tx, chartTop, tw, chartH, page.days or {})
+    UI.flowGroup = nil
 end)
 
 UI:RegisterRenderer("ledger", function(pool, page, side, canvas)
     local tx, tw = UI.TextX(side), UI.TextW()
     local top = -UI.TOP
     local rowTop = top        -- row positions already leave room for the figures above the list
-    local R = { tx + 100, tx + 190, tx + 276, tx + tw }      -- right edges of the four columns
+    -- right edges of the four columns, in the same proportions on a page made narrow by big writing
+    local R = { tx + floor(tw * 0.25), tx + floor(tw * 0.50), tx + floor(tw * 0.75), tx + tw }
+    if tw >= 300 then R = { tx + floor(tw * 0.29), tx + floor(tw * 0.55), tx + floor(tw * 0.79), tx + tw } end
     -- best day, worst day and the average, above the list on its first page
     local f = page.facts
     if f then
@@ -1844,6 +1876,8 @@ UI:RegisterRenderer("ledger", function(pool, page, side, canvas)
             t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 4, top - 10)
         else
             t:SetPoint("TOPRIGHT", canvas, "TOPLEFT", R[i] - 4, top - 10)
+            t:SetWidth(R[i] - R[i - 1] - 6)     -- a column keeps to itself; a long word gets smaller
+            t:SetWordWrap(false)
         end
     end
     local r1 = pool:Rect(c.redInk, 0.7)
@@ -1871,7 +1905,8 @@ UI:RegisterRenderer("ledger", function(pool, page, side, canvas)
         dn:SetText(format(L["Day %d"], d.day))
         dn:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx + 14, y - 7)
         local dt = pool:Text(9, c.inkFaint, UI.FONT)
-        dt:SetText(date(WFD.loc.dayMonth, WFD:DayTime(d.day)))
+        -- the date beside the day only where the column has room for it (it is in the tooltip too)
+        dt:SetText(tw >= 300 and date(WFD.loc.dayMonth, WFD:DayTime(d.day)) or "")
         dt:SetPoint("BOTTOMLEFT", dn, "BOTTOMRIGHT", 6, 1)
         local vals = {
             { d.inc, d.inc > 0 and GREEN or c.inkFaint, d.inc > 0 and ("+" .. UI.CoinIcons(d.inc, 12)) or "-" },
@@ -1881,6 +1916,8 @@ UI:RegisterRenderer("ledger", function(pool, page, side, canvas)
         for i, v in ipairs(vals) do
             local t = pool:Text(i == 3 and 12 or 11, v[2], UI.FONT, "RIGHT")
             t:SetText(v[3])
+            t:SetWidth(R[i + 1] - R[i] - 6)
+            t:SetWordWrap(false)
             t:SetPoint("TOPRIGHT", canvas, "TOPLEFT", R[i + 1] - 4, y - 7)
         end
         -- tooltip: the day's money by category
@@ -2046,6 +2083,8 @@ UI:RegisterSection({
         book:Add({ kind = "data", numbered = true, head = L["Settings"] })
     end,
 })
+-- with big writing these pages go on over the next ones
+for _, kind in ipairs({ "settings", "appearance", "handling", "data" }) do UI.FlowKind(kind) end
 
 -- languages the diary can be read in (names are translated into the current language)
 local LANG_NAMES = {
@@ -2060,7 +2099,7 @@ end
 
 local function setLanguage(code)
     WFDiaryDB.language = code    -- nil = follow the game
-    ReloadUI()
+    WFD:Reload()
 end
 
 UI:RegisterRenderer("settings", function(pool, page, side, canvas)
@@ -2070,6 +2109,8 @@ UI:RegisterRenderer("settings", function(pool, page, side, canvas)
 
     local function caption(text)
         local t = pool:Text(10, c.redInk, UI.FONT)
+        t.flowKeep = true
+        t.flowKeep = true
         t:SetText(text:upper())
         t:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
         y = y - 18
@@ -2183,8 +2224,9 @@ UI:RegisterRenderer("data", function(pool, page, side, canvas)
     local function links(items)
         for _, it in ipairs(items) do
             local fs = pool:Link(it.text, it.fn, 14, c.inkSoft)
+            fs:SetWidth(tw)                 -- a long link takes a second line on a narrow page
             fs:SetPoint("TOPLEFT", canvas, "TOPLEFT", tx, y)
-            y = y - 24
+            y = y - max(24, (fs:GetStringHeight() or 0) + 8)
         end
         y = y - 6
     end
