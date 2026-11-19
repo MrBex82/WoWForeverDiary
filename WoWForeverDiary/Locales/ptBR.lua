@@ -1398,3 +1398,4 @@ L["Talk to a merchant, a trainer or a quest giver: everyone you speak to gets a 
 L["The diary writes itself while you play: every day gets its page, told as a story."] = "O diário se escreve sozinho enquanto você joga: cada dia ganha sua página, contada como uma história."
 L["Bookmarks stand at the foot of the register."] = "Os marcadores ficam no pé do índice."
 L["Filter"] = "Filtro"
+L["No longer read later"] = "Não ler mais tarde"

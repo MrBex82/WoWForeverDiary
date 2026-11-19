@@ -194,10 +194,10 @@ UI.CollectionView({
             row:Set({ icon = UI.Icon("journal"), ring = spine(e.id, b), name = b.title or "?",
                 sub = kindWord(b) .. (b.zone and ("  -  " .. b.zone) or "") .. (b.t and ("  -  " .. date(WFD.loc.date, b.t)) or ""),
                 right = b.later and L["To read later"] or nil, right2 = missing and L["Pages are missing"] or nil,
-                go = function() UI:ShowCard("book", e.id) end })
+                go = function() UI.SelectIn("library", e.id) end })
         end,
     },
-    cardKind = "book",
+    detail = function(rp, id) UI.BookReport(rp, id) end,          -- (Cards.lua)
     keyOf = function(e) return e.id end,
     empty = function()
         if #WFD:Library() == 0 then return L["The shelf is empty. Every book, note and plaque you read will stand here."] end

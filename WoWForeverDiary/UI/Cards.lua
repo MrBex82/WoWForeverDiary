@@ -744,6 +744,28 @@ local function readerFrame(card)
     return sf
 end
 
+-- a book, note or plaque as a report in the column of the library: the whole text flows in the column and scrolls
+-- with the report; "read later" is a button
+function UI.BookReport(rp, id)
+    local b = WFD:Book(id)
+    if not b then return end
+    local kind = b.kind == "plaque" and L["Plaque"] or (b.kind == "note" and L["Note"] or L["Book"])
+    rp:Kicker(kind .. (b.zone and ("  -  " .. b.zone) or ""))
+    rp:Title(b.title or "?")
+    rp:Text(format(L["Read by %s on %s"], b.who or "?", b.t and date(WFD.loc.date, b.t) or "?"), "muted", "small", 8)
+    if not WFD:BookComplete(b) then rp:Text(L["Pages are missing: read the rest to complete this book."], "neg", "small", 8) end
+    rp:Button(b.later and L["No longer read later"] or L["Read later"], function()
+        b.later = (not b.later) or nil
+        UI.SelectIn("library", id)
+        local lib = UI.ViewInstance and UI.ViewInstance("library")
+        if lib and lib.host:IsShown() then lib:Refresh(true) end
+    end, "ghost")
+    rp:Flourish()
+    for p in (WFD:BookText(b) .. "\n\n"):gmatch("(.-)\n\n") do
+        if p:find("%S") then rp:Paragraph(p, "ink") end
+    end
+end
+
 local function renderBook(card, id)
     local b = WFD:Book(id)
     local pool, canvas = card.pool, card.canvas
@@ -804,7 +826,7 @@ function UI:FitDockedCard()
 end
 
 -- kinds whose card is a report in the column of their view now (written for its width, not scaled down)
-local REPORT_VIEW = { person = "people", creature = "bestiary", catch = "fishbook" }
+local REPORT_VIEW = { person = "people", creature = "bestiary", catch = "fishbook", book = "library" }
 
 function UI:ShowCard(kind, key)
     if not self.holder then return end

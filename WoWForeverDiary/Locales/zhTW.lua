@@ -1395,3 +1395,4 @@ L["Talk to a merchant, a trainer or a quest giver: everyone you speak to gets a 
 L["The diary writes itself while you play: every day gets its page, told as a story."] = "日記會在你遊玩時自行書寫：每一天都會得到自己的一頁，以故事講述。"
 L["Bookmarks stand at the foot of the register."] = "書籤位於目錄的底部。"
 L["Filter"] = "篩選"
+L["No longer read later"] = "取消稍後閱讀"
