@@ -724,7 +724,7 @@ function K.SectionHead(parent, text, right)
     -- as in the book: a small diamond, the words in capitals, a gold line running out towards the figure
     f.dia = UI.Diamond(f, 6, { 1, 1, 1, 1 }, "ARTWORK", 1)
     f.dia:SetPoint("LEFT", 2, 0)
-    f.text = K.Text(f, "section", "gold")
+    f.text = K.Text(f, "section", "rubric")
     f.text:SetPoint("LEFT", 12, 0)
     f.right = K.Text(f, "small", "soft", "RIGHT")
     f.right:SetPoint("RIGHT", 0, 0)
@@ -732,7 +732,7 @@ function K.SectionHead(parent, text, right)
     f.rule:SetTexture(UI.WHITE)
     f.rule:SetHeight(1)
     local function paint(s)
-        local r, g, b = UI.Tok("gold")
+        local r, g, b = UI.Tok("rubric")
         s.dia:SetVertexColor(r, g, b, 1)
         UI.Gradient(s.rule, "HORIZONTAL", { r, g, b, 0.55 }, { r, g, b, 0 })
     end
@@ -1370,6 +1370,36 @@ function K.Spread(parent)
     b.left = CreateFrame("Frame", nil, b)
     b.right = CreateFrame("Frame", nil, b)
     b.fold = K.Gutter(b)
+    -- at the foot of each page a small flourish, as printed books have (in the styles of the book only)
+    b.orn = {}
+    for i, side in ipairs({ b.left, b.right }) do
+        local o = CreateFrame("Frame", nil, b)
+        o:SetSize(40, 7)
+        o:SetPoint("BOTTOM", side, "BOTTOM", 0, 3)
+        o:SetFrameLevel(b:GetFrameLevel() + 1)
+        o.dia = UI.Diamond(o, 5, { 1, 1, 1, 1 }, "ARTWORK", 1)
+        o.dia:SetPoint("CENTER")
+        o.l = o:CreateTexture(nil, "ARTWORK")
+        o.l:SetTexture(UI.WHITE)
+        o.l:SetSize(14, 1)
+        o.l:SetPoint("RIGHT", o.dia, "LEFT", -3, 0)
+        o.r = o:CreateTexture(nil, "ARTWORK")
+        o.r:SetTexture(UI.WHITE)
+        o.r:SetSize(14, 1)
+        o.r:SetPoint("LEFT", o.dia, "RIGHT", 3, 0)
+        b.orn[i] = o
+    end
+    UI.Skin.Add(b.orn[1], function()
+        local classic = CLASSIC[UI.THEME or "codex"]
+        local r, g, bb = UI.Tok("rubric")
+        for _, o in ipairs(b.orn) do
+            o.dia:SetVertexColor(r, g, bb, 0.7)
+            UI.Gradient(o.l, "HORIZONTAL", { r, g, bb, 0 }, { r, g, bb, 0.6 })
+            UI.Gradient(o.r, "HORIZONTAL", { r, g, bb, 0.6 }, { r, g, bb, 0 })
+            o.classic = classic
+            o:SetShown(classic and o.want ~= false)
+        end
+    end)
     function b:Lay(split)
         self.split = split
         self.left:ClearAllPoints()
@@ -1380,11 +1410,15 @@ function K.Spread(parent)
             self.right:SetPoint("TOPLEFT", self, "TOPLEFT", split, 0)
             self.right:SetPoint("BOTTOMRIGHT")
             self.left:Show()
+            self.orn[1].want = true
+            self.orn[1]:SetShown(self.orn[1].classic and true or false)
             self.fold:Place(split)
             self.fold:SetFrameLevel(self:GetFrameLevel() + 30)
         else
             self.right:SetAllPoints(self)
             self.left:Hide()
+            self.orn[1].want = false
+            self.orn[1]:Hide()
             self.fold:Hide()
         end
     end

@@ -9,6 +9,7 @@ local UI = WFD.UI
 ------------------------------------------------------------------------
 -- frame: the outer rim, edge: its gold line, shell: the desk, panel: register and head bar, card: a card on the
 -- desk, inset: a sunken field (tiles, inputs), hover: what the mouse is on or what is open, line: thin rules.
+-- rubric: the headings of the sections (red ink on light paper, as in an old book),
 -- gold: the accent, onGold: writing on the accent, title: headings, ink / soft / muted: three levels of writing.
 -- pos / neg: gain and loss (always shown with a sign as well), danger: a button that destroys something.
 local TOKENS = {
@@ -16,7 +17,7 @@ local TOKENS = {
         frame = { 0.110, 0.075, 0.047 }, edge = { 0.54, 0.42, 0.18 }, shell = { 0.165, 0.118, 0.082 },
         panel = { 0.192, 0.137, 0.102 }, card = { 0.227, 0.169, 0.122 }, inset = { 0.149, 0.106, 0.075 },
         hover = { 0.290, 0.212, 0.149 }, line = { 0.83, 0.66, 0.29, 0.26 },
-        gold = { 0.83, 0.66, 0.29 }, onGold = { 0.12, 0.08, 0.055 }, title = { 0.925, 0.816, 0.541 },
+        gold = { 0.83, 0.66, 0.29 }, onGold = { 0.12, 0.08, 0.055 }, title = { 0.925, 0.816, 0.541 }, rubric = { 0.83, 0.66, 0.29 },
         ink = { 0.937, 0.890, 0.800 }, soft = { 0.824, 0.753, 0.620 }, muted = { 0.714, 0.639, 0.494 },
         pos = { 0.56, 0.82, 0.54 }, neg = { 0.94, 0.63, 0.44 }, danger = { 0.66, 0.20, 0.12 },
         shade = { 0, 0, 0, 0.55 },
@@ -25,7 +26,7 @@ local TOKENS = {
         frame = { 0.29, 0.196, 0.125 }, edge = { 0.69, 0.54, 0.24 }, shell = { 0.902, 0.839, 0.698 },
         panel = { 0.863, 0.792, 0.627 }, card = { 0.945, 0.898, 0.790 }, inset = { 0.868, 0.796, 0.635 },
         hover = { 0.804, 0.725, 0.541 }, line = { 0.43, 0.31, 0.12, 0.30 },
-        gold = { 0.54, 0.35, 0.07 }, onGold = { 0.984, 0.953, 0.863 }, title = { 0.353, 0.212, 0.031 },
+        gold = { 0.54, 0.35, 0.07 }, onGold = { 0.984, 0.953, 0.863 }, title = { 0.353, 0.212, 0.031 }, rubric = { 0.58, 0.13, 0.07 },
         ink = { 0.150, 0.098, 0.047 }, soft = { 0.250, 0.180, 0.110 }, muted = { 0.340, 0.260, 0.170 },
         pos = { 0.18, 0.43, 0.16 }, neg = { 0.66, 0.28, 0.10 }, danger = { 0.60, 0.17, 0.09 },
         shade = { 0.2, 0.12, 0.04, 0.35 },
@@ -34,7 +35,7 @@ local TOKENS = {
         frame = { 0.050, 0.055, 0.065 }, edge = { 0.30, 0.36, 0.44 }, shell = { 0.090, 0.100, 0.115 },
         panel = { 0.115, 0.125, 0.145 }, card = { 0.140, 0.150, 0.175 }, inset = { 0.075, 0.080, 0.095 },
         hover = { 0.190, 0.210, 0.250 }, line = { 0.62, 0.80, 1.00, 0.18 },
-        gold = { 0.43, 0.66, 0.91 }, onGold = { 0.05, 0.06, 0.08 }, title = { 0.85, 0.92, 1.00 },
+        gold = { 0.43, 0.66, 0.91 }, onGold = { 0.05, 0.06, 0.08 }, title = { 0.85, 0.92, 1.00 }, rubric = { 0.43, 0.66, 0.91 },
         ink = { 0.94, 0.95, 0.97 }, soft = { 0.78, 0.81, 0.86 }, muted = { 0.62, 0.66, 0.72 },
         pos = { 0.47, 0.86, 0.56 }, neg = { 0.96, 0.56, 0.48 }, danger = { 0.72, 0.22, 0.20 },
         shade = { 0, 0, 0, 0.55 },
@@ -43,7 +44,7 @@ local TOKENS = {
         frame = { 0, 0, 0 }, edge = { 1.00, 0.82, 0.23 }, shell = { 0.02, 0.02, 0.02 },
         panel = { 0.06, 0.06, 0.06 }, card = { 0.10, 0.10, 0.10 }, inset = { 0, 0, 0 },
         hover = { 0.22, 0.20, 0.14 }, line = { 1.00, 0.85, 0.30, 0.45 },
-        gold = { 1.00, 0.82, 0.23 }, onGold = { 0, 0, 0 }, title = { 1.00, 0.90, 0.50 },
+        gold = { 1.00, 0.82, 0.23 }, onGold = { 0, 0, 0 }, title = { 1.00, 0.90, 0.50 }, rubric = { 1.00, 0.82, 0.23 },
         ink = { 1, 1, 1 }, soft = { 0.94, 0.92, 0.87 }, muted = { 0.84, 0.81, 0.74 },
         pos = { 0.62, 0.95, 0.55 }, neg = { 1.00, 0.62, 0.50 }, danger = { 0.80, 0.18, 0.12 },
         shade = { 0, 0, 0, 0.6 },
