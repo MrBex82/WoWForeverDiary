@@ -43,7 +43,12 @@ end
 ------------------------------------------------------------------------
 UI.PART_VIEW.runs = "runs"
 
-local function runDur(r) return r.t1 and (r.t1 - r.t0) or (time() - (r.t0 or time())) end
+-- how long a run lasted: until its end, the one in progress until now, one left open until it was last seen
+local function runDur(r)
+    if r.t1 then return r.t1 - (r.t0 or r.t1) end
+    if WFD.CurrentRun and WFD:CurrentRun() == r then return time() - (r.t0 or time()) end
+    return (r.seen or r.t0 or 0) - (r.t0 or 0)
+end
 
 local function runData(state)
     local list = {}

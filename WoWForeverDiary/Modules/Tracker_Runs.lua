@@ -35,21 +35,62 @@ local function addMembers()
     for k, v in pairs(members()) do run.party[k] = v end
 end
 
+local BREAK = 1800      -- back inside within half an hour: still the same run
+
+-- the last moment the run in progress was seen (a /reload or a logout inside leaves no end behind)
+local function touch() if run then run.seen = time() end end
+
+-- Runs left open by a /reload, a logout or a crash inside get the last moment they were seen as their end, and
+-- runs of the same place on the same day with only a short break between them become one (one visit, entered
+-- again and again). Runs once per login, before the first run is started or taken up again.
+local healed
+local function heal(C)
+    if healed or not C.runs then return end
+    healed = true
+    for _, r in ipairs(C.runs) do
+        if not r.t1 then r.t1 = r.seen or r.t0 end
+    end
+    local list = {}
+    for _, r in ipairs(C.runs) do
+        local p = list[#list]
+        if p and p.name == r.name and p.day == r.day and r.t0 and p.t1 and r.t0 - p.t1 < BREAK then
+            p.t1 = max(p.t1, r.t1 or r.t0)
+            p.kills = (p.kills or 0) + (r.kills or 0)
+            for _, b in ipairs(r.bosses or {}) do p.bosses[#p.bosses + 1] = b end
+            for _, d in ipairs(r.deaths or {}) do p.deaths[#p.deaths + 1] = d end
+            for _, l in ipairs(r.loot or {}) do if #p.loot < 30 then p.loot[#p.loot + 1] = l end end
+            for k, v in pairs(r.party or {}) do p.party[k] = v end
+            p.last = r.last or p.last
+            p.level = max(p.level or 0, r.level or 0)
+        else
+            list[#list + 1] = r
+        end
+    end
+    C.runs = list
+end
+
 local function startRun(name)
     local C = WFD.C
     C.runs = C.runs or {}
+    heal(C)
     local last = C.runs[#C.runs]
-    if last and last.name == name and last.t1 and time() - last.t1 < 1800 then
-        run = last              -- back inside after a short break: still the same run
+    if last and last.name == name and last.t1 and time() - last.t1 < BREAK then
+        run = last              -- back inside after a short break (or a /reload): still the same run
         run.t1 = nil
     else
         run = { name = name, t0 = time(), day = WFD:DayIndex(), party = {}, bosses = {}, kills = 0, deaths = {}, loot = {},
             level = UnitLevel("player") }
         C.runs[#C.runs + 1] = run
     end
+    touch()
     addMembers()
     WFD.dirty = true
 end
+
+-- the run in progress (for its duration until now), nil outside
+function WFD:CurrentRun() return run end
+
+C_Timer.NewTicker(60, touch)
 
 local function endRun()
     if run then
@@ -61,6 +102,7 @@ end
 
 WFD:On("PLAYER_ENTERING_WORLD", function()
     if WFD.paused or not WFD.C then return end
+    heal(WFD.C)
     local inside, kind = IsInInstance()
     if inside and (kind == "party" or kind == "raid") then
         local name = GetInstanceInfo()
@@ -78,6 +120,7 @@ WFD:On("GROUP_ROSTER_UPDATE", function() if not WFD.paused then addMembers() end
 WFD:OnSignal("kill", function(id)
     lastKillId = { id = id, t = time() }
     if run then
+        touch()
         run.kills = run.kills + 1
         -- the kill is reported after the end of the encounter in newer clients: the boss it belongs to
         -- gets its creature for the painting then (only if the names agree)
