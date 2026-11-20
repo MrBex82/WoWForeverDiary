@@ -101,7 +101,15 @@ local function newItem(parent)
         -- the mark of the open entry in the colour of its group
         local gc = self.col
         if gc then self.accent:SetVertexColor(min(1, gc[1] * 1.3), min(1, gc[2] * 1.3), min(1, gc[3] * 1.3), 1) end
-        K.Recolor(self.text, self.active and "railTitle" or "rail")
+        local book = K.IsBook()
+        K.Recolor(self.text, self.active and "railTitle" or "rail", book and "heading" or "strong")
+        if book then
+            self.badge:SetSurface(nil, nil)
+            K.Recolor(self.badge.text, "railGold")
+        else
+            self.badge:SetSurface("gold", nil)
+            K.Recolor(self.badge.text, "onGold")
+        end
         local col = self.col or { 0.4, 0.3, 0.2 }
         local k = (self.active or self.hover) and 1.25 or 1
         self.ring:SetVertexColor(min(1, col[1] * k), min(1, col[2] * k), min(1, col[3] * k), 1)
@@ -119,6 +127,9 @@ local function newSub(parent)
     b.text:SetSpacing(1)
     b.count = K.Text(b, "small", "railGold", "RIGHT")
     b.count:SetPoint("RIGHT", -8, 0)
+    b.dots = K.Text(b, "small", "railMuted")
+    b.dots:SetWordWrap(false)
+    b.dots:SetText(string.rep(" .", 60))
     b:SetScript("OnEnter", function(self) self.hover = true self:Paint() end)
     b:SetScript("OnLeave", function(self) self.hover = nil self:Paint() end)
     function b:Paint()
@@ -131,6 +142,20 @@ local function newSub(parent)
         UI.Gradient(self.glow, "HORIZONTAL", { r, g, bb, self.active and 0.22 or (self.hover and 0.10 or 0) }, { r, g, bb, 0 })
         K.Recolor(self.text, self.active and "railTitle" or (self.empty and "railMuted" or "railSoft"))
         self.dot:SetVertexColor(UI.Tok(self.active and "railGold" or "railMuted", self.active and 1 or 0.7))
+        -- in the styles of the book: dots lead from the name to its count (one line names only)
+        local oneLine = (self.text:GetStringHeight() or 0) < (select(2, self.text:GetFont()) or 13) * 1.6
+        local book = K.IsBook()
+        self.dots:SetShown(book and oneLine)
+        if book and oneLine then
+            local hasCount = (self.count:GetText() or "") ~= ""
+            self.dots:ClearAllPoints()
+            self.dots:SetPoint("LEFT", self, "LEFT", 14 + (self.text:GetStringWidth() or 0) + 4, -1)
+            if hasCount then
+                self.dots:SetPoint("RIGHT", self.count, "LEFT", -4, -1)
+            else
+                self.dots:SetPoint("RIGHT", self, "RIGHT", -8, -1)
+            end
+        end
     end
     return b
 end
