@@ -164,11 +164,14 @@ function UI.CollectionView(def)
             end
             V.note = note
 
-            -- the summary: a row of figures
+            -- the summary: a sentence in the voice of the diary (def.lead), then a row of figures
             V.tiles = {}
             V.top = CreateFrame("Frame", nil, host)
             V.top:SetPoint("TOPLEFT", 0, 0)
             V.top:SetPoint("TOPRIGHT", 0, 0)
+            V.lead = K.Text(V.top, "body", "ink")
+            V.lead:SetJustifyH("LEFT")
+            V.lead:SetSpacing(2)
 
             -- the filter bar
             V.chips = {}
@@ -349,6 +352,17 @@ function UI.CollectionView(def)
 
             function V:PlaceTop(w)
                 local x, y, rowH = PAD, -12, 0
+                -- first the telling, then the counting
+                local ok, text = pcall(function() return def.lead and def.lead() end)
+                text = ok and text or nil
+                self.lead:SetShown(text ~= nil)
+                if text then
+                    self.lead:SetWidth(max(60, w - 2 * PAD))
+                    self.lead:SetText(text)
+                    self.lead:ClearAllPoints()
+                    self.lead:SetPoint("TOPLEFT", self.top, "TOPLEFT", PAD, y - 2)
+                    y = y - 2 - self.lead:GetStringHeight() - 10
+                end
                 local tiles = def.summary and def.summary() or {}
                 for i, t in ipairs(tiles) do
                     local f = self.tiles[i]

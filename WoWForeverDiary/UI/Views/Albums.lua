@@ -124,6 +124,16 @@ UI.CollectionView({
         { "sketch", "Sketches" }, { "nemesis", "Nemeses" }, { "find", "Still to find" } },
     sorts = { { "zone", "By area" }, { "kind", "By kind" }, { "kills", "Most slain" },
         { "next", "Closest to the next card" }, { "last", "Last slain" } },
+    lead = function()
+        local kinds, kills, best = 0, 0, nil
+        for _, m in pairs(WFD.C.mobs or {}) do
+            kinds = kinds + 1
+            kills = kills + (m.kills or 0)
+            if m.name and (not best or (m.kills or 0) > (best.kills or 0)) then best = m end
+        end
+        if kinds == 0 or not best then return nil end
+        return format(L["So far I have slain %s creatures of %d kinds. I met %s most often."], WFD:Int(kills), kinds, best.name)
+    end,
     summary = function()
         local C = WFD.C
         local kinds, kills, masters, rare = 0, 0, 0, 0
@@ -210,6 +220,11 @@ UI.CollectionView({
     chips = { { "all", "All" }, { "fish", "Fish" }, { "treasure", "Treasure" }, { "junk", "Junk" },
         { "other", "Odds and ends" }, { "find", "Still to find" } },
     sorts = { { "zone", "By water" }, { "kind", "By kind" }, { "most", "Most caught" }, { "new", "Newest first" } },
+    lead = function()
+        local s = WFD:CatchSummary()
+        if (s.total or 0) == 0 then return nil end
+        return format(L["%s fish of %d kinds have gone onto my hook so far."], WFD:Int(s.total), s.species)
+    end,
     summary = function()
         local s = WFD:CatchSummary()
         local _, hidden = WFD:CatchHints()

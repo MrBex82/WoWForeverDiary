@@ -191,6 +191,17 @@ UI.CollectionView({
     chips = { { "all", "All" }, { "trainer", "Trainers" }, { "merchant", "Merchants" }, { "flight", "Flight masters" },
         { "quest", "Quest givers" }, { "regular", "Regulars" } },
     sorts = { { "name", "A to Z" }, { "zone", "By area" }, { "talks", "Most spoken to" }, { "new", "Met last" } },
+    lead = function()
+        local total, best = 0, nil
+        for _, n in pairs(WFD.C.npcs or {}) do
+            if not n.obj then
+                total = total + 1
+                if n.name and (not best or (n.talks or 0) > (best.talks or 0)) then best = n end
+            end
+        end
+        if total == 0 or not best then return nil end
+        return format(L["I have met %d people on my way. I talked to %s most often."], total, best.name)
+    end,
     summary = function()
         local total, regulars, talks = 0, 0, 0
         for _, n in pairs(WFD.C.npcs or {}) do
@@ -328,6 +339,15 @@ UI.CollectionView({
     key = "quests", label = "Quest Book", group = "diary",
     chips = { { "all", "All" }, { "open", "Open" }, { "done", "Done" }, { "gaveup", "Given up" } },
     sorts = { { "zone", "By area" }, { "new", "Newest first" }, { "name", "A to Z" } },
+    lead = function()
+        local done, open = 0, 0
+        for _, q in pairs(WFD.C.quests or {}) do
+            local st = questState(q)
+            if st == "done" then done = done + 1 elseif st == "open" then open = open + 1 end
+        end
+        if done + open == 0 then return nil end
+        return format(L["I have finished %d quests so far, and %d are still waiting."], done, open)
+    end,
     summary = function()
         local done, open, gaveUp = 0, 0, 0
         for _, q in pairs(WFD.C.quests or {}) do

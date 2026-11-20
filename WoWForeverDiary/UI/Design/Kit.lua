@@ -215,6 +215,8 @@ local BUTTON = {
     -- tabs of a register in the styles of the book: only the word, the chosen one darker and underlined
     tab = { text = "rubric", hoverText = "title" },
     tabOn = { text = "title" },
+    -- a quiet button in the styles of the book: a link in ink, underlined under the mouse
+    link = { text = "rubric", hoverText = "title", downBg = nil },
 }
 
 -- a pressed button: what it carries moves down by a pixel while the mouse button is held
@@ -256,7 +258,10 @@ local function paintOff(b)
 end
 
 local function paintButton(b)
-    local st = BUTTON[b.style] or BUTTON.secondary
+    -- in the styles of the book a quiet button is a link in ink (K.IsBook is defined further down)
+    local style = b.style
+    if style == "ghost" and K.IsBook and K.IsBook() then style = "link" end
+    local st = BUTTON[style] or BUTTON.secondary
     local on = b:IsEnabled()
     local hot = b.hover and on
     local down = b.pressed and on
@@ -303,7 +308,7 @@ local function paintButton(b)
         paintText(b.label)
         if b.glyph then b.glyph:SetColorKey(b.label.colorKey) end
         b:SetAlpha(1)
-        local tab = b.style == "tab" or b.style == "tabOn"
+        local tab = b.style == "tab" or b.style == "tabOn" or style == "link"
         if b.sheen then b.sheen:SetShown(not tab and not down and (b.style ~= "ghost" or hot)) end
         -- the line under a tab: under the chosen one always, under another while the mouse is on it
         if tab and not b.under then
@@ -323,7 +328,7 @@ local function paintButton(b)
     -- the width follows the label (it changes with the size of the writing and the language)
     if not b.fixedW then
         local extra = b.glyph and 18 or 0
-        local pad = (b.style == "tab" or b.style == "tabOn") and 14 or 28
+        local pad = (b.style == "tab" or b.style == "tabOn" or style == "link") and 14 or 28
         b:SetWidth(floor(b.label:GetStringWidth() + pad + extra + 0.5))
     end
     local _, size = UI.TypeFont("strong")
