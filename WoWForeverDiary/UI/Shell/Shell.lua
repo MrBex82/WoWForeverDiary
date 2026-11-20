@@ -310,13 +310,16 @@ function UI:RefreshHead()
     local book = v and v.host and v.host.book
     if book and book.SetHeads then
         local clean = function(t) return t and (t:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")) or nil end
-        book:SetHeads(clean(path), clean(title))
+        book:SetHeads(clean(path), clean(title), pathRoute)
     end
+    -- in the book the page says where it is: the head bar keeps back, forward, the search and the buttons
+    local inBook = book ~= nil
     S.pathBtn.route = pathRoute
     local has = path ~= nil and path ~= ""
-    S.pathBtn:SetShown(has)
+    S.pathBtn:SetShown(has and not inBook)
     S.pathBtn:SetWidth(max(1, S.path:GetStringWidth() + 4))
-    S.sep:SetShown(has)
+    S.sep:SetShown(has and not inBook)
+    S.title:SetShown(not inBook)
     S.title:ClearAllPoints()
     if has then S.title:SetPoint("LEFT", S.sep, "RIGHT", 6, 0) else S.title:SetPoint("LEFT", S.fwd, "RIGHT", 14, 0) end
     S.title:SetPoint("RIGHT", S.search, "LEFT", -12, 0)

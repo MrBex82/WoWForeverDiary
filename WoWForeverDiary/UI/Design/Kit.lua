@@ -1412,8 +1412,14 @@ function K.Spread(parent)
         t:SetWordWrap(false)
         b.heads[i] = t
     end
-    function b:SetHeads(l, r)
-        self.headL, self.headR = l, r
+    -- the running head of the group leads to its overview (b.headRoute, set by the shell)
+    b.headBtn = CreateFrame("Button", nil, b)
+    b.headBtn:SetFrameLevel(b:GetFrameLevel() + 32)
+    b.headBtn:SetScript("OnClick", function() if b.headRoute then UI.Router.Go(b.headRoute) end end)
+    b.headBtn:SetScript("OnEnter", function() if b.headRoute then K.Recolor(b.heads[1], "title") end end)
+    b.headBtn:SetScript("OnLeave", function() K.Recolor(b.heads[1], "rubric") end)
+    function b:SetHeads(l, r, route)
+        self.headL, self.headR, self.headRoute = l, r, route
         self:PlaceHeads()
     end
     function b:PlaceHeads()
@@ -1436,6 +1442,10 @@ function K.Spread(parent)
             h1:SetText(both and UI.Upper(both) or "")
             h2:Hide()
         end
+        self.headBtn:ClearAllPoints()
+        self.headBtn:SetPoint("CENTER", h1, "CENTER")
+        self.headBtn:SetSize(max(1, h1:GetStringWidth() + 8), max(1, h1:GetStringHeight() + 8))
+        self.headBtn:SetShown(self.headRoute ~= nil)
     end
     -- at the foot of each page a small flourish, as printed books have (in the styles of the book only)
     b.orn = {}
