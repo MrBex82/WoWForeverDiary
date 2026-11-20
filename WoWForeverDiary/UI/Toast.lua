@@ -181,6 +181,20 @@ local function buildCard()
     local f = K.Box(stack, "panel", "gold", "Button")
     f:SetSize(TW, TH)
     K.Material(f, "dark")
+    -- in the styles of the book the card is a slip of the book's paper, written in its inks
+    f.paper = f:CreateTexture(nil, "BORDER", nil, -8)
+    f.paper:SetTexture(UI.WHITE)
+    f.paper:SetPoint("TOPLEFT", 1, -1)
+    f.paper:SetPoint("BOTTOMRIGHT", -1, 1)
+    function f:Ink()
+        local book = K.IsBook()
+        self.paper:SetShown(book)
+        if book then self.paper:SetVertexColor(UI.Tok("card")) end
+        K.Recolor(self.kicker, book and "rubric" or "railGold")
+        K.Recolor(self.name, book and "title" or "railTitle")
+        K.Recolor(self.hint, book and "soft" or "rail")
+        K.Recolor(self.points, book and "rubric" or "railGold")
+    end
     f:SetFrameStrata("HIGH")
     local sh = UI.Fill(f, { 0, 0, 0 }, "BACKGROUND", -8, 0.4)
     sh:SetPoint("TOPLEFT", 4, -6)
@@ -275,7 +289,7 @@ local function fill(f, ev)
     f.name:SetWidth(nameW)
     UI.FitText(f.name, nameW, UI.FS(16), UI.FS(12))
     f.metal:SetText(UI.Upper(d.metal or ""))
-    if d.metalCol then f.metal:SetTextColor(d.metalCol[1], d.metalCol[2], d.metalCol[3], 1) else K.Recolor(f.metal, "railGold") end
+    if d.metalCol then f.metal:SetTextColor(d.metalCol[1], d.metalCol[2], d.metalCol[3], 1) else K.Recolor(f.metal, K.IsBook() and "rubric" or "railGold") end
     local mw = (d.metal and d.metal ~= "") and (f.metal:GetStringWidth() + 10) or 0
     for i = 1, 5 do
         local p = f.pips[i]
@@ -294,6 +308,7 @@ local function fill(f, ev)
     f.hint:ClearAllPoints()
     f.hint:SetPoint("TOPLEFT", (d.metal and d.metal ~= "") and f.metal or f.name, "BOTTOMLEFT", 0, -5)
     f.hint:SetText(d.hint or "")
+    f:Ink()
     -- as tall as its lines: with bigger writing the card grows instead of the hint running out below it
     local function hgt(fs) return (fs:GetText() or "") ~= "" and (fs:GetStringHeight() or 0) or 0 end
     local h = 14 + hgt(f.kicker) + 3 + hgt(f.name)
