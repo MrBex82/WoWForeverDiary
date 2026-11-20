@@ -94,7 +94,7 @@ local cards = {}
 
 -- Today: the day in four figures, its mood and its first lines
 function cards.today(parent)
-    local c = K.Card(parent)
+    local c = K.Section(parent)
     c.title = K.Text(c, "display", "title")
     c.title:SetPoint("TOPLEFT", PAD + 2, -PAD)
     c.title:SetText(L["Today"])
@@ -105,6 +105,8 @@ function cards.today(parent)
     c.mood.text:SetPoint("CENTER", 0, 0)
     c.tiles = {}
     for i = 1, 4 do c.tiles[i] = tile(c) end
+    c.margin = K.Text(c, "small", "rubric")
+    c.margin:SetWordWrap(true)
     c.story = K.Text(c, "body", "ink")
     c.story:SetSpacing(3)
     if c.story.SetMaxLines then c.story:SetMaxLines(5) end
@@ -126,6 +128,15 @@ function cards.today(parent)
             { WFD:Dec((d.steps or 0) * 0.9144 / 1000) .. " km", L["on foot"], "atlas" },
             { (net < 0 and "-" or "+") .. UI.CoinIcons(net, 13), L["Gold today"], "ledger", net < 0 and "neg" or "pos" },
         }
+        local line = {}
+        for _, v in ipairs(vals) do line[#line + 1] = v[1] .. " " .. v[2] end
+        self.margin:SetText(table.concat(line, "   |   "))
+        -- the way to the day: a link in ink in the book, a gilded button elsewhere
+        local book = K.IsBook()
+        self.read.style = book and "ghost" or "primary"
+        self.resume.style = book and "ghost" or "secondary"
+        K.Repaint(self.read)
+        K.Repaint(self.resume)
         for i, v in ipairs(vals) do
             local t = self.tiles[i]
             t.value:SetText(v[1])
@@ -155,6 +166,25 @@ function cards.today(parent)
         self.mood:ClearAllPoints()
         self.mood:SetPoint("TOPRIGHT", self, "TOPRIGHT", -PAD, -PAD - 4)
         self.mood:SetSize(self.mood.text:GetStringWidth() + 20, 24)
+        -- in the book: the figures as one line in the margin, the story right below
+        local book = K.IsBook()
+        self.margin:SetShown(book)
+        for _, t in ipairs(self.tiles) do t:SetShown(not book) end
+        if book then
+            self.margin:SetWidth(w - 2 * PAD)
+            self.margin:ClearAllPoints()
+            self.margin:SetPoint("TOPLEFT", self, "TOPLEFT", PAD, -y + 4)
+            y = y + self.margin:GetStringHeight() + 10
+            self.story:SetWidth(min(w - 2 * PAD, 640))
+            self.story:ClearAllPoints()
+            self.story:SetPoint("TOPLEFT", self, "TOPLEFT", PAD, -y)
+            y = y + self.story:GetStringHeight() + 10
+            self.read:ClearAllPoints()
+            self.read:SetPoint("TOPLEFT", self, "TOPLEFT", PAD - 6, -y)
+            self.resume:ClearAllPoints()
+            self.resume:SetPoint("LEFT", self.read, "RIGHT", 6, 0)
+            return y + self.read:GetHeight() + PAD
+        end
         local cols = (w >= 520 * UI.FK()) and 4 or 2          -- two to a row when the writing is big or the card narrow
         local tw = (w - 2 * PAD - (cols - 1) * 10) / cols
         local th = 0
@@ -185,7 +215,7 @@ end
 
 -- the tasks of the day and of the week
 function cards.tasks(parent)
-    local c = K.Card(parent)
+    local c = K.Section(parent)
     head(c, L["Tasks of the day"])
     c.rows = {}
     c.rule = K.Rule(c, "line")
@@ -273,7 +303,7 @@ end
 
 -- what came into the book since it was last put away
 function cards.new(parent)
-    local c = K.Card(parent)
+    local c = K.Section(parent)
     head(c, L["New since I last read"])
     c.rows = {}
     c.none = K.Text(c, "body", "soft")
@@ -328,7 +358,7 @@ end
 
 -- this day in an earlier year, and the anniversaries that are due
 function cards.memory(parent)
-    local c = K.Card(parent)
+    local c = K.Section(parent)
     head(c, L["A memory"])
     c.jubilee = K.Text(c, "strong", "title")
     c.jubilee:SetSpacing(2)
@@ -385,7 +415,7 @@ end
 
 -- the landmark of the day: a place not seen yet
 function cards.destination(parent)
-    local c = K.Card(parent)
+    local c = K.Section(parent)
     head(c, L["Destination of the day"])
     c.icon = c:CreateTexture(nil, "ARTWORK")
     c.icon:SetSize(36, 36)
@@ -436,7 +466,7 @@ end
 
 -- the honours closest to their next tier
 function cards.almost(parent)
-    local c = K.Card(parent)
+    local c = K.Section(parent)
     head(c, L["Almost there"])
     c.rows = {}
     for i = 1, 2 do
@@ -505,7 +535,7 @@ end
 -- how far every collection has come
 local PROGRESS = { "bestiary", "atlas", "honour", "landmarks", "fishbook", "people", "runs", "library" }
 function cards.progress(parent)
-    local c = K.Card(parent)
+    local c = K.Section(parent)
     head(c, L["Collections"])
     c.tiles = {}
 
@@ -582,7 +612,7 @@ local function stepRow(parent)
 end
 
 function cards.first(parent)
-    local c = K.Card(parent)
+    local c = K.Section(parent)
     head(c, L["First steps"])
     c.rows = {}
     for i = 1, #FIRST_STEPS do c.rows[i] = stepRow(c) end
@@ -658,10 +688,11 @@ UI:RegisterView({
         function v:ArrangeSpread(BW)
             local half = floor(BW / 2)
             book:Lay(half)
+            C.progress:Hide()          -- (the collections stand in their album, not on the open book)
             local mem = (not C.memory.off) and C.memory or nil
             local pages = {
                 { x = 20, list = { (not C.first.off) and C.first or nil, C.today, C.tasks, mem } },
-                { x = half + 20, list = { C.new, C.destination, C.almost, C.progress } },
+                { x = half + 20, list = { C.new, C.destination, C.almost } },
             }
             local cw = half - 40
             local bottom = 0

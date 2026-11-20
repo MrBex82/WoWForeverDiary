@@ -1597,3 +1597,18 @@ end
 -- the styles of the book (Leather and gold, Parchment) dress their controls as parts of the book: tabs instead of
 -- buttons, figures without boxes; Modern and Strong contrast keep plain controls
 function K.IsBook() return CLASSIC[UI.THEME or "codex"] and true or false end
+
+-- A section of a page (Start, the overviews): in the styles of the book it is writing on the page itself, set apart
+-- by its heading; in Modern and Strong contrast it lies on the page as a card. The card is a sibling below the
+-- section, so it never covers what the section holds.
+function K.Section(parent)
+    local c = CreateFrame("Frame", nil, parent)
+    local bg = K.Card(parent)
+    bg:SetAllPoints(c)
+    c.cardBg = bg
+    local function show() bg:SetShown(c:IsShown() and not K.IsBook()) bg:SetFrameLevel(max(0, c:GetFrameLevel() - 1)) end
+    c:HookScript("OnShow", show)
+    c:HookScript("OnHide", function() bg:Hide() end)
+    UI.Skin.Add(c, show)
+    return c
+end
