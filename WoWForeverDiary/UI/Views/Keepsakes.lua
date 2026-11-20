@@ -106,7 +106,6 @@ UI.ReportView({
     key = "fishwaters", label = "Waters and tackle", group = "hunt",
     fill = function(rp)
         local C = WFD.C
-        rp:Kicker(L["Angler's log"])
         rp:Title(L["Waters and tackle"], "display")
         rp:Text(L["Where it bites, and what I fished with"], "soft", "small", 12)
         rp:Tiles({ { C.catchCasts or 0, L["Casts in all"] }, { C.catchLured or 0, L["Casts with a lure"] } }, 2)
@@ -235,7 +234,6 @@ UI.ReportView({
     fill = function(rp)
         if WFD.UpdateFamily then WFD.UpdateFamily() end
         local fam = WFD:Family()
-        rp:Kicker(L["Keepsakes"])
         rp:Title(L["Family book"], "display")
         rp:Text(WFD:Count("%d characters on this account", #fam), "soft", "small", 12)
         for _, f in ipairs(fam) do
@@ -355,7 +353,6 @@ UI.ReportView({
     key = "capsule", label = "Time capsule", group = "keep",
     fill = function(rp)
         local C = WFD.C
-        rp:Kicker(L["Keepsakes"])
         rp:Title(L["Time capsule"], "display")
         rp:Text(L["Letters to my future self"], "soft", "small", 12)
         -- the letter being written

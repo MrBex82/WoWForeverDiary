@@ -329,7 +329,6 @@ end
 UI.ReportView({
     key = "records", label = "Records", group = "chronicle",
     fill = function(rp)
-        rp:Kicker(L["Chronicle"])
         rp:Title(L["Records"], "display")
         rp:Text(L["The best and the worst of days"], "soft", "small", 12)
         for _, r in ipairs(records()) do
@@ -360,7 +359,6 @@ UI.ReportView({
                 if not slow or s.secs > slow.secs then slow = s end
             end
         end
-        rp:Kicker(L["Chronicle"])
         rp:Title(L["Level timeline"], "display")
         rp:Text(L["How long each level took"], "soft", "small", 12)
         rp:Tiles({
@@ -433,7 +431,6 @@ end
 UI.ReportView({
     key = "yearbook", label = "Year book", group = "chronicle",
     fill = function(rp)
-        rp:Kicker(L["Chronicle"])
         rp:Title(L["Year book"], "display")
         rp:Text(L["A year of travel in figures"], "soft", "small", 12)
         local list = years()
@@ -590,7 +587,6 @@ UI.ReportView({
         if week < 0 then week = 0 end
         local from, to = WFD:WeekRange(week)
         local s = UI.WeekStats(from, to)
-        rp:Kicker(L["Chronicle"])
         rp:Title(L["The week in review"], "display")
         rp:Text(UI.WeekTitle(from, to), "soft", "small", 10)
         rp:Tiles({

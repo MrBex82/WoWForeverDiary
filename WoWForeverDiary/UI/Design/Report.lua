@@ -52,6 +52,9 @@ local function makeLine(parent)
     r.sub = K.Text(r, "small", "muted")
     r.sub:SetPoint("TOPLEFT", r.name, "BOTTOMLEFT", 0, -2)
     r.bar = K.Bar(r, 4)
+    r.dots = K.Text(r, "small", "muted")
+    r.dots:SetWordWrap(false)
+    r.dots:SetText(string.rep(" .", 80))
     r:SetScript("OnEnter", function(self)
         if self.go then self.hl:Show() end
         if self.link then
@@ -101,6 +104,15 @@ local function makeLine(parent)
         K.Recolor(self.sub, o.subKey or "muted")
         self.sub:SetShown(o.sub ~= nil)
         self.go, self.tip, self.link = o.go, o.tip, o.link
+        -- in the book: dots lead from a one line name to the figure on the right, as in an index
+        local nameW = math.min(self.name:GetStringWidth() or 0, room)
+        local dots = K.IsBook() and (o.right or "") ~= "" and not o.wrap and nameW > 0
+        self.dots:SetShown(dots)
+        if dots then
+            self.dots:ClearAllPoints()
+            self.dots:SetPoint("BOTTOMLEFT", self.name, "BOTTOMLEFT", nameW + 6, 1)
+            self.dots:SetPoint("RIGHT", self.right, "LEFT", -6, 0)
+        end
         local h = 6 + self.name:GetStringHeight() + (o.sub and (2 + self.sub:GetStringHeight()) or 0)
         self.bar:SetShown(o.frac ~= nil)
         if o.frac then
@@ -125,8 +137,16 @@ local function makeTile(parent)
     t.value:SetPoint("TOPLEFT", 9, -7)
     t.label = K.Text(t, "small", "muted")
     t.label:SetPoint("TOPLEFT", t.value, "BOTTOMLEFT", 0, -2)
+    t.mark = K.Fill(t, "rubric", "ARTWORK", 1, 0.7)
+    t.mark:SetWidth(2)
+    t.mark:SetPoint("TOPLEFT", 0, -6)
+    t.mark:SetPoint("BOTTOMLEFT", 0, 6)
+    t.rest = function(self)
+        if K.IsBook() then self:SetSurface(nil, nil) else self:SetSurface("inset", nil) end
+        self.mark:SetShown(K.IsBook())
+    end
     t:SetScript("OnEnter", function(self) if self.go then self:SetSurface("hover", "gold") end end)
-    t:SetScript("OnLeave", function(self) self:SetSurface("inset", nil) end)
+    t:SetScript("OnLeave", function(self) self:rest() end)
     t:SetScript("OnClick", function(self) if self.go then self.go() end end)
     return t
 end
@@ -324,7 +344,7 @@ function K.Report(parent)
             t.value:SetWidth(tw - 16)
             t.label:SetWidth(tw - 16)
             t.go = it[3]
-            t:SetSurface("inset", nil)
+            t:rest()
             rowH = max(rowH, 7 + t.value:GetStringHeight() + 2 + t.label:GetStringHeight() + 8)
             if i % per == 0 or i == #list then
                 -- a row of tiles is as tall as its tallest
