@@ -1613,3 +1613,18 @@ function K.Section(parent)
     UI.Skin.Add(c, show)
     return c
 end
+
+-- A figure in a small box (K.Box with value and label) becomes a note in the margin in the styles of the book: no box,
+-- a thin line in the ink of the headings at its left. t:rest() puts it back after the mouse leaves.
+function K.AsFigure(t)
+    t.mark = K.Fill(t, "rubric", "ARTWORK", 1, 0.7)
+    t.mark:SetWidth(2)
+    t.mark:SetPoint("TOPLEFT", 0, -6)
+    t.mark:SetPoint("BOTTOMLEFT", 0, 6)
+    function t:rest()
+        if K.IsBook() then self:SetSurface(nil, nil) else self:SetSurface("inset", nil) end
+        self.mark:SetShown(K.IsBook())
+    end
+    UI.Skin.Add(t, function(s) s:rest() end)
+    return t
+end

@@ -350,7 +350,7 @@ local function ledgerDays()
 end
 
 local function card(parent, title)
-    local c = K.Card(parent)
+    local c = K.Section(parent)
     c.head = K.SectionHead(c, title)
     c.head:SetPoint("TOPLEFT", PAD, -PAD)
     c.head:SetPoint("RIGHT", c, "RIGHT", -PAD, 0)
@@ -567,7 +567,7 @@ UI:RegisterView({
         local purse = card(area, L["Ledger"])
         purse.tiles = {}
         for i = 1, 4 do
-            local t = K.Box(purse, "inset", nil)
+            local t = K.AsFigure(K.Box(purse, "inset", nil))
             t.value = K.Text(t, "strong", "ink")
             t.value:SetPoint("TOPLEFT", 10, -8)
             t.label = K.Text(t, "small", "muted")
@@ -745,13 +745,13 @@ UI:RegisterView({
         dayCard.rows = {}
         dayCard.facts = {}
         for i = 1, 3 do
-            local t = K.Box(dayCard, "inset", nil, "Button")
+            local t = K.AsFigure(K.Box(dayCard, "inset", nil, "Button"))
             t.value = K.Text(t, "strong", "ink")
             t.value:SetPoint("TOPLEFT", 10, -8)
             t.label = K.Text(t, "small", "muted")
             t.label:SetPoint("TOPLEFT", t.value, "BOTTOMLEFT", 0, -3)
             t:SetScript("OnEnter", function(s) if s.day then s:SetSurface("hover", "gold") end end)
-            t:SetScript("OnLeave", function(s) s:SetSurface("inset", nil) end)
+            t:SetScript("OnLeave", function(s) s:rest() end)
             t:SetScript("OnClick", function(s) if s.day then readDay(s.day) end end)
             dayCard.facts[i] = t
         end
