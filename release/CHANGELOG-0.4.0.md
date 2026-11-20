@@ -12,6 +12,17 @@ changed since 0.3.5, in short.
 - A notebook of your own in the register: as many pages as you like, each with a title, written like in an
   editor with the numbers of the lines at the margin. The notes you kept on the groups moved into it.
 
+**Written like a diary**
+- Every list begins with a sentence of its own ("So far I have slain 361 creatures of 46 kinds. I met the Young
+  Wolf most often."), and the book now speaks of you as "I" wherever it tells your story.
+- Each page has a running head at the top (the group on the left page, the part on the right) and, where there
+  is one, its place at the foot ("Day 9 of 15", "12 of 102").
+- In Leather and gold and in Parchment: filters are tabs in ink, figures are notes in the margin, lists read like
+  an index with dots to the number, switches are rings to tick, quiet buttons are links in ink, the register is a
+  table of contents, the notebook is ruled and a note on the screen is a slip of the book's paper. Modern and
+  Strong contrast keep their plain buttons and boxes.
+- Start is today's double page: the day on the left, what comes next on the right.
+
 **Find everything quickly**
 - A window you can make as large as you like. On the left a register with every part, on top back and forward,
   where you are, and a search for everything (Ctrl + F).
@@ -35,6 +46,8 @@ changed since 0.3.5, in short.
 
 **Fixed**
 - Everything fixed in 0.3.4 and 0.3.5 is in this version too.
+- Dungeon reports: a /reload or a logout inside a dungeon no longer starts a new report that seemed to last for
+  days. Reports left open that way are closed and joined when the diary loads.
 - Flying over a region no longer gives it time or a first visit in its region chronicle. Flights are now kept
   apart from your footsteps and show paler on the world map. Flights from before this version still count as
   footsteps.
@@ -53,6 +66,17 @@ changed since 0.3.5, in short.
 - Beim Wechsel der Seite wird umgeblättert (lässt sich unter Aussehen abschalten).
 - Ein eigenes Notizbuch im Register: so viele Seiten du willst, jede mit Titel, geschrieben wie in einem Editor
   mit Zeilennummern am Rand. Die Notizen, die du bei den Gruppen hattest, sind dorthin umgezogen.
+
+**Geschrieben wie ein Tagebuch**
+- Jede Liste beginnt mit einem eigenen Satz („Bisher habe ich 361 Kreaturen in 46 Arten erlegt. Am häufigsten
+  traf ich auf Junger Wolf.“), und das Buch spricht überall, wo es deine Geschichte erzählt, in der Ich-Form.
+- Jede Seite hat oben einen Kolumnentitel (links die Gruppe, rechts der Teil) und, wo es passt, unten ihre Stelle
+  („Tag 9 von 15“, „12 von 102“).
+- In Leder und Gold und in Pergament: Filter sind Registerzungen in Tinte, Zahlen stehen als Notizen am Rand,
+  Listen lesen sich wie ein Verzeichnis mit Punkten bis zur Zahl, Schalter sind Ankreuzringe, ruhige Knöpfe
+  Tintenlinks, das Register ist ein Inhaltsverzeichnis, das Notizbuch ist liniert und eine Meldung ist ein Zettel
+  aus dem Papier des Buchs. Modern und Starker Kontrast behalten ihre schlichten Knöpfe und Kästen.
+- Start ist die Doppelseite des heutigen Tages: links der Tag, rechts, was als Nächstes kommt.
 
 **Alles schnell finden**
 - Ein Fenster, so groß du willst. Links ein Register mit allen Teilen, oben Zurück und Vor, wo du bist, und eine
@@ -76,6 +100,8 @@ changed since 0.3.5, in short.
 
 **Behoben**
 - Alle Fehlerbehebungen aus 0.3.4 und 0.3.5 sind auch in dieser Version enthalten.
+- Dungeon-Berichte: Ein /reload oder Logout im Dungeon legt keinen neuen Bericht mehr an, der scheinbar tagelang
+  dauerte. So offen gebliebene Berichte werden beim Laden geschlossen und zusammengeführt.
 - Wer über ein Gebiet fliegt, bekommt dort in der Gebietschronik keine Zeit und keinen ersten Besuch mehr. Flüge
   werden jetzt getrennt von deinen Fußwegen gespeichert und erscheinen auf der Weltkarte blasser. Flüge von vor
   dieser Version zählen weiter als Fußwege.
