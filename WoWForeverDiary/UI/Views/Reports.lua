@@ -164,6 +164,13 @@ UI.CollectionView({
     key = "runs", label = "Dungeon reports", group = "world",
     chips = { { "all", "All" }, { "clean", "Nobody fell" }, { "fallen", "With fallen" } },
     sorts = { { "new", "Newest first" }, { "name", "By dungeon" }, { "fast", "Fastest first" }, { "kills", "Most kills" } },
+    lead = function()
+        local runs = WFD.C.runs or {}
+        if #runs == 0 then return nil end
+        local seen, nd = {}, 0
+        for _, r in ipairs(runs) do if r.name and not seen[r.name] then seen[r.name] = true nd = nd + 1 end end
+        return WFD:Count("I went into dungeons %d {time|times}, into %d different {one|ones}.", #runs, nd)
+    end,
     summary = function()
         local runs = WFD.C.runs or {}
         local dungeons, bosses, secs = {}, 0, 0
@@ -336,6 +343,12 @@ UI.CollectionView({
     key = "fates", label = "Fate", group = "hunt",
     chips = { { "deaths", "Every death" }, { "nemesis", "Nemeses" } },
     sorts = { { "new", "Newest first" }, { "zone", "By area" }, { "foe", "By foe" }, { "level", "By level" } },
+    lead = function()
+        local fates = WFD:Fates()
+        if #fates == 0 then return nil end
+        local top = nemeses()[1]
+        return WFD:Count("I have died %d {time|times}. %s got me most often.", #fates, top and top.name or "?")
+    end,
     summary = function()
         local fates = WFD:Fates()
         local zones, nz = {}, 0

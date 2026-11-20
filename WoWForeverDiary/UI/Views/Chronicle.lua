@@ -92,6 +92,17 @@ UI.CollectionView({
     chips = { { "all", "All" }, { "level", "Levels" }, { "fight", "Bosses and rares" }, { "find", "Finds" },
         { "honour", "Honours" }, { "place", "Places" } },
     sorts = { { "new", "Newest first" }, { "old", "Oldest first" } },
+    lead = function()
+        local n, days, nd = 0, {}, 0
+        for _, ev in ipairs(WFD.C.events or {}) do
+            if UI.SEAL[ev.k] and (ev.k ~= "challenge" or ev.all) then
+                n = n + 1
+                if ev.day and not days[ev.day] then days[ev.day] = true nd = nd + 1 end
+            end
+        end
+        if n == 0 then return nil end
+        return WFD:Count("My diary holds %d {milestone|milestones} from %d {day|days}.", n, nd)
+    end,
     summary = function()
         local n, days = 0, {}
         local nd = 0
@@ -139,6 +150,12 @@ local QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 UI.CollectionView({
     key = "firsts", label = "First times", group = "chronicle",
     chips = { { "all", "All" }, { "done", "Experienced" }, { "open", "Still to come" } },
+    lead = function()
+        local got = 0
+        for _, def in ipairs(WFD.FIRSTS or {}) do if WFD.C.firsts and WFD.C.firsts[def.key] then got = got + 1 end end
+        if got == 0 then return nil end
+        return WFD:Count("%d of %d first times are behind me.", got, #(WFD.FIRSTS or {}))
+    end,
     summary = function()
         local got = 0
         for _, def in ipairs(WFD.FIRSTS or {}) do if WFD.C.firsts and WFD.C.firsts[def.key] then got = got + 1 end end
@@ -507,6 +524,11 @@ UI.CollectionView({
     key = "gallery", label = "Gallery", group = "chronicle",
     chips = { { "all", "All" }, { "level", "Levels" }, { "fight", "Bosses and rares" }, { "place", "Places" } },
     sorts = { { "new", "Newest first" }, { "old", "Oldest first" } },
+    lead = function()
+        local n = #galleryList()
+        if n == 0 then return nil end
+        return WFD:Count("%d great {moment hangs|moments hang} in my gallery.", n)
+    end,
     summary = function() return { { #galleryList(), L["Gallery"] } } end,
     data = function(state)
         local list = {}

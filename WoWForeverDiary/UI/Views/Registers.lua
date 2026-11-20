@@ -200,7 +200,7 @@ UI.CollectionView({
             end
         end
         if total == 0 or not best then return nil end
-        return format(L["I have met %d people on my way. I talked to %s most often."], total, best.name)
+        return WFD:Count("I have met %d {person|people} on my way. I talked to %s most often.", total, best.name)
     end,
     summary = function()
         local total, regulars, talks = 0, 0, 0
@@ -346,7 +346,7 @@ UI.CollectionView({
             if st == "done" then done = done + 1 elseif st == "open" then open = open + 1 end
         end
         if done + open == 0 then return nil end
-        return format(L["I have finished %d quests so far, and %d are still waiting."], done, open)
+        return WFD:Count("I have finished %d {quest|quests} so far, and %d {is|are} still waiting.", done, open)
     end,
     summary = function()
         local done, open, gaveUp = 0, 0, 0

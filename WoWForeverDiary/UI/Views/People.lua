@@ -77,6 +77,12 @@ UI.CollectionView({
     key = "companions", label = "Companions", group = "people",
     chips = { { "group", "Companions" }, { "traders", "Trading partners" } },
     sorts = { { "most", "Most together" }, { "name", "A to Z" }, { "new", "Met last" } },
+    lead = function()
+        local n = 0
+        for _ in pairs(WFD.C.companions or {}) do n = n + 1 end
+        if n == 0 then return nil end
+        return WFD:Count("I have travelled with %d {companion|companions}.", n)
+    end,
     summary = function()
         local C = WFD.C
         local n, kills, traders, got, gave = 0, 0, 0, 0, 0
@@ -150,6 +156,11 @@ UI.PART_VIEW.stable = "stable"
 UI.CollectionView({
     key = "stable", part = "stable", label = "Mounts", group = "people",
     sorts = { { "first", "First ridden" }, { "rides", "Most rides" }, { "name", "A to Z" } },
+    lead = function()
+        local n = #WFD:Mounts()
+        if n == 0 then return nil end
+        return WFD:Count("%d {mount has|mounts have} carried me so far.", n)
+    end,
     summary = function()
         local list = WFD:Mounts()
         local rides = 0
@@ -233,6 +244,11 @@ local ST_COL = {
 UI.CollectionView({
     key = "standing", part = "standing", label = "Reputation", group = "people",
     sorts = { { "st", "Highest standing" }, { "name", "A to Z" }, { "new", "Newest first" } },
+    lead = function()
+        local n = #WFD:Factions()
+        if n == 0 then return nil end
+        return WFD:Count("%d {faction knows|factions know} my name.", n)
+    end,
     summary = function()
         local list = WFD:Factions()
         local high = 0

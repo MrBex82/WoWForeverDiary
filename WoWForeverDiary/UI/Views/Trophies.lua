@@ -158,6 +158,11 @@ UI.CollectionView({
     chips = { { "all", "All" }, { "best", "Best per slot" }, { "worn", "Worn now" }, { "2", "Uncommon" }, { "3", "Rare" },
         { "4", "Epic" }, { "5", "Legendary" } },
     sorts = { { "slot", "By slot" }, { "best", "Best first" }, { "new", "Newest first" } },
+    lead = function()
+        local n = #UI.TreasureList()
+        if n == 0 then return nil end
+        return WFD:Count("%d {treasure has|treasures have} found {its|their} way into my bags.", n)
+    end,
     summary = function()
         local counts, total = {}, 0
         for _, a in ipairs(UI.TreasureList()) do
@@ -303,6 +308,11 @@ UI.CollectionView({
     key = "honour", label = "Book of honour", group = "goals",
     chips = { { "all", "All" }, { "earned", "Earned" }, { "progress", "In progress" }, { "secret", "Secret" } },
     sorts = { { "cat", "By category" }, { "next", "Closest to the next tier" } },
+    lead = function()
+        local _, s = WFD:HonourState()
+        if (s.tiers or 0) == 0 then return nil end
+        return WFD:Count("I have earned %d of %d tiers of honour.", s.tiers, s.totalTiers)
+    end,
     summary = function()
         local _, s = WFD:HonourState()
         local out = { { s.points .. " / " .. s.maxPoints, L["Honour points"] }, { s.tiers .. " / " .. s.totalTiers, L["Tiers"] } }

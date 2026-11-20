@@ -18,6 +18,11 @@ UI.PART_ENABLED = UI.PART_ENABLED or {}
 UI.CollectionView({
     key = "landmarks", label = "Landmarks", group = "world",
     chips = { { "all", "All" }, { "found", "Found" } },
+    lead = function()
+        local _, found, total = WFD:LandmarkState()
+        if (found or 0) == 0 then return nil end
+        return WFD:Count("I have found %d of %d landmarks.", found, total)
+    end,
     summary = function()
         local _, found, total = WFD:LandmarkState()
         return { { found .. " / " .. total, L["Landmarks"] } }
@@ -158,6 +163,11 @@ UI.CollectionView({
     key = "library", label = "Library", group = "keep",
     chips = { { "all", "All" }, { "book", "Books" }, { "note", "Notes" }, { "plaque", "Plaques" }, { "later", "To read later" } },
     sorts = { { "new", "Newest first" }, { "name", "A to Z" }, { "zone", "By area" } },
+    lead = function()
+        local n = #WFD:Library()
+        if n == 0 then return nil end
+        return WFD:Count("%d {book, note or plaque stands|books, notes and plaques stand} on my shelf.", n)
+    end,
     summary = function()
         local list = WFD:Library()
         local later = 0

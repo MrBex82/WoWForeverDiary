@@ -132,7 +132,7 @@ UI.CollectionView({
             if m.name and (not best or (m.kills or 0) > (best.kills or 0)) then best = m end
         end
         if kinds == 0 or not best then return nil end
-        return format(L["So far I have slain %s creatures of %d kinds. I met %s most often."], WFD:Int(kills), kinds, best.name)
+        return WFD:Count("So far I have slain %d {creature|creatures} of %d {kind|kinds}. I met %s most often.", kills, kinds, best.name)
     end,
     summary = function()
         local C = WFD.C
@@ -223,7 +223,7 @@ UI.CollectionView({
     lead = function()
         local s = WFD:CatchSummary()
         if (s.total or 0) == 0 then return nil end
-        return format(L["%s fish of %d kinds have gone onto my hook so far."], WFD:Int(s.total), s.species)
+        return WFD:Count("%d {fish|fish} of %d {kind|kinds} have gone onto my hook so far.", s.total, s.species)
     end,
     summary = function()
         local s = WFD:CatchSummary()
