@@ -97,7 +97,9 @@ local function makeRow(parent)
         if show then
             self.dots:ClearAllPoints()
             self.dots:SetPoint("BOTTOMLEFT", self.name, "BOTTOMLEFT", nameW + 6, 1)
-            self.dots:SetPoint("RIGHT", self.right, "LEFT", -6, 0)
+            -- (they end before the wider of the two figures on the right, or the second one lies on them)
+            local rw = math.max(self.right:GetStringWidth() or 0, self.right2:GetStringWidth() or 0)
+            self.dots:SetPoint("RIGHT", self, "RIGHT", -10 - rw - 6, 0)
         end
     end
     return r

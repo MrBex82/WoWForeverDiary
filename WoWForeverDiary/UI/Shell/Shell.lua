@@ -256,8 +256,12 @@ function UI:RefreshRail()
                 si = si + 1
                 local sb = S.subs[si] or newSub(rail)
                 S.subs[si] = sb
-                sb.text:SetWidth(UI.RailWidth() - 44 - 6 - 14 - 30)
+                local tw = UI.RailWidth() - 44 - 6 - 14 - 30
+                sb.text:SetWidth(tw)
+                K.Recolor(sb.text, nil, "body")
                 sb.text:SetText(UI.PartLabel(key))
+                -- one long word ("Sehenswürdigkeiten") cannot wrap: a size smaller instead of cut short
+                if sb.text:IsTruncated() then K.Recolor(sb.text, nil, "small") end
                 sb.empty = UI.IsEmptyPart and UI.IsEmptyPart(key)
                 sb.active = (key == part)
                 local n = counts[key] or 0

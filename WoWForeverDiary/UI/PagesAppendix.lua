@@ -444,6 +444,11 @@ local function newCard(parent)
                 self.tag:SetPoint("TOPLEFT", 7, -5)
                 local room = CARD_W - 14 - self.lvl:GetStringWidth() - 6
                 if half * 2 > room then UI.FitText(self.tag, room, 8, 6, UI.HEAD) end
+                -- still too wide (the writing does not get smaller than it may): into the corner of the picture
+                if self.tag:GetStringWidth() > room then
+                    self.tag:ClearAllPoints()
+                    self.tag:SetPoint("TOPLEFT", self.window, "TOPLEFT", 3, -2)
+                end
             end
         end
         fitName(self.name, m.name or "?")
