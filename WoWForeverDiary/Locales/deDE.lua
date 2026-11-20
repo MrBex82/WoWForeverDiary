@@ -642,7 +642,7 @@ L["%d of %d regions explored"] = "%d von %d Regionen erkundet"
 L["Not yet explored"] = "Noch nicht erkundet"
 L["Explored"] = "Erkundet"
 L["Mouse wheel: zoom, drag: move, right click: reset"] = "Mausrad: zoomen, ziehen: verschieben, Rechtsklick: zurücksetzen"
-L["Explorer's checklist"] = "Entdecker-Checkliste"
+L["Where I have been"] = "Wo ich schon war"
 L["Click for the map of this region."] = "Klicken für die Karte dieser Region."
 
 -- people register, companions

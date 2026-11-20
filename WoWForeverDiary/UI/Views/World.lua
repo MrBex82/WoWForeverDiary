@@ -513,7 +513,7 @@ UI:RegisterView({
             else
                 rp:Text(L["Dungeons, cities and other places of their own"], "soft", "small", 12)
             end
-            rp:Head(e.id == OTHER and L["Other places"] or L["Explorer's checklist"])
+            rp:Head(e.id == OTHER and L["Other places"] or L["Where I have been"])
             for _, z in ipairs(e.zones) do
                 local zid = z.id
                 rp:Line({
