@@ -452,6 +452,17 @@ function K.Toggle(parent, label, get, set, hint)
         K.Repaint(self.knob)
         self.knob:ClearAllPoints()
         self.knob:SetPoint("LEFT", self.track, "LEFT", on and 19 or 3, 0)
+        -- in the book a switch is a ring to tick, as on a form (K.CheckBox is made further down)
+        local book = K.IsBook()
+        if book and not self.ring then self.ring = K.CheckBox(self) end
+        self.track:SetShown(not book)
+        if self.ring then
+            self.ring:SetShown(book)
+            self.ring:Fit(18)
+            self.ring:ClearAllPoints()
+            self.ring:SetPoint("CENTER", self.track, "CENTER", 0, 0)
+            self.ring:SetDone(on)
+        end
     end
     -- the height of the row at width w (the texts get their width first, so long ones wrap before measuring)
     function row:Measure(w)
@@ -484,8 +495,11 @@ function K.Segmented(parent, items, get, set)
         local cur = get()
         local x, y, widest = 0, 0, 0
         local bh = self.buttons[1] and self.buttons[1]:GetHeight() or 30
+        local book = K.IsBook()
         for _, b in ipairs(self.buttons) do
-            b.style = (b.value == cur) and "primary" or "secondary"
+            -- in the book the choices are tabs (the chosen one underlined), elsewhere buttons
+            local on = b.value == cur
+            b.style = book and (on and "tabOn" or "tab") or (on and "primary" or "secondary")
             paintButton(b)
             local bw = b:GetWidth()
             if self.maxW and x > 0 and x + bw > self.maxW then x, y = 0, y + bh + 6 end
