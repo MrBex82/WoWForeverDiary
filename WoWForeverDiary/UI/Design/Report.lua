@@ -571,9 +571,10 @@ function UI.ReportView(def)
         build = function(host)
             local v = {}
             v.sheet = K.Spread(host)
+            host.book = v.sheet
             v.report = K.Report(v.sheet)
-            v.report:SetPoint("TOPLEFT", v.sheet, "TOPLEFT", 12, -6)
-            v.report:SetPoint("BOTTOMRIGHT", v.sheet, "BOTTOMRIGHT", -12, 6)
+            v.report:SetPoint("TOPLEFT", v.sheet, "TOPLEFT", 12, -K.PAGE_HEAD)
+            v.report:SetPoint("BOTTOMRIGHT", v.sheet, "BOTTOMRIGHT", -12, K.PAGE_FOOT)
             function v:Fill()
                 local rp = self.report
                 rp:Begin()

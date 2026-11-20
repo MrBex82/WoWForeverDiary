@@ -1501,3 +1501,4 @@ L["I went into dungeons %d {time|times}, into %d different {one|ones}."] = "Ich 
 L["I have died %d {time|times}. %s got me most often."] = "Ich bin %d-mal gestorben. Am häufigsten erwischte mich %s."
 L["%d {treasure has|treasures have} found {its|their} way into my bags."] = "%d {Schatz hat|Schätze haben} den Weg in meine Taschen gefunden."
 L["I have earned %d of %d tiers of honour."] = "Ich habe %d von %d Ehrenstufen errungen."
+L["%d of %d"] = "%d von %d"

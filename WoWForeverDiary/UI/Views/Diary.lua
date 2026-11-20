@@ -177,6 +177,7 @@ UI:RegisterView({
 
         -- the open book: the chapters and days on the left page, the day on the right page
         v.book = K.Spread(host)
+        host.book = v.book
         -- in a narrow window the index lies on a card of its own over the page
         v.indexCard = K.Card(host)
         v.index = CreateFrame("Frame", nil, host)
@@ -261,6 +262,9 @@ UI:RegisterView({
             self.nextB:SetEnabled(at ~= nil and at < #days)
             self.mark:SetLabel(self:Marked() and L["Remove the bookmark"] or L["Set a bookmark"])
             self.where:SetText(self.day and format(L["Day %d of %d"], self.day, days[#days] or self.day) or "")
+            -- the place in the diary stands at the foot of the page, as the number of a printed page
+            self.book:SetFolio(nil, self.where:GetText())
+            self.where:SetText("")
             -- shown only where it fits whole between the buttons (larger writing, a narrow window)
             local room = (self.foot:GetWidth() or 0) - self.prev:GetWidth() - self.nextB:GetWidth() - self.mark:GetWidth() - 36 - (self.narrow and 70 or 0)
             self.where:SetShown(self.where:GetStringWidth() <= room)
@@ -447,8 +451,8 @@ UI:RegisterView({
                 self.indexCard:SetFrameLevel(host:GetFrameLevel() + 29)
             else
                 self.index:SetParent(book.left)
-                self.index:SetPoint("TOPLEFT", book.left, "TOPLEFT", 0, -4)
-                self.index:SetPoint("BOTTOMRIGHT", book.left, "BOTTOMRIGHT", -6, 4)
+                self.index:SetPoint("TOPLEFT", book.left, "TOPLEFT", 0, -K.PAGE_HEAD)
+                self.index:SetPoint("BOTTOMRIGHT", book.left, "BOTTOMRIGHT", -6, K.PAGE_FOOT)
             end
             self.index:SetFrameLevel((narrow and host:GetFrameLevel() + 30) or (book:GetFrameLevel() + 2))
             -- the right page: the day in a column of a good length to read, the foot at the bottom of the page
@@ -456,8 +460,8 @@ UI:RegisterView({
             local rw = BW - (split or 0)
             local pw = min(rw - 28, floor(PAGE_W * k))
             self.page:ClearAllPoints()
-            self.page:SetPoint("TOPLEFT", book.right, "TOPLEFT", floor((rw - pw) / 2), -4)
-            self.page:SetSize(pw, max(100, BH - 8 - footH))
+            self.page:SetPoint("TOPLEFT", book.right, "TOPLEFT", floor((rw - pw) / 2), -K.PAGE_HEAD)
+            self.page:SetSize(pw, max(100, BH - K.PAGE_HEAD - K.PAGE_FOOT - footH))
             self.foot:ClearAllPoints()
             self.foot:SetPoint("TOPLEFT", self.page, "BOTTOMLEFT", 0, -2)
             self.foot:SetSize(pw, footH - 8)

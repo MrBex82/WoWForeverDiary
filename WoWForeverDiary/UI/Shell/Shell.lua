@@ -306,6 +306,12 @@ function UI:RefreshHead()
     if v and v.Head then title, path, pathRoute = v:Head(cur) end
     S.title:SetText(title or "")
     S.path:SetText(path or "")
+    -- the running heads of the open book: the group on the left page, the part on the right
+    local book = v and v.host and v.host.book
+    if book and book.SetHeads then
+        local clean = function(t) return t and (t:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")) or nil end
+        book:SetHeads(clean(path), clean(title))
+    end
     S.pathBtn.route = pathRoute
     local has = path ~= nil and path ~= ""
     S.pathBtn:SetShown(has)

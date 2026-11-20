@@ -1405,6 +1405,38 @@ function K.Spread(parent)
     b.left = CreateFrame("Frame", nil, b)
     b.right = CreateFrame("Frame", nil, b)
     b.fold = K.Gutter(b)
+    -- the running heads at the top of the pages (the group on the left, the part on the right; one page: both)
+    b.heads = {}
+    for i = 1, 2 do
+        local t = K.Text(b, "section", "rubric", "CENTER")
+        t:SetWordWrap(false)
+        b.heads[i] = t
+    end
+    function b:SetHeads(l, r)
+        self.headL, self.headR = l, r
+        self:PlaceHeads()
+    end
+    function b:PlaceHeads()
+        local l, r = self.headL, self.headR
+        local h1, h2 = self.heads[1], self.heads[2]
+        h1:ClearAllPoints()
+        h2:ClearAllPoints()
+        if self.split then
+            h1:SetPoint("TOP", self.left, "TOP", 0, -7)
+            h1:SetWidth(max(40, self.split - 40))
+            h2:SetPoint("TOP", self.right, "TOP", 0, -7)
+            h2:SetWidth(max(40, (self:GetWidth() or 400) - self.split - 40))
+            h1:SetText(l and UI.Upper(l) or "")
+            h2:SetText(r and UI.Upper(r) or "")
+            h2:Show()
+        else
+            h1:SetPoint("TOP", self, "TOP", 0, -7)
+            h1:SetWidth(max(40, (self:GetWidth() or 400) - 60))
+            local both = (l and r and l ~= r) and (l .. "  -  " .. r) or (r or l)
+            h1:SetText(both and UI.Upper(both) or "")
+            h2:Hide()
+        end
+    end
     -- at the foot of each page a small flourish, as printed books have (in the styles of the book only)
     b.orn = {}
     for i, side in ipairs({ b.left, b.right }) do
@@ -1422,7 +1454,32 @@ function K.Spread(parent)
         o.r:SetTexture(UI.WHITE)
         o.r:SetSize(14, 1)
         o.r:SetPoint("LEFT", o.dia, "RIGHT", 3, 0)
+        o.text = K.Text(o, "small", "rubric", "CENTER")
+        o.text:SetPoint("CENTER", 0, 1)
         b.orn[i] = o
+    end
+    -- the flourish only in the styles of the book; the folio (a place in the part) in every style
+    function b:PaintOrn()
+        for _, o in ipairs(self.orn) do
+            local has = o.text:IsShown()
+            o:SetShown(o.want ~= false and (o.classic or has) and true or false)
+            o.l:SetShown(o.classic and true or false)
+            o.r:SetShown(o.classic and true or false)
+            o.dia:SetShown(o.classic and not has or false)
+        end
+    end
+    function b:SetFolio(l, r)
+        for i, t in ipairs({ l or false, r or false }) do
+            local o = self.orn[i]
+            local has = t and t ~= ""
+            o.text:SetText(has and t or "")
+            o.text:SetShown(has and true or false)
+            o.l:ClearAllPoints()
+            o.r:ClearAllPoints()
+            o.l:SetPoint("RIGHT", has and o.text or o.dia, "LEFT", -6, 0)
+            o.r:SetPoint("LEFT", has and o.text or o.dia, "RIGHT", 6, 0)
+        end
+        self:PaintOrn()
     end
     UI.Skin.Add(b.orn[1], function()
         local classic = CLASSIC[UI.THEME or "codex"]
@@ -1432,8 +1489,8 @@ function K.Spread(parent)
             UI.Gradient(o.l, "HORIZONTAL", { r, g, bb, 0 }, { r, g, bb, 0.6 })
             UI.Gradient(o.r, "HORIZONTAL", { r, g, bb, 0.6 }, { r, g, bb, 0 })
             o.classic = classic
-            o:SetShown(classic and o.want ~= false)
         end
+        b:PaintOrn()
     end)
     function b:Lay(split)
         self.split = split
@@ -1446,15 +1503,17 @@ function K.Spread(parent)
             self.right:SetPoint("BOTTOMRIGHT")
             self.left:Show()
             self.orn[1].want = true
-            self.orn[1]:SetShown(self.orn[1].classic and true or false)
+            self:PaintOrn()
             self.fold:Place(split)
             self.fold:SetFrameLevel(self:GetFrameLevel() + 30)
+            self:PlaceHeads()
         else
             self.right:SetAllPoints(self)
             self.left:Hide()
             self.orn[1].want = false
-            self.orn[1]:Hide()
+            self:PaintOrn()
             self.fold:Hide()
+            if self.PlaceHeads then self:PlaceHeads() end
         end
     end
     b:Lay(nil)
@@ -1463,13 +1522,17 @@ end
 
 -- A view inside the open book: the book lies on the desk (outer) with room for its shadow, and everything of the
 -- view goes into host, the size of the book. K.BOOK_W and K.BOOK_H are what the book is smaller than the desk.
-K.BOOK_W, K.BOOK_H = 26, 22
+-- K.PAGE_HEAD and K.PAGE_FOOT are the room at the top and the foot of a page for its running head and folio.
+K.PAGE_HEAD, K.PAGE_FOOT = 24, 18
+K.BOOK_W, K.BOOK_H = 26, 22 + K.PAGE_HEAD + K.PAGE_FOOT
 function K.BookHost(outer)
     local book = K.Spread(outer)
     book:SetPoint("TOPLEFT", outer, "TOPLEFT", 10, -8)
     book:SetPoint("BOTTOMRIGHT", outer, "BOTTOMRIGHT", -16, 14)
     local host = CreateFrame("Frame", nil, book)
-    host:SetAllPoints(book)
+    host:SetPoint("TOPLEFT", book, "TOPLEFT", 0, -K.PAGE_HEAD)
+    host:SetPoint("BOTTOMRIGHT", book, "BOTTOMRIGHT", 0, K.PAGE_FOOT)
+    outer.book = book          -- (the shell writes the running heads on it)
     return book, host
 end
 

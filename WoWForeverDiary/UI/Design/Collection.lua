@@ -329,6 +329,7 @@ function UI.CollectionView(def)
                 self.selected = nil
                 note("key", nil)
                 self.detail:Hide()
+                self.book:SetFolio(nil, nil)
                 self:Arrange()
             end
             function V:Step(dir)
@@ -343,7 +344,8 @@ function UI.CollectionView(def)
                 note("key", key)
                 local at
                 for i, k in ipairs(self.order) do if k == key then at = i break end end
-                self.pos:SetText(at and (at .. " / " .. #self.order) or "")
+                self.pos:SetText("")
+                self.book:SetFolio(nil, at and string.format(L["%d of %d"], at, #self.order) or nil)
                 local many = #self.order > 1
                 self.prev:SetShown(many)
                 self.next:SetShown(many)

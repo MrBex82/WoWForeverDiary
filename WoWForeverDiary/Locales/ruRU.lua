@@ -1424,3 +1424,4 @@ L["I went into dungeons %d {time|times}, into %d different {one|ones}."] = "Я �
 L["I have died %d {time|times}. %s got me most often."] = "Я погибал %d {раз|раза|раз}. Чаще всего меня настигал: %s."
 L["%d {treasure has|treasures have} found {its|their} way into my bags."] = "В мои сумки попало %d {сокровище|сокровища|сокровищ}."
 L["I have earned %d of %d tiers of honour."] = "Получено ступеней почёта: %d из %d."
+L["%d of %d"] = "%d из %d"
