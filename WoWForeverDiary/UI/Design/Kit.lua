@@ -212,6 +212,9 @@ local BUTTON = {
     secondary = { bg = "inset", border = "line", text = "ink", hoverBg = "hover", hoverBorder = "gold", downBg = "inset", downBorder = "gold" },
     ghost = { text = "gold", hoverBg = "hover", hoverText = "title", downBg = "inset" },
     danger = { text = "white" },
+    -- tabs of a register in the styles of the book: only the word, the chosen one darker and underlined
+    tab = { text = "rubric", hoverText = "title" },
+    tabOn = { text = "title" },
 }
 
 -- a pressed button: what it carries moves down by a pixel while the mouse button is held
@@ -300,12 +303,28 @@ local function paintButton(b)
         paintText(b.label)
         if b.glyph then b.glyph:SetColorKey(b.label.colorKey) end
         b:SetAlpha(1)
-        if b.sheen then b.sheen:SetShown(not down and (b.style ~= "ghost" or hot)) end
+        local tab = b.style == "tab" or b.style == "tabOn"
+        if b.sheen then b.sheen:SetShown(not tab and not down and (b.style ~= "ghost" or hot)) end
+        -- the line under a tab: under the chosen one always, under another while the mouse is on it
+        if tab and not b.under then
+            b.under = b:CreateTexture(nil, "ARTWORK", nil, 2)
+            b.under:SetTexture(WHITE)
+            b.under:SetHeight(1)
+        end
+        if b.under then
+            b.under:ClearAllPoints()
+            b.under:SetPoint("TOPLEFT", b.label, "BOTTOMLEFT", 0, -3)
+            b.under:SetPoint("TOPRIGHT", b.label, "BOTTOMRIGHT", 0, -3)
+            local r, g, bl = Tok(b.style == "tabOn" and "title" or "rubric")
+            b.under:SetVertexColor(r, g, bl, 0.9)
+            b.under:SetShown(tab and (b.style == "tabOn" or hot) or false)
+        end
     end
     -- the width follows the label (it changes with the size of the writing and the language)
     if not b.fixedW then
         local extra = b.glyph and 18 or 0
-        b:SetWidth(floor(b.label:GetStringWidth() + 28 + extra + 0.5))
+        local pad = (b.style == "tab" or b.style == "tabOn") and 14 or 28
+        b:SetWidth(floor(b.label:GetStringWidth() + pad + extra + 0.5))
     end
     local _, size = UI.TypeFont("strong")
     b:SetHeight(max(b.minH or 30, size + 16))
@@ -1496,3 +1515,7 @@ function K.CheckBox(parent)
     end
     return b
 end
+
+-- the styles of the book (Leather and gold, Parchment) dress their controls as parts of the book: tabs instead of
+-- buttons, figures without boxes; Modern and Strong contrast keep plain controls
+function K.IsBook() return CLASSIC[UI.THEME or "codex"] and true or false end

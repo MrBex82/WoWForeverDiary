@@ -358,8 +358,18 @@ function UI.CollectionView(def)
                         f.value:SetPoint("TOPLEFT", 10, -7)
                         f.label = K.Text(f, "small", "muted")
                         f.label:SetPoint("TOPLEFT", f.value, "BOTTOMLEFT", 0, -2)
+                        f.mark = K.Fill(f, "rubric", "ARTWORK", 1, 0.7)
+                        f.mark:SetWidth(2)
+                        f.mark:SetPoint("TOPLEFT", 0, -6)
+                        f.mark:SetPoint("BOTTOMLEFT", 0, 6)
                         self.tiles[i] = f
                     end
+                    -- in the book a figure is a note in the margin, elsewhere a small box
+                    local book = K.IsBook()
+                    local bg = "inset"
+                    if book then bg = nil end
+                    f:SetSurface(bg, nil)
+                    f.mark:SetShown(book)
                     f.value:SetText(t[1])
                     f.label:SetText(t[2])
                     local tw = max(f.value:GetStringWidth(), f.label:GetStringWidth()) + 22
@@ -389,8 +399,10 @@ function UI.CollectionView(def)
                 for _, b in ipairs(self.chips) do need = need + b:GetWidth() + 4 end
                 local fold = #self.chips > 3 and need > w - 2 * PAD
                 self.filter:SetShown(fold)
+                local book = K.IsBook()
                 for _, b in ipairs(self.chips) do
-                    b.style = (b.key == self.state.chip) and "primary" or "secondary"
+                    local on = b.key == self.state.chip
+                    b.style = book and (on and "tabOn" or "tab") or (on and "primary" or "secondary")
                     K.Repaint(b)
                     b:SetShown(not fold)
                     if not fold then put(b, 4) end
