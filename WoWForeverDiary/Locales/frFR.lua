@@ -1418,3 +1418,4 @@ L["I have died %d {time|times}. %s got me most often."] = "J'ai péri %d fois. C
 L["%d {treasure has|treasures have} found {its|their} way into my bags."] = "%d {trésor a|trésors ont} trouvé le chemin de mes sacs."
 L["I have earned %d of %d tiers of honour."] = "J'ai obtenu %d paliers d'honneur sur %d."
 L["%d of %d"] = "%d sur %d"
+L["Order and search"] = "Trier et chercher"

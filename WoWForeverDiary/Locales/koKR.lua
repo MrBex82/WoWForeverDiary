@@ -1411,3 +1411,4 @@ L["I have died %d {time|times}. %s got me most often."] = "나는 %d번 쓰러�
 L["%d {treasure has|treasures have} found {its|their} way into my bags."] = "보물 %d개가 내 가방에 들어왔다."
 L["I have earned %d of %d tiers of honour."] = "명예 단계를 %d개 얻었다. 전체는 %d개다."
 L["%d of %d"] = "%d / %d"
+L["Order and search"] = "정렬과 검색"

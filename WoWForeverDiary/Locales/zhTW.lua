@@ -1414,3 +1414,4 @@ L["I have died %d {time|times}. %s got me most often."] = "我陣亡了 %d 次�
 L["%d {treasure has|treasures have} found {its|their} way into my bags."] = "有 %d 件寶物進了我的背包。"
 L["I have earned %d of %d tiers of honour."] = "我已獲得 %d 個榮譽階段，共 %d 個。"
 L["%d of %d"] = "%d / %d"
+L["Order and search"] = "排序與搜尋"

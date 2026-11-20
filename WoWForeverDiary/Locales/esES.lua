@@ -1430,3 +1430,4 @@ L["I have died %d {time|times}. %s got me most often."] = "He muerto %d {vez|vec
 L["%d {treasure has|treasures have} found {its|their} way into my bags."] = "%d {tesoro ha|tesoros han} encontrado el camino a mis bolsas."
 L["I have earned %d of %d tiers of honour."] = "He ganado %d de %d niveles de honor."
 L["%d of %d"] = "%d de %d"
+L["Order and search"] = "Ordenar y buscar"

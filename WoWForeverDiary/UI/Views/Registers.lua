@@ -62,6 +62,10 @@ local function makeRow(parent)
     r.sub = K.Text(r, "small", "muted")
     r.sub:SetPoint("TOPLEFT", r.name, "BOTTOMLEFT", 0, -2)
     r.sub:SetWordWrap(false)
+    -- in the book a line of dots leads from the name to the figure on the right, as in an index
+    r.dots = K.Text(r, "small", "muted")
+    r.dots:SetWordWrap(false)
+    r.dots:SetText(string.rep(" .", 80))
     r:SetScript("OnEnter", function(self)
         self:SetSurface("hover")
         if self.tip then self.tip(self) else K.ShowFull(self, "ANCHOR_RIGHT", self.name, self.sub) end
@@ -86,6 +90,15 @@ local function makeRow(parent)
         K.Recolor(self.name, o.nameKey or "ink")
         self.sub:SetText(o.sub or "")
         self.go, self.tip = o.go, o.tip
+        local hasRight = (o.right or "") ~= ""
+        local nameW = math.min(self.name:GetStringWidth() or 0, self.name:GetWidth() or 0)
+        local show = K.IsBook() and hasRight and nameW > 0
+        self.dots:SetShown(show)
+        if show then
+            self.dots:ClearAllPoints()
+            self.dots:SetPoint("BOTTOMLEFT", self.name, "BOTTOMLEFT", nameW + 6, 1)
+            self.dots:SetPoint("RIGHT", self.right, "LEFT", -6, 0)
+        end
     end
     return r
 end

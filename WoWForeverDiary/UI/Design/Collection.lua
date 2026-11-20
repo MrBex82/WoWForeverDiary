@@ -253,6 +253,14 @@ function UI.CollectionView(def)
                 end
                 self:Refresh()
             end
+            -- in the book the search and the order wait behind one link
+            V.tools = K.Button(V.top, L["Order and search"], "ghost", function()
+                V.toolsOpen = not V.toolsOpen
+                V:Arrange()
+                if V.toolsOpen and V.search then V.search:SetFocus() end
+            end)
+            V.tools:AddArrow("down")
+            V.tools.minH = 28
             V.clear = K.Button(V.top, L["Reset filter"], "ghost", function() V:ClearFilter() end)
             V.clear:AddArrow("close")
             V.clear.minH = 28
@@ -431,14 +439,25 @@ function UI.CollectionView(def)
                     put(self.filter, 4)
                 end
                 if #self.chips > 0 then x = x + 12 end
+                -- in the book: search and order behind a link, open while they are in use
+                local inUse = (self.state.q or "") ~= "" or (self.state.sort ~= SORT0)
+                local closed = book and not self.toolsOpen and not inUse and (self.search or self.sort) and true or false
+                self.tools:SetShown(closed)
+                if closed then put(self.tools) end
                 if self.search then
-                    local _, fsz = UI.TypeFont("body")
-                    self.search:SetSize(floor(190 * UI.FK() + 0.5), max(28, fsz + 14))
-                    put(self.search)
+                    self.search:SetShown(not closed)
+                    if not closed then
+                        local _, fsz = UI.TypeFont("body")
+                        self.search:SetSize(floor(190 * UI.FK() + 0.5), max(28, fsz + 14))
+                        put(self.search)
+                    end
                 end
                 self.clear:SetShown(self:Filtered())
                 if self.clear:IsShown() then put(self.clear) end
-                if self.sort then self.sort:Refresh() put(self.sort) end
+                if self.sort then
+                    self.sort:SetShown(not closed)
+                    if not closed then self.sort:Refresh() put(self.sort) end
+                end
                 for _, b in ipairs(self.extra) do put(b) end
                 y = y - rowH - 12
                 self.top:SetHeight(-y)
