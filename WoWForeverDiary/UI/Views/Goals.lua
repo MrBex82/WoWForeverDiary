@@ -42,7 +42,7 @@ end
 
 -- a card with a heading; lines are added by the view
 local function card(parent, title)
-    local c = K.Card(parent)
+    local c = K.Section(parent)
     c.head = K.SectionHead(c, title)
     c.head:SetPoint("TOPLEFT", PAD, -PAD)
     c.head:SetPoint("RIGHT", c, "RIGHT", -PAD, 0)
@@ -261,7 +261,7 @@ UI:RegisterView({
         own.rows = {}
         own.none = K.Text(own, "body", "soft")
         own.none:SetText(L["What I want to do next goes here, ticked off when it is done."])
-        own.add = K.Button(own, L["Add a goal"], "primary", function()
+        own.add = K.Button(own, L["Add a goal"], K.IsBook() and "ghost" or "primary", function()
             UI:Ask({
                 title = L["What do I want to do next?"], ok = L["Add a goal"], input = { max = 48 },
                 onOk = function(text)

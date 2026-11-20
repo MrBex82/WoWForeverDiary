@@ -341,8 +341,10 @@ UI.CollectionView({
             local isTitle = WFD.C and WFD.C.title == h.key
             local inCase = WFD:InShowcase(h.key)
             r.title.key, r.show.key = h.key, h.key
-            r.title.style = isTitle and "primary" or "secondary"
-            r.show.style = inCase and "primary" or "secondary"
+            -- in the book the two choices are tabs of the line (the chosen one underlined), elsewhere buttons
+            local book = K.IsBook()
+            r.title.style = book and (isTitle and "tabOn" or "tab") or (isTitle and "primary" or "secondary")
+            r.show.style = book and (inCase and "tabOn" or "tab") or (inCase and "primary" or "secondary")
             K.Repaint(r.title)
             K.Repaint(r.show)
             r.title:SetShown(earned)
