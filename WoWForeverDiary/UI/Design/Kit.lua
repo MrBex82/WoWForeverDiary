@@ -328,7 +328,8 @@ local function paintButton(b)
     -- the width follows the label (it changes with the size of the writing and the language)
     if not b.fixedW then
         local extra = b.glyph and 18 or 0
-        local pad = (b.style == "tab" or b.style == "tabOn" or style == "link") and 14 or 28
+        -- a word without a box needs little room, but a link with an arrow keeps the room of a button for it
+        local pad = (not b.glyph and (b.style == "tab" or b.style == "tabOn" or style == "link")) and 14 or 28
         b:SetWidth(floor(b.label:GetStringWidth() + pad + extra + 0.5))
     end
     local _, size = UI.TypeFont("strong")

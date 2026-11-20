@@ -300,6 +300,28 @@ UI:RegisterView({
             local h = max(sf:GetHeight() or 0, (eb:GetHeight() or 0) + 16, y + 16)
             area:SetHeight(h)
             sf:SetContentHeight(h)
+            -- in the book the sheet is ruled: a faint line under every line of writing, down to the foot
+            self.rules = self.rules or {}
+            local book = K.IsBook()
+            measure:SetText("Ag")
+            local lh = max(8, measure:GetStringHeight() or 14)
+            local count = book and floor((h - 8) / lh) or 0
+            local r, g, b = UI.Tok("rubric")
+            for i = 1, count do
+                local t = self.rules[i]
+                if not t then
+                    t = area:CreateTexture(nil, "BACKGROUND", nil, 3)
+                    t:SetTexture(UI.WHITE)
+                    t:SetHeight(1)
+                    self.rules[i] = t
+                end
+                t:ClearAllPoints()
+                t:SetPoint("TOPLEFT", area, "TOPLEFT", self.gw + 4, -(8 + i * lh))
+                t:SetPoint("RIGHT", area, "RIGHT", -6, 0)
+                t:SetVertexColor(r, g, b, 0.16)
+                t:Show()
+            end
+            for i = count + 1, #self.rules do self.rules[i]:Hide() end
         end
 
         function v:Page()

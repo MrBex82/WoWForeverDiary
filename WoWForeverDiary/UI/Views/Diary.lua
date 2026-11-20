@@ -258,6 +258,12 @@ UI:RegisterView({
             local days = self:Days()
             local at
             for i, d in ipairs(days) do if d == self.day then at = i end end
+            -- in the book the ways to the next pages are links in ink
+            local book = K.IsBook()
+            for _, b in ipairs({ self.prev, self.nextB }) do
+                b.style = book and "ghost" or "secondary"
+                K.Repaint(b)
+            end
             self.prev:SetEnabled(at ~= nil and at > 1)
             self.nextB:SetEnabled(at ~= nil and at < #days)
             self.mark:SetLabel(self:Marked() and L["Remove the bookmark"] or L["Set a bookmark"])

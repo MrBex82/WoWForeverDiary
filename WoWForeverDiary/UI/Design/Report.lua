@@ -185,11 +185,21 @@ function K.Report(parent)
             b.text = K.Text(b, "small", "ink")
             b.text:SetPoint("CENTER", 0, 0)
             -- a chip that leads somewhere lights up like a button
+            -- (in the book a chip is a word in the margin: no box, under the mouse the ink darkens)
+            b.rest = function(s)
+                if s.inBook then s:SetSurface(nil, nil) else s:SetSurface("inset", "line") end
+            end
             b:SetScript("OnEnter", function(s)
-                if s.go then s:SetSurface("hover", "gold") end
+                if s.go then
+                    if s.inBook then K.Recolor(s.text, "title") else s:SetSurface("hover", "gold") end
+                end
                 if s.tip then K.ShowTip(s, s.tip[1], { select(2, unpack(s.tip)) }) end
             end)
-            b:SetScript("OnLeave", function(s) s:SetSurface("inset", "line") GameTooltip:Hide() end)
+            b:SetScript("OnLeave", function(s)
+                if s.inBook then K.Recolor(s.text, s.ink or "ink") end
+                s:rest()
+                GameTooltip:Hide()
+            end)
             b:SetScript("OnClick", function(s) if s.go then s.go() end end)
             return b
         end),
@@ -409,17 +419,21 @@ function K.Report(parent)
     -- small boxes in a row that breaks where the room ends: { { text, key, tip, go } } (go: where a click leads)
     function rp:Chips(list)
         local x, rowH = 0, 0
+        local book = K.IsBook()
         for _, it in ipairs(list) do
             local b = st.chip:Take(area)
             b.text:SetText(it[1])
-            K.Recolor(b.text, it[2] or "ink", "small")
-            local bw, bh = b.text:GetStringWidth() + 18, b.text:GetStringHeight() + 10
+            b.inBook = book
+            b.ink = it[2] or (book and "rubric") or "ink"
+            K.Recolor(b.text, b.ink, "small")
+            b:rest()
+            local bw, bh = b.text:GetStringWidth() + (book and 4 or 18), b.text:GetStringHeight() + (book and 4 or 10)
             b:SetSize(bw, bh)
             if x > 0 and x + bw > self.w then x, self.y, rowH = 0, self.y + rowH + 6, 0 end
             b:ClearAllPoints()
             b:SetPoint("TOPLEFT", area, "TOPLEFT", PAD + x, -self.y)
             b.tip, b.go = it[3], it[4]
-            x = x + bw + 6
+            x = x + bw + (book and 14 or 6)
             rowH = max(rowH, bh)
         end
         if #list > 0 then self.y = self.y + rowH + 12 end
